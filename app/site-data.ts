@@ -86,10 +86,10 @@ export const company = {
     "Client Satisfaction",
   ],
 
-  profilePdf: "/company-profile.pdf",
+  profilePdf: "/md-profile.pdf",
 
   mdProfilePdf:
-    "/documents/Abiodun_Christopher_Akinola_MD_Profile_Resume.pdf",
+    "/documents/md-profile.pdf",
 };
 
 /* -------------------------------------------------------------------------- */
