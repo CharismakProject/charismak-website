@@ -86,10 +86,10 @@ export const company = {
     "Client Satisfaction",
   ],
 
-  profilePdf: "/md-profile.pdf",
+  profilePdf: "/company-profile.pdf",
 
   mdProfilePdf:
-    "/documents/md-profile.pdf",
+    "/documents/company-profile.pdf",
 };
 
 /* -------------------------------------------------------------------------- */
@@ -911,10 +911,10 @@ export const mdProfile = {
   image: "/Images/Team/md-profile.png",
 
   resume:
-    "/documents/Abiodun_Christopher_Akinola_MD_Profile_Resume.pdf",
+    "/md-profile.pdf",
 
   profilePdf:
-    "/documents/Abiodun_Christopher_Akinola_MD_Profile_Resume.pdf",
+    "/md-profile.pdf",
 
   phone: "+2347066619598",
 
