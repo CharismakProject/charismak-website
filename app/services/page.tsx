@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -40,17 +39,6 @@ const deliveryProcess = [
   },
 ];
 
-const serviceImages = [
-  "/Images/Projects/coco/cover.jpg",
-  "/Images/Projects/Djibouti/cover.jpg",
-  "/Images/Projects/Flawless/cover.jpg",
-  "/Images/Projects/fabrication/cover.jpg",
-  "/Images/Projects/Jahi/cover.jpg",
-  "/Images/Projects/Office/cover.jpg",
-  "/Images/Projects/Jahi/cover.jpg",
-  "/Images/Projects/flats/cover.jpg",
-];
-
 const serviceHighlights = [
   "Clear project scope and responsibilities",
   "Professional site supervision",
@@ -63,19 +51,28 @@ const serviceHighlights = [
 export default function ServicesPage() {
   return (
     <main className="overflow-hidden bg-white pt-20">
+      {/* Hero section */}
       <section className="relative min-h-[70vh] overflow-hidden bg-[#071E33] text-white">
+        {/* Decorative background without project photographs */}
         <div className="absolute inset-0">
-          <Image
-            src="/Images/Projects/Jahi/1.jpg"
-            alt="Charismak construction services"
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover"
+          <div className="absolute inset-0 bg-gradient-to-br from-[#071E33] via-[#0D3B66] to-[#071E33]" />
+
+          <div className="absolute -right-24 top-10 h-[420px] w-[420px] rounded-full border border-white/10" />
+          <div className="absolute -right-10 top-24 h-[300px] w-[300px] rounded-full border border-[#F2B544]/20" />
+          <div className="absolute right-20 top-40 h-[170px] w-[170px] rounded-full bg-[#A82B05]/15 blur-2xl" />
+
+          <div className="absolute -bottom-40 -left-28 h-[420px] w-[420px] rounded-full bg-[#0D3B66]/60 blur-3xl" />
+
+          <div
+            className="absolute inset-0 opacity-[0.045]"
+            style={{
+              backgroundImage:
+                "linear-gradient(rgba(255,255,255,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.8) 1px, transparent 1px)",
+              backgroundSize: "48px 48px",
+            }}
           />
 
-          <div className="absolute inset-0 bg-gradient-to-r from-[#071E33]/98 via-[#0D3B66]/88 to-[#071E33]/35" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#071E33]/70 via-transparent to-[#071E33]/15" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#071E33] via-transparent to-transparent" />
         </div>
 
         <div className="relative mx-auto flex min-h-[70vh] max-w-7xl items-center px-5 py-24 md:px-8">
@@ -88,7 +85,7 @@ export default function ServicesPage() {
               Comprehensive construction solutions built around your project.
             </h1>
 
-            <p className="mt-7 max-w-3xl text-base leading-8 text-white/78 md:text-lg">
+            <p className="mt-7 max-w-3xl text-base leading-8 text-white/75 md:text-lg">
               Charismak Project Nigeria Limited provides construction,
               engineering, renovation, fabrication, consultancy and project
               management services supported by professional planning,
@@ -116,6 +113,7 @@ export default function ServicesPage() {
         </div>
       </section>
 
+      {/* Service statistics */}
       <section className="border-b border-[#0D3B66]/10 bg-white">
         <div className="mx-auto grid max-w-7xl gap-6 px-5 py-9 sm:grid-cols-2 md:px-8 lg:grid-cols-4">
           {[
@@ -137,6 +135,7 @@ export default function ServicesPage() {
         </div>
       </section>
 
+      {/* Services */}
       <section className="bg-[#F5F7FA] px-5 py-20 md:px-8">
         <div className="mx-auto max-w-7xl">
           <p className="mb-4 text-xs font-bold uppercase tracking-[0.28em] text-[#C8A45D]">
@@ -162,42 +161,34 @@ export default function ServicesPage() {
               return (
                 <article
                   key={service.title}
-                  className="group overflow-hidden border border-[#0D3B66]/10 bg-white transition duration-300 hover:-translate-y-1 hover:shadow-[0_25px_60px_rgba(7,30,51,0.14)]"
+                  className="group relative flex min-h-[370px] flex-col overflow-hidden border border-[#0D3B66]/10 bg-white p-7 transition duration-300 hover:-translate-y-1 hover:border-[#C8A45D]/50 hover:shadow-[0_25px_60px_rgba(7,30,51,0.14)]"
                 >
-                  <div className="relative h-[220px] overflow-hidden bg-[#071E33]">
-                    <Image
-                      src={
-                        serviceImages[index] ||
-                        "/Images/Projects/Coco-Gwarimpa/1.jpg"
-                      }
-                      alt={service.title}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 25vw"
-                      className="object-cover transition duration-700 group-hover:scale-105"
-                    />
+                  {/* Decorative card number */}
+                  <span className="absolute right-5 top-3 text-6xl font-black text-[#0D3B66]/[0.035]">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
 
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#071E33]/85 via-[#071E33]/10 to-transparent" />
-
-                    <div className="absolute bottom-5 left-5 grid h-12 w-12 place-items-center bg-[#A82B05] text-white">
-                      <Icon className="h-6 w-6" />
-                    </div>
+                  <div className="relative z-10 grid h-14 w-14 place-items-center bg-[#A82B05] text-white transition duration-300 group-hover:bg-[#0D3B66]">
+                    <Icon className="h-7 w-7" />
                   </div>
 
-                  <div className="p-6">
-                    <h3 className="text-xl font-bold text-[#0D3B66]">
+                  <div className="relative z-10 mt-7 flex flex-1 flex-col">
+                    <h3 className="text-xl font-bold leading-tight text-[#0D3B66]">
                       {service.title}
                     </h3>
 
-                    <p className="mt-4 text-sm leading-7 text-[#3A4653]">
+                    <div className="mt-4 h-[2px] w-12 bg-[#C8A45D] transition-all duration-300 group-hover:w-20" />
+
+                    <p className="mt-5 flex-1 text-sm leading-7 text-[#3A4653]">
                       {service.description}
                     </p>
 
                     <Link
                       href="/contact"
-                      className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-[#A82B05]"
+                      className="mt-7 inline-flex items-center gap-2 text-sm font-bold text-[#A82B05] transition hover:text-[#0D3B66]"
                     >
                       Discuss This Service
-                      <ArrowRight className="h-4 w-4" />
+                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                     </Link>
                   </div>
                 </article>
@@ -207,28 +198,75 @@ export default function ServicesPage() {
         </div>
       </section>
 
+      {/* Delivery approach */}
       <section className="bg-white px-5 py-20 md:px-8">
         <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-          <div className="relative min-h-[560px] overflow-hidden bg-[#071E33]">
-            <Image
-              src="/Images/Projects/Djibouti/2.jpg"
-              alt="Construction supervision and project coordination"
-              fill
-              sizes="(max-width: 1024px) 100vw, 45vw"
-              className="object-cover"
+          <div className="relative flex min-h-[560px] overflow-hidden bg-[#071E33] p-8 text-white md:p-12">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#071E33] via-[#0D3B66] to-[#071E33]" />
+
+            <div
+              className="absolute inset-0 opacity-[0.06]"
+              style={{
+                backgroundImage:
+                  "linear-gradient(rgba(255,255,255,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.8) 1px, transparent 1px)",
+                backgroundSize: "42px 42px",
+              }}
             />
 
-            <div className="absolute inset-0 bg-gradient-to-t from-[#071E33]/85 via-transparent to-transparent" />
+            <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full border border-white/10" />
+            <div className="absolute -bottom-28 -left-20 h-80 w-80 rounded-full bg-[#A82B05]/15 blur-3xl" />
 
-            <div className="absolute bottom-0 p-7 text-white md:p-10">
-              <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#F2B544]">
-                Delivery Approach
-              </p>
+            <div className="relative z-10 flex w-full flex-col justify-between">
+              <div>
+                <div className="grid h-16 w-16 place-items-center border border-[#F2B544]/50 bg-white/5 backdrop-blur">
+                  <HardHat className="h-8 w-8 text-[#F2B544]" />
+                </div>
 
-              <h3 className="mt-4 max-w-xl text-3xl font-bold leading-tight">
-                Construction supported by planning, supervision and clear
-                accountability.
-              </h3>
+                <p className="mt-8 text-xs font-bold uppercase tracking-[0.22em] text-[#F2B544]">
+                  Delivery Approach
+                </p>
+
+                <h3 className="mt-5 max-w-xl text-3xl font-bold leading-tight md:text-4xl">
+                  Construction supported by planning, supervision and clear
+                  accountability.
+                </h3>
+
+                <p className="mt-6 max-w-lg text-sm leading-7 text-white/65">
+                  Our project delivery structure brings together planning,
+                  procurement coordination, technical supervision, quality
+                  inspections and progress reporting.
+                </p>
+              </div>
+
+              <div className="mt-12 grid grid-cols-2 gap-4">
+                <div className="border border-white/10 bg-white/5 p-5">
+                  <p className="text-2xl font-black text-[#F2B544]">01</p>
+                  <p className="mt-2 text-sm font-semibold text-white">
+                    Plan Clearly
+                  </p>
+                </div>
+
+                <div className="border border-white/10 bg-white/5 p-5">
+                  <p className="text-2xl font-black text-[#F2B544]">02</p>
+                  <p className="mt-2 text-sm font-semibold text-white">
+                    Execute Properly
+                  </p>
+                </div>
+
+                <div className="border border-white/10 bg-white/5 p-5">
+                  <p className="text-2xl font-black text-[#F2B544]">03</p>
+                  <p className="mt-2 text-sm font-semibold text-white">
+                    Monitor Quality
+                  </p>
+                </div>
+
+                <div className="border border-white/10 bg-white/5 p-5">
+                  <p className="text-2xl font-black text-[#F2B544]">04</p>
+                  <p className="mt-2 text-sm font-semibold text-white">
+                    Deliver Value
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -273,6 +311,7 @@ export default function ServicesPage() {
         </div>
       </section>
 
+      {/* Work process */}
       <section className="bg-[#071E33] px-5 py-20 text-white md:px-8">
         <div className="mx-auto max-w-7xl">
           <p className="mb-4 text-xs font-bold uppercase tracking-[0.28em] text-[#F2B544]">
@@ -294,11 +333,11 @@ export default function ServicesPage() {
             {deliveryProcess.map((item, index) => (
               <article
                 key={item.title}
-                className="border border-white/12 bg-white/5 p-7 backdrop-blur transition hover:bg-white/10"
+                className="border border-white/10 bg-white/5 p-7 backdrop-blur transition hover:border-[#F2B544]/40 hover:bg-white/10"
               >
                 <div className="flex items-center justify-between">
                   <p className="text-4xl font-black text-[#F2B544]">
-                    0{index + 1}
+                    {String(index + 1).padStart(2, "0")}
                   </p>
 
                   {index === 0 && (
@@ -329,6 +368,7 @@ export default function ServicesPage() {
         </div>
       </section>
 
+      {/* Project link */}
       <section className="bg-[#F5F7FA] px-5 py-20 md:px-8">
         <div className="mx-auto grid max-w-7xl gap-8 md:grid-cols-[1fr_0.5fr] md:items-center">
           <div>
