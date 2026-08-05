@@ -800,15 +800,6 @@ export const people: Person[] = [
       "Leads business development, client relationships and growth strategy for the company.",
   },
   {
-    name: "Dorathy Raymond",
-    role: "Executive Assistant",
-    image: "/Images/Team/dorathy.png",
-    group: "Active Team",
-    category: "Executive Support",
-    bio:
-      "Provides executive support, scheduling, correspondence and coordination for company leadership.",
-  },
-  {
     name: "Paul Chukwudi Amiarah",
     role: "Site Supervisor (Main)",
     image: "/Images/Team/chuks.png",
