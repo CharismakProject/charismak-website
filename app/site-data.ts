@@ -800,6 +800,15 @@ export const people: Person[] = [
       "Leads business development, client relationships and growth strategy for the company.",
   },
   {
+    name: "Akinola Toyin",
+    role: "Supporting Secretary",
+    image: "/Images/Team/toyin.png",
+    group: "Active Team",
+    category: "Corporate Administration",
+    bio:
+      "Supports corporate documentation, communication, records and company secretarial responsibilities.",
+  },
+  {
     name: "Paul Chukwudi Amiarah",
     role: "Site Supervisor (Main)",
     image: "/Images/Team/chuks.png",
@@ -820,15 +829,6 @@ export const people: Person[] = [
 
   /* ---------------------------------- SUPPORTING TEAM ---------------------------------- */
 
-  {
-    name: "Akinola Toyin",
-    role: "Secretary",
-    image: "/Images/Team/toyin.png",
-    group: "Supporting Team",
-    category: "Corporate Administration",
-    bio:
-      "Supports corporate documentation, communication, records and company secretarial responsibilities.",
-  },
   {
     name: "Seyi Fituyi",
     role: "Project Director (South)",
