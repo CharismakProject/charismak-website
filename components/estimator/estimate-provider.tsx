@@ -4,10 +4,16 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from "
 import { calculateFenceSectionPhysicalLayout } from "@/lib/fence/physical-layout-calculator";
 import type {
   FenceSection,
-  ColumnSpecification,
   Gate,
   FencePanelComposition,
+  ColumnConstructionSystem,
 } from "@/lib/fence/types";
+import {
+  createFenceColumnSpecifications,
+  DEFAULT_FENCE_BOQ_PROFILE,
+  normalizeFenceBoqProfile,
+  type FenceBoqProfile,
+} from "@/lib/fence/fence-boq-profile";
 
 const STORAGE_KEY = "charismak-estimator-draft";
 
@@ -20,7 +26,11 @@ type ProjectInfo = {
   designCategory: string;
 };
 
-type SectionState = FenceSection & { grossLengthM: number };
+export type SectionState = FenceSection & {
+  grossLengthM: number;
+  constructionSystem: ColumnConstructionSystem;
+  boqProfile: FenceBoqProfile;
+};
 
 type EstimateState = {
   activeStage: number;
@@ -56,13 +66,6 @@ const defaultProject: ProjectInfo = {
   designCategory: "Simple",
 };
 
-const defaultColumnSpecifications: ColumnSpecification[] = [
-  { id: "regular-column", name: "Regular column", constructionSystem: "reinforced-concrete", widthAlongFenceM: 0.4, depthM: 0.4, heightM: 2.2, concreteMixId: "1-2-4", concreteCoverMm: 50, mainBarCount: 4, mainBarDiameterMm: 12, mainBarExtraLengthM: 0.2, linkBarDiameterMm: 8, linkSpacingM: 0.2, linkHookAllowanceM: 0.3, formedWidthFaceCount: 2, formedDepthFaceCount: 2, bindingWirePercentOfReinforcementWeight: 1.5, concreteWastagePercent: 5, reinforcementWastagePercent: 5, formworkWastagePercent: 10  },
-  { id: "corner-column", name: "Corner column", constructionSystem: "reinforced-concrete", widthAlongFenceM: 0.45, depthM: 0.45, heightM: 2.2, concreteMixId: "1-2-4", concreteCoverMm: 50, mainBarCount: 4, mainBarDiameterMm: 12, mainBarExtraLengthM: 0.2, linkBarDiameterMm: 8, linkSpacingM: 0.2, linkHookAllowanceM: 0.3, formedWidthFaceCount: 2, formedDepthFaceCount: 2, bindingWirePercentOfReinforcementWeight: 1.5, concreteWastagePercent: 5, reinforcementWastagePercent: 5, formworkWastagePercent: 10 },
-  { id: "pedestrian-gate-post", name: "Pedestrian gate post", constructionSystem: "reinforced-concrete", widthAlongFenceM: 0.35, depthM: 0.35, heightM: 2.2, concreteMixId: "1-2-4", concreteCoverMm: 50, mainBarCount: 4, mainBarDiameterMm: 12, mainBarExtraLengthM: 0.2, linkBarDiameterMm: 8, linkSpacingM: 0.2, linkHookAllowanceM: 0.3, formedWidthFaceCount: 2, formedDepthFaceCount: 2, bindingWirePercentOfReinforcementWeight: 1.5, concreteWastagePercent: 5, reinforcementWastagePercent: 5, formworkWastagePercent: 10 },
-  { id: "vehicle-gate-post", name: "Vehicle gate post", constructionSystem: "reinforced-concrete", widthAlongFenceM: 0.5, depthM: 0.5, heightM: 2.2, concreteMixId: "1-2-4", concreteCoverMm: 50, mainBarCount: 4, mainBarDiameterMm: 12, mainBarExtraLengthM: 0.2, linkBarDiameterMm: 8, linkSpacingM: 0.2, linkHookAllowanceM: 0.3, formedWidthFaceCount: 2, formedDepthFaceCount: 2, bindingWirePercentOfReinforcementWeight: 1.5, concreteWastagePercent: 5, reinforcementWastagePercent: 5, formworkWastagePercent: 10 },
-];
-
 function makeEmptySection(idSuffix = "", opts?: { position?: any; name?: string }): SectionState {
   const id = `section-${Date.now()}${idSuffix}`;
   const section: SectionState = {
@@ -89,6 +92,8 @@ function makeEmptySection(idSuffix = "", opts?: { position?: any; name?: string 
     securityTopping: "none",
     notes: "",
     panelCompositionOverrides: [],
+    constructionSystem: "reinforced-concrete",
+    boqProfile: { ...DEFAULT_FENCE_BOQ_PROFILE },
   };
 
   return section;
@@ -110,7 +115,16 @@ export function EstimateProvider({ children }: { children: React.ReactNode }) {
     try {
       const parsed = JSON.parse(raw);
       if (parsed.projectInfo) setProjectInfo(parsed.projectInfo);
-      if (parsed.sections) setSections(parsed.sections);
+      if (parsed.sections) {
+        setSections(
+          parsed.sections.map((section: Partial<SectionState>) => ({
+            ...section,
+            constructionSystem:
+              section.constructionSystem ?? "reinforced-concrete",
+            boqProfile: normalizeFenceBoqProfile(section.boqProfile),
+          })) as SectionState[],
+        );
+      }
       if (typeof parsed.activeStage === "number") setActiveStageState(parsed.activeStage);
     } catch {
       localStorage.removeItem(STORAGE_KEY);
@@ -204,7 +218,12 @@ export function EstimateProvider({ children }: { children: React.ReactNode }) {
   const duplicateSection = (id: string) => {
     const src = sections.find((s) => s.id === id);
     if (!src) return;
-    const clone = { ...src, id: `section-${Date.now()}` } as SectionState;
+    const clone = {
+      ...src,
+      id: `section-${Date.now()}`,
+      gates: src.gates.map((gate) => ({ ...gate, id: `${gate.id}-copy-${Date.now()}` })),
+      boqProfile: { ...src.boqProfile },
+    } as SectionState;
     setSections((cur) => [...cur, clone]);
   };
 
@@ -236,7 +255,10 @@ export function EstimateProvider({ children }: { children: React.ReactNode }) {
     } as FenceSection;
 
     try {
-      const result = calculateFenceSectionPhysicalLayout({ section: engineSection as any, specifications: defaultColumnSpecifications });
+      const result = calculateFenceSectionPhysicalLayout({
+        section: engineSection as FenceSection,
+        specifications: createFenceColumnSpecifications(s),
+      });
       return result;
     } catch (err) {
       return { error: err instanceof Error ? err.message : String(err) };

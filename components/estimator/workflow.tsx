@@ -7,7 +7,7 @@ import ShellButton from "./ui/button";
 import { useEstimate } from "./estimate-provider";
 import ReviewWorkspace from "../bill/review-workspace";
 import { adaptFenceScopeToBill } from "@/lib/billing/fence-adapter";
-import { getOrCreateDraftBill, replaceCalculationInBill } from "@/lib/billing/store";
+import { getOrCreateDraftBill, replaceCalculationSectionsInBill } from "@/lib/billing/store";
 
 const steps = ["Project", "Sections", "Structure", "Review"];
 
@@ -57,6 +57,12 @@ export default function Workflow({ onOpenConcrete, onOpenBlockwork, onOpenBill, 
     if (id) setSelectedSectionId(id);
   }
 
+  function updateBoqProfile(section: any, field: string, value: number | string | boolean) {
+    updateSection(section.id, {
+      boqProfile: { ...section.boqProfile, [field]: value },
+    } as any);
+  }
+
   function generateFenceBoq() {
     const measuredSections = sections
       .map((section: any) => ({
@@ -80,13 +86,17 @@ export default function Workflow({ onOpenConcrete, onOpenBlockwork, onOpenBill, 
       bill.location = projectInfo.location || null;
       bill.currency = projectInfo.currency || "NGN";
 
-      replaceCalculationInBill({
+      const adapted = adaptFenceScopeToBill({
+        calculationId: "fence-project-scope",
+        sections: measuredSections,
+      });
+      replaceCalculationSectionsInBill({
         bill,
-        sectionId: "fence-works",
-        sectionTitle: "Fence Works",
         calculationId: "fence-project-scope",
         module: "fence",
-        ...adaptFenceScopeToBill({ calculationId: "fence-project-scope", sections: measuredSections }),
+        sections: adapted.workSections,
+        materials: adapted.materials,
+        assumptions: adapted.assumptions,
       });
       setFenceBillMessage(`Fence BOQ updated from ${measuredSections.length} measured section${measuredSections.length === 1 ? "" : "s"}.`);
     } catch (caught) {
@@ -255,6 +265,44 @@ export default function Workflow({ onOpenConcrete, onOpenBlockwork, onOpenBill, 
                             <option value="heavy-luxury">Heavy</option>
                           </select>
                         </label>
+                        <label className="block text-sm font-medium text-[#0B2942]">Wall coping
+                          <select value={s.wallCopingType} onChange={(e) => updateSection(s.id, { wallCopingType: e.target.value } as any)} className="mt-2 w-full rounded-3xl border bg-[#F8FAFC] px-4 py-3">
+                            <option value="none">None</option>
+                            <option value="in-situ-concrete">In-situ concrete</option>
+                            <option value="precast-concrete">Precast concrete</option>
+                            <option value="stone">Stone coping</option>
+                            <option value="metal">Metal coping</option>
+                          </select>
+                        </label>
+                        <label className="block text-sm font-medium text-[#0B2942]">Column caps
+                          <select value={s.regularColumnCapType} onChange={(e) => updateSection(s.id, { regularColumnCapType: e.target.value, cornerColumnCapType: e.target.value, gatePostCapType: e.target.value } as any)} className="mt-2 w-full rounded-3xl border bg-[#F8FAFC] px-4 py-3">
+                            <option value="none">None</option>
+                            <option value="in-situ-concrete">In-situ concrete</option>
+                            <option value="precast-concrete">Precast concrete</option>
+                            <option value="stone">Stone caps</option>
+                            <option value="metal">Metal caps</option>
+                          </select>
+                        </label>
+                        <label className="block text-sm font-medium text-[#0B2942]">External finish
+                          <select value={s.externalFinish.standardFinish} onChange={(e) => updateSection(s.id, { externalFinish: { ...s.externalFinish, standardFinish: e.target.value } } as any)} className="mt-2 w-full rounded-3xl border bg-[#F8FAFC] px-4 py-3">
+                            <option value="none">None</option>
+                            <option value="fair-face">Fair face</option>
+                            <option value="plaster-and-paint">Plaster and paint</option>
+                            <option value="textured-paint">Plaster and textured paint</option>
+                            <option value="stone-cladding">Stone cladding</option>
+                            <option value="tile-cladding">Tile cladding</option>
+                          </select>
+                        </label>
+                        <label className="block text-sm font-medium text-[#0B2942]">Internal finish
+                          <select value={s.internalFinish.standardFinish} onChange={(e) => updateSection(s.id, { internalFinish: { ...s.internalFinish, standardFinish: e.target.value } } as any)} className="mt-2 w-full rounded-3xl border bg-[#F8FAFC] px-4 py-3">
+                            <option value="none">None</option>
+                            <option value="fair-face">Fair face</option>
+                            <option value="plaster-and-paint">Plaster and paint</option>
+                            <option value="textured-paint">Plaster and textured paint</option>
+                            <option value="stone-cladding">Stone cladding</option>
+                            <option value="tile-cladding">Tile cladding</option>
+                          </select>
+                        </label>
 
                         <div className="col-span-1 mt-1 border-t border-[#DFE6EE] pt-4 min-[340px]:col-span-2">
                           <div className="text-sm font-semibold">Gates ({s.gates.length}) — total {s.gates.reduce((t: number, g: any) => t + (g.widthM || 0), 0)} m</div>
@@ -340,13 +388,14 @@ export default function Workflow({ onOpenConcrete, onOpenBlockwork, onOpenBill, 
           <div className="grid gap-3">
             {sections.map((s: any) => {
               const res = calculateSectionLayout(s.id);
+              const p = s.boqProfile;
               return (
                 <Card key={s.id} title={s.name}>
                   {res?.error ? <div className="text-red-600">{res.error}</div> : (
                     <div className="grid gap-2">
                       <div>Gross length: {res?.grossSectionLengthM} m</div>
                       <div>Gate opening width: {res?.totalGateOpeningWidthM} m</div>
-                      <div>Column count: {res?.columns?.length}</div>
+                      <div className="rounded-xl bg-[#FFF4E4] p-3 font-semibold text-[#8A3A11]">Column count: {res?.columns?.length} — calculation driver only; the BOQ is broken into concrete, reinforcement, formwork or block-pillar constituents.</div>
                       <div>Column system: {res?.columns?.[0]?.constructionSystem ?? "-"}</div>
                       <div>Block-wall height: {s.defaultPanelComposition.blockWallHeightM} m</div>
                       <div>Column height: {s.columnBodyHeightM} m</div>
@@ -355,6 +404,102 @@ export default function Workflow({ onOpenConcrete, onOpenBlockwork, onOpenBill, 
                       <div>Blockwork area: {res?.totalBlockworkAreaM2} m²</div>
                       <div>Upper-infill area: {res?.totalUpperInfillAreaM2} m²</div>
                       <div>Reconciliation: {res && (res.totalGateOpeningWidthM + res.totalColumnOccupiedLengthM + res.totalClearBlockPanelLengthM)} m = {res?.grossSectionLengthM} m</div>
+                      <details className="mt-3 rounded-2xl border border-[#D6E0EA] bg-[#F8FAFC] p-3">
+                        <summary className="cursor-pointer text-sm font-bold text-[#0D3B66]">Edit substructure assumptions</summary>
+                        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                          {[
+                            ["Trench width (m)", "trenchWidthM", 0.05],
+                            ["Trench depth (m)", "trenchDepthM", 0.05],
+                            ["Column pit length (m)", "columnPitLengthM", 0.05],
+                            ["Column pit width (m)", "columnPitWidthM", 0.05],
+                            ["Column pit depth (m)", "columnPitDepthM", 0.05],
+                            ["Blinding thickness (m)", "blindingThicknessM", 0.01],
+                            ["Strip footing width (m)", "stripFootingWidthM", 0.05],
+                            ["Strip footing thickness (m)", "stripFootingThicknessM", 0.01],
+                            ["Foundation block height (m)", "foundationBlockworkHeightM", 0.025],
+                            ["Column base length (m)", "columnBaseLengthM", 0.05],
+                            ["Column base width (m)", "columnBaseWidthM", 0.05],
+                            ["Column base thickness (m)", "columnBaseThicknessM", 0.01],
+                            ["Starter height (m)", "starterHeightM", 0.05],
+                            ["Base basket bars", "baseMainBarCount", 1],
+                            ["Base bar diameter (mm)", "baseMainBarDiameterMm", 1],
+                            ["Starter bars", "starterBarCount", 1],
+                            ["Starter bar diameter (mm)", "starterBarDiameterMm", 1],
+                          ].map(([label, field, step]) => (
+                            <label key={String(field)} className="text-xs font-semibold text-[#33485D]">{label}
+                              <input type="number" step={Number(step)} value={p[field as keyof typeof p] as number} onChange={(e) => updateBoqProfile(s, String(field), Number(e.target.value))} className="mt-1.5 w-full rounded-xl border bg-white px-3 py-2.5" />
+                            </label>
+                          ))}
+                          <label className="text-xs font-semibold text-[#33485D]">Foundation block infill
+                            <select value={p.foundationBlockInfill} onChange={(e) => updateBoqProfile(s, "foundationBlockInfill", e.target.value)} className="mt-1.5 w-full rounded-xl border bg-white px-3 py-2.5">
+                              <option value="none">Hollow / not filled</option>
+                              <option value="partial">Partially filled</option>
+                              <option value="full">Fully filled with weak concrete</option>
+                            </select>
+                          </label>
+                          {[
+                            ["Blinding mix", "blindingMix"],
+                            ["Structural concrete mix", "structuralConcreteMix"],
+                            ["Weak concrete mix", "weakConcreteMix"],
+                            ["Block-laying mortar mix", "mortarMix"],
+                          ].map(([label, field]) => (
+                            <label key={field} className="text-xs font-semibold text-[#33485D]">{label}
+                              <input value={p[field as keyof typeof p] as string} onChange={(e) => updateBoqProfile(s, field, e.target.value)} placeholder="e.g. 1:2:4" className="mt-1.5 w-full rounded-xl border bg-white px-3 py-2.5" />
+                            </label>
+                          ))}
+                        </div>
+                      </details>
+
+                      <details className="rounded-2xl border border-[#D6E0EA] bg-[#F8FAFC] p-3">
+                        <summary className="cursor-pointer text-sm font-bold text-[#0D3B66]">Edit column construction assumptions</summary>
+                        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                          {s.constructionSystem === "block-pillar" ? (
+                            <>
+                              {[
+                                ["Pillar width (m)", "blockPillarWidthM", 0.025],
+                                ["Pillar depth (m)", "blockPillarDepthM", 0.025],
+                                ["Blocks per course", "blocksPerPillarCourse", 1],
+                                ["Course height (m)", "blockCourseHeightM", 0.025],
+                                ["Vertical bars", "blockPillarVerticalBarCount", 1],
+                                ["Vertical bar diameter (mm)", "blockPillarVerticalBarDiameterMm", 1],
+                              ].map(([label, field, step]) => (
+                                <label key={String(field)} className="text-xs font-semibold text-[#33485D]">{label}
+                                  <input type="number" step={Number(step)} value={p[field as keyof typeof p] as number} onChange={(e) => updateBoqProfile(s, String(field), Number(e.target.value))} className="mt-1.5 w-full rounded-xl border bg-white px-3 py-2.5" />
+                                </label>
+                              ))}
+                              <label className="text-xs font-semibold text-[#33485D]">Block-pillar infill
+                                <select value={p.blockPillarInfill} onChange={(e) => updateBoqProfile(s, "blockPillarInfill", e.target.value)} className="mt-1.5 w-full rounded-xl border bg-white px-3 py-2.5">
+                                  <option value="none">Hollow / not filled</option>
+                                  <option value="partial">Partially filled</option>
+                                  <option value="full">Fully filled with weak concrete</option>
+                                </select>
+                              </label>
+                            </>
+                          ) : (
+                            <>
+                              {[
+                                ["RC column width (m)", "rcColumnWidthM", 0.025],
+                                ["RC column depth (m)", "rcColumnDepthM", 0.025],
+                                ["Main bars", "rcMainBarCount", 1],
+                                ["Main bar diameter (mm)", "rcMainBarDiameterMm", 1],
+                                ["Link diameter (mm)", "rcLinkDiameterMm", 1],
+                                ["Link spacing (m)", "rcLinkSpacingM", 0.025],
+                              ].map(([label, field, step]) => (
+                                <label key={String(field)} className="text-xs font-semibold text-[#33485D]">{label}
+                                  <input type="number" step={Number(step)} value={p[field as keyof typeof p] as number} onChange={(e) => updateBoqProfile(s, String(field), Number(e.target.value))} className="mt-1.5 w-full rounded-xl border bg-white px-3 py-2.5" />
+                                </label>
+                              ))}
+                            </>
+                          )}
+                          <label className="flex items-center gap-2 rounded-xl border bg-white px-3 py-2.5 text-xs font-semibold text-[#33485D]">
+                            <input type="checkbox" checked={p.includePreliminaries} onChange={(e) => updateBoqProfile(s, "includePreliminaries", e.target.checked)} />
+                            Include preliminaries
+                          </label>
+                          <label className="text-xs font-semibold text-[#33485D]">Material wastage (%)
+                            <input type="number" step="0.5" value={p.materialWastagePercent} onChange={(e) => updateBoqProfile(s, "materialWastagePercent", Number(e.target.value))} className="mt-1.5 w-full rounded-xl border bg-white px-3 py-2.5" />
+                          </label>
+                        </div>
+                      </details>
                     </div>
                   )}
                 </Card>

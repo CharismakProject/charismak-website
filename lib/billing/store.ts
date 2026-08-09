@@ -416,13 +416,46 @@ export function replaceCalculationInBill(input: {
     assumptions = [],
   } = input;
 
+  return replaceCalculationSectionsInBill({
+    bill,
+    calculationId,
+    module,
+    sections: [
+      {
+        id: sectionId,
+        title: sectionTitle,
+        items: workItems ?? (workItem ? [workItem] : []),
+      },
+    ],
+    materials,
+    assumptions,
+  });
+}
+
+export function replaceCalculationSectionsInBill(input: {
+  bill: Bill;
+  calculationId: string;
+  module: string;
+  sections: Bill["sections"];
+  materials: ProcurementItem[];
+  assumptions?: Bill["assumptions"];
+}): Bill {
+  const {
+    bill,
+    calculationId,
+    module,
+    sections: incomingSections,
+    materials,
+    assumptions = [],
+  } = input;
+
   if (isBillLocked(bill)) {
     throw new Error(
       "This bill is completed and locked. Create a new revision before adding calculations.",
     );
   }
 
-  const incomingWorkItems = workItems ?? (workItem ? [workItem] : []);
+  const incomingWorkItems = incomingSections.flatMap((section) => section.items);
   const existingWorkItems = bill.sections
     .flatMap((existingSection) => existingSection.items)
     .filter((item) => item.sourceCalculationId === calculationId);
@@ -437,6 +470,10 @@ export function replaceCalculationInBill(input: {
     incomingItem.plantRate = existingItem.plantRate ?? null;
     incomingItem.otherRate = existingItem.otherRate ?? null;
     incomingItem.allInRate = existingItem.allInRate ?? null;
+    incomingItem.rateSource = existingItem.rateSource;
+    incomingItem.defaultRate = existingItem.defaultRate;
+    incomingItem.analysedRate = existingItem.analysedRate;
+    incomingItem.manualRate = existingItem.manualRate;
   }
 
   for (const section of bill.sections) {
@@ -446,12 +483,25 @@ export function replaceCalculationInBill(input: {
   }
   bill.sections = bill.sections.filter((section) => section.items.length > 0);
 
-  let section = bill.sections.find((candidate) => candidate.id === sectionId);
-  if (!section) {
-    section = { id: sectionId, title: sectionTitle, items: [] };
-    bill.sections.push(section);
+  for (const incomingSection of incomingSections) {
+    if (incomingSection.items.length === 0) continue;
+    let section = bill.sections.find(
+      (candidate) => candidate.id === incomingSection.id,
+    );
+    if (!section) {
+      section = {
+        id: incomingSection.id,
+        code: incomingSection.code,
+        title: incomingSection.title,
+        items: [],
+      };
+      bill.sections.push(section);
+    } else {
+      section.code = incomingSection.code;
+      section.title = incomingSection.title;
+    }
+    section.items.push(...incomingSection.items);
   }
-  section.items.push(...incomingWorkItems);
 
   bill.materials = bill.materials.filter(
     (material) => material.sourceCalculationId !== calculationId,

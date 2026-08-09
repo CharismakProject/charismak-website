@@ -11,7 +11,10 @@ const materialName: Record<string, string> = {
   "block-225": "225 mm sandcrete blocks",
   "binding-wire": "Binding wire",
   "formwork-sheet": "Formwork plywood sheets",
+  "formwork-nails": "Formwork nails",
   "imported-fill": "Approved imported filling",
+  "emulsion-paint": "Approved emulsion paint",
+  "textured-paint": "Approved textured paint",
 };
 
 export function inferMaterialId(item: ProcurementItem): string {
@@ -25,10 +28,17 @@ export function inferMaterialId(item: ProcurementItem): string {
   if (value.includes("water")) return "water";
   if (value.includes("225mm") || value.includes("225 mm")) return "block-225";
   if (value.includes("binding wire")) return "binding-wire";
+  if (value.includes("formwork") && value.includes("nail")) {
+    return "formwork-nails";
+  }
   if (value.includes("formwork") && value.includes("sheet")) {
     return "formwork-sheet";
   }
   if (value.includes("imported fill")) return "imported-fill";
+  if (value.includes("textured") && value.includes("paint")) {
+    return "textured-paint";
+  }
+  if (value.includes("paint")) return "emulsion-paint";
   const bar = value.match(/y\s?(\d+)\s+reinforcement/);
   if (bar) return `reinforcement-y${bar[1]}`;
   return value
