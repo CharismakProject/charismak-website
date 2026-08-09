@@ -508,6 +508,7 @@ export function adaptFenceScopeToBill(input: {
       addMortarMaterials({ materials, calculationId, prefix: `${prefix}:mat:panel-mortar`, name: `${name} superstructure wall mortar`, basicVolumeM3: layout.totalBlockworkAreaM2 * profile.mortarVolumePerWallM2, mixRatio: profile.mortarMix, wastagePercent: waste });
     }
 
+    let superstructureRebarKg = 0;
     for (const [specificationId, count] of columnGroups) {
       const specification = specificationMap.get(specificationId) as ColumnSpecification | undefined;
       if (!specification) continue;
@@ -516,6 +517,7 @@ export function adaptFenceScopeToBill(input: {
         const result = calculateReinforcedConcreteColumnQuantities({ columnCount: count, specification });
         const mainBasicKg = rebarWeightKg(result.basicMainBarLengthM, result.mainBarDiameterMm);
         const linkBasicKg = rebarWeightKg(result.basicLinkBarLengthM, result.linkBarDiameterMm);
+        superstructureRebarKg += mainBasicKg + linkBasicKg;
         superstructure.items.push(
           workItem({ id: `${groupPrefix}:concrete`, calculationId, module: "concrete", code: "CONC-RC", description: `Provide and place ${profile.structuralConcreteMix} reinforced concrete in ${specification.name} superstructure columns at ${name}`, unit: "m³", quantity: result.basicConcreteVolumeM3, notes: `${count} columns used to derive the measured volume.` }),
           workItem({ id: `${groupPrefix}:main-rebar`, calculationId, module: "reinforcement", code: `REBAR-Y${result.mainBarDiameterMm}`, description: `Provide, cut, bend and fix Y${result.mainBarDiameterMm} main reinforcement in ${specification.name} columns at ${name}`, unit: "kg", quantity: mainBasicKg }),
@@ -530,6 +532,7 @@ export function adaptFenceScopeToBill(input: {
         const result = calculateBlockPillarColumnQuantities({ columnCount: count, specification });
         const pillarArea = result.basicBlockQuantity / 10;
         const verticalBasicKg = rebarWeightKg(result.basicVerticalBarLengthM, result.verticalBarDiameterMm);
+        superstructureRebarKg += verticalBasicKg;
         superstructure.items.push(workItem({ id: `${groupPrefix}:blockwork`, calculationId, module: "blockwork", code: "BLK-225", description: `Provide and lay 225 mm sandcrete blockwork in ${specification.name} pillars at ${name}`, unit: "m²", quantity: pillarArea, notes: `${count} pillars and ${result.basicBlockQuantity} blocks used to derive the measured area.` }));
         addBlocks({ materials, calculationId, prefix: `${groupPrefix}:mat:blocks`, name: `${name} ${specification.name} pillars`, basicQuantity: result.basicBlockQuantity, wastagePercent: waste });
         addMortarMaterials({ materials, calculationId, prefix: `${groupPrefix}:mat:mortar`, name: `${name} ${specification.name} pillar mortar`, basicVolumeM3: result.basicMortarVolumeM3, mixRatio: profile.mortarMix, wastagePercent: waste });
@@ -544,22 +547,14 @@ export function adaptFenceScopeToBill(input: {
       }
     }
 
-    const allColumnRebarKg = baseRebar + starterRebar;
-    if (allColumnRebarKg > 0) {
-      materials.push(material({
-        id: `${prefix}:mat:binding-wire`, materialId: "binding-wire", calculationId, module: "reinforcement",
-        description: `Binding wire for reinforcement at ${name}`, unit: "kg",
-        calculated: allColumnRebarKg * 0.015,
-        purchase: allColumnRebarKg * 0.015 * (1 + waste / 100),
-        wastagePercent: waste,
-      }));
-    }
+    let allColumnRebarKg = baseRebar + starterRebar + superstructureRebarKg;
 
     if (section.wallCopingType !== "none") {
       if (section.wallCopingType === "in-situ-concrete") {
         const copingConcrete = clearLength * profile.wallCopingWidthM * profile.wallCopingDepthM;
         const copingFormwork = clearLength * (profile.wallCopingWidthM + 2 * profile.wallCopingDepthM);
         const copingRebar = rebarWeightKg(clearLength * profile.wallCopingBarCount, profile.wallCopingBarDiameterMm);
+        allColumnRebarKg += copingRebar;
         superstructure.items.push(
           workItem({ id: `${prefix}:wall-coping-concrete`, calculationId, module: "concrete", code: "CONC-RC", description: `Provide and place ${profile.structuralConcreteMix} in-situ concrete coping to fence wall at ${name}`, unit: "m³", quantity: copingConcrete }),
           workItem({ id: `${prefix}:wall-coping-formwork`, calculationId, module: "formwork", code: "FORM", description: `Provide formwork to wall coping at ${name}`, unit: "m²", quantity: copingFormwork }),
@@ -571,6 +566,16 @@ export function adaptFenceScopeToBill(input: {
       } else {
         superstructure.items.push(workItem({ id: `${prefix}:wall-coping`, calculationId, module: "specialist", code: "FEN-COP", description: `Provide ${section.wallCopingType.replaceAll("-", " ")} wall coping to ${name}`, unit: "m", quantity: clearLength }));
       }
+    }
+
+    if (allColumnRebarKg > 0) {
+      materials.push(material({
+        id: `${prefix}:mat:binding-wire`, materialId: "binding-wire", calculationId, module: "reinforcement",
+        description: `Binding wire for all reinforcement at ${name}`, unit: "kg",
+        calculated: allColumnRebarKg * 0.015,
+        purchase: allColumnRebarKg * 0.015 * (1 + waste / 100),
+        wastagePercent: waste,
+      }));
     }
 
     const capType = section.regularColumnCapType;
