@@ -1,7 +1,7 @@
-const CACHE_NAME = "charismak-estimator-v2";
+const CACHE_NAME = "charismak-estimator-v3";
 const APP_SHELL = [
   "/estimator/app",
-  "/estimator/app/manifest.webmanifest",
+  "/estimator-manifest.webmanifest",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
 ];

@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description:
     "Measure construction work, analyse rates and generate professional bills of quantities.",
   applicationName: "Charismak Estimator",
-  manifest: "/estimator/app/manifest.webmanifest",
+  manifest: "/estimator-manifest.webmanifest",
   icons: {
     icon: [
       { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
