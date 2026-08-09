@@ -4,8 +4,11 @@ import {
   ArrowRight,
   BadgeCheck,
   Building2,
+  Calculator,
+  FileSpreadsheet,
   Quote,
   ShieldCheck,
+  Smartphone,
 } from "lucide-react";
 
 import HeroSlideshow, {
@@ -80,6 +83,51 @@ export default function HomePage() {
               </p>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className="relative overflow-hidden bg-[#071E33] px-5 py-20 text-white md:px-8">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_20%,rgba(200,164,93,0.18),transparent_28rem)]" />
+        <div className="relative mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+          <div>
+            <p className="mb-4 text-xs font-bold uppercase tracking-[0.28em] text-[#F2B544]">Charismak Digital Tools · Beta</p>
+            <h2 className="max-w-3xl text-4xl font-semibold leading-tight md:text-6xl">Measure. Price. Export.</h2>
+            <p className="mt-6 max-w-2xl text-base leading-8 text-white/70">Use our construction estimator to calculate quantities, analyse rates and prepare professional bills of quantities for building, civil, electrical, mechanical and specialist fence work.</p>
+
+            <div className="mt-8 grid gap-3 sm:grid-cols-3">
+              {[
+                { icon: Calculator, label: "Site calculators" },
+                { icon: FileSpreadsheet, label: "Editable BOQ" },
+                { icon: Smartphone, label: "Install on phone" },
+              ].map(({ icon: Icon, label }) => (
+                <div key={label} className="border border-white/12 bg-white/5 p-4 backdrop-blur">
+                  <Icon className="h-5 w-5 text-[#F2B544]" />
+                  <p className="mt-3 text-sm font-bold">{label}</p>
+                </div>
+              ))}
+            </div>
+
+            <Link href="/estimator" className="mt-8 inline-flex items-center gap-3 bg-[#A82B05] px-7 py-4 text-sm font-bold text-white transition hover:bg-[#C8A45D]">
+              Explore the Estimator <ArrowRight className="h-5 w-5" />
+            </Link>
+          </div>
+
+          <div className="border border-white/12 bg-[#0D3B66] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.22)] md:p-8">
+            <div className="grid grid-cols-[1fr_auto] items-center border-b border-white/12 pb-4">
+              <div><p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#F2B544]">Live construction workflow</p><p className="mt-2 text-xl font-bold">From measurement to priced bill</p></div>
+              <span className="rounded-full bg-emerald-400/15 px-3 py-2 text-xs font-bold text-emerald-200">Beta</span>
+            </div>
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              {["Concrete & blockwork", "Reinforcement & formwork", "Electrical & mechanical", "Fence & external works"].map((item, index) => (
+                <div key={item} className="border border-white/10 bg-[#071E33]/45 p-5">
+                  <span className="text-xs font-bold text-[#F2B544]">0{index + 1}</span>
+                  <p className="mt-4 font-bold">{item}</p>
+                  <div className="mt-4 h-1 bg-white/10"><div className="h-full bg-[#A82B05]" style={{ width: `${58 + index * 11}%` }} /></div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 flex items-center justify-between border border-[#F2B544]/25 bg-[#F2B544]/10 p-4"><span className="text-sm text-white/65">Professional output</span><strong>Excel · PDF · BOQ</strong></div>
+          </div>
         </div>
       </section>
 
