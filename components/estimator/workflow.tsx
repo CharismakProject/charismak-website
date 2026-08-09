@@ -214,7 +214,7 @@ export default function Workflow({ onOpenConcrete, onOpenBlockwork, onOpenBill, 
                   </div>
 
                   {!isCollapsed ? (
-                    <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-4">
+                    <div className="mt-4 grid grid-cols-1 gap-x-3 gap-y-4 min-[340px]:grid-cols-2">
                       <div className="contents">
                         <label className="block text-sm font-medium text-[#0B2942]">Section name
                           <input value={s.name} onChange={(e) => updateSection(s.id, { name: e.target.value } as any)} className="mt-2 w-full rounded-3xl border bg-[#F8FAFC] px-4 py-3" />
@@ -256,7 +256,7 @@ export default function Workflow({ onOpenConcrete, onOpenBlockwork, onOpenBill, 
                           </select>
                         </label>
 
-                        <div className="col-span-2 mt-1 border-t border-[#DFE6EE] pt-4">
+                        <div className="col-span-1 mt-1 border-t border-[#DFE6EE] pt-4 min-[340px]:col-span-2">
                           <div className="text-sm font-semibold">Gates ({s.gates.length}) — total {s.gates.reduce((t: number, g: any) => t + (g.widthM || 0), 0)} m</div>
                           <div className="mt-2 space-y-2">
                             {s.gates.map((g: any) => (

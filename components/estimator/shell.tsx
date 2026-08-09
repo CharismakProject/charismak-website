@@ -202,7 +202,7 @@ function EstimatorShellContent() {
           </main>
         </div>
       </div>
-      <nav aria-label="Mobile navigation" className="fixed inset-x-2 bottom-2 z-50 mx-auto grid h-[58px] max-w-md grid-cols-5 gap-1 rounded-2xl border border-white/60 bg-[#071E33]/95 p-1.5 text-white shadow-[0_14px_38px_rgba(7,30,51,0.32)] backdrop-blur-xl lg:hidden">
+      <nav aria-label="Mobile navigation" className="estimator-mobile-nav fixed inset-x-2 bottom-2 z-50 mx-auto grid h-[58px] max-w-md grid-cols-5 gap-1 rounded-2xl border border-white/60 bg-[#071E33]/95 p-1.5 text-white shadow-[0_14px_38px_rgba(7,30,51,0.32)] backdrop-blur-xl lg:hidden">
         {[
           { label: "Home", page: "dashboard" as PageKey, action: () => navigate("dashboard") },
           { label: "Estimate", page: "estimates" as PageKey, action: () => navigate("estimates") },

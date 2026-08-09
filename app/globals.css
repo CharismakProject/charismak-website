@@ -29,6 +29,7 @@ body {
   --background: #f4f7fa;
   --foreground: #0b2942;
   min-height: 100vh;
+  min-height: 100dvh;
   background: #f4f7fa;
   color: #0b2942;
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
@@ -90,5 +91,29 @@ body {
     min-height: 44px;
     border-radius: 14px;
     font-size: 14px;
+  }
+
+  [data-estimator-app] .estimator-mobile-nav {
+    bottom: max(0.5rem, env(safe-area-inset-bottom));
+    max-width: calc(100vw - 1rem);
+  }
+}
+
+@media (max-width: 339px) {
+  [data-estimator-app] .fence-workflow {
+    font-size: 13px;
+  }
+
+  [data-estimator-app] .fence-workflow input:not([type="checkbox"]):not([type="radio"]),
+  [data-estimator-app] .fence-workflow select,
+  [data-estimator-app] .fence-workflow textarea {
+    padding-left: 0.7rem !important;
+    padding-right: 0.7rem !important;
+  }
+
+  [data-estimator-app] .estimator-mobile-nav {
+    gap: 0;
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
   }
 }

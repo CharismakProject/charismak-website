@@ -14,6 +14,13 @@ export default function PwaManager() {
   const [platform, setPlatform] = useState<"ios" | "android" | "desktop">("desktop");
 
   useEffect(() => {
+    let refreshingForUpdate = false;
+    const handleControllerChange = () => {
+      if (refreshingForUpdate) return;
+      refreshingForUpdate = true;
+      window.location.reload();
+    };
+
     const standalone =
       window.matchMedia("(display-mode: standalone)").matches ||
       Boolean((navigator as Navigator & { standalone?: boolean }).standalone);
@@ -33,8 +40,10 @@ export default function PwaManager() {
     }, 900);
 
     if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.addEventListener("controllerchange", handleControllerChange);
       void navigator.serviceWorker
         .register("/estimator-sw.js", { scope: "/estimator/app" })
+        .then((registration) => registration.update())
         .catch((error: unknown) => {
           console.error("Estimator service worker registration failed", error);
         });
@@ -55,6 +64,7 @@ export default function PwaManager() {
     window.addEventListener("appinstalled", handleInstalled);
     return () => {
       window.clearTimeout(welcomeTimer);
+      navigator.serviceWorker?.removeEventListener("controllerchange", handleControllerChange);
       window.removeEventListener("beforeinstallprompt", handlePrompt);
       window.removeEventListener("appinstalled", handleInstalled);
     };
