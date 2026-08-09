@@ -29,6 +29,11 @@ const formatDate = (value: string) =>
 const itemCount = (bill: Bill) =>
   bill.sections.reduce((total, section) => total + section.items.length, 0);
 
+const isRegisterBill = (bill: Bill) =>
+  bill.status === "completed" ||
+  itemCount(bill) > 0 ||
+  bill.title === "New Bill of Quantities";
+
 export default function EstimatesArchive({
   onOpenBill,
   onStartFence,
@@ -40,7 +45,7 @@ export default function EstimatesArchive({
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    const refresh = () => setBills(loadBills());
+    const refresh = () => setBills(loadBills().filter(isRegisterBill));
     refresh();
     window.addEventListener(BILL_UPDATED_EVENT, refresh);
     return () => window.removeEventListener(BILL_UPDATED_EVENT, refresh);
@@ -57,7 +62,33 @@ export default function EstimatesArchive({
   };
 
   const startBlankBill = () => {
-    createNewBill({ title: "New Bill of Quantities" });
+    const now = Date.now();
+    createNewBill({
+      title: "New Bill of Quantities",
+      sections: [
+        {
+          id: "manual-items",
+          title: "Additional Items",
+          items: [
+            {
+              id: `manual-${now}`,
+              sourceCalculationId: null,
+              sourceModule: "manual",
+              description: "Additional construction item",
+              unit: "item",
+              calculatedQuantity: 1,
+              billQuantity: 1,
+              materialRate: null,
+              labourRate: null,
+              plantRate: null,
+              otherRate: null,
+              allInRate: null,
+              amount: null,
+            },
+          ],
+        },
+      ],
+    });
     onOpenBill();
   };
 
@@ -77,7 +108,7 @@ export default function EstimatesArchive({
     if (!window.confirm(`Delete the draft “${bill.title}”?`)) return;
     try {
       deleteDraftBill(bill.id);
-      setBills(loadBills());
+      setBills(loadBills().filter(isRegisterBill));
       setMessage("Draft deleted.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Unable to delete draft.");
