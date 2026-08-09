@@ -3,8 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/react";
-import Navbar from "./components/Navbar";
-import Footer from "./components/Footer";
+import SiteChrome from "./components/SiteChrome";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -53,9 +52,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body className="bg-white text-[#151B22] antialiased">
-        <Navbar />
-        {children}
-        <Footer />
+        <SiteChrome>{children}</SiteChrome>
         <Analytics />
       </body>
     </html>

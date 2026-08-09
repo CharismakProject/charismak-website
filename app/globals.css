@@ -24,3 +24,48 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+[data-estimator-app] {
+  --background: #f4f7fa;
+  --foreground: #0b2942;
+  min-height: 100vh;
+  background: #f4f7fa;
+  color: #0b2942;
+}
+
+[data-estimator-app] .app-backdrop {
+  background-color: #f3f6f9;
+  background-image:
+    radial-gradient(circle at 82% 2%, rgba(13, 59, 102, 0.11), transparent 26rem),
+    radial-gradient(circle at 38% 24%, rgba(200, 50, 10, 0.045), transparent 22rem),
+    linear-gradient(rgba(13, 59, 102, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(13, 59, 102, 0.025) 1px, transparent 1px);
+  background-position: center;
+  background-size: auto, auto, 32px 32px, 32px 32px;
+  background-attachment: fixed;
+}
+
+[data-estimator-app] button,
+[data-estimator-app] input,
+[data-estimator-app] select,
+[data-estimator-app] textarea {
+  font: inherit;
+}
+
+[data-estimator-app] input:not([type="checkbox"]):not([type="radio"]),
+[data-estimator-app] select {
+  appearance: none;
+}
+
+[data-estimator-app] input[type="checkbox"],
+[data-estimator-app] input[type="radio"] {
+  appearance: auto;
+}
+
+[data-estimator-app] input:focus,
+[data-estimator-app] select:focus,
+[data-estimator-app] textarea:focus {
+  border-color: rgba(13, 59, 102, 0.72) !important;
+  box-shadow: 0 0 0 3px rgba(13, 59, 102, 0.09);
+  outline: none;
+}

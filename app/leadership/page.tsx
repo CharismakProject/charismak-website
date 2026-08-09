@@ -56,7 +56,7 @@ export default function LeadershipPage() {
 
             <p className="max-w-2xl text-base leading-8 text-[#3A4653] lg:justify-self-end">
               The individuals who directly lead, coordinate and supervise
-              Charismak's day-to-day operations and active projects.
+              Charismak&apos;s day-to-day operations and active projects.
             </p>
           </div>
 

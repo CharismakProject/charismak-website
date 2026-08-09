@@ -21,9 +21,7 @@ export const metadata: Metadata = {
   },
 };
 
-const estimatorUrl =
-  process.env.NEXT_PUBLIC_ESTIMATOR_URL ||
-  "https://charismak-construction-estimator-beta.charismakprojectnigl.chatgpt.site";
+const estimatorUrl = "/estimator/app";
 
 const steps = [
   {
@@ -73,8 +71,6 @@ export default function EstimatorBetaPage() {
               <div className="mt-9 flex flex-col gap-3 sm:flex-row">
                 <Link
                   href={estimatorUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   className="inline-flex items-center justify-center gap-3 bg-[#D8320A] px-7 py-4 text-sm font-black text-white shadow-[0_16px_40px_rgba(216,50,10,0.28)] transition hover:bg-[#F2B544] hover:text-[#071E33]"
                 >
                   Open & Install Beta <Download className="h-5 w-5" />
@@ -170,8 +166,6 @@ export default function EstimatorBetaPage() {
             </p>
             <Link
               href={estimatorUrl}
-              target="_blank"
-              rel="noopener noreferrer"
               className="mt-7 inline-flex items-center gap-3 bg-white px-6 py-4 text-sm font-black text-[#071E33]"
             >
               Start beta testing <ArrowRight className="h-5 w-5" />
