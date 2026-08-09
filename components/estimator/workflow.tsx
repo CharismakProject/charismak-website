@@ -7,7 +7,7 @@ import ShellButton from "./ui/button";
 import { useEstimate } from "./estimate-provider";
 import ReviewWorkspace from "../bill/review-workspace";
 import { adaptFenceScopeToBill } from "@/lib/billing/fence-adapter";
-import { getOrCreateDraftBill, replaceCalculationSectionsInBill } from "@/lib/billing/store";
+import { getOrCreateLinkedDraftBill, replaceCalculationSectionsInBill } from "@/lib/billing/store";
 
 const steps = ["Project", "Sections", "Structure", "Review"];
 
@@ -20,7 +20,7 @@ type WorkflowProps = {
 
 export default function Workflow({ onOpenConcrete, onOpenBlockwork, onOpenBill, onOpenEstimates }: WorkflowProps) {
   const estimate = useEstimate();
-  const { projectInfo, setProjectField, sections, addSection, updateSection, removeSection, duplicateSection, addGateToSection, removeGateFromSection, totals, calculateSectionLayout, setActiveStage, startNewEstimate, clearDraft } = estimate as any;
+  const { projectInfo, setProjectField, sections, addSection, updateSection, removeSection, duplicateSection, addGateToSection, removeGateFromSection, totals, calculateSectionLayout, setActiveStage, startNewEstimate, clearDraft, estimateBillId, setEstimateBillId } = estimate as any;
 
   const [newGateWidth, setNewGateWidth] = useState(1.2);
   const [newGateType, setNewGateType] = useState("pedestrian");
@@ -32,11 +32,49 @@ export default function Workflow({ onOpenConcrete, onOpenBlockwork, onOpenBill, 
 
   const currentStage = estimate.activeStage ?? 1;
 
+  const getInvalidSections = () =>
+    sections
+      .map((section: any) => ({
+        section,
+        layout: calculateSectionLayout(section.id),
+      }))
+      .filter(({ layout }: any) => !layout || layout.error);
+
+  const focusInvalidSection = (invalid: any) => {
+    setSelectedSectionId(invalid.section.id);
+    setCollapsed((current) => ({
+      ...current,
+      [invalid.section.id]: false,
+    }));
+    const requiredHeight =
+      Number(invalid.section.defaultPanelComposition.blockWallHeightM || 0) +
+      Number(invalid.section.defaultPanelComposition.upperInfillHeightM || 0);
+    alert(
+      `${invalid.section.name}: ${invalid.layout?.error || "Section details are incomplete."}` +
+        (requiredHeight > Number(invalid.section.columnBodyHeightM || 0)
+          ? ` Set total column height to at least ${Number(requiredHeight.toFixed(3))} m.`
+          : ""),
+    );
+  };
+
   function goNext() {
     if (currentStage === 1) {
       if (!validProject) { alert("Please fill project name, client and location"); return; }
       setActiveStage(2);
       return;
+    }
+    if (currentStage === 2 || currentStage === 3) {
+      if (sections.length === 0) {
+        alert("Add at least one fence section before continuing.");
+        setActiveStage(2);
+        return;
+      }
+      const invalid = getInvalidSections()[0];
+      if (invalid) {
+        focusInvalidSection(invalid);
+        setActiveStage(2);
+        return;
+      }
     }
     if (currentStage < 4) setActiveStage(currentStage + 1);
   }
@@ -64,12 +102,22 @@ export default function Workflow({ onOpenConcrete, onOpenBlockwork, onOpenBill, 
   }
 
   function generateFenceBoq() {
-    const measuredSections = sections
-      .map((section: any) => ({
-        section,
-        layout: calculateSectionLayout(section.id),
-      }))
-      .filter(({ layout }: any) => layout && !layout.error);
+    const measuredSections = sections.map((section: any) => ({
+      section,
+      layout: calculateSectionLayout(section.id),
+    }));
+
+    const invalid = measuredSections.find(
+      ({ layout }: any) => !layout || layout.error,
+    );
+    if (invalid) {
+      setFenceBillMessage(
+        `${invalid.section.name}: ${invalid.layout?.error || "Section details are incomplete."} Fix this section before generating the BOQ; no section has been omitted.`,
+      );
+      focusInvalidSection(invalid);
+      setActiveStage(2);
+      return;
+    }
 
     if (measuredSections.length === 0) {
       setFenceBillMessage("Add at least one valid fence section before generating the BOQ.");
@@ -77,9 +125,10 @@ export default function Workflow({ onOpenConcrete, onOpenBlockwork, onOpenBill, 
     }
 
     try {
-      const bill = getOrCreateDraftBill({
+      const bill = getOrCreateLinkedDraftBill(estimateBillId, {
         title: `${projectInfo.projectName || "Fence Project"} Bill of Quantities`,
       });
+      if (bill.id !== estimateBillId) setEstimateBillId(bill.id);
       bill.title = `${projectInfo.projectName || "Fence Project"} Bill of Quantities`;
       bill.projectName = projectInfo.projectName || "Fence Project";
       bill.clientName = projectInfo.clientName || null;
@@ -212,6 +261,14 @@ export default function Workflow({ onOpenConcrete, onOpenBlockwork, onOpenBill, 
           <div className="grid gap-3">
             {sections.map((s: any) => {
               const isCollapsed = !!collapsed[s.id];
+              const requiredColumnHeight = Number(
+                (
+                  Number(s.defaultPanelComposition.blockWallHeightM || 0) +
+                  Number(s.defaultPanelComposition.upperInfillHeightM || 0)
+                ).toFixed(3),
+              );
+              const columnHeightIsLow =
+                Number(s.columnBodyHeightM || 0) < requiredColumnHeight;
               return (
                 <Card key={s.id} title={s.name}>
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -246,9 +303,27 @@ export default function Workflow({ onOpenConcrete, onOpenBlockwork, onOpenBill, 
                         </label>
                       </div>
                       <div className="contents">
-                        <label className="block text-sm font-medium text-[#0B2942]">Total column height (m)
-                          <input type="number" step="0.01" value={s.columnBodyHeightM} onChange={(e) => updateSection(s.id, { columnBodyHeightM: Number(e.target.value) } as any)} className="mt-2 w-full rounded-3xl border bg-[#F8FAFC] px-4 py-3" />
-                        </label>
+                        <div className="block text-sm font-medium text-[#0B2942]">
+                          <label htmlFor={`${s.id}-column-height`}>Total column height (m)</label>
+                          <input id={`${s.id}-column-height`} type="number" step="0.01" value={s.columnBodyHeightM} onChange={(e) => updateSection(s.id, { columnBodyHeightM: Number(e.target.value) } as any)} className={`mt-2 w-full rounded-3xl border bg-[#F8FAFC] px-4 py-3 ${columnHeightIsLow ? "border-[#C8320A]" : ""}`} />
+                          {columnHeightIsLow ? (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                updateSection(s.id, {
+                                  columnBodyHeightM: requiredColumnHeight,
+                                } as any)
+                              }
+                              className="mt-2 w-full rounded-xl bg-[#FFF0E9] px-3 py-2 text-left text-xs font-bold text-[#C8320A]"
+                            >
+                              Use minimum {requiredColumnHeight} m (wall + infill)
+                            </button>
+                          ) : (
+                            <span className="mt-2 block text-[11px] font-normal text-[#6B7D8F]">
+                              Minimum for this panel: {requiredColumnHeight} m
+                            </span>
+                          )}
+                        </div>
                         <label className="block text-sm font-medium text-[#0B2942]">Maximum column spacing (m)
                           <input type="number" step="0.1" value={s.maximumColumnSpacingM} onChange={(e) => updateSection(s.id, { maximumColumnSpacingM: Number(e.target.value) } as any)} className="mt-2 w-full rounded-3xl border bg-[#F8FAFC] px-4 py-3" />
                         </label>
@@ -389,9 +464,32 @@ export default function Workflow({ onOpenConcrete, onOpenBlockwork, onOpenBill, 
             {sections.map((s: any) => {
               const res = calculateSectionLayout(s.id);
               const p = s.boqProfile;
+              const requiredColumnHeight = Number(
+                (
+                  Number(s.defaultPanelComposition.blockWallHeightM || 0) +
+                  Number(s.defaultPanelComposition.upperInfillHeightM || 0)
+                ).toFixed(3),
+              );
               return (
                 <Card key={s.id} title={s.name}>
-                  {res?.error ? <div className="text-red-600">{res.error}</div> : (
+                  {res?.error ? (
+                    <div className="rounded-2xl bg-[#FFF0E9] p-4 text-[#9B2D0B]">
+                      <p className="font-semibold">{res.error}</p>
+                      {requiredColumnHeight > Number(s.columnBodyHeightM || 0) ? (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updateSection(s.id, {
+                              columnBodyHeightM: requiredColumnHeight,
+                            } as any)
+                          }
+                          className="mt-3 rounded-xl bg-[#C8320A] px-4 py-2 text-sm font-bold text-white"
+                        >
+                          Fix: set column height to {requiredColumnHeight} m
+                        </button>
+                      ) : null}
+                    </div>
+                  ) : (
                     <div className="grid gap-2">
                       <div>Gross length: {res?.grossSectionLengthM} m</div>
                       <div>Gate opening width: {res?.totalGateOpeningWidthM} m</div>
@@ -535,8 +633,7 @@ export default function Workflow({ onOpenConcrete, onOpenBlockwork, onOpenBill, 
             onOpenBlockwork={onOpenBlockwork}
             onOpenEstimates={onOpenEstimates}
             onStartFence={() => {
-              startNewEstimate();
-              setActiveStage(1);
+              if (startNewEstimate()) setActiveStage(1);
             }}
           />
         </section>

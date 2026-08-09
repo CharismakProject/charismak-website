@@ -14,6 +14,12 @@ import {
   normalizeFenceBoqProfile,
   type FenceBoqProfile,
 } from "@/lib/fence/fence-boq-profile";
+import {
+  createNewBill,
+  loadBill,
+  loadBillById,
+  selectBill,
+} from "@/lib/billing/store";
 
 const STORAGE_KEY = "charismak-estimator-draft";
 
@@ -34,12 +40,14 @@ export type SectionState = FenceSection & {
 
 type EstimateState = {
   activeStage: number;
+  estimateBillId: string | null;
   teamMode: boolean;
   projectInfo: ProjectInfo;
   sections: SectionState[];
   setProjectField: (field: keyof ProjectInfo, value: string) => void;
   setActiveStage: (n: number) => void;
-  startNewEstimate: () => void;
+  setEstimateBillId: (id: string | null) => void;
+  startNewEstimate: () => boolean;
   clearDraft: () => void;
   addSection: (
     section?: Partial<SectionState>,
@@ -104,6 +112,7 @@ export function EstimateProvider({ children }: { children: React.ReactNode }) {
   const [teamMode, setTeamMode] = useState(true);
   const [projectInfo, setProjectInfo] = useState<ProjectInfo>(defaultProject);
   const [sections, setSections] = useState<SectionState[]>([]);
+  const [estimateBillId, setEstimateBillId] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -126,6 +135,40 @@ export function EstimateProvider({ children }: { children: React.ReactNode }) {
         );
       }
       if (typeof parsed.activeStage === "number") setActiveStageState(parsed.activeStage);
+
+      let restoredBillId =
+        typeof parsed.estimateBillId === "string" ? parsed.estimateBillId : null;
+      if (!restoredBillId) {
+        // One-time migration for drafts created before estimates were linked
+        // to their own bill. Only reuse an editable fence bill that clearly
+        // belongs to the restored project; never bind to a completed issue.
+        const activeBill = loadBill();
+        if (
+          activeBill?.status === "draft" &&
+          activeBill.sourceModules?.includes("fence") &&
+          activeBill.projectName &&
+          activeBill.projectName === parsed.projectInfo?.projectName
+        ) {
+          restoredBillId = activeBill.id;
+        } else if (Array.isArray(parsed.sections) && parsed.sections.length > 0) {
+          // Older beta builds could leave a new fence scope pointing at the
+          // last completed bill. Give that restored scope an independent
+          // editable bill during migration rather than reopening the locked
+          // historical issue.
+          const migratedBill = createNewBill({
+            title: `${parsed.projectInfo?.projectName || "Fence Project"} Bill of Quantities`,
+            projectName: parsed.projectInfo?.projectName || null,
+            clientName: parsed.projectInfo?.clientName || null,
+            location: parsed.projectInfo?.location || null,
+            currency: parsed.projectInfo?.currency || "NGN",
+          });
+          restoredBillId = migratedBill.id;
+        }
+      }
+      if (restoredBillId && loadBillById(restoredBillId)) {
+        setEstimateBillId(restoredBillId);
+        selectBill(restoredBillId);
+      }
     } catch {
       localStorage.removeItem(STORAGE_KEY);
     } finally {
@@ -146,18 +189,34 @@ export function EstimateProvider({ children }: { children: React.ReactNode }) {
       projectInfo,
       sections,
       activeStage,
+      estimateBillId,
     });
     localStorage.setItem(STORAGE_KEY, payload);
-  }, [projectInfo, sections, activeStage, hydrated]);
+  }, [projectInfo, sections, activeStage, estimateBillId, hydrated]);
 
   const setProjectField = (field: keyof ProjectInfo, value: string) => setProjectInfo((p) => ({ ...p, [field]: value }));
 
-  const startNewEstimate = () => {
+  const startNewEstimate = (): boolean => {
     const hasDraft =
       projectInfo.projectName.trim().length > 0 || sections.length > 0;
+    if (!hasDraft && estimateBillId) {
+      const existing = loadBillById(estimateBillId);
+      const existingItemCount =
+        existing?.sections.reduce(
+          (total, section) => total + section.items.length,
+          0,
+        ) ?? 0;
+      if (existing?.status === "draft" && existingItemCount === 0) {
+        selectBill(existing.id);
+        setActiveStageState(1);
+        return true;
+      }
+    }
     if (hasDraft) {
-      const ok = window.confirm("A draft estimate exists. Start a new estimate and discard the existing draft?");
-      if (!ok) return;
+      const ok = window.confirm(
+        "Start a new fence estimate? The current bill will remain safely available in Bill Register.",
+      );
+      if (!ok) return false;
       const raw = localStorage.getItem(STORAGE_KEY);
       let current: Record<string, unknown> = {};
       try {
@@ -168,11 +227,21 @@ export function EstimateProvider({ children }: { children: React.ReactNode }) {
       delete current.projectInfo;
       delete current.sections;
       delete current.activeStage;
+      delete current.estimateBillId;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
     }
+    const newBill = createNewBill({
+      title: "New Fence Estimate",
+      projectName: null,
+      clientName: null,
+      location: null,
+      currency: "NGN",
+    });
     setProjectInfo(defaultProject);
     setSections([]);
+    setEstimateBillId(newBill.id);
     setActiveStageState(1);
+    return true;
   };
 
   const clearDraft = () => {
@@ -188,9 +257,11 @@ export function EstimateProvider({ children }: { children: React.ReactNode }) {
     delete current.projectInfo;
     delete current.sections;
     delete current.activeStage;
+    delete current.estimateBillId;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
     setProjectInfo(defaultProject);
     setSections([]);
+    setEstimateBillId(null);
     setActiveStageState(0);
   };
 
@@ -273,11 +344,13 @@ export function EstimateProvider({ children }: { children: React.ReactNode }) {
 
   const value: EstimateState = {
     activeStage,
+    estimateBillId,
     teamMode,
     projectInfo,
     sections,
     setProjectField,
     setActiveStage: setActiveStageState,
+    setEstimateBillId,
     startNewEstimate,
     clearDraft,
     addSection,

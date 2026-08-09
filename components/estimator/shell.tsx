@@ -130,8 +130,7 @@ function EstimatorShellContent() {
   const openBlockwork = useCallback(() => navigate("quick", "blockwork"), [navigate]);
   const openBill = useCallback(() => navigate("bill"), [navigate]);
   const startFence = useCallback(() => {
-    estimate.startNewEstimate();
-    navigate("fence");
+    if (estimate.startNewEstimate()) navigate("fence");
   }, [estimate, navigate]);
 
   const itemCount = useMemo(

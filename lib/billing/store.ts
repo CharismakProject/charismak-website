@@ -207,11 +207,37 @@ export function getOrCreateDraftBill(overrides?: Partial<Bill>): Bill {
   const current = loadBill();
   if (!current) return createNewBill(overrides);
   if (isBillLocked(current)) {
-    throw new Error(
-      `“${current.title}” Version ${current.version} is completed. Open Bill / BOQ and create a revision before adding new calculations.`,
-    );
+    // A completed issue is immutable. A fresh calculator result therefore
+    // starts a new independent draft instead of silently targeting the old
+    // completed bill. Revisions are still created explicitly from the
+    // completed bill workspace.
+    return createNewBill(overrides);
   }
   return current;
+}
+
+/**
+ * Resolve the draft that belongs to a specific estimator workflow.
+ *
+ * Unlike getOrCreateDraftBill, this never falls back to some unrelated active
+ * bill. That distinction is what lets several fence estimates coexist while
+ * completed versions remain locked.
+ */
+export function getOrCreateLinkedDraftBill(
+  billId: string | null,
+  overrides?: Partial<Bill>,
+): Bill {
+  if (!billId) return createNewBill(overrides);
+
+  const linked = loadBillById(billId);
+  if (!linked) return createNewBill(overrides);
+  if (isBillLocked(linked)) {
+    throw new Error(
+      `“${linked.title}” Version ${linked.version} is completed and locked. Start a new estimate for a separate bill, or create a revision to continue this bill.`,
+    );
+  }
+
+  return selectBill(linked.id);
 }
 
 export function markBillCompleted(id: string): Bill {

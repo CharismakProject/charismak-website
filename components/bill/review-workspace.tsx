@@ -25,6 +25,7 @@ import { consolidateProcurementItems } from "@/lib/billing/procurement";
 import { applyPriceLibraryRates } from "@/lib/pricing/boq-rates";
 import { loadPriceItems, loadRateTemplates } from "@/lib/pricing/store";
 import ShellButton from "../estimator/ui/button";
+import { useEstimate } from "../estimator/estimate-provider";
 
 type ReviewWorkspaceProps = {
   onOpenConcrete: () => void;
@@ -59,6 +60,7 @@ export default function ReviewWorkspace({
   onStartFence,
   onOpenEstimates,
 }: ReviewWorkspaceProps) {
+  const estimate = useEstimate();
   const [bill, setBill] = useState<Bill | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -232,6 +234,9 @@ export default function ReviewWorkspace({
     if (!bill) return;
     try {
       const revision = createBillRevision(bill.id);
+      if (estimate.estimateBillId === bill.id) {
+        estimate.setEstimateBillId(revision.id);
+      }
       setBill(revision);
       setMessage(
         `Version ${revision.version} created as an editable draft. The completed version remains unchanged.`,
