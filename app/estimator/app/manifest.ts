@@ -2,13 +2,13 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    id: "/estimator/app/",
+    id: "/estimator/app",
     name: "Charismak Construction Estimator",
     short_name: "Charismak Estimator",
     description:
       "Measure construction work, analyse rates and export professional bills of quantities.",
     start_url: "/estimator/app#dashboard",
-    scope: "/estimator/app/",
+    scope: "/estimator/app",
     display: "standalone",
     background_color: "#F4F7FA",
     theme_color: "#071E33",

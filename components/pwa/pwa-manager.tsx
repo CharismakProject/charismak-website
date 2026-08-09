@@ -27,7 +27,7 @@ export default function PwaManager() {
 
     if ("serviceWorker" in navigator) {
       void navigator.serviceWorker
-        .register("/estimator-sw.js", { scope: "/estimator/app/" })
+        .register("/estimator-sw.js", { scope: "/estimator/app" })
         .catch((error: unknown) => {
           console.error("Estimator service worker registration failed", error);
         });
@@ -70,7 +70,7 @@ export default function PwaManager() {
       ? "In Safari, tap Share, then choose Add to Home Screen."
       : platform === "android"
         ? "In Chrome, tap the three-dot menu, then choose Install app or Add to Home screen."
-        : "In Chrome or Edge, open the browser menu and choose Install Charismak Estimator.";
+        : "In Chrome, open the top-right three-dot menu, then choose Cast, save and share → Install page as app. In Edge, use Apps → Install this site as an app.";
 
   return (
     <div
