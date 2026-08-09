@@ -263,7 +263,7 @@ export default function ReviewWorkspace({
     }
   };
 
-  if (!bill || itemCount === 0) {
+  if (!bill) {
     return (
       <section className="overflow-hidden rounded-[30px] border border-[#d6dfe9] bg-white shadow-[0_20px_60px_rgba(7,30,51,0.08)]">
         <div className="grid gap-8 p-6 md:p-8 lg:grid-cols-[1fr_0.8fr] lg:items-center">
@@ -345,6 +345,7 @@ export default function ReviewWorkspace({
             <div className="col-span-2 rounded-2xl bg-[#C8320A] p-4 sm:col-span-1"><span className="text-xs text-white/75">Grand total</span><strong className="mt-1 block text-lg">{formatCurrency(totals.grandTotal, bill.currency)}</strong></div>
           </div>
         </div>
+        {itemCount === 0 ? <div className="mt-5 rounded-2xl border border-[#E7B34B]/35 bg-white/8 p-4 text-sm leading-6 text-white/80">This bill is open and editable, but it has no measured items yet. For a fence estimate, use <strong className="text-white">Generate / Update Fence BOQ</strong> above. For a manual bill, use <strong className="text-white">Add manual item</strong>.</div> : null}
         <div className="mt-6 flex flex-wrap gap-3 border-t border-white/12 pt-5">
           <ShellButton onClick={exportExcel}>Export Excel</ShellButton>
           <button type="button" onClick={printBill} className="rounded-full border border-white/35 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10">Print / Save PDF</button>
