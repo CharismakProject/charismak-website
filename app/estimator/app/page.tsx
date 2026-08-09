@@ -4,9 +4,11 @@ import PwaManager from "@/components/pwa/pwa-manager";
 
 export default function EstimatorApplicationPage() {
   return (
-    <BetaAccessGate>
+    <>
       <PwaManager />
-      <EstimatorShell />
-    </BetaAccessGate>
+      <BetaAccessGate>
+        <EstimatorShell />
+      </BetaAccessGate>
+    </>
   );
 }

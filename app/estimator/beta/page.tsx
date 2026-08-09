@@ -37,7 +37,7 @@ const steps = [
   {
     number: "03",
     title: "Install on your phone",
-    text: "Choose Install App or Add to Home Screen from your browser menu.",
+    text: "Tap the permanent Install App button. If needed, it will show the exact step for your phone.",
   },
 ];
 
@@ -73,7 +73,7 @@ export default function EstimatorBetaPage() {
                   href={estimatorUrl}
                   className="inline-flex items-center justify-center gap-3 bg-[#D8320A] px-7 py-4 text-sm font-black text-white shadow-[0_16px_40px_rgba(216,50,10,0.28)] transition hover:bg-[#F2B544] hover:text-[#071E33]"
                 >
-                  Open & Install Beta <Download className="h-5 w-5" />
+                  Open Beta & Install <Download className="h-5 w-5" />
                 </Link>
                 <Link
                   href="/estimator"
@@ -143,15 +143,15 @@ export default function EstimatorBetaPage() {
               <div>
                 <h2 className="text-lg font-bold">Android</h2>
                 <p className="mt-3 text-sm leading-7 text-[#526171]">
-                  Open the estimator in Chrome, tap the three-dot menu, then
-                  choose <strong>Install app</strong> or <strong>Add to Home screen</strong>.
+                  Open the estimator, then tap the visible <strong>Install App</strong>
+                  button. Chrome will open its native prompt or show the exact menu step.
                 </p>
               </div>
               <div>
                 <h2 className="text-lg font-bold">iPhone</h2>
                 <p className="mt-3 text-sm leading-7 text-[#526171]">
-                  Open the estimator in Safari, tap <strong>Share</strong>, then
-                  choose <strong>Add to Home Screen</strong>.
+                  Open the estimator in Safari and tap the visible <strong>Install App</strong>
+                  button for the Share → Add to Home Screen instruction.
                 </p>
               </div>
             </div>
