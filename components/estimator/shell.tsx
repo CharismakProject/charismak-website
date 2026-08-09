@@ -194,7 +194,7 @@ function EstimatorShellContent() {
         <div className="flex min-h-screen min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-30 border-b border-white/60 bg-white/85 px-4 py-2 shadow-sm backdrop-blur-xl lg:hidden"><div className="flex items-center justify-between gap-3"><EstimatorLogo small /><div className="flex items-center gap-2"><span className="hidden text-[10px] font-bold uppercase tracking-[0.14em] text-[#6C7D8D] min-[390px]:inline">{activePageLabel}</span><button type="button" onClick={() => setBillOpen(true)} className="rounded-full border border-[#0D3B66] px-3 py-2 text-xs font-bold text-[#0D3B66]">BOQ · {itemCount}</button></div></div></header>
 
-          <main className="flex-1 px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
+          <main className="min-w-0 flex-1 overflow-x-hidden px-3 py-4 sm:px-6 sm:py-5 lg:px-8 lg:py-7">
             <div className="mx-auto flex max-w-[1440px] flex-col gap-6 pb-28 lg:pb-10">
               <div className="hidden items-center justify-between gap-6 rounded-[30px] border border-[#d6dfe9] bg-white px-6 py-4 shadow-sm lg:flex"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0D3B66]/60">{activePageLabel}</p><h1 className="mt-1 text-2xl font-bold">Charismak Construction Estimator</h1></div><div className="flex flex-wrap items-center gap-2"><ShellButton onClick={() => navigate("estimates")}>New Project Estimate</ShellButton><ShellButton variant="secondary" onClick={startFence}>Fence Module</ShellButton><ShellButton variant="secondary" onClick={() => navigate("quick")}>Quick Calculator</ShellButton><button type="button" onClick={() => navigate("feedback")} className="rounded-full px-4 py-3 text-sm font-bold text-[#0D3B66] hover:bg-[#EEF3F8]">Review</button><button type="button" onClick={() => void betaSession.signOut()} className="rounded-full px-4 py-3 text-sm font-bold text-[#526579] hover:bg-[#EEF3F8]">Sign out</button><button type="button" onClick={() => setBillOpen(true)} className="rounded-full border border-[#0D3B66] px-4 py-3 text-sm font-bold text-[#0D3B66]">Bill ({itemCount}){itemCount > 0 ? ` · ${money(bill?.totals?.grandTotal ?? 0, bill?.currency)}` : ""}</button></div></div>
               {renderContent()}
@@ -202,14 +202,14 @@ function EstimatorShellContent() {
           </main>
         </div>
       </div>
-      <nav aria-label="Mobile navigation" className="fixed inset-x-3 bottom-3 z-50 mx-auto grid max-w-md grid-cols-5 gap-1 rounded-[22px] border border-white/60 bg-[#071E33]/95 p-2 text-white shadow-[0_18px_55px_rgba(7,30,51,0.35)] backdrop-blur-xl lg:hidden">
+      <nav aria-label="Mobile navigation" className="fixed inset-x-2 bottom-2 z-50 mx-auto grid h-[58px] max-w-md grid-cols-5 gap-1 rounded-2xl border border-white/60 bg-[#071E33]/95 p-1.5 text-white shadow-[0_14px_38px_rgba(7,30,51,0.32)] backdrop-blur-xl lg:hidden">
         {[
           { label: "Home", page: "dashboard" as PageKey, action: () => navigate("dashboard") },
           { label: "Estimate", page: "estimates" as PageKey, action: () => navigate("estimates") },
           { label: "Tools", page: "quick" as PageKey, action: () => navigate("quick") },
           { label: "Review", page: "feedback" as PageKey, action: () => navigate("feedback") },
           { label: `BOQ ${itemCount}`, page: "bill" as PageKey, action: openBill },
-        ].map((item, index) => <button key={item.label} type="button" onClick={item.action} className={`rounded-2xl px-2 py-2 text-center transition ${activePage === item.page ? "bg-[#E7B34B] text-[#071E33]" : "text-white/70"}`}><span className="mx-auto block text-[10px] font-bold tracking-[0.16em]">0{index + 1}</span><span className="mt-1 block text-[11px] font-semibold">{item.label}</span></button>)}
+        ].map((item) => <button key={item.label} type="button" onClick={item.action} className={`rounded-xl px-1 py-2 text-center text-[10px] font-bold transition ${activePage === item.page ? "bg-[#E7B34B] text-[#071E33]" : "text-white/72"}`}>{item.label}</button>)}
       </nav>
       <BillDrawer open={billOpen} onClose={() => setBillOpen(false)} onOpenBill={openBill} />
     </div>

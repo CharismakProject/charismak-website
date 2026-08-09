@@ -95,13 +95,13 @@ export default function Workflow({ onOpenConcrete, onOpenBlockwork, onOpenBill, 
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="fence-workflow min-w-0 space-y-4 overflow-x-hidden sm:space-y-6">
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm uppercase tracking-[0.24em] text-[#0D3B66]/80">Fence Estimator</p>
-          <h2 className="mt-2 text-2xl font-semibold text-[#0B2942]">Project workflow</h2>
+          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#0D3B66]/70 sm:text-sm">Fence Estimator</p>
+          <h2 className="mt-1 text-xl font-bold text-[#0B2942] sm:mt-2 sm:text-2xl">Project workflow</h2>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="grid w-full grid-cols-4 gap-1 sm:flex sm:w-auto sm:items-center sm:gap-3">
           {steps.map((s, i) => {
             const stepNumber = i + 1;
             const disabled = stepNumber > currentStage;
@@ -110,27 +110,27 @@ export default function Workflow({ onOpenConcrete, onOpenBlockwork, onOpenBill, 
                 key={s}
                 type="button"
                 onClick={() => { if (!disabled) setActiveStage(stepNumber); }}
-                className={`rounded-full px-3 py-2 text-sm ${currentStage === stepNumber ? "bg-[#0D3B66] text-white" : disabled ? "bg-white/20 text-[#9AA6B6] cursor-not-allowed" : "bg-white/80 text-[#0B2942]"}`}
+                className={`min-w-0 rounded-xl px-1.5 py-2 text-[10px] font-bold sm:rounded-full sm:px-3 sm:text-sm ${currentStage === stepNumber ? "bg-[#0D3B66] text-white" : disabled ? "cursor-not-allowed bg-white/35 text-[#9AA6B6]" : "bg-white/80 text-[#0B2942]"}`}
                 disabled={disabled}
-              >{stepNumber}. {s}</button>
+              ><span className="block sm:inline">{stepNumber}</span><span className="mt-0.5 block truncate sm:ml-1 sm:mt-0 sm:inline">{s}</span></button>
             );
           })}
         </div>
       </div>
 
-      <div className="rounded-[28px] bg-white p-4 shadow-sm">
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-[#556475]">Draft autosaved. <button className="underline" onClick={clearDraft}>Clear</button></div>
-          <div className="flex gap-2">
+      <div className="rounded-[20px] bg-white p-3 shadow-sm sm:rounded-[28px] sm:p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="text-xs text-[#556475] sm:text-sm">Draft autosaved. <button className="font-semibold underline" onClick={clearDraft}>Clear</button></div>
+          <div className="grid grid-cols-2 gap-2 sm:flex">
             {currentStage < 4 ? (
               <>
-                <button onClick={goBack} className="rounded-3xl border px-4 py-2">Back</button>
-                <button onClick={goNext} className="rounded-3xl bg-[#0D3B66] px-4 py-2 text-white">Continue</button>
+                <button onClick={goBack} className="rounded-xl border px-4 py-2 text-sm font-semibold sm:rounded-3xl">Back</button>
+                <button onClick={goNext} className="rounded-xl bg-[#0D3B66] px-4 py-2 text-sm font-semibold text-white sm:rounded-3xl">Continue</button>
               </>
             ) : (
               <>
-                <button onClick={goBack} className="rounded-3xl border px-4 py-2">Back</button>
-                <button onClick={onOpenBill} className="rounded-3xl bg-[#0D3B66] px-4 py-2 text-white">Open Full BOQ</button>
+                <button onClick={goBack} className="rounded-xl border px-4 py-2 text-sm font-semibold sm:rounded-3xl">Back</button>
+                <button onClick={onOpenBill} className="rounded-xl bg-[#0D3B66] px-4 py-2 text-sm font-semibold text-white sm:rounded-3xl">Open Full BOQ</button>
               </>
             )}
           </div>
@@ -191,12 +191,12 @@ export default function Workflow({ onOpenConcrete, onOpenBlockwork, onOpenBill, 
 
       {currentStage === 2 && (
         <section className="grid gap-4">
-          <div className="flex gap-2">
-            <button onClick={() => handleAddNamed("front", "Front")} className="rounded-full border px-4 py-2">Add Front</button>
-            <button onClick={() => handleAddNamed("rear", "Rear")} className="rounded-full border px-4 py-2">Add Rear</button>
-            <button onClick={() => handleAddNamed("left-side", "Left")} className="rounded-full border px-4 py-2">Add Left</button>
-            <button onClick={() => handleAddNamed("right-side", "Right")} className="rounded-full border px-4 py-2">Add Right</button>
-            <button onClick={handleAddCustom} className="rounded-full border px-4 py-2">Add Custom Section</button>
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+            <button onClick={() => handleAddNamed("front", "Front")} className="rounded-xl border border-[#CAD6E2] bg-white px-3 py-2.5 text-sm font-semibold">+ Front</button>
+            <button onClick={() => handleAddNamed("rear", "Rear")} className="rounded-xl border border-[#CAD6E2] bg-white px-3 py-2.5 text-sm font-semibold">+ Rear</button>
+            <button onClick={() => handleAddNamed("left-side", "Left")} className="rounded-xl border border-[#CAD6E2] bg-white px-3 py-2.5 text-sm font-semibold">+ Left</button>
+            <button onClick={() => handleAddNamed("right-side", "Right")} className="rounded-xl border border-[#CAD6E2] bg-white px-3 py-2.5 text-sm font-semibold">+ Right</button>
+            <button onClick={handleAddCustom} className="col-span-2 rounded-xl border border-[#0D3B66] bg-[#0D3B66] px-3 py-2.5 text-sm font-semibold text-white sm:col-span-1">+ Custom section</button>
           </div>
 
           <div className="grid gap-3">
@@ -204,18 +204,18 @@ export default function Workflow({ onOpenConcrete, onOpenBlockwork, onOpenBill, 
               const isCollapsed = !!collapsed[s.id];
               return (
                 <Card key={s.id} title={s.name}>
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="text-sm text-[#556475]">{s.position}</div>
-                    <div className="flex gap-2">
-                      <button onClick={() => setCollapsed((c) => ({ ...c, [s.id]: !c[s.id] }))} className="rounded-full border px-3 py-1">{isCollapsed ? "Expand" : "Collapse"}</button>
-                      <button onClick={() => duplicateSection(s.id)} className="rounded-full border px-3 py-1">Duplicate</button>
-                      <button onClick={() => removeSection(s.id)} className="rounded-full border px-3 py-1">Remove</button>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button onClick={() => setCollapsed((c) => ({ ...c, [s.id]: !c[s.id] }))} className="rounded-lg border px-2 py-2 text-xs font-semibold sm:rounded-full sm:px-3 sm:py-1">{isCollapsed ? "Expand" : "Collapse"}</button>
+                      <button onClick={() => duplicateSection(s.id)} className="rounded-lg border px-2 py-2 text-xs font-semibold sm:rounded-full sm:px-3 sm:py-1">Duplicate</button>
+                      <button onClick={() => removeSection(s.id)} className="rounded-lg border border-[#F0C3B7] px-2 py-2 text-xs font-semibold text-[#C8320A] sm:rounded-full sm:px-3 sm:py-1">Remove</button>
                     </div>
                   </div>
 
                   {!isCollapsed ? (
-                    <div className="mt-3 grid gap-3 lg:grid-cols-2">
-                      <div className="grid gap-3">
+                    <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-4">
+                      <div className="contents">
                         <label className="block text-sm font-medium text-[#0B2942]">Section name
                           <input value={s.name} onChange={(e) => updateSection(s.id, { name: e.target.value } as any)} className="mt-2 w-full rounded-3xl border bg-[#F8FAFC] px-4 py-3" />
                         </label>
@@ -235,7 +235,7 @@ export default function Workflow({ onOpenConcrete, onOpenBlockwork, onOpenBill, 
                           <input type="number" step="0.01" value={s.defaultPanelComposition.upperInfillHeightM} onChange={(e) => updateSection(s.id, { defaultPanelComposition: { ...s.defaultPanelComposition, upperInfillHeightM: Number(e.target.value) } } as any)} className="mt-2 w-full rounded-3xl border bg-[#F8FAFC] px-4 py-3" />
                         </label>
                       </div>
-                      <div className="grid gap-3">
+                      <div className="contents">
                         <label className="block text-sm font-medium text-[#0B2942]">Total column height (m)
                           <input type="number" step="0.01" value={s.columnBodyHeightM} onChange={(e) => updateSection(s.id, { columnBodyHeightM: Number(e.target.value) } as any)} className="mt-2 w-full rounded-3xl border bg-[#F8FAFC] px-4 py-3" />
                         </label>
@@ -256,7 +256,7 @@ export default function Workflow({ onOpenConcrete, onOpenBlockwork, onOpenBill, 
                           </select>
                         </label>
 
-                        <div>
+                        <div className="col-span-2 mt-1 border-t border-[#DFE6EE] pt-4">
                           <div className="text-sm font-semibold">Gates ({s.gates.length}) — total {s.gates.reduce((t: number, g: any) => t + (g.widthM || 0), 0)} m</div>
                           <div className="mt-2 space-y-2">
                             {s.gates.map((g: any) => (
@@ -279,13 +279,13 @@ export default function Workflow({ onOpenConcrete, onOpenBlockwork, onOpenBill, 
                                 <div className="flex justify-end"><button onClick={() => removeGateFromSection(s.id, g.id)} className="text-xs text-[#C8320A]">Remove</button></div>
                               </div>
                             ))}
-                            <div className="flex gap-2">
-                              <input type="number" step="0.01" value={newGateWidth} onChange={(e) => setNewGateWidth(Number(e.target.value))} className="w-24 rounded-3xl border px-3 py-2" />
-                              <select value={newGateType} onChange={(e) => setNewGateType(e.target.value)} className="rounded-3xl border px-3 py-2">
+                            <div className="grid grid-cols-[68px_minmax(0,1fr)_auto] gap-2">
+                              <input aria-label="New gate width" type="number" step="0.01" value={newGateWidth} onChange={(e) => setNewGateWidth(Number(e.target.value))} className="min-w-0 rounded-xl border px-2 py-2" />
+                              <select aria-label="New gate type" value={newGateType} onChange={(e) => setNewGateType(e.target.value)} className="min-w-0 rounded-xl border px-2 py-2">
                                 <option value="pedestrian">Pedestrian</option>
                                 <option value="vehicle">Vehicle</option>
                               </select>
-                              <button onClick={() => { const gateId = `gate-${Date.now()}`; const gate = { id: gateId, name: `${newGateType} gate`, type: newGateType, operation: "manual", widthM: newGateWidth, heightM: 2.0, positionFromSectionStartM: 0 }; addGateToSection(s.id, gate); }} className="rounded-3xl bg-[#0D3B66] px-4 py-2 text-white">Add gate</button>
+                              <button onClick={() => { const gateId = `gate-${Date.now()}`; const gate = { id: gateId, name: `${newGateType} gate`, type: newGateType, operation: "manual", widthM: newGateWidth, heightM: 2.0, positionFromSectionStartM: 0 }; addGateToSection(s.id, gate); }} className="rounded-xl bg-[#0D3B66] px-3 py-2 text-xs font-bold text-white">Add</button>
                             </div>
                           </div>
                         </div>
@@ -293,8 +293,8 @@ export default function Workflow({ onOpenConcrete, onOpenBlockwork, onOpenBill, 
                     </div>
                   ) : null}
 
-                  <div className="mt-3">
-                    <button onClick={() => setSelectedSectionId(s.id)} className="rounded-full border px-3 py-1">Preview</button>
+                  <div className="mt-4">
+                    <button onClick={() => setSelectedSectionId(s.id)} className="w-full rounded-xl border border-[#0D3B66] px-3 py-2 text-sm font-semibold text-[#0D3B66] sm:w-auto sm:rounded-full sm:py-1">View section summary</button>
                   </div>
                 </Card>
               );
@@ -302,23 +302,30 @@ export default function Workflow({ onOpenConcrete, onOpenBlockwork, onOpenBill, 
           </div>
 
           {selectedSectionId ? (
-            <div className="mt-4">
-              <h4 className="text-lg font-semibold">Section preview</h4>
-              <div className="grid gap-2">
+            <div className="mt-2 rounded-[22px] border border-[#D6E0EA] bg-white p-4 shadow-sm sm:mt-4 sm:p-6">
+              <h4 className="text-base font-bold sm:text-lg">Section summary</h4>
+              <div className="mt-3 grid gap-2">
                 {(() => {
                   const res = calculateSectionLayout(selectedSectionId);
                   if (!res) return <div>Not enough data</div>;
                   if (res.error) return <div className="text-red-600">{res.error}</div>;
                   return (
-                    <div className="grid gap-2">
-                      <div>Gross length: {res.grossSectionLengthM} m</div>
-                      <div>Gate opening width: {res.totalGateOpeningWidthM} m</div>
-                      <div>Columns: {res.columns.length}</div>
-                      <div>Column-occupied length: {res.totalColumnOccupiedLengthM} m</div>
-                      <div>Clear block-panel length: {res.totalClearBlockPanelLengthM} m</div>
-                      <div>Blockwork area: {res.totalBlockworkAreaM2} m²</div>
-                      <div>Upper-infill area: {res.totalUpperInfillAreaM2} m²</div>
-                    </div>
+                    <dl className="grid grid-cols-2 gap-2">
+                      {[
+                        ["Gross length", `${res.grossSectionLengthM} m`],
+                        ["Gate openings", `${res.totalGateOpeningWidthM} m`],
+                        ["Columns", `${res.columns.length}`],
+                        ["Column width", `${res.totalColumnOccupiedLengthM} m`],
+                        ["Clear panels", `${res.totalClearBlockPanelLengthM} m`],
+                        ["Blockwork", `${res.totalBlockworkAreaM2} m²`],
+                        ["Upper infill", `${res.totalUpperInfillAreaM2} m²`],
+                      ].map(([label, value]) => (
+                        <div key={label} className="min-w-0 rounded-xl bg-[#F3F6F9] p-3">
+                          <dt className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#6B7D8F]">{label}</dt>
+                          <dd className="mt-1 truncate text-sm font-bold text-[#071E33]">{value}</dd>
+                        </div>
+                      ))}
+                    </dl>
                   );
                 })()}
               </div>

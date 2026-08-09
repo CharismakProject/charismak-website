@@ -31,6 +31,14 @@ body {
   min-height: 100vh;
   background: #f4f7fa;
   color: #0b2942;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  overflow-x: hidden;
+}
+
+[data-estimator-app] *,
+[data-estimator-app] *::before,
+[data-estimator-app] *::after {
+  box-sizing: border-box;
 }
 
 [data-estimator-app] .app-backdrop {
@@ -68,4 +76,19 @@ body {
   border-color: rgba(13, 59, 102, 0.72) !important;
   box-shadow: 0 0 0 3px rgba(13, 59, 102, 0.09);
   outline: none;
+}
+
+@media (max-width: 639px) {
+  [data-estimator-app] .app-backdrop {
+    background-color: #f3f6f9;
+    background-image: none;
+  }
+
+  [data-estimator-app] input:not([type="checkbox"]):not([type="radio"]),
+  [data-estimator-app] select,
+  [data-estimator-app] textarea {
+    min-height: 44px;
+    border-radius: 14px;
+    font-size: 14px;
+  }
 }
