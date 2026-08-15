@@ -9,7 +9,7 @@ const createdAt = "2026-08-09T00:00:00.000Z";
 
 // Starter references make the workflow testable immediately. They are deliberately
 // labelled as references, not verified live market quotations.
-const starterRates: Record<string, number> = {
+const starterRates: Record<string, number | null> = {
   "cement-50kg": 11500,
   "sharp-sand": 32000,
   "granite-aggregate": 65000,
@@ -20,6 +20,10 @@ const starterRates: Record<string, number> = {
   "formwork-sheet": 40000,
   "formwork-timber": 2200,
   nails: 2500,
+  "brc-a98-sheet": null,
+  "brc-a142-sheet": null,
+  "brc-a193-sheet": null,
+  "brc-a252-sheet": null,
   "concrete-labour": 25000,
   "blockwork-labour": 6000,
   "rebar-labour": 500,
@@ -61,6 +65,10 @@ const CORE_PRICE_ITEMS: PriceItem[] = [
   ["formwork-sheet", "MAT-008", "Formwork plywood sheet 1.22 × 2.44 m", "material", "sheet"],
   ["formwork-timber", "MAT-009", "Formwork support timber", "material", "m"],
   ["nails", "MAT-010", "Assorted nails", "material", "kg"],
+  ["brc-a98-sheet", "MAT-015", "A98 BRC welded mesh, 2.4 × 4.8 m sheet", "material", "sheet"],
+  ["brc-a142-sheet", "MAT-016", "A142 BRC welded mesh, 2.4 × 4.8 m sheet", "material", "sheet"],
+  ["brc-a193-sheet", "MAT-017", "A193 BRC welded mesh, 2.4 × 4.8 m sheet", "material", "sheet"],
+  ["brc-a252-sheet", "MAT-018", "A252 BRC welded mesh, 2.4 × 4.8 m sheet", "material", "sheet"],
   ["concrete-labour", "LAB-001", "Concrete mixing, placing and compaction labour", "labour", "m³"],
   ["blockwork-labour", "LAB-002", "225 mm block laying labour", "labour", "m²"],
   ["rebar-labour", "LAB-003", "Reinforcement cutting, bending and fixing labour", "labour", "kg"],

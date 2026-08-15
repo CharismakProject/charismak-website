@@ -42,7 +42,6 @@ type DashboardProps = {
   onContinueProject: (project: UniversalProject) => void;
   onStartFence: () => void;
   onOpenCalculator: (calculator: CalculatorKey) => void;
-  onOpenEstimateBuilder: () => void;
   onOpenBill: () => void;
   onOpenRates: () => void;
 };
@@ -129,11 +128,11 @@ const startOptions: Array<{
   },
   {
     title: "Import / Upload",
-    description: "Excel, PDF, DWG and existing BOQ files",
+    description: "Excel BOQs, PDFs, plan images and sketches",
     icon: Upload,
     tone: "bg-[#FFF4E4] text-[#B45B09]",
     action: "import",
-    badge: "Coming next",
+    badge: "Working beta",
   },
 ];
 
@@ -173,7 +172,6 @@ export default function EstimatorDashboard({
   onContinueProject,
   onStartFence,
   onOpenCalculator,
-  onOpenEstimateBuilder,
   onOpenBill,
   onOpenRates,
 }: DashboardProps) {
@@ -195,8 +193,7 @@ export default function EstimatorDashboard({
   const firstName = displayName?.trim().split(/\s+/)[0];
 
   const runStartAction = (action: (typeof startOptions)[number]["action"]) => {
-    if (action === "project" || action === "dimensions") onNewProject();
-    if (action === "boq") onOpenEstimateBuilder();
+    if (["project", "dimensions", "boq", "import"].includes(action)) onNewProject();
   };
 
   return (
@@ -274,7 +271,7 @@ export default function EstimatorDashboard({
           <div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#6B7D90]">Start a new estimate</p><h2 className="mt-1 text-lg font-bold text-[#081B36] md:text-xl">Choose how you want to begin</h2></div>
           <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
             {startOptions.map(({ title, description, icon: Icon, tone, action, badge }) => (
-              <button key={title} type="button" disabled={action === "import"} onClick={() => runStartAction(action)} className="relative min-h-36 rounded-xl border border-[#E0E7EE] bg-[#FBFCFE] p-3.5 text-left transition enabled:hover:-translate-y-0.5 enabled:hover:border-[#9BB1C7] disabled:cursor-not-allowed disabled:opacity-65">
+              <button key={title} type="button" onClick={() => runStartAction(action)} className="relative min-h-36 rounded-xl border border-[#E0E7EE] bg-[#FBFCFE] p-3.5 text-left transition hover:-translate-y-0.5 hover:border-[#9BB1C7]">
                 {badge ? <span className="absolute right-2 top-2 rounded-full bg-[#EEF2F6] px-2 py-1 text-[8px] font-bold uppercase tracking-wide text-[#6B7D90]">{badge}</span> : null}
                 <span className={`grid h-10 w-10 place-items-center rounded-xl ${tone}`}><Icon className="h-5 w-5" /></span>
                 <h3 className="mt-4 text-sm font-bold text-[#081B36]">{title}</h3>

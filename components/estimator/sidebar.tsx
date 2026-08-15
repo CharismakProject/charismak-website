@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  BookOpen,
   Calculator,
   FileSpreadsheet,
   FolderKanban,
@@ -9,11 +10,14 @@ import {
   LogOut,
   MessageSquareText,
   PackageSearch,
+  Store,
   Ruler,
   ShieldCheck,
+  WalletCards,
   X,
   type LucideIcon,
 } from "lucide-react";
+import Link from "next/link";
 
 import type { PageKey } from "./types";
 
@@ -34,7 +38,9 @@ const navItems: Array<{ key: PageKey; label: string; icon: LucideIcon; section?:
   { key: "bill", label: "Bill / BOQ", icon: FileSpreadsheet, section: "workspace" },
   { key: "quick", label: "Quick Calculators", icon: Ruler, section: "workspace" },
   { key: "fence", label: "Fence / Boundary", icon: ShieldCheck, section: "workspace" },
+  { key: "budget", label: "Project Budget", icon: WalletCards, section: "workspace" },
   { key: "rates", label: "Prices & Rates", icon: PackageSearch, section: "resources" },
+  { key: "marketplace", label: "Suppliers & Artisans", icon: Store, section: "resources" },
   { key: "register", label: "Bill Register", icon: ListChecks, section: "resources" },
   { key: "feedback", label: "Review & Feedback", icon: MessageSquareText, section: "resources" },
 ];
@@ -97,6 +103,7 @@ export default function Sidebar({
                 );
               })}
             </nav>
+            {section === "resources" ? <div className="mt-1 space-y-1"><Link href="/prices" className="flex min-h-11 items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-[#C3D1DF] transition hover:bg-white/8 hover:text-white"><PackageSearch className="h-[18px] w-[18px] text-[#8FA6BE]" />Public price list</Link><Link href="/blog" className="flex min-h-11 items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-[#C3D1DF] transition hover:bg-white/8 hover:text-white"><BookOpen className="h-[18px] w-[18px] text-[#8FA6BE]" />Construction guides</Link></div> : null}
           </div>
         ))}
 

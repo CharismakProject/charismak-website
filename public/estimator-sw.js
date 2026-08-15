@@ -1,4 +1,4 @@
-const CACHE_NAME = "charismak-estimator-v6";
+const CACHE_NAME = "charismak-estimator-v7";
 const APP_SHELL = [
   "/estimator/app",
   "/estimator-manifest.webmanifest",
