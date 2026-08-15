@@ -8,6 +8,13 @@ import {
   useState,
 } from "react";
 import type { Session } from "@supabase/supabase-js";
+import {
+  ArrowRight,
+  CheckCircle2,
+  ClipboardList,
+  FolderKanban,
+  Ruler,
+} from "lucide-react";
 
 import EstimatorLogo from "@/components/estimator/ui/logo";
 import {
@@ -129,42 +136,48 @@ export default function BetaAccessGate({ children }: { children: ReactNode }) {
 
   if (!session) {
     return (
-      <main className="min-h-screen bg-[#071E33] px-5 py-8 text-[#071E33] sm:px-8">
-        <div className="mx-auto grid min-h-[calc(100vh-4rem)] max-w-6xl overflow-hidden rounded-[34px] bg-white shadow-[0_30px_100px_rgba(0,0,0,0.35)] lg:grid-cols-[1.05fr_0.95fr]">
-          <section className="flex flex-col justify-between bg-[#0D3B66] p-7 text-white sm:p-10 lg:p-14">
-            <div className="max-w-xs rounded-[26px] bg-white p-3">
+      <main className="min-h-screen bg-[#F3F6F9] p-3 text-[#081B36] sm:p-6 lg:p-8">
+        <div className="mx-auto grid min-h-[calc(100vh-1.5rem)] max-w-[1180px] overflow-hidden rounded-3xl border border-[#DCE4EC] bg-white shadow-[0_24px_80px_rgba(8,27,54,0.13)] sm:min-h-[calc(100vh-3rem)] lg:grid-cols-[1.05fr_0.95fr]">
+          <section className="relative flex flex-col overflow-hidden bg-[#081B36] p-5 text-white sm:p-8 lg:p-11">
+            <div className="absolute -right-28 -top-28 h-72 w-72 rounded-full border-[48px] border-white/[0.035]" />
+            <div className="relative max-w-[260px] rounded-2xl bg-white p-2.5">
               <EstimatorLogo />
             </div>
-            <div className="py-12">
-              <span className="rounded-full bg-[#E7B34B]/15 px-3 py-2 text-xs font-bold uppercase tracking-[0.2em] text-[#E7B34B]">
-                Public beta access
-              </span>
-              <h1 className="mt-6 text-4xl font-bold leading-tight sm:text-5xl">
-                Measure. Price. Export.
-              </h1>
-              <p className="mt-5 max-w-xl text-base leading-7 text-white/75">
-                Create editable construction rate analyses, consolidate material
-                requirements and export professional bills of quantities.
-              </p>
+
+            <div className="relative py-8 sm:py-10 lg:py-14">
+              <span className="inline-flex rounded-full bg-[#E7B34B]/14 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-[#E7B34B]">Construction estimating platform</span>
+              <h1 className="mt-5 max-w-xl text-3xl font-bold leading-tight sm:text-4xl lg:text-[44px]">Build estimates with confidence.</h1>
+              <p className="mt-4 max-w-xl text-sm leading-6 text-[#B8C9D9] sm:text-base sm:leading-7">A guided workspace for homeowners, builders and professionals—from first dimensions to a structured BOQ.</p>
+
+              <div className="mt-6 grid grid-cols-3 gap-2.5">
+                {[
+                  { icon: FolderKanban, label: "Projects" },
+                  { icon: Ruler, label: "Measurements" },
+                  { icon: ClipboardList, label: "BOQ output" },
+                ].map(({ icon: Icon, label }) => (
+                  <div key={label} className="rounded-xl border border-white/10 bg-white/[0.055] p-3">
+                    <Icon className="h-4 w-4 text-[#E7B34B]" />
+                    <p className="mt-3 text-[10px] font-semibold text-[#D4E0EB] sm:text-xs">{label}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-5 hidden rounded-2xl border border-white/10 bg-[#102E4E] p-4 sm:block">
+                <div className="flex items-center justify-between"><div><p className="text-[9px] font-bold uppercase tracking-[0.16em] text-[#8FA6BE]">Inside your workspace</p><p className="mt-1 text-sm font-bold">A dashboard built around real projects</p></div><span className="grid h-9 w-9 place-items-center rounded-xl bg-[#E7B34B] text-[#081B36]"><CheckCircle2 className="h-4 w-4" /></span></div>
+                <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/10"><span className="block h-full w-2/3 rounded-full bg-[#45C78B]" /></div>
+              </div>
             </div>
-            <p className="text-xs leading-5 text-white/60">
-              Your email is used for secure access, beta usage records and—only
-              with your permission—product review follow-up.
-            </p>
+
+            <p className="relative mt-auto text-[10px] leading-5 text-[#8FA6BE]">Secure beta access · Editable local rates · Mobile-ready workspace</p>
           </section>
 
-          <section className="flex items-center p-7 sm:p-10 lg:p-14">
-            <form onSubmit={submitEmail} className="w-full">
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#C8320A]">
-                Welcome to the beta
-              </p>
-              <h2 className="mt-3 text-3xl font-bold">Continue with your email</h2>
-              <p className="mt-3 text-sm leading-6 text-[#526579]">
-                No password is required. We will email you a secure one-tap
-                sign-in link.
-              </p>
+          <section className="flex items-center p-5 sm:p-8 lg:p-12">
+            <form onSubmit={submitEmail} className="mx-auto w-full max-w-md">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#C8320A]">Secure beta access</p>
+              <h2 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">Open your estimator</h2>
+              <p className="mt-2 text-sm leading-6 text-[#617286]">Enter your email and we will send a secure one-tap sign-in link. No password is required.</p>
 
-              <label className="mt-8 block text-sm font-semibold" htmlFor="beta-email">
+              <label className="mt-7 block text-sm font-semibold" htmlFor="beta-email">
                 Email address
               </label>
               <input
@@ -175,16 +188,16 @@ export default function BetaAccessGate({ children }: { children: ReactNode }) {
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="name@example.com"
-                className="mt-2 w-full rounded-2xl border border-[#C7D5E3] bg-[#F7F9FB] px-4 py-4 outline-none transition focus:border-[#0D3B66] focus:ring-4 focus:ring-[#0D3B66]/10"
+                className="mt-2 w-full rounded-xl border border-[#CAD5E0] bg-[#F8FAFC] px-4 py-3.5 outline-none transition focus:border-[#175FC4] focus:ring-4 focus:ring-[#175FC4]/10"
               />
 
-              <label className="mt-6 flex cursor-pointer items-start gap-4 rounded-2xl border border-[#D6E0EA] bg-[#F7F9FB] p-4 text-sm leading-6 text-[#34485C] transition hover:border-[#0D3B66]/40">
+              <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-xl border border-[#DCE4EC] bg-[#F8FAFC] p-3.5 text-xs leading-5 text-[#526579] transition hover:border-[#9BB1C7]">
                 <input
                   type="checkbox"
                   required
                   checked={privacyAccepted}
                   onChange={(event) => setPrivacyAccepted(event.target.checked)}
-                  className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer accent-[#C8320A]"
+                  className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-[#175FC4]"
                 />
                 <span>
                   <strong className="block text-[#071E33]">Required for access</strong>
@@ -192,12 +205,12 @@ export default function BetaAccessGate({ children }: { children: ReactNode }) {
                   and essential service communication.
                 </span>
               </label>
-              <label className="mt-3 flex cursor-pointer items-start gap-4 rounded-2xl border border-[#D6E0EA] bg-white p-4 text-sm leading-6 text-[#34485C] transition hover:border-[#0D3B66]/40">
+              <label className="mt-3 flex cursor-pointer items-start gap-3 rounded-xl border border-[#DCE4EC] bg-white p-3.5 text-xs leading-5 text-[#526579] transition hover:border-[#9BB1C7]">
                 <input
                   type="checkbox"
                   checked={contactConsent}
                   onChange={(event) => setContactConsent(event.target.checked)}
-                  className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer accent-[#C8320A]"
+                  className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-[#175FC4]"
                 />
                 <span>
                   <strong className="block text-[#071E33]">Optional beta follow-up</strong>
@@ -209,9 +222,9 @@ export default function BetaAccessGate({ children }: { children: ReactNode }) {
               <button
                 type="submit"
                 disabled={submitting || !privacyAccepted}
-                className="mt-7 w-full rounded-2xl bg-[#C8320A] px-5 py-4 text-sm font-bold text-white shadow-[0_16px_35px_rgba(200,50,10,0.22)] transition hover:bg-[#AE2B08] disabled:cursor-not-allowed disabled:opacity-50"
+                className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#081B36] px-5 py-3.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(8,27,54,0.18)] transition hover:bg-[#173B62] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {submitting ? "Sending secure link…" : "Email my sign-in link"}
+                {submitting ? "Sending secure link…" : <>Email my sign-in link <ArrowRight className="h-4 w-4" /></>}
               </button>
               {!privacyAccepted ? (
                 <p className="mt-3 text-center text-xs text-[#6B7D8F]">
@@ -219,7 +232,7 @@ export default function BetaAccessGate({ children }: { children: ReactNode }) {
                 </p>
               ) : null}
               {message ? (
-                <p role="status" className="mt-4 rounded-2xl bg-[#EEF3F8] p-4 text-sm leading-6 text-[#0D3B66]">
+                <p role="status" className="mt-4 rounded-xl bg-[#EEF3F8] p-4 text-sm leading-6 text-[#0D3B66]">
                   {message}
                 </p>
               ) : null}

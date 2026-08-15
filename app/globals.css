@@ -79,6 +79,21 @@ body {
   outline: none;
 }
 
+@keyframes estimator-drawer-in {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+[data-estimator-app] .estimator-mobile-drawer {
+  animation: estimator-drawer-in 180ms ease-out both;
+}
+
 @media (max-width: 639px) {
   [data-estimator-app] .app-backdrop {
     background-color: #f3f6f9;

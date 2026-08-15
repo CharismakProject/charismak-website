@@ -1,67 +1,51 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Bell,
+  FileSpreadsheet,
+  FolderKanban,
+  HelpCircle,
+  Home,
+  Menu,
+  MoreHorizontal,
+  Plus,
+} from "lucide-react";
 
 import type { Bill } from "@/lib/billing/models";
 import { BILL_UPDATED_EVENT, loadBill } from "@/lib/billing/store";
+import type { UniversalProject } from "@/lib/projects/models";
+import { saveProject } from "@/lib/projects/store";
+import { createRateEstimate, selectRateEstimate } from "@/lib/pricing/store";
+import { useBetaSession } from "../auth/beta-session";
 import BillDrawer from "../bill/bill-drawer";
 import EstimatesArchive from "../bill/estimates-archive";
 import ReviewWorkspace from "../bill/review-workspace";
+import BetaInsights from "../feedback/beta-insights";
+import FeedbackPage from "../feedback/feedback-page";
 import EstimateBuilder from "../pricing/estimate-builder";
 import PriceLibrary from "../pricing/price-library";
-import { DEFAULT_PRICE_ITEMS, DEFAULT_RATE_TEMPLATES } from "@/lib/pricing/defaults";
-import { createRateEstimate, selectRateEstimate } from "@/lib/pricing/store";
-import type { UniversalProject } from "@/lib/projects/models";
-import { saveProject } from "@/lib/projects/store";
+import ProjectWorkspace from "../projects/project-workspace";
 import CalculatorShell from "./calculators/calculator-shell";
+import EstimatorDashboard from "./dashboard";
 import EstimateProvider, { useEstimate } from "./estimate-provider";
 import { parseHash } from "./routing";
 import Sidebar from "./sidebar";
 import type { CalculatorKey, PageKey } from "./types";
-import EstimatorLogo from "./ui/logo";
-import ShellButton from "./ui/button";
 import Workflow from "./workflow";
-import WorkDiagram from "./visuals/work-diagram";
-import FeedbackPage from "../feedback/feedback-page";
-import BetaInsights from "../feedback/beta-insights";
-import { useBetaSession } from "../auth/beta-session";
-import ProjectWorkspace from "../projects/project-workspace";
 
 const pages: Array<{ key: PageKey; label: string }> = [
   { key: "dashboard", label: "Dashboard" },
   { key: "projects", label: "Projects" },
-  { key: "fence", label: "Fence Estimator" },
+  { key: "fence", label: "Fence / Boundary" },
   { key: "quick", label: "Quick Calculators" },
   { key: "estimates", label: "Estimate Builder" },
   { key: "bill", label: "Bill / BOQ" },
   { key: "register", label: "Bill Register" },
-  { key: "rates", label: "Price Library" },
+  { key: "rates", label: "Prices & Rates" },
   { key: "feedback", label: "Review & Feedback" },
   { key: "insights", label: "Beta Insights" },
 ];
-
-const calculatorCards: Array<{
-  key: CalculatorKey;
-  number: string;
-  title: string;
-  description: string;
-  unit: string;
-}> = [
-  { key: "concrete", number: "01", title: "Concrete", description: "Volume, cement, sand, aggregate and water.", unit: "m³" },
-  { key: "blockwork", number: "02", title: "Blockwork", description: "Wall area, block quantity and mortar materials.", unit: "m²" },
-  { key: "reinforcement", number: "03", title: "Reinforcement", description: "Cut lengths, steel weight and binding wire.", unit: "kg" },
-  { key: "excavation", number: "04", title: "Excavation", description: "Trenches, pits, backfill and disposal volumes.", unit: "m³" },
-  { key: "formwork", number: "05", title: "Formwork", description: "Contact area, sheet requirements and reuse.", unit: "m²" },
-];
-
-const visualModules = [
-  { id: "concrete", title: "Concrete frame", type: "concrete", unit: "m³" },
-  { id: "blockwork", title: "Block wall", type: "blockwork", unit: "m²" },
-  { id: "electrical", title: "Electrical installation", type: "electrical", unit: "point" },
-  { id: "mechanical", title: "Mechanical services", type: "mechanical", unit: "point" },
-  { id: "roofing", title: "Roof covering", type: "roofing", unit: "m²" },
-  { id: "fence", title: "Complete fence", type: "fence", unit: "m" },
-] as const;
 
 const pageHash: Record<PageKey, string> = {
   dashboard: "#dashboard",
@@ -75,13 +59,6 @@ const pageHash: Record<PageKey, string> = {
   insights: "#insights",
   projects: "#projects",
 };
-
-const money = (value: number, currency = "NGN") =>
-  new Intl.NumberFormat("en-NG", {
-    style: "currency",
-    currency,
-    maximumFractionDigits: 2,
-  }).format(value || 0);
 
 export default function EstimatorShell() {
   return (
@@ -97,14 +74,15 @@ function EstimatorShellContent() {
   const [activePage, setActivePage] = useState<PageKey>("dashboard");
   const [activeCalculator, setActiveCalculator] = useState<CalculatorKey | null>(null);
   const [billOpen, setBillOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [bill, setBill] = useState<Bill | null>(null);
-  const [visualModuleId, setVisualModuleId] = useState<(typeof visualModules)[number]["id"]>("concrete");
 
   useEffect(() => {
     const syncRoute = () => {
       const route = parseHash(window.location.hash);
       setActivePage(route.page);
       setActiveCalculator(route.calculator);
+      setMobileMenuOpen(false);
     };
     syncRoute();
     window.addEventListener("hashchange", syncRoute);
@@ -122,9 +100,24 @@ function EstimatorShellContent() {
     return () => window.removeEventListener(BILL_UPDATED_EVENT, syncBill);
   }, []);
 
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMobileMenuOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [mobileMenuOpen]);
+
   const navigate = useCallback((page: PageKey, calculator: CalculatorKey | null = null) => {
     setActivePage(page);
     setActiveCalculator(page === "quick" ? calculator : null);
+    setMobileMenuOpen(false);
     const hash = page === "quick" && calculator ? `#calculators/${calculator}` : pageHash[page];
     if (window.location.hash !== hash) window.history.pushState(null, "", hash);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -186,42 +179,28 @@ function EstimatorShellContent() {
     [bill],
   );
   const activePageLabel = pages.find((page) => page.key === activePage)?.label ?? "Dashboard";
-  const visualModule = visualModules.find((item) => item.id === visualModuleId) ?? visualModules[0];
-
-  const renderDashboard = () => (
-    <div className="space-y-6">
-      <section className="overflow-hidden rounded-[34px] bg-[#071E33] text-white shadow-[0_28px_90px_rgba(7,30,51,0.22)]">
-        <div className="grid lg:grid-cols-[0.88fr_1.12fr]">
-          <div className="flex flex-col justify-center p-7 md:p-10">
-            <span className="w-fit rounded-full bg-[#E7B34B]/15 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-[#E7B34B]">Built for real construction work</span>
-            <h1 className="mt-5 text-4xl font-bold leading-tight tracking-tight md:text-5xl">Measure. Price. Export.</h1>
-            <p className="mt-4 max-w-xl text-sm leading-7 text-white/72 md:text-base">Build rate analyses and complete project estimates across building, civil, electrical and mechanical work—then issue professional BOQs without rebuilding calculations in spreadsheets.</p>
-            <div className="mt-7 flex flex-wrap gap-3"><ShellButton onClick={() => navigate("projects")}>Start New Project</ShellButton><button type="button" onClick={startFence} className="rounded-full border border-white/30 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/10">Specialist Fence Estimate</button></div>
-            <div className="mt-8 grid grid-cols-3 gap-3 border-t border-white/12 pt-6"><div><strong className="block text-xl">{DEFAULT_RATE_TEMPLATES.length}</strong><span className="text-xs text-white/55">Rate templates</span></div><div><strong className="block text-xl">{DEFAULT_PRICE_ITEMS.length}</strong><span className="text-xs text-white/55">Price resources</span></div><div><strong className="block text-xl">2</strong><span className="text-xs text-white/55">BOQ exports</span></div></div>
-          </div>
-          <div className="relative hidden min-h-[330px] items-center bg-[#0D3B66] p-4 md:p-8 lg:flex"><div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(231,179,75,0.18),transparent_34%)]" /><div className="relative w-full"><WorkDiagram type={visualModule.type} title={visualModule.title} unit={visualModule.unit} /><div className="mt-4 flex flex-wrap gap-2 text-[10px] font-bold uppercase tracking-[0.12em]">{visualModules.map((item) => <button key={item.id} type="button" onClick={() => setVisualModuleId(item.id)} className={`rounded-full px-3 py-2 transition ${item.id === visualModule.id ? "bg-[#E7B34B] text-[#071E33]" : "bg-white/10 text-white hover:bg-white/20"}`}>{item.id}</button>)}</div><p className="mt-3 text-xs text-white/55">Choose a work module to preview its measured-work diagram.</p></div></div>
-        </div>
-      </section>
-
-      <section>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#C8320A]">Quick start</p><h2 className="mt-1 text-2xl font-bold text-[#071E33]">What do you want to calculate?</h2></div><p className="max-w-md text-sm text-[#526579]">Essential inputs first. Detailed assumptions stay available when you need them.</p></div>
-        <div className="mt-5 grid auto-cols-[86%] grid-flow-col gap-4 overflow-x-auto pb-3 snap-x snap-mandatory md:auto-cols-auto md:grid-flow-row md:grid-cols-2 md:overflow-visible xl:grid-cols-3">
-          <button type="button" onClick={() => navigate("projects")} className="group relative snap-start overflow-hidden rounded-[28px] bg-[#C8320A] p-6 text-left text-white shadow-[0_18px_45px_rgba(200,50,10,0.2)] transition hover:-translate-y-1"><span className="text-xs font-bold tracking-[0.2em] text-white/65">PRIMARY WORKFLOW</span><h3 className="mt-8 text-2xl font-bold">New Construction Project</h3><p className="mt-2 text-sm leading-6 text-white/75">Choose your experience level, project type and the most suitable way to begin.</p><span className="mt-6 inline-flex text-sm font-bold">Start project →</span></button>
-          <button type="button" onClick={startFence} className="group snap-start rounded-[28px] bg-[#0D3B66] p-6 text-left text-white shadow-[0_18px_45px_rgba(13,59,102,0.18)] transition hover:-translate-y-1"><span className="text-xs font-bold tracking-[0.2em] text-[#E7B34B]">SPECIALIST MODULE</span><h3 className="mt-8 text-2xl font-bold">Complete Fence</h3><p className="mt-2 text-sm leading-6 text-white/70">Sections, gates, columns, grills, finishes and consolidated measured work.</p><span className="mt-6 inline-flex text-sm font-bold">Start fence →</span></button>
-          {calculatorCards.map((calculator) => <button key={calculator.key} type="button" onClick={() => navigate("quick", calculator.key)} className="group snap-start rounded-[28px] border border-[#d6dfe9] bg-white p-6 text-left shadow-[0_12px_35px_rgba(7,30,51,0.05)] transition hover:-translate-y-1 hover:border-[#0D3B66]"><div className="flex items-center justify-between"><span className="text-xs font-bold tracking-[0.18em] text-[#0D3B66]/55">{calculator.number}</span><span className="rounded-full bg-[#EEF3F8] px-3 py-1 text-xs font-bold text-[#0D3B66]">{calculator.unit}</span></div><h3 className="mt-8 text-xl font-bold text-[#071E33]">{calculator.title}</h3><p className="mt-2 text-sm leading-6 text-[#526579]">{calculator.description}</p><span className="mt-5 inline-flex text-sm font-bold text-[#C8320A]">Open calculator →</span></button>)}
-        </div>
-      </section>
-
-      <section className="grid gap-5 lg:grid-cols-[1fr_0.58fr]">
-        <div className="rounded-[30px] border border-[#d6dfe9] bg-white p-6"><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0D3B66]/60">One connected workflow</p><h2 className="mt-2 text-2xl font-bold">Every calculation can become a bill.</h2><div className="mt-6 grid gap-3 sm:grid-cols-4">{["Calculate", "Add to bill", "Enter rates", "Export BOQ"].map((step, index) => <div key={step} className="rounded-2xl bg-[#F4F7FA] p-4"><span className="text-xs font-bold text-[#C8320A]">0{index + 1}</span><p className="mt-3 text-sm font-semibold">{step}</p></div>)}</div></div>
-        <button type="button" onClick={openBill} className="rounded-[30px] bg-[#0D3B66] p-6 text-left text-white"><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#E7B34B]">Current bill</p><strong className="mt-4 block text-4xl">{itemCount}</strong><span className="text-sm text-white/65">BOQ item{itemCount === 1 ? "" : "s"}</span><p className="mt-6 text-xl font-bold">{money(bill?.totals?.grandTotal ?? 0, bill?.currency)}</p><span className="mt-5 inline-flex text-sm font-bold">Open bill workspace →</span></button>
-      </section>
-    </div>
-  );
+  const metadata = betaSession.user?.user_metadata as Record<string, unknown> | undefined;
+  const displayName = typeof metadata?.full_name === "string"
+    ? metadata.full_name
+    : typeof metadata?.name === "string"
+      ? metadata.name
+      : null;
 
   const renderContent = () => {
     switch (activePage) {
-      case "dashboard": return renderDashboard();
+      case "dashboard":
+        return <EstimatorDashboard
+          displayName={displayName}
+          bill={bill}
+          billItemCount={itemCount}
+          onNewProject={() => navigate("projects")}
+          onContinueProject={continueUniversalProject}
+          onStartFence={startFence}
+          onOpenCalculator={(calculator) => navigate("quick", calculator)}
+          onOpenEstimateBuilder={() => navigate("estimates")}
+          onOpenBill={openBill}
+          onOpenRates={() => navigate("rates")}
+        />;
       case "projects": return <ProjectWorkspace onContinueProject={continueUniversalProject} />;
       case "fence": return <Workflow onOpenConcrete={openConcrete} onOpenBlockwork={openBlockwork} onOpenBill={openBill} onOpenEstimates={() => navigate("register")} />;
       case "quick": return <CalculatorShell activeCalculator={activeCalculator} onSelectCalculator={(calculator) => navigate("quick", calculator)} onOpenBill={openBill} />;
@@ -234,30 +213,75 @@ function EstimatorShellContent() {
     }
   };
 
-  return (
-    <div className="app-backdrop min-h-screen bg-[#F4F7FA] text-[#071E33]">
-      <div className="mx-auto flex min-h-screen max-w-[1800px] overflow-hidden">
-        <Sidebar activePage={activePage} onSelectPage={(page) => navigate(page)} isAdmin={betaSession.isAdmin} />
-        <div className="flex min-h-screen min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-30 border-b border-white/60 bg-white/85 px-4 py-2 shadow-sm backdrop-blur-xl lg:hidden"><div className="flex items-center justify-between gap-3"><EstimatorLogo small /><div className="flex items-center gap-2"><span className="hidden text-[10px] font-bold uppercase tracking-[0.14em] text-[#6C7D8D] min-[390px]:inline">{activePageLabel}</span><button type="button" onClick={() => setBillOpen(true)} className="rounded-full border border-[#0D3B66] px-3 py-2 text-xs font-bold text-[#0D3B66]">BOQ · {itemCount}</button></div></div></header>
+  const signOut = () => void betaSession.signOut();
+  const moreActive = !["dashboard", "projects", "bill"].includes(activePage);
 
-          <main className="flex-1 px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
-            <div className="mx-auto flex max-w-[1440px] flex-col gap-6 pb-28 lg:pb-10">
-              <div className="hidden items-center justify-between gap-6 rounded-[30px] border border-[#d6dfe9] bg-white px-6 py-4 shadow-sm lg:flex"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0D3B66]/60">{activePageLabel}</p><h1 className="mt-1 text-2xl font-bold">Charismak Construction Estimator</h1></div><div className="flex flex-wrap items-center gap-2"><ShellButton onClick={() => navigate("projects")}>New Project</ShellButton><ShellButton variant="secondary" onClick={startFence}>Fence Module</ShellButton><ShellButton variant="secondary" onClick={() => navigate("quick")}>Quick Calculator</ShellButton><button type="button" onClick={() => navigate("feedback")} className="rounded-full px-4 py-3 text-sm font-bold text-[#0D3B66]">Review</button><button type="button" onClick={() => setBillOpen(true)} className="rounded-full border border-[#0D3B66] px-4 py-3 text-sm font-bold text-[#0D3B66]">Bill ({itemCount}){itemCount > 0 ? ` · ${money(bill?.totals?.grandTotal ?? 0, bill?.currency)}` : ""}</button><button type="button" onClick={() => void betaSession.signOut()} className="rounded-full px-3 py-2 text-xs font-semibold text-[#526579]">Sign out</button></div></div>
-              {renderContent()}
+  return (
+    <div className="min-h-screen bg-[#F5F7FA] text-[#081B36]">
+      <div className="flex min-h-screen">
+        <Sidebar
+          activePage={activePage}
+          onSelectPage={(page) => navigate(page)}
+          isAdmin={betaSession.isAdmin}
+          email={betaSession.email}
+          onSignOut={signOut}
+        />
+
+        <div className="flex min-h-screen min-w-0 flex-1 flex-col">
+          <header className="sticky top-0 z-40 hidden min-h-[72px] items-center justify-between border-b border-[#DCE4EC] bg-white/95 px-6 backdrop-blur-xl lg:flex">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7A8B9E]">Charismak Estimator</p>
+              <h1 className="mt-0.5 text-lg font-bold text-[#081B36]">{activePageLabel}</h1>
             </div>
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={() => navigate("feedback")} className="grid h-10 w-10 place-items-center rounded-xl border border-[#DCE4EC] text-[#617286] transition hover:bg-[#F5F7FA]" aria-label="Help and feedback"><HelpCircle className="h-[18px] w-[18px]" /></button>
+              <button type="button" onClick={() => setBillOpen(true)} className="relative grid h-10 w-10 place-items-center rounded-xl border border-[#DCE4EC] text-[#617286] transition hover:bg-[#F5F7FA]" aria-label="Current bill"><Bell className="h-[18px] w-[18px]" />{itemCount ? <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-[#C8320A] px-1 text-[9px] font-bold text-white">{itemCount}</span> : null}</button>
+              <button type="button" onClick={() => navigate("projects")} className="ml-1 inline-flex min-h-10 items-center gap-2 rounded-xl bg-[#081B36] px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-[#173B62]"><Plus className="h-4 w-4" /> New Project</button>
+            </div>
+          </header>
+
+          <header className="sticky top-0 z-40 flex min-h-[64px] items-center justify-between border-b border-[#DCE4EC] bg-white/95 px-3.5 backdrop-blur-xl lg:hidden">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <button type="button" onClick={() => setMobileMenuOpen(true)} aria-label="Open menu" className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-[#DCE4EC] text-[#081B36]"><Menu className="h-5 w-5" /></button>
+              <div className="min-w-0"><p className="truncate text-[9px] font-black uppercase tracking-[0.16em] text-[#C8320A]">Charismak</p><h1 className="truncate text-sm font-bold text-[#081B36]">{activePageLabel}</h1></div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={() => setBillOpen(true)} className="relative grid h-10 w-10 place-items-center rounded-xl border border-[#DCE4EC] text-[#081B36]" aria-label="Open current BOQ"><FileSpreadsheet className="h-[18px] w-[18px]" />{itemCount ? <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-[#C8320A] px-1 text-[9px] font-bold text-white">{itemCount}</span> : null}</button>
+              <button type="button" onClick={() => navigate("projects")} className="grid h-10 w-10 place-items-center rounded-xl bg-[#081B36] text-white" aria-label="New project"><Plus className="h-5 w-5" /></button>
+            </div>
+          </header>
+
+          <main className="flex-1 px-3.5 py-4 sm:px-5 md:py-5 lg:px-6 xl:px-8">
+            <div className="mx-auto w-full max-w-[1480px] pb-24 lg:pb-6">{renderContent()}</div>
           </main>
         </div>
       </div>
-      <nav aria-label="Mobile navigation" className="fixed inset-x-3 bottom-3 z-50 mx-auto grid max-w-lg grid-cols-5 gap-1 rounded-[22px] border border-white/60 bg-[#071E33]/95 p-2 text-white shadow-[0_18px_55px_rgba(7,30,51,0.35)] backdrop-blur-xl lg:hidden">
-        {[
-          { label: "Home", page: "dashboard" as PageKey, action: () => navigate("dashboard") },
-          { label: "Projects", page: "projects" as PageKey, action: () => navigate("projects") },
-          { label: "Tools", page: "quick" as PageKey, action: () => navigate("quick") },
-          { label: `BOQ ${itemCount}`, page: "bill" as PageKey, action: openBill },
-          { label: "Review", page: "feedback" as PageKey, action: () => navigate("feedback") },
-        ].map((item, index) => <button key={item.label} type="button" onClick={item.action} className={`rounded-2xl px-2 py-2 text-center transition ${activePage === item.page ? "bg-[#E7B34B] text-[#071E33]" : "text-white/70"}`}><span className="mx-auto block text-[10px] font-bold tracking-[0.16em]">0{index + 1}</span><span className="mt-1 block text-[11px] font-semibold">{item.label}</span></button>)}
+
+      {mobileMenuOpen ? (
+        <div className="fixed inset-0 z-[80] flex lg:hidden" role="dialog" aria-modal="true" aria-label="Estimator navigation menu">
+          <button type="button" className="absolute inset-0 bg-[#020B16]/65 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} aria-label="Close menu" />
+          <div className="estimator-mobile-drawer relative h-full">
+            <Sidebar
+              activePage={activePage}
+              onSelectPage={(page) => navigate(page)}
+              isAdmin={betaSession.isAdmin}
+              mobile
+              email={betaSession.email}
+              onClose={() => setMobileMenuOpen(false)}
+              onSignOut={signOut}
+            />
+          </div>
+        </div>
+      ) : null}
+
+      <nav aria-label="Mobile navigation" className="estimator-mobile-nav fixed inset-x-2 bottom-2 z-50 mx-auto grid max-w-md grid-cols-5 rounded-2xl border border-[#D8E1EA] bg-white/96 p-1.5 shadow-[0_16px_45px_rgba(8,27,54,0.2)] backdrop-blur-xl lg:hidden">
+        <button type="button" onClick={() => navigate("dashboard")} className={`flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl text-[10px] font-semibold ${activePage === "dashboard" ? "bg-[#EAF2FF] text-[#175FC4]" : "text-[#6B7D90]"}`}><Home className="h-[18px] w-[18px]" />Home</button>
+        <button type="button" onClick={() => navigate("projects")} className={`flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl text-[10px] font-semibold ${activePage === "projects" ? "bg-[#EAF2FF] text-[#175FC4]" : "text-[#6B7D90]"}`}><FolderKanban className="h-[18px] w-[18px]" />Projects</button>
+        <button type="button" onClick={() => navigate("projects")} aria-label="Create a new project" className="relative -mt-5 flex min-h-16 flex-col items-center justify-center gap-1 rounded-2xl bg-[#081B36] text-[10px] font-bold text-white shadow-[0_10px_25px_rgba(8,27,54,0.28)]"><Plus className="h-6 w-6" />New</button>
+        <button type="button" onClick={openBill} className={`relative flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl text-[10px] font-semibold ${activePage === "bill" ? "bg-[#FFF0EB] text-[#C8320A]" : "text-[#6B7D90]"}`}><FileSpreadsheet className="h-[18px] w-[18px]" />BOQ{itemCount ? <span className="absolute right-2 top-1 grid h-4 min-w-4 place-items-center rounded-full bg-[#C8320A] px-1 text-[8px] font-bold text-white">{itemCount}</span> : null}</button>
+        <button type="button" onClick={() => setMobileMenuOpen(true)} className={`flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl text-[10px] font-semibold ${moreActive ? "bg-[#EAF2FF] text-[#175FC4]" : "text-[#6B7D90]"}`}><MoreHorizontal className="h-[18px] w-[18px]" />Menu</button>
       </nav>
+
       <BillDrawer open={billOpen} onClose={() => setBillOpen(false)} onOpenBill={openBill} />
     </div>
   );
