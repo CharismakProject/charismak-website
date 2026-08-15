@@ -231,25 +231,25 @@ export default function ProjectWorkspace({ onContinueProject }: ProjectWorkspace
 
   return (
     <div className="space-y-6">
-      <section className="overflow-hidden rounded-[34px] bg-[#071E33] text-white shadow-[0_28px_90px_rgba(7,30,51,0.2)]">
-        <div className="grid gap-8 p-7 md:p-10 lg:grid-cols-[1fr_0.72fr] lg:items-end">
+      <section className="rounded-2xl border border-[#DCE4EC] bg-white p-4 shadow-[0_8px_28px_rgba(7,30,51,0.04)] md:p-6">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div>
-            <span className="inline-flex rounded-full bg-[#E7B34B]/15 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-[#E7B34B]">One project · every discipline</span>
-            <h1 className="mt-5 max-w-3xl text-4xl font-bold tracking-tight md:text-5xl">What are you planning to build?</h1>
-            <p className="mt-4 max-w-2xl text-sm leading-7 text-white/72 md:text-base">Start at your own level. The platform keeps professional calculation and BOQ structure underneath, while showing only the detail you need.</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#C8320A]">New project</p>
+            <h1 className="mt-1 text-2xl font-bold tracking-tight text-[#081B36] md:text-3xl">What are you planning to build?</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-[#617286]">Choose the level of guidance you need. Professional estimating structure stays underneath every route.</p>
           </div>
-          <div className="grid grid-cols-3 gap-3">
-            {["Describe", "Measure", "Control"].map((label, index) => (
-              <div key={label} className="rounded-2xl bg-white/8 p-4">
-                <span className="text-xs font-bold text-[#E7B34B]">0{index + 1}</span>
-                <p className="mt-3 text-sm font-semibold">{label}</p>
+          <div className="grid grid-cols-3 gap-2 rounded-xl bg-[#F4F7FA] p-2 sm:min-w-[360px]">
+            {["Your role", "Start method", "Project setup"].map((label, index) => (
+              <div key={label} className="rounded-lg bg-white px-2.5 py-2.5 text-center shadow-sm">
+                <span className="mx-auto grid h-5 w-5 place-items-center rounded-full bg-[#081B36] text-[9px] font-bold text-white">{index + 1}</span>
+                <p className="mt-1.5 text-[10px] font-semibold text-[#617286]">{label}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="rounded-[30px] border border-[#d6dfe9] bg-white p-5 shadow-sm md:p-7">
+      <section className="rounded-2xl border border-[#DCE4EC] bg-white p-4 shadow-[0_8px_28px_rgba(7,30,51,0.04)] md:p-6">
         <div className="flex items-start gap-4">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#0D3B66] text-sm font-bold text-white">1</span>
           <div><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#C8320A]">Choose your workspace</p><h2 className="mt-1 text-2xl font-bold text-[#071E33]">Which description fits you?</h2></div>
@@ -262,7 +262,7 @@ export default function ProjectWorkspace({ onContinueProject }: ProjectWorkspace
         </div>
       </section>
 
-      <section className="rounded-[30px] border border-[#d6dfe9] bg-white p-5 shadow-sm md:p-7">
+      <section className="rounded-2xl border border-[#DCE4EC] bg-white p-4 shadow-[0_8px_28px_rgba(7,30,51,0.04)] md:p-6">
         <div className="flex items-start gap-4">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#0D3B66] text-sm font-bold text-white">2</span>
           <div><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#C8320A]">Choose how to begin</p><h2 className="mt-1 text-2xl font-bold text-[#071E33]">How do you want to provide the project information?</h2></div>
@@ -275,7 +275,7 @@ export default function ProjectWorkspace({ onContinueProject }: ProjectWorkspace
         </div>
       </section>
 
-      <section className="rounded-[30px] border border-[#d6dfe9] bg-white p-5 shadow-sm md:p-7">
+      <section className="rounded-2xl border border-[#DCE4EC] bg-white p-4 shadow-[0_8px_28px_rgba(7,30,51,0.04)] md:p-6">
         <div className="flex items-start gap-4">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#0D3B66] text-sm font-bold text-white">3</span>
           <div><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#C8320A]">Set up the project</p><h2 className="mt-1 text-2xl font-bold text-[#071E33]">Project type, location and work coverage</h2></div>
@@ -306,7 +306,7 @@ export default function ProjectWorkspace({ onContinueProject }: ProjectWorkspace
         </div>
       </section>
 
-      <section className="rounded-[30px] border border-[#d6dfe9] bg-white p-5 shadow-sm md:p-7">
+      <section className="rounded-2xl border border-[#DCE4EC] bg-white p-4 shadow-[0_8px_28px_rgba(7,30,51,0.04)] md:p-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0D3B66]/60">Saved on this device</p><h2 className="mt-1 text-2xl font-bold text-[#071E33]">Recent projects</h2></div><span className="text-sm text-[#526579]">{projects.length} project{projects.length === 1 ? "" : "s"}</span></div>
         {projects.length ? <div className="mt-5 grid gap-4 lg:grid-cols-2">{projects.map((project) => <article key={project.id} className="rounded-[24px] border border-[#d6dfe9] bg-[#F8FAFC] p-5"><div className="flex items-start justify-between gap-4"><div><span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#C8320A]">{projectTypeLabel(project.projectType)}</span><h3 className="mt-2 text-lg font-bold text-[#071E33]">{project.name}</h3><p className="mt-1 text-sm text-[#526579]">{project.location}{project.clientName ? ` · ${project.clientName}` : ""}</p></div><span className="rounded-full bg-[#E7F6EE] px-3 py-1 text-[10px] font-bold uppercase text-[#16704A]">{project.status}</span></div><div className="mt-4 flex flex-wrap gap-2 text-xs text-[#526579]"><span className="rounded-full bg-white px-3 py-2">{audienceLabel(project.audience)}</span><span className="rounded-full bg-white px-3 py-2">{routeLabel(project.entryRoute)}</span><span className="rounded-full bg-white px-3 py-2">{project.disciplines.length} disciplines</span></div><div className="mt-5 flex gap-3"><ShellButton onClick={() => onContinueProject(project)}>Continue</ShellButton><button type="button" onClick={() => deleteProject(project)} className="rounded-full px-4 py-3 text-xs font-semibold text-[#C8320A]">Remove</button></div></article>)}</div> : <div className="mt-5 rounded-[24px] border border-dashed border-[#C9D5E1] bg-[#F8FAFC] p-8 text-center"><p className="font-semibold text-[#071E33]">No universal projects yet.</p><p className="mt-2 text-sm text-[#526579]">Your existing bills and estimates remain available in their current workspaces.</p></div>}
       </section>
