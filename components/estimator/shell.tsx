@@ -229,8 +229,8 @@ function EstimatorShellContent() {
       case "estimates": return <EstimateBuilder onOpenRates={() => navigate("rates")} onOpenBill={openBill} />;
       case "register": return <EstimatesArchive onOpenBill={openBill} onStartFence={startFence} />;
       case "rates": return <PriceLibrary onOpenEstimate={() => navigate("estimates")} />;
-      case "feedback": return <FeedbackPage />;
-      case "insights": return betaSession.isAdmin ? <BetaInsights /> : <FeedbackPage />;
+      case "feedback": return <FeedbackPage onBack={() => navigate("dashboard")} />;
+      case "insights": return betaSession.isAdmin ? <BetaInsights /> : <FeedbackPage onBack={() => navigate("dashboard")} />;
     }
   };
 
