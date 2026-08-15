@@ -46,6 +46,11 @@ export type ProcurementItem = {
   calculatedQuantity: number;
   wastagePercent: number;
   purchaseQuantity: number;
+  bulkPurchase?: {
+    densityTonnesPerM3: number;
+    truckCapacity: number;
+    truckCapacityBasis: "tonnes" | "cubic-metres";
+  } | null;
   notes?: string | null;
 };
 

@@ -4,22 +4,10 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from "
 import { calculateFenceSectionPhysicalLayout } from "@/lib/fence/physical-layout-calculator";
 import type {
   FenceSection,
+  ColumnSpecification,
   Gate,
   FencePanelComposition,
-  ColumnConstructionSystem,
 } from "@/lib/fence/types";
-import {
-  createFenceColumnSpecifications,
-  DEFAULT_FENCE_BOQ_PROFILE,
-  normalizeFenceBoqProfile,
-  type FenceBoqProfile,
-} from "@/lib/fence/fence-boq-profile";
-import {
-  createNewBill,
-  loadBill,
-  loadBillById,
-  selectBill,
-} from "@/lib/billing/store";
 
 const STORAGE_KEY = "charismak-estimator-draft";
 
@@ -32,22 +20,16 @@ type ProjectInfo = {
   designCategory: string;
 };
 
-export type SectionState = FenceSection & {
-  grossLengthM: number;
-  constructionSystem: ColumnConstructionSystem;
-  boqProfile: FenceBoqProfile;
-};
+type SectionState = FenceSection & { grossLengthM: number };
 
 type EstimateState = {
   activeStage: number;
-  estimateBillId: string | null;
   teamMode: boolean;
   projectInfo: ProjectInfo;
   sections: SectionState[];
   setProjectField: (field: keyof ProjectInfo, value: string) => void;
   setActiveStage: (n: number) => void;
-  setEstimateBillId: (id: string | null) => void;
-  startNewEstimate: () => boolean;
+  startNewEstimate: (project?: Partial<ProjectInfo>) => boolean;
   clearDraft: () => void;
   addSection: (
     section?: Partial<SectionState>,
@@ -73,6 +55,13 @@ const defaultProject: ProjectInfo = {
   measurement: "Metric",
   designCategory: "Simple",
 };
+
+const defaultColumnSpecifications: ColumnSpecification[] = [
+  { id: "regular-column", name: "Regular column", constructionSystem: "reinforced-concrete", widthAlongFenceM: 0.4, depthM: 0.4, heightM: 2.2, concreteMixId: "1-2-4", concreteCoverMm: 50, mainBarCount: 4, mainBarDiameterMm: 12, mainBarExtraLengthM: 0.2, linkBarDiameterMm: 8, linkSpacingM: 0.2, linkHookAllowanceM: 0.3, formedWidthFaceCount: 2, formedDepthFaceCount: 2, bindingWirePercentOfReinforcementWeight: 1.5, concreteWastagePercent: 5, reinforcementWastagePercent: 5, formworkWastagePercent: 10  },
+  { id: "corner-column", name: "Corner column", constructionSystem: "reinforced-concrete", widthAlongFenceM: 0.45, depthM: 0.45, heightM: 2.2, concreteMixId: "1-2-4", concreteCoverMm: 50, mainBarCount: 4, mainBarDiameterMm: 12, mainBarExtraLengthM: 0.2, linkBarDiameterMm: 8, linkSpacingM: 0.2, linkHookAllowanceM: 0.3, formedWidthFaceCount: 2, formedDepthFaceCount: 2, bindingWirePercentOfReinforcementWeight: 1.5, concreteWastagePercent: 5, reinforcementWastagePercent: 5, formworkWastagePercent: 10 },
+  { id: "pedestrian-gate-post", name: "Pedestrian gate post", constructionSystem: "reinforced-concrete", widthAlongFenceM: 0.35, depthM: 0.35, heightM: 2.2, concreteMixId: "1-2-4", concreteCoverMm: 50, mainBarCount: 4, mainBarDiameterMm: 12, mainBarExtraLengthM: 0.2, linkBarDiameterMm: 8, linkSpacingM: 0.2, linkHookAllowanceM: 0.3, formedWidthFaceCount: 2, formedDepthFaceCount: 2, bindingWirePercentOfReinforcementWeight: 1.5, concreteWastagePercent: 5, reinforcementWastagePercent: 5, formworkWastagePercent: 10 },
+  { id: "vehicle-gate-post", name: "Vehicle gate post", constructionSystem: "reinforced-concrete", widthAlongFenceM: 0.5, depthM: 0.5, heightM: 2.2, concreteMixId: "1-2-4", concreteCoverMm: 50, mainBarCount: 4, mainBarDiameterMm: 12, mainBarExtraLengthM: 0.2, linkBarDiameterMm: 8, linkSpacingM: 0.2, linkHookAllowanceM: 0.3, formedWidthFaceCount: 2, formedDepthFaceCount: 2, bindingWirePercentOfReinforcementWeight: 1.5, concreteWastagePercent: 5, reinforcementWastagePercent: 5, formworkWastagePercent: 10 },
+];
 
 function makeEmptySection(idSuffix = "", opts?: { position?: any; name?: string }): SectionState {
   const id = `section-${Date.now()}${idSuffix}`;
@@ -100,8 +89,6 @@ function makeEmptySection(idSuffix = "", opts?: { position?: any; name?: string 
     securityTopping: "none",
     notes: "",
     panelCompositionOverrides: [],
-    constructionSystem: "reinforced-concrete",
-    boqProfile: { ...DEFAULT_FENCE_BOQ_PROFILE },
   };
 
   return section;
@@ -112,7 +99,6 @@ export function EstimateProvider({ children }: { children: React.ReactNode }) {
   const [teamMode, setTeamMode] = useState(true);
   const [projectInfo, setProjectInfo] = useState<ProjectInfo>(defaultProject);
   const [sections, setSections] = useState<SectionState[]>([]);
-  const [estimateBillId, setEstimateBillId] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -124,51 +110,8 @@ export function EstimateProvider({ children }: { children: React.ReactNode }) {
     try {
       const parsed = JSON.parse(raw);
       if (parsed.projectInfo) setProjectInfo(parsed.projectInfo);
-      if (parsed.sections) {
-        setSections(
-          parsed.sections.map((section: Partial<SectionState>) => ({
-            ...section,
-            constructionSystem:
-              section.constructionSystem ?? "reinforced-concrete",
-            boqProfile: normalizeFenceBoqProfile(section.boqProfile),
-          })) as SectionState[],
-        );
-      }
+      if (parsed.sections) setSections(parsed.sections);
       if (typeof parsed.activeStage === "number") setActiveStageState(parsed.activeStage);
-
-      let restoredBillId =
-        typeof parsed.estimateBillId === "string" ? parsed.estimateBillId : null;
-      if (!restoredBillId) {
-        // One-time migration for drafts created before estimates were linked
-        // to their own bill. Only reuse an editable fence bill that clearly
-        // belongs to the restored project; never bind to a completed issue.
-        const activeBill = loadBill();
-        if (
-          activeBill?.status === "draft" &&
-          activeBill.sourceModules?.includes("fence") &&
-          activeBill.projectName &&
-          activeBill.projectName === parsed.projectInfo?.projectName
-        ) {
-          restoredBillId = activeBill.id;
-        } else if (Array.isArray(parsed.sections) && parsed.sections.length > 0) {
-          // Older beta builds could leave a new fence scope pointing at the
-          // last completed bill. Give that restored scope an independent
-          // editable bill during migration rather than reopening the locked
-          // historical issue.
-          const migratedBill = createNewBill({
-            title: `${parsed.projectInfo?.projectName || "Fence Project"} Bill of Quantities`,
-            projectName: parsed.projectInfo?.projectName || null,
-            clientName: parsed.projectInfo?.clientName || null,
-            location: parsed.projectInfo?.location || null,
-            currency: parsed.projectInfo?.currency || "NGN",
-          });
-          restoredBillId = migratedBill.id;
-        }
-      }
-      if (restoredBillId && loadBillById(restoredBillId)) {
-        setEstimateBillId(restoredBillId);
-        selectBill(restoredBillId);
-      }
     } catch {
       localStorage.removeItem(STORAGE_KEY);
     } finally {
@@ -189,33 +132,17 @@ export function EstimateProvider({ children }: { children: React.ReactNode }) {
       projectInfo,
       sections,
       activeStage,
-      estimateBillId,
     });
     localStorage.setItem(STORAGE_KEY, payload);
-  }, [projectInfo, sections, activeStage, estimateBillId, hydrated]);
+  }, [projectInfo, sections, activeStage, hydrated]);
 
   const setProjectField = (field: keyof ProjectInfo, value: string) => setProjectInfo((p) => ({ ...p, [field]: value }));
 
-  const startNewEstimate = (): boolean => {
+  const startNewEstimate = (project?: Partial<ProjectInfo>) => {
     const hasDraft =
       projectInfo.projectName.trim().length > 0 || sections.length > 0;
-    if (!hasDraft && estimateBillId) {
-      const existing = loadBillById(estimateBillId);
-      const existingItemCount =
-        existing?.sections.reduce(
-          (total, section) => total + section.items.length,
-          0,
-        ) ?? 0;
-      if (existing?.status === "draft" && existingItemCount === 0) {
-        selectBill(existing.id);
-        setActiveStageState(1);
-        return true;
-      }
-    }
     if (hasDraft) {
-      const ok = window.confirm(
-        "Start a new fence estimate? The current bill will remain safely available in Bill Register.",
-      );
+      const ok = window.confirm("A draft estimate exists. Start a new estimate and discard the existing draft?");
       if (!ok) return false;
       const raw = localStorage.getItem(STORAGE_KEY);
       let current: Record<string, unknown> = {};
@@ -227,19 +154,10 @@ export function EstimateProvider({ children }: { children: React.ReactNode }) {
       delete current.projectInfo;
       delete current.sections;
       delete current.activeStage;
-      delete current.estimateBillId;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
     }
-    const newBill = createNewBill({
-      title: "New Fence Estimate",
-      projectName: null,
-      clientName: null,
-      location: null,
-      currency: "NGN",
-    });
-    setProjectInfo(defaultProject);
+    setProjectInfo({ ...defaultProject, ...project });
     setSections([]);
-    setEstimateBillId(newBill.id);
     setActiveStageState(1);
     return true;
   };
@@ -257,11 +175,9 @@ export function EstimateProvider({ children }: { children: React.ReactNode }) {
     delete current.projectInfo;
     delete current.sections;
     delete current.activeStage;
-    delete current.estimateBillId;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
     setProjectInfo(defaultProject);
     setSections([]);
-    setEstimateBillId(null);
     setActiveStageState(0);
   };
 
@@ -289,12 +205,7 @@ export function EstimateProvider({ children }: { children: React.ReactNode }) {
   const duplicateSection = (id: string) => {
     const src = sections.find((s) => s.id === id);
     if (!src) return;
-    const clone = {
-      ...src,
-      id: `section-${Date.now()}`,
-      gates: src.gates.map((gate) => ({ ...gate, id: `${gate.id}-copy-${Date.now()}` })),
-      boqProfile: { ...src.boqProfile },
-    } as SectionState;
+    const clone = { ...src, id: `section-${Date.now()}` } as SectionState;
     setSections((cur) => [...cur, clone]);
   };
 
@@ -326,10 +237,7 @@ export function EstimateProvider({ children }: { children: React.ReactNode }) {
     } as FenceSection;
 
     try {
-      const result = calculateFenceSectionPhysicalLayout({
-        section: engineSection as FenceSection,
-        specifications: createFenceColumnSpecifications(s),
-      });
+      const result = calculateFenceSectionPhysicalLayout({ section: engineSection as any, specifications: defaultColumnSpecifications });
       return result;
     } catch (err) {
       return { error: err instanceof Error ? err.message : String(err) };
@@ -344,13 +252,11 @@ export function EstimateProvider({ children }: { children: React.ReactNode }) {
 
   const value: EstimateState = {
     activeStage,
-    estimateBillId,
     teamMode,
     projectInfo,
     sections,
     setProjectField,
     setActiveStage: setActiveStageState,
-    setEstimateBillId,
     startNewEstimate,
     clearDraft,
     addSection,

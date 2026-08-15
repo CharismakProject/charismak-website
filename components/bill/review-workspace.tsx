@@ -21,11 +21,13 @@ import {
 } from "@/lib/billing/export";
 import type { Bill, BillAdjustment, BillItem } from "@/lib/billing/models";
 import type { BillItemRateSource } from "@/lib/billing/models";
-import { consolidateProcurementItems } from "@/lib/billing/procurement";
+import {
+  consolidateProcurementItems,
+  getPracticalPurchaseSummary,
+} from "@/lib/billing/procurement";
 import { applyPriceLibraryRates } from "@/lib/pricing/boq-rates";
 import { loadPriceItems, loadRateTemplates } from "@/lib/pricing/store";
 import ShellButton from "../estimator/ui/button";
-import { useEstimate } from "../estimator/estimate-provider";
 
 type ReviewWorkspaceProps = {
   onOpenConcrete: () => void;
@@ -60,7 +62,6 @@ export default function ReviewWorkspace({
   onStartFence,
   onOpenEstimates,
 }: ReviewWorkspaceProps) {
-  const estimate = useEstimate();
   const [bill, setBill] = useState<Bill | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -234,9 +235,6 @@ export default function ReviewWorkspace({
     if (!bill) return;
     try {
       const revision = createBillRevision(bill.id);
-      if (estimate.estimateBillId === bill.id) {
-        estimate.setEstimateBillId(revision.id);
-      }
       setBill(revision);
       setMessage(
         `Version ${revision.version} created as an editable draft. The completed version remains unchanged.`,
@@ -263,7 +261,7 @@ export default function ReviewWorkspace({
     }
   };
 
-  if (!bill) {
+  if (!bill || itemCount === 0) {
     return (
       <section className="overflow-hidden rounded-[30px] border border-[#d6dfe9] bg-white shadow-[0_20px_60px_rgba(7,30,51,0.08)]">
         <div className="grid gap-8 p-6 md:p-8 lg:grid-cols-[1fr_0.8fr] lg:items-center">
@@ -345,7 +343,6 @@ export default function ReviewWorkspace({
             <div className="col-span-2 rounded-2xl bg-[#C8320A] p-4 sm:col-span-1"><span className="text-xs text-white/75">Grand total</span><strong className="mt-1 block text-lg">{formatCurrency(totals.grandTotal, bill.currency)}</strong></div>
           </div>
         </div>
-        {itemCount === 0 ? <div className="mt-5 rounded-2xl border border-[#E7B34B]/35 bg-white/8 p-4 text-sm leading-6 text-white/80">This bill is open and editable, but it has no measured items yet. For a fence estimate, use <strong className="text-white">Generate / Update Fence BOQ</strong> above. For a manual bill, use <strong className="text-white">Add manual item</strong>.</div> : null}
         <div className="mt-6 flex flex-wrap gap-3 border-t border-white/12 pt-5">
           <ShellButton onClick={exportExcel}>Export Excel</ShellButton>
           <button type="button" onClick={printBill} className="rounded-full border border-white/35 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10">Print / Save PDF</button>
@@ -415,7 +412,7 @@ export default function ReviewWorkspace({
               <span><span className="block text-xs font-bold uppercase tracking-[0.2em] text-[#0D3B66]/65">Procurement</span><span className="mt-1 block text-xl font-bold text-[#071E33]">Materials schedule</span></span>
               <span className="rounded-full bg-[#EEF3F8] px-4 py-2 text-xs font-bold text-[#0D3B66]">{consolidatedMaterials.length} consolidated items · View</span>
             </summary>
-            <div className="mt-5 overflow-x-auto"><table className="min-w-[760px] w-full border-collapse text-sm"><thead><tr className="border-b-2 border-[#0D3B66] text-left text-[11px] uppercase tracking-[0.08em]"><th className="p-3">S/N</th><th className="p-3">Material</th><th className="p-3">Unit</th><th className="p-3 text-right">Calculated</th><th className="p-3 text-right">Purchase</th><th className="p-3">Sources / notes</th></tr></thead><tbody>{consolidatedMaterials.map((material, index) => <tr key={material.id} className="border-b border-[#DFE6EE]"><td className="p-3">{index + 1}</td><td className="p-3 font-medium">{material.description}</td><td className="p-3">{material.unit}</td><td className="p-3 text-right">{formatQuantity(material.calculatedQuantity)}</td><td className="p-3 text-right font-bold text-[#0D3B66]">{formatQuantity(material.purchaseQuantity)}</td><td className="max-w-[300px] p-3 text-xs leading-5 text-[#526579]">{material.notes}</td></tr>)}</tbody></table></div>
+            <div className="mt-5 overflow-x-auto"><table className="min-w-[980px] w-full border-collapse text-sm"><thead><tr className="border-b-2 border-[#0D3B66] text-left text-[11px] uppercase tracking-[0.08em]"><th className="p-3">S/N</th><th className="p-3">Material</th><th className="p-3">Unit</th><th className="p-3 text-right">Calculated</th><th className="p-3 text-right">Purchase</th><th className="p-3">Practical purchase</th><th className="p-3">Sources / notes</th></tr></thead><tbody>{consolidatedMaterials.map((material, index) => <tr key={material.id} className="border-b border-[#DFE6EE]"><td className="p-3">{index + 1}</td><td className="p-3 font-medium">{material.description}</td><td className="p-3">{material.unit}</td><td className="p-3 text-right">{formatQuantity(material.calculatedQuantity)}</td><td className="p-3 text-right font-bold text-[#0D3B66]">{formatQuantity(material.purchaseQuantity)}</td><td className="max-w-[290px] p-3 text-xs font-medium leading-5 text-[#0D3B66]">{getPracticalPurchaseSummary(material) ?? "—"}</td><td className="max-w-[300px] p-3 text-xs leading-5 text-[#526579]">{material.notes}</td></tr>)}</tbody></table></div>
           </details>
         </div>
 

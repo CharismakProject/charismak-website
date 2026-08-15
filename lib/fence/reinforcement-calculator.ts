@@ -42,6 +42,52 @@ const assertPositiveWholeNumber = (
 export function calculateReinforcement(
   input: ReinforcementCalculationInput
 ): ReinforcementCalculationResult {
+  if (input.calculationMode === "welded-mesh") {
+    assertPositive("Mesh coverage area", input.coverageAreaM2);
+    assertNonNegative("Mesh lap allowance", input.lapPercent);
+    assertNonNegative("Mesh wastage", input.wastagePercent);
+    assertPositive("Mesh sheet length", input.sheetLengthM);
+    assertPositive("Mesh sheet width", input.sheetWidthM);
+    assertPositive("Mesh unit weight", input.unitWeightKgPerM2);
+    assertNonNegative("Binding wire percentage", input.bindingWirePercent);
+
+    const lapAreaM2 = input.coverageAreaM2 * (input.lapPercent / 100);
+    const areaIncludingLapsM2 = input.coverageAreaM2 + lapAreaM2;
+    const wastageAreaM2 = areaIncludingLapsM2 * (input.wastagePercent / 100);
+    const finalRequiredAreaM2 = areaIncludingLapsM2 + wastageAreaM2;
+    const sheetAreaM2 = input.sheetLengthM * input.sheetWidthM;
+    const exactSheetQuantity = finalRequiredAreaM2 / sheetAreaM2;
+    const procurementSheetQuantity = Math.ceil(exactSheetQuantity);
+    const installedWeightKg = input.coverageAreaM2 * input.unitWeightKgPerM2;
+    const totalWeightKg = finalRequiredAreaM2 * input.unitWeightKgPerM2;
+    const procurementWeightKg =
+      procurementSheetQuantity * sheetAreaM2 * input.unitWeightKgPerM2;
+    const bindingWireWeightKg = totalWeightKg * (input.bindingWirePercent / 100);
+
+    return {
+      id: input.id,
+      name: input.name,
+      calculationMode: input.calculationMode,
+      meshDesignation: input.meshDesignation.trim() || "Custom welded mesh",
+      coverageAreaM2: roundQuantity(input.coverageAreaM2),
+      lapPercent: roundQuantity(input.lapPercent),
+      lapAreaM2: roundQuantity(lapAreaM2),
+      wastagePercent: roundQuantity(input.wastagePercent),
+      wastageAreaM2: roundQuantity(wastageAreaM2),
+      finalRequiredAreaM2: roundQuantity(finalRequiredAreaM2),
+      sheetLengthM: roundQuantity(input.sheetLengthM),
+      sheetWidthM: roundQuantity(input.sheetWidthM),
+      sheetAreaM2: roundQuantity(sheetAreaM2),
+      exactSheetQuantity: roundQuantity(exactSheetQuantity),
+      procurementSheetQuantity,
+      unitWeightKgPerM2: roundQuantity(input.unitWeightKgPerM2),
+      installedWeightKg: roundQuantity(installedWeightKg),
+      totalWeightKg: roundQuantity(totalWeightKg),
+      procurementWeightKg: roundQuantity(procurementWeightKg),
+      bindingWireWeightKg: roundQuantity(bindingWireWeightKg),
+    };
+  }
+
   assertPositive(
     "Bar diameter",
     input.barDiameterMm
@@ -170,6 +216,7 @@ export function calculateReinforcement(
     barDiameterMm: roundQuantity(
       input.barDiameterMm
     ),
+    steelGrade: input.steelGrade ?? "high-yield",
 
     quantity,
     cuttingLengthM:

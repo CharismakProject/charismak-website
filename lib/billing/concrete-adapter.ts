@@ -8,6 +8,7 @@ import type {
   BillItem,
   ProcurementItem,
 } from "./models";
+import type { BulkPurchaseAssumption } from "../materials/bulk-converter";
 
 const round = (value: number, precision: number) =>
   Number(value.toFixed(precision));
@@ -17,12 +18,20 @@ export function adaptConcreteResultToBill(input: {
   element: ConcreteElementCalculationInput;
   mix: ConcreteMixSpecification;
   result: ConcreteElementMaterialCalculationResult;
+  bulkPurchase?: {
+    sand: BulkPurchaseAssumption;
+    aggregate: BulkPurchaseAssumption;
+  };
 }): {
   workItem: BillItem;
   materials: ProcurementItem[];
   assumptions: BillAssumption[];
 } {
   const { calculationId, element, mix, result } = input;
+  const bulkPurchase = input.bulkPurchase ?? {
+    sand: { densityTonnesPerM3: 1.6, truckCapacity: 15, truckCapacityBasis: "tonnes" as const },
+    aggregate: { densityTonnesPerM3: 1.5, truckCapacity: 15, truckCapacityBasis: "tonnes" as const },
+  };
   const elementName = element.name.trim() || "Concrete element";
   const mixBasis =
     mix.calculationMethod === "ratio-based"
@@ -75,7 +84,8 @@ export function adaptConcreteResultToBill(input: {
       calculatedQuantity: round(result.materials.sandVolumeM3, 3),
       wastagePercent: 0,
       purchaseQuantity: round(result.materials.sandVolumeM3, 3),
-      notes: "Quantity already follows the selected concrete mix conversion.",
+      bulkPurchase: bulkPurchase.sand,
+      notes: "Technical quantity is in m³. Tonnage and truckloads are approximate purchasing conversions; confirm density and load capacity with the supplier.",
     },
     {
       id: `${calculationId}:aggregate`,
@@ -87,7 +97,8 @@ export function adaptConcreteResultToBill(input: {
       calculatedQuantity: round(result.materials.coarseAggregateVolumeM3, 3),
       wastagePercent: 0,
       purchaseQuantity: round(result.materials.coarseAggregateVolumeM3, 3),
-      notes: "Quantity already follows the selected concrete mix conversion.",
+      bulkPurchase: bulkPurchase.aggregate,
+      notes: "Technical quantity is in m³. Tonnage and truckloads are approximate purchasing conversions; confirm density and load capacity with the supplier.",
     },
     {
       id: `${calculationId}:water`,

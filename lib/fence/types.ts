@@ -659,7 +659,10 @@ export type BlockworkElementMaterialCalculationResult = {
 
 export type ReinforcementCalculationMode =
   | "bar-mark"
-  | "direct-total-length";
+  | "direct-total-length"
+  | "welded-mesh";
+
+export type ReinforcementSteelGrade = "high-yield" | "mild-steel";
 
 export type BarMarkReinforcementInput = {
   id: string;
@@ -674,6 +677,7 @@ export type BarMarkReinforcementInput = {
   wastagePercent: number;
   stockBarLengthM: number;
   bindingWirePercent: number;
+  steelGrade?: ReinforcementSteelGrade;
 };
 
 export type DirectLengthReinforcementInput = {
@@ -687,18 +691,35 @@ export type DirectLengthReinforcementInput = {
   wastagePercent: number;
   stockBarLengthM: number;
   bindingWirePercent: number;
+  steelGrade?: ReinforcementSteelGrade;
+};
+
+export type WeldedMeshReinforcementInput = {
+  id: string;
+  name: string;
+  calculationMode: "welded-mesh";
+  meshDesignation: string;
+  coverageAreaM2: number;
+  lapPercent: number;
+  wastagePercent: number;
+  sheetLengthM: number;
+  sheetWidthM: number;
+  unitWeightKgPerM2: number;
+  bindingWirePercent: number;
 };
 
 export type ReinforcementCalculationInput =
   | BarMarkReinforcementInput
-  | DirectLengthReinforcementInput;
+  | DirectLengthReinforcementInput
+  | WeldedMeshReinforcementInput;
 
-export type ReinforcementCalculationResult = {
+export type BarReinforcementCalculationResult = {
   id: string;
   name: string;
-  calculationMode: ReinforcementCalculationMode;
+  calculationMode: "bar-mark" | "direct-total-length";
 
   barDiameterMm: number;
+  steelGrade: ReinforcementSteelGrade;
 
   quantity: number | null;
   cuttingLengthM: number | null;
@@ -719,6 +740,33 @@ export type ReinforcementCalculationResult = {
 
   bindingWireWeightKg: number;
 };
+
+export type WeldedMeshReinforcementResult = {
+  id: string;
+  name: string;
+  calculationMode: "welded-mesh";
+  meshDesignation: string;
+  coverageAreaM2: number;
+  lapPercent: number;
+  lapAreaM2: number;
+  wastagePercent: number;
+  wastageAreaM2: number;
+  finalRequiredAreaM2: number;
+  sheetLengthM: number;
+  sheetWidthM: number;
+  sheetAreaM2: number;
+  exactSheetQuantity: number;
+  procurementSheetQuantity: number;
+  unitWeightKgPerM2: number;
+  installedWeightKg: number;
+  totalWeightKg: number;
+  procurementWeightKg: number;
+  bindingWireWeightKg: number;
+};
+
+export type ReinforcementCalculationResult =
+  | BarReinforcementCalculationResult
+  | WeldedMeshReinforcementResult;
 
 export type ExcavationCalculationMode =
   | "dimensions"
