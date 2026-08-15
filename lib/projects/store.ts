@@ -1,6 +1,7 @@
 import type { NewUniversalProject, UniversalProject } from "./models";
 
 const PROJECTS_KEY = "charismak-universal-projects-v1";
+const ACTIVE_PROJECT_KEY = "charismak-active-project-v1";
 export const PROJECTS_UPDATED_EVENT = "charismak:projects-updated";
 
 const canUseStorage = () => typeof localStorage !== "undefined";
@@ -27,6 +28,23 @@ export function loadProjects(): UniversalProject[] {
   }
 }
 
+export function loadProject(id: string): UniversalProject | null {
+  return loadProjects().find((project) => project.id === id) ?? null;
+}
+
+export function setActiveProject(project: UniversalProject | string | null) {
+  if (!canUseStorage()) return;
+  const id = typeof project === "string" ? project : project?.id ?? null;
+  if (id) localStorage.setItem(ACTIVE_PROJECT_KEY, id);
+  else localStorage.removeItem(ACTIVE_PROJECT_KEY);
+}
+
+export function loadActiveProject(): UniversalProject | null {
+  if (!canUseStorage()) return null;
+  const id = localStorage.getItem(ACTIVE_PROJECT_KEY);
+  return id ? loadProject(id) : null;
+}
+
 export function saveProject(project: UniversalProject): UniversalProject {
   const next = { ...project, updatedAt: new Date().toISOString() };
   if (canUseStorage()) {
@@ -36,6 +54,9 @@ export function saveProject(project: UniversalProject): UniversalProject {
     else projects.unshift(next);
     localStorage.setItem(PROJECTS_KEY, JSON.stringify(projects));
     notify();
+  }
+  if (canUseStorage() && localStorage.getItem(ACTIVE_PROJECT_KEY) === project.id) {
+    localStorage.setItem(ACTIVE_PROJECT_KEY, project.id);
   }
   return next;
 }

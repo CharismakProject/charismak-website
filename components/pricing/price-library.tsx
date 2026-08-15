@@ -37,6 +37,15 @@ const money = (value: number | null, currency = "NGN") =>
         maximumFractionDigits: 2,
       }).format(value);
 
+const practicalUnitHint = (item: PriceItem) => {
+  if (item.id === "sharp-sand") return "Buying guide: m³ + tonnes + selected truck capacity";
+  if (item.id === "granite-aggregate") return "Buying guide: m³ + tonnes + 10/20/30-tonne truck";
+  if (item.id === "reinforcement-steel") return "Buying guide: kg + tonne + 12 m bar lengths";
+  if (item.id.startsWith("brc-")) return "Buying guide: full 2.4 × 4.8 m BRC sheet";
+  if (item.id === "cement-50kg") return "Buying guide: 50 kg bag · 20 bags ≈ 1 tonne";
+  return null;
+};
+
 export default function PriceLibrary({
   onOpenEstimate,
 }: {
@@ -238,7 +247,7 @@ export default function PriceLibrary({
               {displayedItems.map((item) => (
                 <tr key={item.id} className="border-b border-[#DFE6EE] align-top hover:bg-[#F8FAFC]">
                   <td className="p-3"><input value={item.code} onChange={(event) => update(item.id, { code: event.target.value })} className="w-24 rounded-xl border border-[#CCD7E3] px-3 py-2 font-semibold" /></td>
-                  <td className="p-3"><input value={item.description} onChange={(event) => update(item.id, { description: event.target.value })} className="w-72 rounded-xl border border-[#CCD7E3] px-3 py-2" /></td>
+                  <td className="p-3"><input value={item.description} onChange={(event) => update(item.id, { description: event.target.value })} className="w-72 rounded-xl border border-[#CCD7E3] px-3 py-2" />{practicalUnitHint(item) ? <p className="mt-1 max-w-72 text-[10px] font-semibold leading-4 text-[#175FC4]">{practicalUnitHint(item)}</p> : null}</td>
                   <td className="p-3"><select value={item.category} onChange={(event) => update(item.id, { category: event.target.value as PriceCategory })} className="rounded-xl border border-[#CCD7E3] px-3 py-2"><option value="material">Material</option><option value="labour">Labour</option><option value="plant">Plant</option><option value="subcontract">Subcontract</option></select></td>
                   <td className="p-3"><input value={item.unit} onChange={(event) => update(item.id, { unit: event.target.value })} className="w-20 rounded-xl border border-[#CCD7E3] px-3 py-2" /></td>
                   <td className="p-3"><input aria-label={`Rate for ${item.description}`} type="number" min="0" step="0.01" value={item.rate ?? ""} placeholder="Enter price" onChange={(event) => update(item.id, { rate: event.target.value === "" ? null : Math.max(0, Number(event.target.value) || 0), confidence: "manual" })} className={`w-36 rounded-xl border px-3 py-2 text-right font-bold ${item.rate === null ? "border-[#E3A58F] bg-[#FFF8F5] text-[#C8320A]" : "border-[#CCD7E3] bg-white text-[#071E33]"}`} /><p className="mt-1 text-right text-[10px] text-[#526579]">Default: {money(item.defaultRate ?? null, item.currency)} · {item.confidence ?? "manual"}</p></td>

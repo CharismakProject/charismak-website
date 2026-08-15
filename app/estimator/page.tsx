@@ -10,6 +10,7 @@ import {
   MessageSquareText,
   Smartphone,
 } from "lucide-react";
+import QuickCostEstimator from "@/components/public/quick-cost-estimator";
 
 export const metadata: Metadata = {
   title: "Construction Estimator",
@@ -62,6 +63,8 @@ export default function EstimatorPage() {
           </div>
         </div>
       </section>
+
+      <QuickCostEstimator />
 
       <section id="how-it-works" className="px-5 py-20 md:px-8">
         <div className="mx-auto max-w-7xl">

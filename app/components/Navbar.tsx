@@ -7,13 +7,13 @@ import { useState } from "react";
 import { company } from "../site-data";
 
 const navItems = [
-  { label: "Home", href: "/" },
   { label: "About", href: "/about" },
   { label: "Services", href: "/services" },
   { label: "Projects", href: "/projects" },
-  { label: "Estimator", href: "/estimator" },
-  { label: "Leadership", href: "/leadership" },
-  { label: "HSE", href: "/hse" },
+  { label: "Estimate", href: "/estimator" },
+  { label: "Prices", href: "/prices" },
+  { label: "Marketplace", href: "/marketplace" },
+  { label: "Blog", href: "/blog" },
   { label: "Contact", href: "/contact" },
 ];
 
@@ -49,7 +49,7 @@ export default function Navbar() {
             </div>
           </Link>
 
-          <nav className="hidden items-center gap-5 xl:flex">
+          <nav className="hidden items-center gap-4 xl:flex">
             {navItems.map((item) => (
               <Link
                 key={item.href}
@@ -64,7 +64,7 @@ export default function Navbar() {
           <div className="hidden items-center gap-3 lg:flex">
             <Link
               href="/company-profile.pdf"
-              className="inline-flex items-center gap-2 border border-white/25 px-4 py-3 text-sm font-bold text-white transition hover:border-[#C8A45D] hover:text-[#C8A45D]"
+              className="hidden items-center gap-2 border border-white/25 px-4 py-3 text-sm font-bold text-white transition hover:border-[#C8A45D] hover:text-[#C8A45D] 2xl:inline-flex"
             >
               Profile <Download className="h-4 w-4" />
             </Link>

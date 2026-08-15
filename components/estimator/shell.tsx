@@ -15,7 +15,7 @@ import {
 import type { Bill } from "@/lib/billing/models";
 import { BILL_UPDATED_EVENT, loadBill } from "@/lib/billing/store";
 import type { UniversalProject } from "@/lib/projects/models";
-import { saveProject } from "@/lib/projects/store";
+import { loadActiveProject, loadProject, saveProject, setActiveProject as rememberActiveProject } from "@/lib/projects/store";
 import { createRateEstimate, selectRateEstimate } from "@/lib/pricing/store";
 import { useBetaSession } from "../auth/beta-session";
 import BillDrawer from "../bill/bill-drawer";
@@ -25,7 +25,12 @@ import BetaInsights from "../feedback/beta-insights";
 import FeedbackPage from "../feedback/feedback-page";
 import EstimateBuilder from "../pricing/estimate-builder";
 import PriceLibrary from "../pricing/price-library";
+import MarketplaceDirectory from "../marketplace/marketplace-directory";
 import ProjectWorkspace from "../projects/project-workspace";
+import BoqImportWorkspace from "../projects/boq-import-workspace";
+import BudgetWorkspace from "../projects/budget-workspace";
+import GuidedEstimator from "../projects/guided-estimator";
+import PlanUploadWorkspace from "../projects/plan-upload-workspace";
 import CalculatorShell from "./calculators/calculator-shell";
 import EstimatorDashboard from "./dashboard";
 import EstimateProvider, { useEstimate } from "./estimate-provider";
@@ -37,6 +42,12 @@ import Workflow from "./workflow";
 const pages: Array<{ key: PageKey; label: string }> = [
   { key: "dashboard", label: "Dashboard" },
   { key: "projects", label: "Projects" },
+  { key: "guided", label: "Guided Estimate" },
+  { key: "dimensions", label: "Project Dimensions" },
+  { key: "plan", label: "Plan Review" },
+  { key: "import", label: "Import BOQ" },
+  { key: "budget", label: "Project Budget" },
+  { key: "marketplace", label: "Suppliers & Artisans" },
   { key: "fence", label: "Fence / Boundary" },
   { key: "quick", label: "Quick Calculators" },
   { key: "estimates", label: "Estimate Builder" },
@@ -58,6 +69,12 @@ const pageHash: Record<PageKey, string> = {
   feedback: "#feedback",
   insights: "#insights",
   projects: "#projects",
+  guided: "#guided",
+  dimensions: "#dimensions",
+  plan: "#plan",
+  import: "#import",
+  budget: "#budget",
+  marketplace: "#marketplace",
 };
 
 export default function EstimatorShell() {
@@ -76,6 +93,7 @@ function EstimatorShellContent() {
   const [billOpen, setBillOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [bill, setBill] = useState<Bill | null>(null);
+  const [activeProject, setActiveProject] = useState<UniversalProject | null>(null);
 
   useEffect(() => {
     const syncRoute = () => {
@@ -98,6 +116,10 @@ function EstimatorShellContent() {
     const syncBill = () => setBill(loadBill());
     window.addEventListener(BILL_UPDATED_EVENT, syncBill);
     return () => window.removeEventListener(BILL_UPDATED_EVENT, syncBill);
+  }, []);
+
+  useEffect(() => {
+    setActiveProject(loadActiveProject());
   }, []);
 
   useEffect(() => {
@@ -131,6 +153,8 @@ function EstimatorShellContent() {
   }, [estimate, navigate]);
 
   const continueUniversalProject = useCallback((project: UniversalProject) => {
+    rememberActiveProject(project);
+    setActiveProject(project);
     if (project.projectType === "fence-boundary") {
       const started = estimate.startNewEstimate({
         projectName: project.name,
@@ -143,10 +167,11 @@ function EstimatorShellContent() {
       return;
     }
 
-    if (project.entryRoute === "enter-dimensions") {
-      navigate("quick");
-      return;
-    }
+    if (project.entryRoute === "guided-questions") return navigate("guided");
+    if (project.entryRoute === "upload-plan") return navigate("plan");
+    if (project.entryRoute === "enter-dimensions") return navigate("dimensions");
+    if (project.entryRoute === "import-boq") return navigate("import");
+    if (project.entryRoute === "drawing-takeoff") return navigate("plan");
 
     try {
       if (project.linkedEstimateId) {
@@ -159,7 +184,8 @@ function EstimatorShellContent() {
           location: project.location,
           currency: project.currency,
         });
-        saveProject({ ...project, linkedEstimateId: linkedEstimate.id });
+        const saved = saveProject({ ...project, linkedEstimateId: linkedEstimate.id });
+        setActiveProject(saved);
       }
     } catch {
       const linkedEstimate = createRateEstimate({
@@ -169,7 +195,8 @@ function EstimatorShellContent() {
         location: project.location,
         currency: project.currency,
       });
-      saveProject({ ...project, linkedEstimateId: linkedEstimate.id });
+      const saved = saveProject({ ...project, linkedEstimateId: linkedEstimate.id });
+      setActiveProject(saved);
     }
     navigate("estimates");
   }, [estimate, navigate]);
@@ -197,11 +224,15 @@ function EstimatorShellContent() {
           onContinueProject={continueUniversalProject}
           onStartFence={startFence}
           onOpenCalculator={(calculator) => navigate("quick", calculator)}
-          onOpenEstimateBuilder={() => navigate("estimates")}
           onOpenBill={openBill}
           onOpenRates={() => navigate("rates")}
         />;
       case "projects": return <ProjectWorkspace onContinueProject={continueUniversalProject} />;
+      case "guided": return activeProject ? <GuidedEstimator project={activeProject} mode="guided" onBack={() => navigate("projects")} onOpenBill={openBill} onOpenBudget={() => navigate("budget")} /> : <ProjectWorkspace onContinueProject={continueUniversalProject} />;
+      case "dimensions": return activeProject ? <GuidedEstimator project={activeProject} mode="dimensions" onBack={() => navigate("projects")} onOpenBill={openBill} onOpenBudget={() => navigate("budget")} /> : <ProjectWorkspace onContinueProject={continueUniversalProject} />;
+      case "plan": return activeProject ? <PlanUploadWorkspace project={activeProject} professional={activeProject.entryRoute === "drawing-takeoff"} onBack={() => navigate("projects")} onContinue={() => { const refreshed = loadProject(activeProject.id); if (refreshed) setActiveProject(refreshed); navigate(activeProject.entryRoute === "drawing-takeoff" ? "estimates" : "guided"); }} /> : <ProjectWorkspace onContinueProject={continueUniversalProject} />;
+      case "import": return activeProject ? <BoqImportWorkspace project={activeProject} onBack={() => navigate("projects")} onOpenBill={openBill} /> : <ProjectWorkspace onContinueProject={continueUniversalProject} />;
+      case "budget": return activeProject ? <BudgetWorkspace project={activeProject} onBack={() => navigate(activeProject.entryRoute === "enter-dimensions" ? "dimensions" : "guided")} /> : <ProjectWorkspace onContinueProject={continueUniversalProject} />;
       case "fence": return <Workflow onOpenConcrete={openConcrete} onOpenBlockwork={openBlockwork} onOpenBill={openBill} onOpenEstimates={() => navigate("register")} />;
       case "quick": return <CalculatorShell activeCalculator={activeCalculator} onSelectCalculator={(calculator) => navigate("quick", calculator)} onOpenBill={openBill} />;
       case "bill": return <ReviewWorkspace onOpenConcrete={openConcrete} onOpenBlockwork={openBlockwork} onStartFence={startFence} onOpenEstimates={() => navigate("register")} />;
@@ -210,6 +241,7 @@ function EstimatorShellContent() {
       case "rates": return <PriceLibrary onOpenEstimate={() => navigate("estimates")} />;
       case "feedback": return <FeedbackPage onBack={() => navigate("dashboard")} />;
       case "insights": return betaSession.isAdmin ? <BetaInsights /> : <FeedbackPage onBack={() => navigate("dashboard")} />;
+      case "marketplace": return <MarketplaceDirectory embedded />;
     }
   };
 

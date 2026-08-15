@@ -36,6 +36,36 @@ export type ProjectDiscipline =
 
 export type ProjectStatus = "draft" | "estimating" | "active" | "archived";
 
+export type FinishLevel = "basic" | "standard" | "premium";
+
+export type ProjectSpace = {
+  id: string;
+  name: string;
+  category: "living" | "bedroom" | "kitchen" | "bathroom" | "work" | "circulation" | "other";
+  count: number;
+  lengthM?: number | null;
+  widthM?: number | null;
+  heightM?: number | null;
+};
+
+export type ProjectScope = {
+  landLengthM?: number | null;
+  landWidthM?: number | null;
+  landAreaM2?: number | null;
+  buildingLengthM?: number | null;
+  buildingWidthM?: number | null;
+  floorAreaM2?: number | null;
+  floors?: number;
+  finishLevel?: FinishLevel;
+  includeExternalWorks?: boolean;
+  preliminariesMode?: "none" | "percentage" | "recommended";
+  preliminariesPercent?: number;
+  spaces?: ProjectSpace[];
+  source?: "guided" | "dimensions" | "drawing" | "measured" | "imported";
+  confidence?: "rough" | "detailed" | "professional";
+  assumptions?: string[];
+};
+
 export type UniversalProject = {
   id: string;
   name: string;
@@ -50,6 +80,7 @@ export type UniversalProject = {
   status: ProjectStatus;
   linkedEstimateId?: string | null;
   linkedBillId?: string | null;
+  scope?: ProjectScope | null;
   createdAt: string;
   updatedAt: string;
 };

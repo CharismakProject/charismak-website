@@ -28,5 +28,11 @@ export function parseHash(
   if (normalized === "feedback") return { page: "feedback", calculator: null };
   if (normalized === "insights") return { page: "insights", calculator: null };
   if (normalized === "projects") return { page: "projects", calculator: null };
+  if (normalized === "guided") return { page: "guided", calculator: null };
+  if (normalized === "dimensions") return { page: "dimensions", calculator: null };
+  if (normalized === "plan") return { page: "plan", calculator: null };
+  if (normalized === "import") return { page: "import", calculator: null };
+  if (normalized === "budget") return { page: "budget", calculator: null };
+  if (normalized === "marketplace") return { page: "marketplace", calculator: null };
   return { page: "dashboard", calculator: null };
 }

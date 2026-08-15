@@ -8,7 +8,13 @@ export type PageKey =
   | "rates"
   | "feedback"
   | "insights"
-  | "projects";
+  | "projects"
+  | "guided"
+  | "dimensions"
+  | "plan"
+  | "import"
+  | "budget"
+  | "marketplace";
 
 export type CalculatorKey =
   | "concrete"
