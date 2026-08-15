@@ -1,4 +1,8 @@
 import type { ProcurementItem } from "./models";
+import {
+  convertBulkMaterialToPurchaseUnits,
+  formatBulkPurchaseSummary,
+} from "../materials/bulk-converter";
 
 const round = (value: number, precision = 6) =>
   Number(value.toFixed(precision));
@@ -11,10 +15,13 @@ const materialName: Record<string, string> = {
   "block-225": "225 mm sandcrete blocks",
   "binding-wire": "Binding wire",
   "formwork-sheet": "Formwork plywood sheets",
-  "formwork-nails": "Formwork nails",
   "imported-fill": "Approved imported filling",
-  "emulsion-paint": "Approved emulsion paint",
-  "textured-paint": "Approved textured paint",
+};
+
+const defaultBulkPurchase = {
+  "sharp-sand": { densityTonnesPerM3: 1.6, truckCapacity: 15, truckCapacityBasis: "tonnes" as const },
+  "granite-aggregate": { densityTonnesPerM3: 1.5, truckCapacity: 15, truckCapacityBasis: "tonnes" as const },
+  "imported-fill": { densityTonnesPerM3: 1.6, truckCapacity: 15, truckCapacityBasis: "tonnes" as const },
 };
 
 export function inferMaterialId(item: ProcurementItem): string {
@@ -28,17 +35,10 @@ export function inferMaterialId(item: ProcurementItem): string {
   if (value.includes("water")) return "water";
   if (value.includes("225mm") || value.includes("225 mm")) return "block-225";
   if (value.includes("binding wire")) return "binding-wire";
-  if (value.includes("formwork") && value.includes("nail")) {
-    return "formwork-nails";
-  }
   if (value.includes("formwork") && value.includes("sheet")) {
     return "formwork-sheet";
   }
   if (value.includes("imported fill")) return "imported-fill";
-  if (value.includes("textured") && value.includes("paint")) {
-    return "textured-paint";
-  }
-  if (value.includes("paint")) return "emulsion-paint";
   const bar = value.match(/y\s?(\d+)\s+reinforcement/);
   if (bar) return `reinforcement-y${bar[1]}`;
   return value
@@ -79,6 +79,7 @@ export function consolidateProcurementItems(
 
     existing.calculatedQuantity += item.calculatedQuantity;
     existing.purchaseQuantity += item.purchaseQuantity;
+    if (!existing.bulkPurchase && item.bulkPurchase) existing.bulkPurchase = item.bulkPurchase;
     existing.contributors.add(item.sourceModule);
     if (item.notes) existing.notesSet.add(item.notes);
   }
@@ -96,7 +97,23 @@ export function consolidateProcurementItems(
       calculatedQuantity: round(group.calculatedQuantity),
       wastagePercent: 0,
       purchaseQuantity: round(group.purchaseQuantity),
+      bulkPurchase: group.bulkPurchase,
       notes: `Combined from ${sources.join(", ")}.${notes.length === 1 ? ` ${notes[0]}` : ""}`,
     };
   });
+}
+
+export function getPracticalPurchaseSummary(item: ProcurementItem): string | null {
+  if (item.unit.trim().toLowerCase() !== "m³") return null;
+  const assumption = item.bulkPurchase
+    ?? defaultBulkPurchase[inferMaterialId(item) as keyof typeof defaultBulkPurchase];
+  if (!assumption) return null;
+  try {
+    return formatBulkPurchaseSummary(convertBulkMaterialToPurchaseUnits({
+      volumeM3: item.purchaseQuantity,
+      assumption,
+    }));
+  } catch {
+    return null;
+  }
 }

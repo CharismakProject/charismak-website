@@ -11,6 +11,11 @@ import {
   replaceCalculationInBill,
 } from "@/lib/billing/store";
 import { adaptConcreteResultToBill } from "@/lib/billing/concrete-adapter";
+import {
+  convertBulkMaterialToPurchaseUnits,
+  formatBulkPurchaseSummary,
+  type BulkPurchaseAssumption,
+} from "@/lib/materials/bulk-converter";
 
 const createMix = (
   id: string,
@@ -83,6 +88,16 @@ export default function ConcreteCalculator({
   const [notice, setNotice] = useState<string | null>(null);
   const [mix, setMix] = useState<RatioBasedConcreteMixSpecification>({ ...defaultMix });
   const [workSection, setWorkSection] = useState<"substructure" | "superstructure">("substructure");
+  const [sandBulkPurchase, setSandBulkPurchase] = useState<BulkPurchaseAssumption>({
+    densityTonnesPerM3: 1.6,
+    truckCapacity: 15,
+    truckCapacityBasis: "tonnes",
+  });
+  const [aggregateBulkPurchase, setAggregateBulkPurchase] = useState<BulkPurchaseAssumption>({
+    densityTonnesPerM3: 1.5,
+    truckCapacity: 15,
+    truckCapacityBasis: "tonnes",
+  });
 
   const selectMix = (id: string) => {
     const preset = concreteMixPresets.find((item) => item.id === id);
@@ -153,6 +168,23 @@ export default function ConcreteCalculator({
     }
   }, [input, mix]);
   const { result, error } = calculation;
+  const bulkPurchaseResults = useMemo(() => {
+    if (!result) return null;
+    try {
+      return {
+        sand: convertBulkMaterialToPurchaseUnits({
+          volumeM3: result.materials.sandVolumeM3,
+          assumption: sandBulkPurchase,
+        }),
+        aggregate: convertBulkMaterialToPurchaseUnits({
+          volumeM3: result.materials.coarseAggregateVolumeM3,
+          assumption: aggregateBulkPurchase,
+        }),
+      };
+    } catch {
+      return null;
+    }
+  }, [aggregateBulkPurchase, result, sandBulkPurchase]);
 
   const addResultToBill = () => {
     if (!result) return;
@@ -160,7 +192,13 @@ export default function ConcreteCalculator({
       const bill = getOrCreateDraftBill({
         title: `${input.name.trim() || "Concrete"} Bill of Quantities`,
       });
-      const adapted = adaptConcreteResultToBill({ calculationId: input.id, element: input, mix, result });
+      const adapted = adaptConcreteResultToBill({
+        calculationId: input.id,
+        element: input,
+        mix,
+        result,
+        bulkPurchase: { sand: sandBulkPurchase, aggregate: aggregateBulkPurchase },
+      });
       replaceCalculationInBill({
         bill,
         sectionId: `${workSection}-concrete`,
@@ -353,6 +391,24 @@ export default function ConcreteCalculator({
               </dl>
             </div>
           </div>
+        </Card>
+      ) : null}
+      {result && bulkPurchaseResults ? (
+        <Card title="Practical bulk-material purchasing">
+          <p className="text-sm leading-7 text-[#526579]">The BOQ keeps the technical quantity in cubic metres. This view also shows approximate tonnage and truckload equivalents, using editable density and truck capacity.</p>
+          <div className="mt-5 grid gap-4 lg:grid-cols-2">
+            {([
+              ["Sharp sand", bulkPurchaseResults.sand, sandBulkPurchase, setSandBulkPurchase],
+              ["Granite aggregate", bulkPurchaseResults.aggregate, aggregateBulkPurchase, setAggregateBulkPurchase],
+            ] as const).map(([label, conversion, settings, setSettings]) => (
+              <div key={label} className="rounded-[24px] border border-[#D7E0E9] bg-[#F8FAFC] p-5">
+                <div className="flex items-start justify-between gap-4"><div><p className="text-sm font-bold text-[#071E33]">{label}</p><p className="mt-1 text-xs text-[#526579]">Technical: {formatQuantity(conversion.technicalVolumeM3)} m³</p></div><span className="rounded-full bg-[#E7F6EE] px-3 py-1 text-xs font-bold text-[#16704A]">≈ {formatQuantity(conversion.approximateWeightTonnes, 2)} t</span></div>
+                <p className="mt-4 rounded-2xl bg-white p-4 text-sm font-semibold leading-6 text-[#0D3B66]">{formatBulkPurchaseSummary(conversion)}</p>
+                <details className="mt-4"><summary className="cursor-pointer text-xs font-bold uppercase tracking-[0.12em] text-[#C8320A]">Edit conversion assumptions</summary><div className="mt-4 grid gap-3 sm:grid-cols-2"><label className="text-xs font-semibold text-[#526579]">Bulk density (t/m³)<input type="number" min="0.01" step="0.01" value={settings.densityTonnesPerM3} onChange={(event) => setSettings({ ...settings, densityTonnesPerM3: safeNumber(event.target.value) })} className="mt-1 w-full rounded-xl border border-[#CCD7E3] bg-white px-3 py-2" /></label><label className="text-xs font-semibold text-[#526579]">Truck/load capacity<input type="number" min="0.01" step="0.1" value={settings.truckCapacity} onChange={(event) => setSettings({ ...settings, truckCapacity: safeNumber(event.target.value) })} className="mt-1 w-full rounded-xl border border-[#CCD7E3] bg-white px-3 py-2" /></label><label className="text-xs font-semibold text-[#526579] sm:col-span-2">Supplier measures the truck by<select value={settings.truckCapacityBasis} onChange={(event) => setSettings({ ...settings, truckCapacityBasis: event.target.value as "tonnes" | "cubic-metres" })} className="mt-1 w-full rounded-xl border border-[#CCD7E3] bg-white px-3 py-2"><option value="tonnes">Tonnes</option><option value="cubic-metres">Cubic metres</option></select></label></div></details>
+              </div>
+            ))}
+          </div>
+          <p className="mt-4 text-xs leading-6 text-[#6C7D8D]">Truckload figures are planning equivalents—not universal trip sizes. Confirm the supplier&apos;s actual vehicle capacity and combine quantities across the project before ordering.</p>
         </Card>
       ) : null}
       {result ? (

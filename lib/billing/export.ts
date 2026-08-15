@@ -1,7 +1,10 @@
 import * as XLSX from "xlsx";
 
 import type { Bill } from "./models";
-import { consolidateProcurementItems } from "./procurement";
+import {
+  consolidateProcurementItems,
+  getPracticalPurchaseSummary,
+} from "./procurement";
 import { getBillItemRate, isBillItemPriced, recalcBill } from "./store";
 
 const currency = (value: number, code: string) =>
@@ -134,6 +137,7 @@ export function createBillWorkbook(billInput: Bill): XLSX.WorkBook {
       "CALCULATED QTY",
       "WASTAGE %",
       "PURCHASE QTY",
+      "PRACTICAL PURCHASE",
       "NOTES",
     ],
     ...consolidatedMaterials.map((material, index) => [
@@ -143,6 +147,7 @@ export function createBillWorkbook(billInput: Bill): XLSX.WorkBook {
       material.calculatedQuantity,
       material.wastagePercent,
       material.purchaseQuantity,
+      getPracticalPurchaseSummary(material) ?? "",
       material.notes ?? "",
     ]),
   ];
@@ -154,6 +159,7 @@ export function createBillWorkbook(billInput: Bill): XLSX.WorkBook {
     { wch: 18 },
     { wch: 14 },
     { wch: 18 },
+    { wch: 52 },
     { wch: 54 },
   ];
   if (exportOptions.includeMaterialsSchedule) {
@@ -239,6 +245,7 @@ export function openBillPrintView(billInput: Bill): void {
           <td>${escapeHtml(material.unit)}</td>
           <td class="number">${number(material.calculatedQuantity)}</td>
           <td class="number">${number(material.purchaseQuantity)}</td>
+          <td>${escapeHtml(getPracticalPurchaseSummary(material) ?? "")}</td>
           <td>${escapeHtml(material.notes ?? "")}</td>
         </tr>`,
     )
@@ -255,8 +262,8 @@ export function openBillPrintView(billInput: Bill): void {
           <div class="page-header"><strong>${escapeHtml(bill.title)}</strong><span>CPNL</span></div>
           ${exportOptions.includeMaterialsSchedule ? `<h2>Materials Procurement Schedule</h2>
           <table>
-            <thead><tr><th>S/N</th><th>Material</th><th>Unit</th><th>Calculated Qty</th><th>Purchase Qty</th><th>Notes</th></tr></thead>
-            <tbody>${materialRows || '<tr><td colspan="6">No material quantities.</td></tr>'}</tbody>
+            <thead><tr><th>S/N</th><th>Material</th><th>Unit</th><th>Calculated Qty</th><th>Purchase Qty</th><th>Practical Purchase</th><th>Notes</th></tr></thead>
+            <tbody>${materialRows || '<tr><td colspan="7">No material quantities.</td></tr>'}</tbody>
           </table>` : ""}
           ${exportOptions.includeAssumptions ? `<h3>Calculation Assumptions</h3>
           <table><tbody>${assumptionRows || '<tr><td>No assumptions recorded.</td><td></td></tr>'}</tbody></table>` : ""}
