@@ -17,19 +17,12 @@ import {
 } from "lucide-react";
 
 import EstimatorLogo from "@/components/estimator/ui/logo";
+import { isAdminEmail } from "@/lib/auth/admin";
 import {
   getSupabaseBrowserClient,
   isSupabaseConfigured,
 } from "@/lib/supabase/browser";
 import { BetaSessionContext } from "./beta-session";
-
-const adminEmails = (
-  process.env.NEXT_PUBLIC_ESTIMATOR_ADMIN_EMAILS ??
-  "md@charismakproject.com,info@charismakproject.com"
-)
-  .split(",")
-  .map((email) => email.trim().toLowerCase())
-  .filter(Boolean);
 
 export default function BetaAccessGate({ children }: { children: ReactNode }) {
   const client = useMemo(() => getSupabaseBrowserClient(), []);
@@ -112,7 +105,7 @@ export default function BetaAccessGate({ children }: { children: ReactNode }) {
   const value = {
     user: session?.user ?? null,
     email: userEmail,
-    isAdmin: Boolean(userEmail && adminEmails.includes(userEmail)),
+    isAdmin: isAdminEmail(userEmail),
     signOut,
   };
 

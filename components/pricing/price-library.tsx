@@ -193,9 +193,9 @@ export default function PriceLibrary({
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#E7B34B]">Project price intelligence</p>
-            <h2 className="mt-3 text-3xl font-bold">Price Library</h2>
+            <h2 className="mt-3 text-3xl font-bold">Material &amp; Labour Price List</h2>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-white/70">
-              Maintain material, labour, plant and subcontract prices once. Starter references, analysed rates and verified market updates remain visibly separated.
+              Search material, labour, plant and subcontract prices inside the estimator. Starter references, analysed rates and verified market updates remain visibly separated.
             </p>
           </div>
           <button type="button" onClick={onOpenEstimate} className="rounded-full bg-[#C8320A] px-5 py-3 text-sm font-bold text-white">Open Estimate Builder</button>

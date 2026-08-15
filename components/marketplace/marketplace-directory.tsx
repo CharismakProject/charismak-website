@@ -31,6 +31,11 @@ export default function MarketplaceDirectory({ embedded = false }: { embedded?: 
 
   useEffect(() => {
     const refresh = () => void loadMarketplaceProfiles().then(setProfiles);
+    const params = new URLSearchParams(window.location.search);
+    const initialSearch = params.get("search");
+    const initialType = params.get("type");
+    if (initialSearch) setQuery(initialSearch);
+    if (initialType === "supplier" || initialType === "artisan") setType(initialType);
     refresh();
     window.addEventListener(MARKETPLACE_UPDATED_EVENT, refresh);
     return () => window.removeEventListener(MARKETPLACE_UPDATED_EVENT, refresh);
