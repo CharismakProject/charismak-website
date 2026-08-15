@@ -16,8 +16,7 @@ export const metadata: Metadata = {
   description: "Calculate construction quantities, analyse unit rates and generate professional bills of quantities with the Charismak Construction Estimator.",
 };
 
-const estimatorUrl = process.env.NEXT_PUBLIC_ESTIMATOR_URL ||
-  "https://charismak-construction-estimator-beta.charismakprojectnigl.chatgpt.site";
+const estimatorUrl = "/estimator/app";
 
 const modules = [
   "Complete project estimate",
@@ -44,7 +43,7 @@ export default function EstimatorPage() {
             <h1 className="mt-7 text-5xl font-black leading-[1.03] tracking-tight md:text-7xl">Construction estimating, without the spreadsheet maze.</h1>
             <p className="mt-7 max-w-2xl text-base leading-8 text-white/72 md:text-lg">Measure construction work, adjust rate assumptions, consolidate material requirements and generate professional priced bills from one connected workspace.</p>
             <div className="mt-9 flex flex-wrap gap-4">
-              <Link href={estimatorUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-3 bg-[#A82B05] px-7 py-4 text-sm font-bold text-white transition hover:bg-[#C8A45D]">
+              <Link href={estimatorUrl} className="inline-flex items-center gap-3 bg-[#A82B05] px-7 py-4 text-sm font-bold text-white transition hover:bg-[#C8A45D]">
                 Launch Estimator <ArrowRight className="h-5 w-5" />
               </Link>
               <a href="#how-it-works" className="inline-flex items-center gap-3 border border-white/25 bg-white/5 px-7 py-4 text-sm font-bold text-white transition hover:border-[#F2B544] hover:bg-white/10">See how it works</a>
@@ -82,7 +81,7 @@ export default function EstimatorPage() {
       </section>
 
       <section className="bg-[#0D3B66] px-5 py-20 text-white md:px-8">
-        <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 lg:flex-row lg:items-center"><div><p className="text-xs font-bold uppercase tracking-[0.24em] text-[#F2B544]">Start beta testing</p><h2 className="mt-4 text-4xl font-semibold">Build your first estimate.</h2><div className="mt-6 flex flex-wrap gap-x-6 gap-y-3 text-sm text-white/70">{["Email-only access", "Editable assumptions", "Phone install", "Review form"].map((item) => <span key={item} className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-[#F2B544]" />{item}</span>)}</div></div><Link href={estimatorUrl} target="_blank" rel="noopener noreferrer" className="inline-flex w-fit items-center gap-3 bg-[#A82B05] px-8 py-5 font-bold text-white transition hover:bg-[#C8A45D]">Open Construction Estimator <ArrowRight className="h-5 w-5" /></Link></div>
+        <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 lg:flex-row lg:items-center"><div><p className="text-xs font-bold uppercase tracking-[0.24em] text-[#F2B544]">Start beta testing</p><h2 className="mt-4 text-4xl font-semibold">Build your first estimate.</h2><div className="mt-6 flex flex-wrap gap-x-6 gap-y-3 text-sm text-white/70">{["Email-only access", "Editable assumptions", "Phone install", "Review form"].map((item) => <span key={item} className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-[#F2B544]" />{item}</span>)}</div></div><Link href={estimatorUrl} className="inline-flex w-fit items-center gap-3 bg-[#A82B05] px-8 py-5 font-bold text-white transition hover:bg-[#C8A45D]">Open Construction Estimator <ArrowRight className="h-5 w-5" /></Link></div>
       </section>
     </main>
   );
