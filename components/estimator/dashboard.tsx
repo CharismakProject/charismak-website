@@ -288,7 +288,7 @@ export default function EstimatorDashboard({
           <div className="mt-4 space-y-2.5 text-xs text-white/72">
             {["Use editable local rates", "Compare practical purchase units", "Carry quantities into the BOQ", "Export professional reports"].map((item) => <p key={item} className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 shrink-0 text-[#45C78B]" />{item}</p>)}
           </div>
-          <button type="button" onClick={onOpenRates} className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-[#E7B34B]">Open price library <ArrowRight className="h-4 w-4" /></button>
+          <button type="button" onClick={onOpenRates} className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-[#E7B34B]">Open material &amp; labour price list <ArrowRight className="h-4 w-4" /></button>
         </section>
       </div>
 

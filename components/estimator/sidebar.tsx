@@ -6,6 +6,7 @@ import {
   FolderKanban,
   Gauge,
   HardHat,
+  ExternalLink,
   ListChecks,
   LogOut,
   MessageSquareText,
@@ -39,8 +40,8 @@ const navItems: Array<{ key: PageKey; label: string; icon: LucideIcon; section?:
   { key: "quick", label: "Quick Calculators", icon: Ruler, section: "workspace" },
   { key: "fence", label: "Fence / Boundary", icon: ShieldCheck, section: "workspace" },
   { key: "budget", label: "Project Budget", icon: WalletCards, section: "workspace" },
-  { key: "rates", label: "Prices & Rates", icon: PackageSearch, section: "resources" },
-  { key: "marketplace", label: "Suppliers & Artisans", icon: Store, section: "resources" },
+  { key: "rates", label: "Material & Labour Price List", icon: PackageSearch, section: "resources" },
+  { key: "marketplace", label: "Find Suppliers & Artisans", icon: Store, section: "resources" },
   { key: "register", label: "Bill Register", icon: ListChecks, section: "resources" },
   { key: "feedback", label: "Review & Feedback", icon: MessageSquareText, section: "resources" },
 ];
@@ -103,7 +104,7 @@ export default function Sidebar({
                 );
               })}
             </nav>
-            {section === "resources" ? <div className="mt-1 space-y-1"><Link href="/prices" className="flex min-h-11 items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-[#C3D1DF] transition hover:bg-white/8 hover:text-white"><PackageSearch className="h-[18px] w-[18px] text-[#8FA6BE]" />Public price list</Link><Link href="/blog" className="flex min-h-11 items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-[#C3D1DF] transition hover:bg-white/8 hover:text-white"><BookOpen className="h-[18px] w-[18px] text-[#8FA6BE]" />Construction guides</Link></div> : null}
+            {section === "resources" ? <div className="mt-4 border-t border-white/10 pt-3"><p className="mb-1 px-3 text-[9px] font-bold uppercase tracking-[0.18em] text-[#7890A9]">Optional website links</p><div className="space-y-1"><Link href="https://www.charismakproject.com/prices" target="_blank" rel="noreferrer" className="flex min-h-11 items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-[#C3D1DF] transition hover:bg-white/8 hover:text-white"><PackageSearch className="h-[18px] w-[18px] text-[#8FA6BE]" /><span className="flex-1">Public price guide website</span><ExternalLink className="h-3.5 w-3.5 text-[#7890A9]" /></Link><Link href="https://www.charismakproject.com/blog" target="_blank" rel="noreferrer" className="flex min-h-11 items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-[#C3D1DF] transition hover:bg-white/8 hover:text-white"><BookOpen className="h-[18px] w-[18px] text-[#8FA6BE]" /><span className="flex-1">Construction blog</span><ExternalLink className="h-3.5 w-3.5 text-[#7890A9]" /></Link></div></div> : null}
           </div>
         ))}
 

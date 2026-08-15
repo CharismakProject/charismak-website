@@ -25,7 +25,6 @@ import BetaInsights from "../feedback/beta-insights";
 import FeedbackPage from "../feedback/feedback-page";
 import EstimateBuilder from "../pricing/estimate-builder";
 import PriceLibrary from "../pricing/price-library";
-import MarketplaceDirectory from "../marketplace/marketplace-directory";
 import ProjectWorkspace from "../projects/project-workspace";
 import BoqImportWorkspace from "../projects/boq-import-workspace";
 import BudgetWorkspace from "../projects/budget-workspace";
@@ -33,6 +32,7 @@ import GuidedEstimator from "../projects/guided-estimator";
 import PlanUploadWorkspace from "../projects/plan-upload-workspace";
 import CalculatorShell from "./calculators/calculator-shell";
 import EstimatorDashboard from "./dashboard";
+import EstimatorMarketplaceWorkspace from "./marketplace-workspace";
 import EstimateProvider, { useEstimate } from "./estimate-provider";
 import { parseHash } from "./routing";
 import Sidebar from "./sidebar";
@@ -47,13 +47,13 @@ const pages: Array<{ key: PageKey; label: string }> = [
   { key: "plan", label: "Plan Review" },
   { key: "import", label: "Import BOQ" },
   { key: "budget", label: "Project Budget" },
-  { key: "marketplace", label: "Suppliers & Artisans" },
+  { key: "marketplace", label: "Supplier & Artisan Matches" },
   { key: "fence", label: "Fence / Boundary" },
   { key: "quick", label: "Quick Calculators" },
   { key: "estimates", label: "Estimate Builder" },
   { key: "bill", label: "Bill / BOQ" },
   { key: "register", label: "Bill Register" },
-  { key: "rates", label: "Prices & Rates" },
+  { key: "rates", label: "Material & Labour Price List" },
   { key: "feedback", label: "Review & Feedback" },
   { key: "insights", label: "Beta Insights" },
 ];
@@ -241,7 +241,7 @@ function EstimatorShellContent() {
       case "rates": return <PriceLibrary onOpenEstimate={() => navigate("estimates")} />;
       case "feedback": return <FeedbackPage onBack={() => navigate("dashboard")} />;
       case "insights": return betaSession.isAdmin ? <BetaInsights /> : <FeedbackPage onBack={() => navigate("dashboard")} />;
-      case "marketplace": return <MarketplaceDirectory embedded />;
+      case "marketplace": return <EstimatorMarketplaceWorkspace project={activeProject} bill={bill} />;
     }
   };
 
