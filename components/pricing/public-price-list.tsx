@@ -25,6 +25,7 @@ import type {
   PriceCategory,
   PriceConfidence,
   PriceItem,
+  PriceMarketMode,
 } from "@/lib/pricing/models";
 import {
   loadPriceItems,
@@ -38,6 +39,14 @@ type CategoryDefinition = {
   label: string;
   description: string;
   icon: LucideIcon;
+};
+
+type MarketPresentation = {
+  primary: string;
+  options: string[];
+  note: string;
+  mode: PriceMarketMode;
+  canUseTechnicalRate: boolean;
 };
 
 const categories: CategoryDefinition[] = [
@@ -75,12 +84,12 @@ const categories: CategoryDefinition[] = [
 
 const popularSearches = [
   "Cement",
-  "Iron rods",
+  "Y12 iron rod",
   "Blocks",
-  "Sand",
+  "Sharp sand",
   "Granite",
   "Tiles",
-  "Plumbing",
+  "Paint",
   "Equipment",
 ];
 
@@ -173,22 +182,232 @@ const money = (value: number | null, currency: string) =>
         maximumFractionDigits: 0,
       }).format(value);
 
-const buyingGuide = (item: PriceItem) => {
-  if (item.id === "sharp-sand")
-    return "1 m³ ≈ 1.6 tonnes. Compare truck quotes using the supplier's stated capacity, not only the truck name.";
-  if (item.id === "granite-aggregate")
-    return "1 m³ ≈ 1.5 tonnes. Compare 10, 20 or 30-tonne truck quotes using actual delivered capacity.";
-  if (item.id === "cement-50kg")
-    return "20 bags ≈ 1 tonne. Compare sealed 50 kg bag prices and confirm whether delivery is included.";
-  if (item.id === "reinforcement-steel")
-    return "Usually purchased by tonne or 12 m length. A Y12 bar is approximately 10.66 kg per 12 m length.";
-  if (item.id.startsWith("brc-"))
-    return "Purchased by full 2.4 × 4.8 m sheet. Allow for laps and round procurement quantities to complete sheets.";
-  if (item.id === "block-225")
-    return "Purchased by piece. Compare quotations per 100 blocks and confirm delivery and breakage allowance.";
-  if (item.unit === "m²")
-    return "Measured per square metre; supplier packaging or labour-gang output can be compared separately.";
-  return `Priced per ${item.unit}. Confirm brand, specification, quantity, delivery and minimum order before buying.`;
+const readableTechnicalUnit = (unit: string) => {
+  if (unit === "nr") return "piece";
+  if (unit === "m") return "linear metre";
+  if (unit === "m²") return "m²";
+  if (unit === "m³") return "m³";
+  return unit;
+};
+
+const practicalUnitDefaults: Record<string, Omit<MarketPresentation, "mode">> = {
+  "cement-50kg": {
+    primary: "50 kg bag",
+    options: ["1 bag", "20 bags ≈ 1 tonne"],
+    note: "Cement is bought and counted by sealed 50 kg bag; large orders are still usually discussed by number of bags.",
+    canUseTechnicalRate: true,
+  },
+  "sharp-sand": {
+    primary: "tipper / truckload",
+    options: ["10 tonne tipper", "20 tonne tipper", "30 tonne tipper"],
+    note: "Quote the actual truck capacity in tonnes. Do not rely on labels such as small tipper or big tipper alone.",
+    canUseTechnicalRate: false,
+  },
+  "granite-aggregate": {
+    primary: "tonne / tipper load",
+    options: ["1 tonne", "10 tonne tipper", "20 tonne tipper", "30 tonne tipper"],
+    note: "Granite is commonly discussed by tonne or delivered tipper load. Grade/size and delivered capacity must be stated.",
+    canUseTechnicalRate: false,
+  },
+  water: {
+    primary: "tanker load",
+    options: ["1,000 L", "5,000 L tanker", "10,000 L tanker"],
+    note: "For site buying, water is usually easier to compare by tanker capacity rather than a single litre rate.",
+    canUseTechnicalRate: false,
+  },
+  "block-225": {
+    primary: "piece",
+    options: ["1 block", "100 blocks", "truckload"],
+    note: "Compare block strength, mould size, delivery and breakage allowance. Bulk quotations are often discussed per 100 blocks or truckload.",
+    canUseTechnicalRate: true,
+  },
+  "reinforcement-steel": {
+    primary: "12 m length / tonne",
+    options: ["12 m length", "bundle", "1 tonne"],
+    note: "Always state diameter and brand/standard. Nigerian sellers commonly quote both individual 12 m lengths and tonne prices.",
+    canUseTechnicalRate: false,
+  },
+  "binding-wire": {
+    primary: "coil / roll",
+    options: ["coil", "roll", "kg"],
+    note: "Confirm coil/roll weight before comparing suppliers because package sizes vary.",
+    canUseTechnicalRate: false,
+  },
+  "formwork-sheet": {
+    primary: "sheet",
+    options: ["1.22 × 2.44 m sheet"],
+    note: "Plywood is bought by full sheet. Thickness, face quality and expected re-use should be stated.",
+    canUseTechnicalRate: true,
+  },
+  "formwork-timber": {
+    primary: "length / piece",
+    options: ["full length", "piece", "bundle"],
+    note: "State timber section size and actual length; site buying is normally by piece/length rather than by an abstract metre rate.",
+    canUseTechnicalRate: false,
+  },
+  nails: {
+    primary: "kg",
+    options: ["1 kg", "carton / bulk pack"],
+    note: "State nail type and size when comparing prices.",
+    canUseTechnicalRate: true,
+  },
+  "emulsion-paint": {
+    primary: "20 L bucket",
+    options: ["4 L bucket", "20 L bucket"],
+    note: "Paint should be compared by brand, grade and bucket size. Coverage can differ significantly even for the same volume.",
+    canUseTechnicalRate: false,
+  },
+  "wall-filler": {
+    primary: "bag / bucket",
+    options: ["bag", "bucket"],
+    note: "Package weight and brand should be stated before prices are compared.",
+    canUseTechnicalRate: false,
+  },
+  "floor-tile": {
+    primary: "carton",
+    options: ["carton", "m² coverage per carton"],
+    note: "Tiles are commonly sold per carton. Show tile size and the exact square-metre coverage of one carton.",
+    canUseTechnicalRate: false,
+  },
+  "tile-adhesive": {
+    primary: "20 kg bag",
+    options: ["20 kg bag"],
+    note: "Compare brand, grade and bag weight; coverage depends on tile size, substrate and application thickness.",
+    canUseTechnicalRate: true,
+  },
+  "cable-2-5": {
+    primary: "coil / roll",
+    options: ["coil", "roll", "full drum for bulk orders"],
+    note: "Cable should show conductor size, brand, type and actual coil/roll length.",
+    canUseTechnicalRate: false,
+  },
+  "conduit-20": {
+    primary: "length / bundle",
+    options: ["length", "bundle"],
+    note: "State conduit diameter, wall grade and number of lengths per bundle.",
+    canUseTechnicalRate: false,
+  },
+  "socket-13a": {
+    primary: "piece",
+    options: ["piece", "carton for bulk order"],
+    note: "Brand, range/series and finish should be shown because they strongly affect price.",
+    canUseTechnicalRate: true,
+  },
+  "back-box": {
+    primary: "piece",
+    options: ["piece", "pack"],
+    note: "State box type, depth and material.",
+    canUseTechnicalRate: true,
+  },
+  "ppr-pipe-25": {
+    primary: "length",
+    options: ["full pipe length", "bundle"],
+    note: "State diameter, pressure rating, brand and actual length per pipe.",
+    canUseTechnicalRate: false,
+  },
+  "ppr-fitting-allowance": {
+    primary: "piece / pack",
+    options: ["piece", "pack"],
+    note: "Fittings should be listed by actual fitting type and size rather than one generic allowance in the public marketplace.",
+    canUseTechnicalRate: false,
+  },
+  "soil-pipe-110": {
+    primary: "length",
+    options: ["full pipe length", "bundle"],
+    note: "State pipe class, brand, diameter and actual length.",
+    canUseTechnicalRate: false,
+  },
+  "soil-fitting-allowance": {
+    primary: "piece / pack",
+    options: ["piece", "pack"],
+    note: "Public listings should identify the fitting itself—bend, tee, socket, reducer, etc.—with diameter and brand.",
+    canUseTechnicalRate: false,
+  },
+  "longspan-roof-sheet": {
+    primary: "linear metre / cut sheet",
+    options: ["linear metre", "cut sheet to required length"],
+    note: "Roofing prices should state profile, gauge/thickness, colour and cut length. Avoid showing only an m² rate to buyers.",
+    canUseTechnicalRate: false,
+  },
+  "roofing-accessories": {
+    primary: "piece / pack",
+    options: ["piece", "pack", "full job set"],
+    note: "List flashings, screws, ridges and other accessories separately wherever possible.",
+    canUseTechnicalRate: false,
+  },
+  "concrete-mixer": {
+    primary: "hire/day or purchase",
+    options: ["hire/day", "hire/week", "purchase unit"],
+    note: "Equipment listings should separate rental from purchase and show capacity, condition, brand/model and delivery/mobilisation.",
+    canUseTechnicalRate: false,
+  },
+};
+
+const getMarketPresentation = (item: PriceItem): MarketPresentation => {
+  const configured = practicalUnitDefaults[item.id];
+
+  const defaultMode: PriceMarketMode =
+    item.category === "plant"
+      ? "buy-or-rent"
+      : item.category === "labour" || item.category === "subcontract"
+        ? "service"
+        : "buy";
+
+  if (item.marketUnit) {
+    return {
+      primary: item.marketUnit,
+      options: item.marketUnitOptions?.length
+        ? item.marketUnitOptions
+        : [item.marketUnit],
+      note:
+        item.marketNote ||
+        `Compare this item using ${item.marketUnit}, including specification, quantity and delivery conditions.`,
+      mode: item.marketMode || defaultMode,
+      canUseTechnicalRate: configured?.canUseTechnicalRate ?? false,
+    };
+  }
+
+  if (item.id.startsWith("brc-")) {
+    return {
+      primary: "2.4 × 4.8 m sheet",
+      options: ["full sheet"],
+      note: "BRC mesh is bought by complete sheet. State mesh type and allow separately for laps in the estimator.",
+      mode: "buy",
+      canUseTechnicalRate: true,
+    };
+  }
+
+  if (configured) {
+    return {
+      ...configured,
+      mode: item.marketMode || defaultMode,
+    };
+  }
+
+  if (item.category === "plant") {
+    return {
+      primary: "hire/day or purchase",
+      options: ["hire/day", "hire/week", "purchase unit"],
+      note: "Show equipment capacity, condition, brand/model, location and mobilisation separately.",
+      mode: item.marketMode || "buy-or-rent",
+      canUseTechnicalRate: false,
+    };
+  }
+
+  return {
+    primary: readableTechnicalUnit(item.unit),
+    options: [readableTechnicalUnit(item.unit)],
+    note: `Confirm specification, quantity, location and delivery conditions before comparing prices.`,
+    mode: item.marketMode || defaultMode,
+    canUseTechnicalRate: true,
+  };
+};
+
+const buyingModeLabel: Record<PriceMarketMode, string> = {
+  buy: "Buy",
+  rent: "Rent",
+  "buy-or-rent": "Buy / Rent",
+  service: "Service rate",
 };
 
 const getImage = (item: PriceItem) => {
@@ -202,18 +421,23 @@ const getImage = (item: PriceItem) => {
   return previewImages[item.id] || fallbackImages[item.category];
 };
 
-const itemSearchText = (item: PriceItem) =>
-  [
+const itemSearchText = (item: PriceItem) => {
+  const market = getMarketPresentation(item);
+
+  return [
     item.code,
     item.description,
     item.unit,
     item.brand,
     item.specification,
     item.location,
+    market.primary,
+    ...market.options,
   ]
     .filter(Boolean)
     .join(" ")
     .toLowerCase();
+};
 
 export default function PublicPriceList() {
   const [items, setItems] = useState<PriceItem[]>([]);
@@ -283,11 +507,11 @@ export default function PublicPriceList() {
             </div>
 
             <h1 className="mt-5 max-w-4xl text-4xl font-black leading-[1.06] tracking-tight md:text-6xl">
-              Find construction prices before you buy.
+              Real construction prices in the units people actually buy.
             </h1>
 
             <p className="mt-5 max-w-3xl text-sm leading-7 text-white/72 md:text-base">
-              Search materials, tools, equipment and specialist construction work by location. See practical buying units, price references and supplier comparisons in one place.
+              Search materials and equipment by location using familiar Nigerian site units—tipper, tonne, bag, 12 m length, carton, bucket, sheet, piece and hire/day. Technical QS units stay available for estimator conversion, not as the main shopping language.
             </p>
 
             <div className="mt-7 grid overflow-hidden rounded-2xl border border-white/15 bg-white shadow-2xl sm:grid-cols-[1fr_210px_auto]">
@@ -296,7 +520,7 @@ export default function PublicPriceList() {
                 <input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="What are you looking for? Cement, Y12, mixer..."
+                  placeholder="Search: 30t granite, Y12 length, 60x60 tiles..."
                   className="min-h-14 w-full border-0 bg-white pl-12 pr-4 text-sm text-[#071E33] outline-none placeholder:text-[#8391A1]"
                 />
               </label>
@@ -341,13 +565,13 @@ export default function PublicPriceList() {
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-2">
             {[
-              ["Nigeria", "market focus"],
-              [items.length || "—", "current references"],
-              ["₦", "local pricing"],
-              ["24/7", "search access"],
+              ["Tipper", "sand & aggregate"],
+              ["Tonne", "steel & bulk material"],
+              ["Carton", "tiles & finishes"],
+              ["Hire/day", "site equipment"],
             ].map(([value, label]) => (
               <div
-                key={String(label)}
+                key={label}
                 className="rounded-2xl border border-white/12 bg-white/6 p-4 backdrop-blur"
               >
                 <strong className="block text-xl text-white">{value}</strong>
@@ -431,14 +655,14 @@ export default function PublicPriceList() {
         <p className="flex items-start gap-2">
           <AlertTriangle className="mt-1 h-4 w-4 shrink-0" />
           <span>
-            <strong>Market guidance, not a supplier quotation.</strong> Prices vary by city, brand, condition, order size and delivery distance. The next data phase will combine multiple Nigerian market sources and verified supplier quotes before a price is marked verified.
+            <strong>Buying unit first, QS conversion second.</strong> We will not relabel a technical ₦/m³ or ₦/kg starter rate as a tipper, tonne or carton price. Market prices will be shown only after Nigerian source observations are normalised into the actual buying unit.
           </span>
         </p>
         <Link
           href="/estimator"
           className="mt-3 inline-flex shrink-0 items-center gap-2 font-black text-[#8B1E00] md:mt-0"
         >
-          Use in estimator <ArrowRight className="h-4 w-4" />
+          Open estimator <ArrowRight className="h-4 w-4" />
         </Link>
       </section>
 
@@ -472,9 +696,12 @@ export default function PublicPriceList() {
           {results.map((item) => {
             const image = getImage(item);
             const confidence = confidenceMeta[item.confidence || "starter"];
+            const market = getMarketPresentation(item);
             const hasRange =
               typeof item.priceLow === "number" &&
               typeof item.priceHigh === "number";
+            const canShowSingleMarketRate =
+              !hasRange && market.canUseTechnicalRate && item.rate !== null;
 
             return (
               <article
@@ -482,8 +709,6 @@ export default function PublicPriceList() {
                 className="group overflow-hidden rounded-2xl border border-[#DCE4EC] bg-white shadow-[0_8px_26px_rgba(7,30,51,0.045)] transition hover:-translate-y-1 hover:border-[#C7D1DC] hover:shadow-[0_22px_50px_rgba(7,30,51,0.11)]"
               >
                 <div className="relative h-48 overflow-hidden bg-[#EEF2F6]">
-                  {/* External images are temporary catalogue references for the preview.
-                      Production catalogue imagery will come from approved supplier/catalogue records. */}
                   <img
                     src={image.src}
                     alt={image.alt}
@@ -496,10 +721,8 @@ export default function PublicPriceList() {
                     <span className="rounded-full bg-white/95 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-[#0D3B66] shadow-sm">
                       {item.category === "plant" ? "equipment" : item.category}
                     </span>
-                    <span
-                      className={`rounded-full px-2.5 py-1 text-[9px] font-black ${confidence.className}`}
-                    >
-                      {confidence.label}
+                    <span className="rounded-full bg-[#071E33]/90 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.1em] text-white">
+                      {buyingModeLabel[market.mode]}
                     </span>
                   </div>
 
@@ -514,12 +737,11 @@ export default function PublicPriceList() {
                     <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#7A8B9E]">
                       {item.code}
                     </span>
-                    {item.sourceCount ? (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#617286]">
-                        <ShieldCheck className="h-3.5 w-3.5" />
-                        {item.sourceCount} sources
-                      </span>
-                    ) : null}
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-[9px] font-black ${confidence.className}`}
+                    >
+                      {confidence.label}
+                    </span>
                   </div>
 
                   <h3 className="mt-3 min-h-12 text-lg font-black leading-6 text-[#071E33]">
@@ -532,35 +754,66 @@ export default function PublicPriceList() {
                     </p>
                   )}
 
+                  <div className="mt-4 rounded-2xl bg-[#F5F7FA] p-4">
+                    <span className="text-[10px] font-black uppercase tracking-[0.14em] text-[#617286]">
+                      How people buy it
+                    </span>
+                    <strong className="mt-1 block text-base text-[#071E33]">
+                      {market.primary}
+                    </strong>
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {market.options.map((option) => (
+                        <span
+                          key={option}
+                          className="rounded-full border border-[#DCE4EC] bg-white px-2.5 py-1 text-[10px] font-bold text-[#526579]"
+                        >
+                          {option}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
                   <div className="mt-4 border-y border-[#E7ECF1] py-4">
                     <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#617286]">
-                      {hasRange ? "Typical market range" : `Reference per ${item.unit}`}
+                      {hasRange
+                        ? `Market range / ${market.primary}`
+                        : canShowSingleMarketRate
+                          ? `Reference / ${market.primary}`
+                          : "Market price"}
                     </span>
+
                     {hasRange ? (
                       <strong className="mt-1 block text-xl text-[#071E33]">
                         {money(item.priceLow ?? null, item.currency)} – {money(item.priceHigh ?? null, item.currency)}
                       </strong>
-                    ) : (
-                      <strong
-                        className={`mt-1 block text-2xl ${
-                          item.rate === null ? "text-[#B45B09]" : "text-[#071E33]"
-                        }`}
-                      >
+                    ) : canShowSingleMarketRate ? (
+                      <strong className="mt-1 block text-2xl text-[#071E33]">
                         {money(item.rate, item.currency)}
+                      </strong>
+                    ) : (
+                      <strong className="mt-1 block text-lg text-[#A82B05]">
+                        Being verified in {market.primary}
                       </strong>
                     )}
 
-                    {hasRange && item.rate !== null && (
-                      <span className="mt-1 block text-xs font-semibold text-[#A82B05]">
-                        Charismak reference: {money(item.rate, item.currency)} / {item.unit}
+                    {!market.canUseTechnicalRate && item.rate !== null && (
+                      <span className="mt-2 block text-[11px] leading-5 text-[#7A8B9E]">
+                        Estimator conversion reference only: {money(item.rate, item.currency)} / {readableTechnicalUnit(item.unit)}
                       </span>
                     )}
+
+                    {item.sourceCount ? (
+                      <span className="mt-2 inline-flex items-center gap-1 text-[10px] font-semibold text-[#617286]">
+                        <ShieldCheck className="h-3.5 w-3.5" />
+                        Based on {item.sourceCount} market sources
+                      </span>
+                    ) : null}
                   </div>
 
                   <div className="mt-4 flex items-start gap-2.5">
                     <PackageSearch className="mt-0.5 h-4 w-4 shrink-0 text-[#A82B05]" />
                     <p className="text-[11px] leading-5 text-[#526579]">
-                      {buyingGuide(item)}
+                      {market.note}
                     </p>
                   </div>
 
@@ -596,7 +849,7 @@ export default function PublicPriceList() {
             <Search className="mx-auto h-7 w-7 text-[#8A99A9]" />
             <h3 className="mt-4 font-black text-[#071E33]">No matching price yet</h3>
             <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#617286]">
-              Try a broader search. As the catalogue expands, this page will cover the full range of Nigerian construction materials, tools and equipment.
+              Try a broader search. The catalogue will grow to cover the full range of Nigerian construction materials, tools and equipment in familiar buying units.
             </p>
           </section>
         ) : null}
@@ -611,10 +864,10 @@ export default function PublicPriceList() {
             </span>
           </div>
           <h2 className="mt-3 text-2xl font-black md:text-3xl">
-            Found the item? Compare who can supply it.
+            Compare the same real buying unit across suppliers.
           </h2>
           <p className="mt-3 max-w-2xl text-sm leading-7 text-white/65">
-            The marketplace will connect each catalogue item to approved suppliers, current offers, delivery coverage and direct quote requests.
+            A 30-tonne tipper should be compared with another 30-tonne tipper—not with an unspecified truck. A tile carton should include its coverage. A steel quote should state diameter, length and whether it is per piece or tonne.
           </p>
         </div>
         <Link
