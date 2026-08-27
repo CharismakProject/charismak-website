@@ -13,10 +13,10 @@ export default function SiteChrome({ children }: { children: ReactNode }) {
   if (estimatorApp) return children;
 
   return (
-    <>
+    <div data-site-style="modern-original" className="min-h-screen">
       <Navbar />
       {children}
       <Footer />
-    </>
+    </div>
   );
 }
