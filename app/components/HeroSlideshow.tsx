@@ -52,7 +52,7 @@ export default function HeroSlideshow({
   };
 
   return (
-    <section className="relative min-h-[88vh] overflow-hidden bg-[#071E33] text-white">
+    <section className="relative min-h-[86vh] overflow-hidden bg-[#071E33] text-white">
       {slides.map((slide, index) => (
         <div
           key={`${slide.title}-${slide.image}`}
@@ -69,22 +69,22 @@ export default function HeroSlideshow({
             className="object-cover"
           />
 
-          <div className="absolute inset-0 bg-gradient-to-r from-[#071E33]/98 via-[#0D3B66]/84 to-[#071E33]/30" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#071E33]/85 via-transparent to-[#071E33]/20" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#071E33]/98 via-[#0D3B66]/82 to-[#071E33]/24" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#071E33]/80 via-transparent to-[#071E33]/18" />
         </div>
       ))}
 
-      <div className="relative mx-auto flex min-h-[88vh] max-w-7xl items-center px-5 py-24 md:px-8">
+      <div className="relative mx-auto flex min-h-[86vh] max-w-7xl items-center px-5 py-24 md:px-8">
         <div className="max-w-4xl">
-          <div
-            key={activeSlide}
-            className="animate-[fadeIn_700ms_ease-out]"
-          >
-            <p className="mb-5 text-xs font-bold uppercase tracking-[0.3em] text-[#F2B544]">
-              {slides[activeSlide].subtitle}
-            </p>
+          <div key={activeSlide} className="animate-[fadeIn_700ms_ease-out]">
+            <div className="mb-6 inline-flex items-center gap-3 rounded-full border border-[#F2B544]/25 bg-[#071E33]/35 px-4 py-2 backdrop-blur-md">
+              <span className="h-2 w-2 rounded-full bg-[#F2B544]" />
+              <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-[#F2B544]">
+                {slides[activeSlide].subtitle}
+              </p>
+            </div>
 
-            <h1 className="max-w-4xl text-5xl font-black leading-[1.02] tracking-tight md:text-7xl lg:text-[82px]">
+            <h1 className="max-w-4xl text-4xl font-black leading-[1.04] tracking-[-0.035em] sm:text-5xl md:text-7xl lg:text-[78px]">
               {slides[activeSlide].title}
             </h1>
 
@@ -99,10 +99,10 @@ export default function HeroSlideshow({
               </p>
             )}
 
-            <div className="mt-9 flex flex-wrap gap-4">
+            <div className="mt-9 flex flex-wrap gap-3">
               <Link
                 href={slides[activeSlide].href}
-                className="inline-flex items-center gap-3 bg-[#A82B05] px-7 py-4 text-sm font-bold text-white transition hover:bg-[#C8A45D]"
+                className="inline-flex items-center gap-3 rounded-xl bg-[#A82B05] px-7 py-4 text-sm font-bold text-white shadow-[0_12px_30px_rgba(168,43,5,0.2)] transition hover:-translate-y-0.5 hover:bg-[#8B1E00]"
               >
                 View Project
                 <ArrowRight className="h-5 w-5" />
@@ -110,7 +110,7 @@ export default function HeroSlideshow({
 
               <Link
                 href="/services"
-                className="inline-flex items-center gap-3 border border-white/30 bg-white/5 px-7 py-4 text-sm font-bold text-white backdrop-blur transition hover:border-[#F2B544] hover:bg-white/10"
+                className="inline-flex items-center gap-3 rounded-xl border border-white/25 bg-white/8 px-7 py-4 text-sm font-bold text-white backdrop-blur-md transition hover:-translate-y-0.5 hover:border-[#F2B544] hover:bg-white/12"
               >
                 Our Services
                 <Building2 className="h-5 w-5" />
@@ -118,7 +118,7 @@ export default function HeroSlideshow({
 
               <Link
                 href="/company-profile.pdf"
-                className="inline-flex items-center gap-3 border border-white/30 bg-white/5 px-7 py-4 text-sm font-bold text-white backdrop-blur transition hover:border-[#F2B544] hover:bg-white/10"
+                className="inline-flex items-center gap-3 rounded-xl border border-white/25 bg-white/8 px-7 py-4 text-sm font-bold text-white backdrop-blur-md transition hover:-translate-y-0.5 hover:border-[#F2B544] hover:bg-white/12"
               >
                 Company Profile
                 <Download className="h-5 w-5" />
@@ -128,18 +128,18 @@ export default function HeroSlideshow({
         </div>
       </div>
 
-      <div className="absolute bottom-8 left-0 right-0 z-20">
+      <div className="absolute bottom-7 left-0 right-0 z-20">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 md:px-8">
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
             {slides.map((slide, index) => (
               <button
                 key={slide.title}
                 onClick={() => setActiveSlide(index)}
                 aria-label={`Show ${slide.title}`}
-                className={`h-1 transition-all ${
+                className={`h-1.5 rounded-full transition-all ${
                   index === activeSlide
                     ? "w-12 bg-[#F2B544]"
-                    : "w-7 bg-white/35 hover:bg-white/60"
+                    : "w-6 bg-white/35 hover:bg-white/60"
                 }`}
               />
             ))}
@@ -149,7 +149,7 @@ export default function HeroSlideshow({
             <button
               onClick={goPrevious}
               aria-label="Previous slide"
-              className="grid h-11 w-11 place-items-center border border-white/25 bg-[#071E33]/40 backdrop-blur transition hover:border-[#F2B544]"
+              className="grid h-11 w-11 place-items-center rounded-xl border border-white/20 bg-[#071E33]/45 backdrop-blur-md transition hover:border-[#F2B544] hover:bg-[#071E33]/65"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
@@ -157,7 +157,7 @@ export default function HeroSlideshow({
             <button
               onClick={goNext}
               aria-label="Next slide"
-              className="grid h-11 w-11 place-items-center border border-white/25 bg-[#071E33]/40 backdrop-blur transition hover:border-[#F2B544]"
+              className="grid h-11 w-11 place-items-center rounded-xl border border-white/20 bg-[#071E33]/45 backdrop-blur-md transition hover:border-[#F2B544] hover:bg-[#071E33]/65"
             >
               <ArrowRight className="h-5 w-5" />
             </button>
