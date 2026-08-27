@@ -19,6 +19,18 @@ export type PriceItem = {
   confidence?: PriceConfidence;
   updatedAt: string;
   active: boolean;
+
+  // Optional public-marketplace metadata. These fields deliberately remain
+  // optional so existing estimator/rate-analysis IDs and calculations continue
+  // to work unchanged while the public catalogue grows into a richer market feed.
+  imageUrl?: string | null;
+  imageAlt?: string | null;
+  brand?: string | null;
+  specification?: string | null;
+  priceLow?: number | null;
+  priceHigh?: number | null;
+  sourceCount?: number | null;
+  deliveryIncluded?: boolean | null;
 };
 
 export type RateComponent = {
