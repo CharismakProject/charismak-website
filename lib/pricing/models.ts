@@ -1,12 +1,15 @@
 export type PriceCategory = "material" | "labour" | "plant" | "subcontract";
 export type PriceConfidence = "starter" | "manual" | "index-adjusted" | "verified";
 export type EstimateRateSource = "default" | "analysed" | "manual";
+export type PriceMarketMode = "buy" | "rent" | "buy-or-rent" | "service";
 
 export type PriceItem = {
   id: string;
   code: string;
   description: string;
   category: PriceCategory;
+
+  // Technical/QS unit used by rate analysis and estimating calculations.
   unit: string;
   rate: number | null;
   defaultRate?: number | null;
@@ -31,6 +34,14 @@ export type PriceItem = {
   priceHigh?: number | null;
   sourceCount?: number | null;
   deliveryIncluded?: boolean | null;
+
+  // Human-facing Nigerian buying units. The public marketplace should lead with
+  // these (tipper, tonne, bag, 12 m length, carton, bucket, sheet, hire/day, etc.)
+  // and only show `unit` as a secondary QS conversion reference.
+  marketUnit?: string | null;
+  marketUnitOptions?: string[];
+  marketMode?: PriceMarketMode;
+  marketNote?: string | null;
 };
 
 export type RateComponent = {
