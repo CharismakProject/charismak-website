@@ -25,6 +25,83 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/*
+ * Public website modernisation layer.
+ * Keeps the original Charismak navy / red / gold / white palette intact and
+ * only improves spacing, shape, interaction quality and component polish.
+ */
+[data-site-style="modern-original"] {
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+[data-site-style="modern-original"] ::selection {
+  background: rgba(200, 164, 93, 0.28);
+  color: #071e33;
+}
+
+[data-site-style="modern-original"] a,
+[data-site-style="modern-original"] button,
+[data-site-style="modern-original"] input,
+[data-site-style="modern-original"] select,
+[data-site-style="modern-original"] textarea {
+  font: inherit;
+}
+
+[data-site-style="modern-original"] a,
+[data-site-style="modern-original"] button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+[data-site-style="modern-original"] a:focus-visible,
+[data-site-style="modern-original"] button:focus-visible,
+[data-site-style="modern-original"] input:focus-visible,
+[data-site-style="modern-original"] select:focus-visible,
+[data-site-style="modern-original"] textarea:focus-visible {
+  outline: 3px solid rgba(200, 164, 93, 0.42);
+  outline-offset: 3px;
+}
+
+[data-site-style="modern-original"] article {
+  border-radius: 18px;
+}
+
+[data-site-style="modern-original"] article[class*="overflow-hidden"] {
+  overflow: hidden;
+}
+
+[data-site-style="modern-original"] a[class*="inline-flex"],
+[data-site-style="modern-original"] button[class*="inline-flex"],
+[data-site-style="modern-original"] button[class*="place-items-center"] {
+  border-radius: 12px;
+}
+
+[data-site-style="modern-original"] input:not([type="checkbox"]):not([type="radio"]),
+[data-site-style="modern-original"] select,
+[data-site-style="modern-original"] textarea {
+  border-radius: 12px;
+}
+
+[data-site-style="modern-original"] img {
+  backface-visibility: hidden;
+}
+
+[data-site-style="modern-original"] main section {
+  scroll-margin-top: 6rem;
+}
+
+@media (max-width: 639px) {
+  [data-site-style="modern-original"] article {
+    border-radius: 16px;
+  }
+
+  [data-site-style="modern-original"] a[class*="inline-flex"],
+  [data-site-style="modern-original"] button[class*="inline-flex"],
+  [data-site-style="modern-original"] button[class*="place-items-center"] {
+    border-radius: 10px;
+  }
+}
+
 [data-estimator-app] {
   --background: #f4f7fa;
   --foreground: #0b2942;
