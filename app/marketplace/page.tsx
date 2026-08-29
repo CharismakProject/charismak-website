@@ -1,10 +1,15 @@
-import MarketplaceDirectory from "@/components/marketplace/marketplace-directory";
+import { redirect } from "next/navigation";
 
 export const metadata = {
-  title: "Construction Suppliers & Artisans",
-  description: "Find Nigerian building-material suppliers and skilled artisans by category and service area.",
+  title: "Construction Material Prices & Suppliers",
+  description:
+    "Supplier offers are now accessed from each construction material or equipment item in the Charismak price list.",
+  robots: {
+    index: false,
+    follow: true,
+  },
 };
 
 export default function MarketplacePage() {
-  return <main className="min-h-screen bg-[#F5F7FA] pt-20"><div className="mx-auto max-w-7xl px-4 py-10 md:px-8 md:py-14"><MarketplaceDirectory /></div></main>;
+  redirect("/prices");
 }
