@@ -1,3 +1,4 @@
+import { deleteRateEstimateCloud, persistRateEstimateCloud } from "@/lib/estimator/cloud";
 import { DEFAULT_PRICE_ITEMS, DEFAULT_RATE_TEMPLATES } from "./defaults";
 import type { PriceItem, RateEstimate, RateTemplate } from "./models";
 
@@ -81,6 +82,12 @@ export function loadRateTemplates(): RateTemplate[] {
 
 type EstimatePayload = { activeEstimateId: string | null; estimates: RateEstimate[] };
 
+const normalizeEstimate = (estimate: RateEstimate): RateEstimate => ({
+  ...estimate,
+  projectId: estimate.projectId ?? null,
+  priceBasisAt: estimate.priceBasisAt ?? estimate.createdAt ?? new Date().toISOString(),
+});
+
 function loadEstimatePayload(): EstimatePayload {
   if (!canUseStorage()) return { activeEstimateId: null, estimates: [] };
   try {
@@ -89,7 +96,7 @@ function loadEstimatePayload(): EstimatePayload {
     const payload = JSON.parse(raw) as EstimatePayload;
     return {
       activeEstimateId: payload.activeEstimateId ?? null,
-      estimates: Array.isArray(payload.estimates) ? payload.estimates : [],
+      estimates: Array.isArray(payload.estimates) ? payload.estimates.map(normalizeEstimate) : [],
     };
   } catch {
     return { activeEstimateId: null, estimates: [] };
@@ -112,10 +119,16 @@ export function loadRateEstimate(): RateEstimate | null {
   return payload.estimates.find((item) => item.id === payload.activeEstimateId) ?? null;
 }
 
+export function loadRateEstimateByProjectId(projectId: string): RateEstimate | null {
+  return loadRateEstimates().find((estimate) => estimate.projectId === projectId) ?? null;
+}
+
 export function createRateEstimate(overrides?: Partial<RateEstimate>): RateEstimate {
   const now = new Date().toISOString();
   const estimate: RateEstimate = {
     id: `estimate-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    projectId: overrides?.projectId ?? null,
+    priceBasisAt: overrides?.priceBasisAt ?? now,
     title: overrides?.title ?? "New Construction Estimate",
     projectName: overrides?.projectName ?? "",
     clientName: overrides?.clientName ?? "",
@@ -129,17 +142,19 @@ export function createRateEstimate(overrides?: Partial<RateEstimate>): RateEstim
   payload.estimates.push(estimate);
   payload.activeEstimateId = estimate.id;
   saveEstimatePayload(payload);
+  persistRateEstimateCloud(estimate);
   return estimate;
 }
 
 export function saveRateEstimate(estimate: RateEstimate): RateEstimate {
   const payload = loadEstimatePayload();
-  const updated = { ...estimate, updatedAt: new Date().toISOString() };
+  const updated = normalizeEstimate({ ...estimate, updatedAt: new Date().toISOString() });
   payload.estimates = payload.estimates.some((item) => item.id === updated.id)
     ? payload.estimates.map((item) => item.id === updated.id ? updated : item)
     : [...payload.estimates, updated];
   payload.activeEstimateId = updated.id;
   saveEstimatePayload(payload);
+  persistRateEstimateCloud(updated);
   return updated;
 }
 
@@ -159,5 +174,6 @@ export function deleteRateEstimate(id: string): RateEstimate | null {
     payload.activeEstimateId = payload.estimates[0]?.id ?? null;
   }
   saveEstimatePayload(payload);
+  deleteRateEstimateCloud(id);
   return payload.estimates.find((item) => item.id === payload.activeEstimateId) ?? null;
 }
