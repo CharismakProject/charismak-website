@@ -2,7 +2,15 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #151b22;
+  --charismak-navy: #0d3b66;
+  --charismak-deep-navy: #071e33;
+  --charismak-gold: #c8a45d;
+  --charismak-gold-soft: #e8c77f;
+  --charismak-grey: #3a4653;
+  --charismak-surface: #f7f8fa;
+  --charismak-line: rgba(13, 59, 102, 0.1);
+  --charismak-shadow: 0 18px 55px rgba(7, 30, 51, 0.09);
 }
 
 @theme inline {
@@ -12,26 +20,156 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  background: #ffffff;
 }
 
 body {
+  margin: 0;
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  text-rendering: optimizeLegibility;
 }
 
+::selection {
+  background: #c8a45d;
+  color: #071e33;
+}
+
+main h1,
+main h2,
+main h3,
+footer h2,
+footer h3 {
+  letter-spacing: -0.025em;
+}
+
+main h1,
+main h2 {
+  text-wrap: balance;
+}
+
+main p {
+  text-wrap: pretty;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a {
+  transition-property: color, background-color, border-color, opacity, transform, box-shadow;
+  transition-duration: 180ms;
+  transition-timing-function: ease;
+}
+
+/* -------------------------------------------------------------------------- */
+/*                       SITE-WIDE LEGACY THEME REMAP                         */
+/* -------------------------------------------------------------------------- */
+
+/* Retire the old orange/red identity without rewriting every functional page. */
+[class*="bg-[#A82B05]"] {
+  background-color: #0d3b66 !important;
+}
+
+[class*="bg-[#8B1E00]"] {
+  background-color: #c8a45d !important;
+  color: #071e33 !important;
+}
+
+[class*="text-[#A82B05]"],
+[class*="text-[#8B1E00]"] {
+  color: #0d3b66 !important;
+}
+
+[class*="border-[#A82B05]"],
+[class*="border-[#8B1E00]"] {
+  border-color: #c8a45d !important;
+}
+
+[class*="hover:bg-[#A82B05]"]:hover,
+[class*="hover:bg-[#8B1E00]"]:hover {
+  background-color: #c8a45d !important;
+  color: #071e33 !important;
+}
+
+[class*="hover:text-[#A82B05]"]:hover,
+[class*="hover:text-[#8B1E00]"]:hover {
+  color: #c8a45d !important;
+}
+
+[class*="hover:border-[#A82B05]"]:hover,
+[class*="hover:border-[#8B1E00]"]:hover {
+  border-color: #c8a45d !important;
+}
+
+/* Harmonise the former light-grey system with the new homepage surfaces. */
+[class*="bg-[#F5F7FA]"] {
+  background-color: #f7f8fa !important;
+}
+
+/* Softer, more contemporary typography on legacy page heroes. */
+main h1.font-black,
+main h2.font-black {
+  font-weight: 650 !important;
+  letter-spacing: -0.045em !important;
+}
+
+/* Shared form language used by quote/contact/marketplace/admin surfaces. */
+main input:not([type="checkbox"]):not([type="radio"]),
+main select,
+main textarea {
+  font: inherit;
+  border-color: rgba(13, 59, 102, 0.16);
+  background-color: #ffffff;
+  color: #151b22;
+}
+
+main input:not([type="checkbox"]):not([type="radio"]):focus,
+main select:focus,
+main textarea:focus {
+  border-color: rgba(13, 59, 102, 0.72) !important;
+  box-shadow: 0 0 0 3px rgba(13, 59, 102, 0.09);
+  outline: none;
+}
+
+main input::placeholder,
+main textarea::placeholder {
+  color: rgba(58, 70, 83, 0.58);
+}
+
+/* Give repeated legacy cards the same refined hover behaviour as the homepage. */
+main article[class*="border-[#0D3B66]/10"],
+main div[class*="border-[#0D3B66]/10"][class*="bg-white"] {
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+main article[class*="border-[#0D3B66]/10"]:hover {
+  border-color: rgba(13, 59, 102, 0.22);
+}
+
+/* -------------------------------------------------------------------------- */
+/*                             ESTIMATOR PRODUCT                              */
+/* -------------------------------------------------------------------------- */
+
 [data-estimator-app] {
-  --background: #f4f7fa;
-  --foreground: #0b2942;
+  --background: #f7f8fa;
+  --foreground: #071e33;
   min-height: 100vh;
   min-height: 100dvh;
-  background: #f4f7fa;
-  color: #0b2942;
+  background: #f7f8fa;
+  color: #071e33;
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   overflow-x: hidden;
 }
@@ -43,12 +181,12 @@ body {
 }
 
 [data-estimator-app] .app-backdrop {
-  background-color: #f3f6f9;
+  background-color: #f7f8fa;
   background-image:
-    radial-gradient(circle at 82% 2%, rgba(13, 59, 102, 0.11), transparent 26rem),
-    radial-gradient(circle at 38% 24%, rgba(200, 50, 10, 0.045), transparent 22rem),
-    linear-gradient(rgba(13, 59, 102, 0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(13, 59, 102, 0.025) 1px, transparent 1px);
+    radial-gradient(circle at 82% 2%, rgba(13, 59, 102, 0.1), transparent 26rem),
+    radial-gradient(circle at 38% 24%, rgba(200, 164, 93, 0.09), transparent 22rem),
+    linear-gradient(rgba(13, 59, 102, 0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(13, 59, 102, 0.022) 1px, transparent 1px);
   background-position: center;
   background-size: auto, auto, 32px 32px, 32px 32px;
   background-attachment: fixed;
@@ -96,7 +234,7 @@ body {
 
 @media (max-width: 639px) {
   [data-estimator-app] .app-backdrop {
-    background-color: #f3f6f9;
+    background-color: #f7f8fa;
     background-image: none;
   }
 
@@ -104,7 +242,7 @@ body {
   [data-estimator-app] select,
   [data-estimator-app] textarea {
     min-height: 44px;
-    border-radius: 14px;
+    border-radius: 12px;
     font-size: 14px;
   }
 
