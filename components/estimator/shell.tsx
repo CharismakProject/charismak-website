@@ -13,10 +13,26 @@ import {
 } from "lucide-react";
 
 import type { Bill } from "@/lib/billing/models";
-import { BILL_UPDATED_EVENT, loadBill } from "@/lib/billing/store";
+import {
+  BILL_UPDATED_EVENT,
+  createNewBill,
+  loadBill,
+  loadBillById,
+  saveBill,
+  selectBill,
+} from "@/lib/billing/store";
 import type { UniversalProject } from "@/lib/projects/models";
-import { loadActiveProject, loadProject, saveProject, setActiveProject as rememberActiveProject } from "@/lib/projects/store";
-import { createRateEstimate, selectRateEstimate } from "@/lib/pricing/store";
+import {
+  loadActiveProject,
+  loadProject,
+  saveProject,
+  setActiveProject as rememberActiveProject,
+} from "@/lib/projects/store";
+import {
+  createRateEstimate,
+  saveRateEstimate,
+  selectRateEstimate,
+} from "@/lib/pricing/store";
 import { useBetaSession } from "../auth/beta-session";
 import BillDrawer from "../bill/bill-drawer";
 import EstimatesArchive from "../bill/estimates-archive";
@@ -136,6 +152,74 @@ function EstimatorShellContent() {
     };
   }, [mobileMenuOpen]);
 
+  const prepareProjectCosting = useCallback((project: UniversalProject) => {
+    let linkedEstimate;
+    if (project.linkedEstimateId) {
+      try {
+        linkedEstimate = selectRateEstimate(project.linkedEstimateId);
+      } catch {
+        linkedEstimate = null;
+      }
+    }
+
+    if (!linkedEstimate) {
+      linkedEstimate = createRateEstimate({
+        projectId: project.id,
+        title: `${project.name} Estimate`,
+        projectName: project.name,
+        clientName: project.clientName,
+        location: project.location,
+        currency: project.currency,
+      });
+    } else if (linkedEstimate.projectId !== project.id) {
+      linkedEstimate = saveRateEstimate({
+        ...linkedEstimate,
+        projectId: project.id,
+        projectName: linkedEstimate.projectName || project.name,
+        clientName: linkedEstimate.clientName || project.clientName,
+        location: linkedEstimate.location || project.location,
+        priceBasisAt: linkedEstimate.priceBasisAt ?? linkedEstimate.createdAt,
+      });
+    }
+
+    let linkedBill = project.linkedBillId
+      ? loadBillById(project.linkedBillId)
+      : null;
+
+    if (!linkedBill) {
+      linkedBill = createNewBill({
+        title: `${project.name} — Bill of Quantities`,
+        projectName: project.name,
+        clientName: project.clientName,
+        location: project.location,
+        currency: project.currency,
+      });
+      linkedBill.projectId = project.id;
+      linkedBill.priceBasisAt = linkedEstimate.priceBasisAt ?? linkedEstimate.createdAt;
+      linkedBill = saveBill(linkedBill);
+    } else {
+      selectBill(linkedBill.id);
+      if (linkedBill.status === "draft" && linkedBill.projectId !== project.id) {
+        linkedBill.projectId = project.id;
+        linkedBill.priceBasisAt ??= linkedEstimate.priceBasisAt ?? linkedEstimate.createdAt;
+        linkedBill = saveBill(linkedBill);
+      }
+    }
+
+    if (
+      project.linkedEstimateId !== linkedEstimate.id ||
+      project.linkedBillId !== linkedBill.id
+    ) {
+      return saveProject({
+        ...project,
+        linkedEstimateId: linkedEstimate.id,
+        linkedBillId: linkedBill.id,
+      });
+    }
+
+    return project;
+  }, []);
+
   const navigate = useCallback((page: PageKey, calculator: CalculatorKey | null = null) => {
     setActivePage(page);
     setActiveCalculator(page === "quick" ? calculator : null);
@@ -144,6 +228,16 @@ function EstimatorShellContent() {
     if (window.location.hash !== hash) window.history.pushState(null, "", hash);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
+
+  const openEstimateWorkspace = useCallback((project?: UniversalProject | null) => {
+    const target = project ?? activeProject ?? loadActiveProject();
+    if (target) {
+      const prepared = prepareProjectCosting(target);
+      rememberActiveProject(prepared);
+      setActiveProject(prepared);
+    }
+    navigate("estimates");
+  }, [activeProject, navigate, prepareProjectCosting]);
 
   const openConcrete = useCallback(() => navigate("quick", "concrete"), [navigate]);
   const openBlockwork = useCallback(() => navigate("quick", "blockwork"), [navigate]);
@@ -157,11 +251,13 @@ function EstimatorShellContent() {
     setActiveProject(project);
     if (project.projectType === "fence-boundary") {
       const started = estimate.startNewEstimate({
+        projectId: project.id,
         projectName: project.name,
         clientName: project.clientName,
         location: project.location,
         currency: project.currency,
         measurement: project.measurementSystem === "metric" ? "Metric" : "Imperial",
+        estimateBillId: project.linkedBillId ?? null,
       });
       if (started) navigate("fence");
       return;
@@ -173,33 +269,8 @@ function EstimatorShellContent() {
     if (project.entryRoute === "import-boq") return navigate("import");
     if (project.entryRoute === "drawing-takeoff") return navigate("plan");
 
-    try {
-      if (project.linkedEstimateId) {
-        selectRateEstimate(project.linkedEstimateId);
-      } else {
-        const linkedEstimate = createRateEstimate({
-          title: `${project.name} Estimate`,
-          projectName: project.name,
-          clientName: project.clientName,
-          location: project.location,
-          currency: project.currency,
-        });
-        const saved = saveProject({ ...project, linkedEstimateId: linkedEstimate.id });
-        setActiveProject(saved);
-      }
-    } catch {
-      const linkedEstimate = createRateEstimate({
-        title: `${project.name} Estimate`,
-        projectName: project.name,
-        clientName: project.clientName,
-        location: project.location,
-        currency: project.currency,
-      });
-      const saved = saveProject({ ...project, linkedEstimateId: linkedEstimate.id });
-      setActiveProject(saved);
-    }
-    navigate("estimates");
-  }, [estimate, navigate]);
+    openEstimateWorkspace(project);
+  }, [estimate, navigate, openEstimateWorkspace]);
 
   const itemCount = useMemo(
     () => bill?.sections.reduce((total, section) => total + section.items.length, 0) ?? 0,
@@ -230,7 +301,7 @@ function EstimatorShellContent() {
       case "projects": return <ProjectWorkspace onContinueProject={continueUniversalProject} />;
       case "guided": return activeProject ? <GuidedEstimator project={activeProject} mode="guided" onBack={() => navigate("projects")} onOpenBill={openBill} onOpenBudget={() => navigate("budget")} /> : <ProjectWorkspace onContinueProject={continueUniversalProject} />;
       case "dimensions": return activeProject ? <GuidedEstimator project={activeProject} mode="dimensions" onBack={() => navigate("projects")} onOpenBill={openBill} onOpenBudget={() => navigate("budget")} /> : <ProjectWorkspace onContinueProject={continueUniversalProject} />;
-      case "plan": return activeProject ? <PlanUploadWorkspace project={activeProject} professional={activeProject.entryRoute === "drawing-takeoff"} onBack={() => navigate("projects")} onContinue={() => { const refreshed = loadProject(activeProject.id); if (refreshed) setActiveProject(refreshed); navigate(activeProject.entryRoute === "drawing-takeoff" ? "estimates" : "guided"); }} /> : <ProjectWorkspace onContinueProject={continueUniversalProject} />;
+      case "plan": return activeProject ? <PlanUploadWorkspace project={activeProject} professional={activeProject.entryRoute === "drawing-takeoff"} onBack={() => navigate("projects")} onContinue={() => { const refreshed = loadProject(activeProject.id); if (refreshed) { setActiveProject(refreshed); if (activeProject.entryRoute === "drawing-takeoff") return openEstimateWorkspace(refreshed); } navigate("guided"); }} /> : <ProjectWorkspace onContinueProject={continueUniversalProject} />;
       case "import": return activeProject ? <BoqImportWorkspace project={activeProject} onBack={() => navigate("projects")} onOpenBill={openBill} /> : <ProjectWorkspace onContinueProject={continueUniversalProject} />;
       case "budget": return activeProject ? <BudgetWorkspace project={activeProject} onBack={() => navigate(activeProject.entryRoute === "enter-dimensions" ? "dimensions" : "guided")} /> : <ProjectWorkspace onContinueProject={continueUniversalProject} />;
       case "fence": return <Workflow onOpenConcrete={openConcrete} onOpenBlockwork={openBlockwork} onOpenBill={openBill} onOpenEstimates={() => navigate("register")} />;
@@ -238,7 +309,7 @@ function EstimatorShellContent() {
       case "bill": return <ReviewWorkspace onOpenConcrete={openConcrete} onOpenBlockwork={openBlockwork} onStartFence={startFence} onOpenEstimates={() => navigate("register")} />;
       case "estimates": return <EstimateBuilder onOpenRates={() => navigate("rates")} onOpenBill={openBill} />;
       case "register": return <EstimatesArchive onOpenBill={openBill} onStartFence={startFence} />;
-      case "rates": return <PriceLibrary onOpenEstimate={() => navigate("estimates")} />;
+      case "rates": return <PriceLibrary onOpenEstimate={() => openEstimateWorkspace()} />;
       case "feedback": return <FeedbackPage onBack={() => navigate("dashboard")} />;
       case "insights": return betaSession.isAdmin ? <BetaInsights /> : <FeedbackPage onBack={() => navigate("dashboard")} />;
       case "marketplace": return <EstimatorMarketplaceWorkspace project={activeProject} bill={bill} />;
@@ -247,13 +318,17 @@ function EstimatorShellContent() {
 
   const signOut = () => void betaSession.signOut();
   const moreActive = !["dashboard", "projects", "bill"].includes(activePage);
+  const selectPage = (page: PageKey) => {
+    if (page === "estimates") openEstimateWorkspace();
+    else navigate(page);
+  };
 
   return (
     <div className="min-h-screen bg-[#F5F7FA] text-[#081B36]">
       <div className="flex min-h-screen">
         <Sidebar
           activePage={activePage}
-          onSelectPage={(page) => navigate(page)}
+          onSelectPage={selectPage}
           isAdmin={betaSession.isAdmin}
           email={betaSession.email}
           onSignOut={signOut}
@@ -295,7 +370,7 @@ function EstimatorShellContent() {
           <div className="estimator-mobile-drawer relative h-full">
             <Sidebar
               activePage={activePage}
-              onSelectPage={(page) => navigate(page)}
+              onSelectPage={selectPage}
               isAdmin={betaSession.isAdmin}
               mobile
               email={betaSession.email}
