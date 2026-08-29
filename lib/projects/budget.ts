@@ -1,3 +1,5 @@
+import { persistBudgetCloud } from "@/lib/estimator/cloud";
+
 export type BudgetSection = {
   id: string;
   label: string;
@@ -56,6 +58,7 @@ export function saveProjectBudget(budget: ProjectBudget): ProjectBudget {
   if (index >= 0) budgets[index] = next;
   else budgets.push(next);
   saveAll(budgets);
+  persistBudgetCloud(next);
   return next;
 }
 
