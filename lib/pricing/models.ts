@@ -140,6 +140,8 @@ export type EstimateLine = {
 
 export type RateEstimate = {
   id: string;
+  projectId?: string | null;
+  priceBasisAt?: string | null;
   title: string;
   projectName: string;
   clientName: string;
