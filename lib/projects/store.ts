@@ -1,3 +1,4 @@
+import { deleteProjectCloud, persistProjectCloud } from "@/lib/estimator/cloud";
 import type { NewUniversalProject, UniversalProject } from "./models";
 
 const PROJECTS_KEY = "charismak-universal-projects-v1";
@@ -58,6 +59,7 @@ export function saveProject(project: UniversalProject): UniversalProject {
   if (canUseStorage() && localStorage.getItem(ACTIVE_PROJECT_KEY) === project.id) {
     localStorage.setItem(ACTIVE_PROJECT_KEY, project.id);
   }
+  persistProjectCloud(next);
   return next;
 }
 
@@ -76,7 +78,11 @@ export function removeProject(id: string): UniversalProject[] {
   const next = loadProjects().filter((project) => project.id !== id);
   if (canUseStorage()) {
     localStorage.setItem(PROJECTS_KEY, JSON.stringify(next));
+    if (localStorage.getItem(ACTIVE_PROJECT_KEY) === id) {
+      localStorage.removeItem(ACTIVE_PROJECT_KEY);
+    }
     notify();
   }
+  deleteProjectCloud(id);
   return next;
 }
