@@ -13,6 +13,7 @@ const navItems = [
   { label: "Projects", href: "/projects" },
   { label: "Estimate", href: "/estimator" },
   { label: "Prices", href: "/prices" },
+  { label: "Suppliers", href: "/supplier-prices" },
   { label: "Marketplace", href: "/marketplace" },
   { label: "Blog", href: "/blog" },
   { label: "Contact", href: "/contact" },
