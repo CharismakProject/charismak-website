@@ -86,6 +86,11 @@ const normalizeEstimate = (estimate: RateEstimate): RateEstimate => ({
   ...estimate,
   projectId: estimate.projectId ?? null,
   priceBasisAt: estimate.priceBasisAt ?? estimate.createdAt ?? new Date().toISOString(),
+  // Legacy estimates receive one snapshot the first time they are opened after
+  // this migration. After that, Price Library edits do not silently rewrite them.
+  priceItemsSnapshot: estimate.priceItemsSnapshot?.length
+    ? estimate.priceItemsSnapshot
+    : clone(loadPriceItems()),
 });
 
 function loadEstimatePayload(): EstimatePayload {
@@ -129,6 +134,7 @@ export function createRateEstimate(overrides?: Partial<RateEstimate>): RateEstim
     id: `estimate-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     projectId: overrides?.projectId ?? null,
     priceBasisAt: overrides?.priceBasisAt ?? now,
+    priceItemsSnapshot: clone(overrides?.priceItemsSnapshot ?? loadPriceItems()),
     title: overrides?.title ?? "New Construction Estimate",
     projectName: overrides?.projectName ?? "",
     clientName: overrides?.clientName ?? "",
@@ -156,6 +162,16 @@ export function saveRateEstimate(estimate: RateEstimate): RateEstimate {
   saveEstimatePayload(payload);
   persistRateEstimateCloud(updated);
   return updated;
+}
+
+export function refreshRateEstimatePriceBasis(id: string): RateEstimate {
+  const current = loadRateEstimates().find((estimate) => estimate.id === id);
+  if (!current) throw new Error("The selected estimate could not be found.");
+  return saveRateEstimate({
+    ...current,
+    priceBasisAt: new Date().toISOString(),
+    priceItemsSnapshot: clone(loadPriceItems()),
+  });
 }
 
 export function selectRateEstimate(id: string): RateEstimate {
