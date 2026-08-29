@@ -58,11 +58,11 @@ export function calculateGuidedEstimate(projectType: ProjectType, scope: Project
   const finish = scope.finishLevel ?? "standard";
   const floors = Math.max(1, scope.floors ?? 1);
   const footprint = positive(scope.floorAreaM2) || positive(scope.buildingLengthM) * positive(scope.buildingWidthM);
-  const totalFloorArea = Math.max(1, footprint * floors);
+  const totalFloorArea = footprint > 0 ? footprint * floors : 0;
   const isBuilding = projectType === "new-building";
   const isSteel = projectType === "structural-steel";
-  const basisQuantity = isSteel ? Math.max(1, positive(scope.floorAreaM2)) : totalFloorArea;
-  const basisUnit = isSteel ? "tonne planning equivalent" : "m²";
+  const basisQuantity = isSteel ? positive(scope.steelWeightTonnes) : totalFloorArea;
+  const basisUnit = isSteel ? "tonne" : "m²";
   const rates = isBuilding ? buildingRates[finish] : projectType === "fence-boundary" ? [0, 0] as [number, number] : projectRates[projectType][finish];
   const baseLow = basisQuantity * rates[0];
   const baseHigh = basisQuantity * rates[1];
@@ -71,8 +71,8 @@ export function calculateGuidedEstimate(projectType: ProjectType, scope: Project
   const prelimHigh = baseHigh * prelimPercent / 100;
   const landArea = positive(scope.landAreaM2) || positive(scope.landLengthM) * positive(scope.landWidthM);
   const openArea = Math.max(0, landArea - footprint);
-  const externalLow = scope.includeExternalWorks ? openArea * 25_000 : 0;
-  const externalHigh = scope.includeExternalWorks ? openArea * 65_000 : 0;
+  const externalLow = !isSteel && scope.includeExternalWorks ? openArea * 25_000 : 0;
+  const externalHigh = !isSteel && scope.includeExternalWorks ? openArea * 65_000 : 0;
   const coreSections = (isBuilding ? buildingSections : genericSections).map(([id, label, share, explanation]) => ({
     id,
     label,
@@ -82,23 +82,26 @@ export function calculateGuidedEstimate(projectType: ProjectType, scope: Project
   }));
   const sections: GuidedEstimateSection[] = [
     ...coreSections,
-    ...(prelimPercent ? [{ id: "preliminaries", label: "Project preliminaries", low: prelimLow, high: prelimHigh, explanation: `Optional ${prelimPercent}% allowance for project setup, supervision and general requirements.` }] : []),
-    ...(scope.includeExternalWorks && openArea ? [{ id: "external", label: "External works allowance", low: externalLow, high: externalHigh, explanation: `Planning allowance for approximately ${Math.round(openArea)} m² of remaining open land.` }] : []),
+    ...(prelimPercent && basisQuantity > 0 ? [{ id: "preliminaries", label: "Project preliminaries", low: prelimLow, high: prelimHigh, explanation: `Optional ${prelimPercent}% allowance for project setup, supervision and general requirements.` }] : []),
+    ...(!isSteel && scope.includeExternalWorks && openArea ? [{ id: "external", label: "External works allowance", low: externalLow, high: externalHigh, explanation: `Planning allowance for approximately ${Math.round(openArea)} m² of remaining open land.` }] : []),
   ];
   const low = sections.reduce((sum, section) => sum + section.low, 0);
   const high = sections.reduce((sum, section) => sum + section.high, 0);
-  const suppliedDimensions = positive(scope.floorAreaM2) > 0 || (positive(scope.buildingLengthM) > 0 && positive(scope.buildingWidthM) > 0);
+  const suppliedBasis = isSteel
+    ? positive(scope.steelWeightTonnes) > 0
+    : positive(scope.floorAreaM2) > 0 || (positive(scope.buildingLengthM) > 0 && positive(scope.buildingWidthM) > 0);
   return {
-    basisLabel: isSteel ? "Selected steel quantity" : "Total estimated floor area",
+    basisLabel: isSteel ? "Approximate steel quantity" : "Total estimated floor area",
     basisQuantity,
     basisUnit,
     low,
     high,
     midpoint: (low + high) / 2,
     sections,
-    confidence: suppliedDimensions ? "detailed" : "rough",
+    confidence: suppliedBasis ? "detailed" : "rough",
     assumptions: [
       `Starter ${finish} specification benchmark for ${projectType.replace(/-/g, " ")}.`,
+      ...(isSteel && !basisQuantity ? ["Enter an approximate structural steel tonnage before using this planning estimate."] : []),
       "Rates are planning references and must be checked against current prices at the project location.",
       "Final cost will change with drawings, structural design, specification, site condition and procurement decisions.",
       ...(scope.assumptions ?? []),
