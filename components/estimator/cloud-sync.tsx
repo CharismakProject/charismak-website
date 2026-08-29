@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 
+import { useBetaSession } from "@/components/auth/beta-session";
 import { BILL_UPDATED_EVENT, loadBill } from "@/lib/billing/store";
 import {
-  ESTIMATOR_CLOUD_SYNCED_EVENT,
   persistBillCloud,
   persistBudgetCloud,
   setEstimatorCloudUser,
@@ -13,21 +13,20 @@ import {
 import { BUDGET_UPDATED_EVENT, loadProjectBudget } from "@/lib/projects/budget";
 import { loadActiveProject } from "@/lib/projects/store";
 
-export default function EstimatorCloudSync({ userId }: { userId: string | null }) {
+export default function EstimatorCloudGate({ children }: { children: ReactNode }) {
+  const session = useBetaSession();
+  const userId = session.user?.id ?? null;
+  const [ready, setReady] = useState(!userId);
+
   useEffect(() => {
     setEstimatorCloudUser(userId);
-    if (!userId) return;
+    if (!userId) {
+      setReady(true);
+      return;
+    }
 
     let cancelled = false;
-
-    void syncEstimatorFromCloud(userId).catch((error) => {
-      if (!cancelled) {
-        console.warn(
-          "[Estimator cloud] initial sync failed:",
-          error instanceof Error ? error.message : error,
-        );
-      }
-    });
+    setReady(false);
 
     const syncBill = () => {
       const bill = loadBill();
@@ -44,6 +43,19 @@ export default function EstimatorCloudSync({ userId }: { userId: string | null }
     window.addEventListener(BILL_UPDATED_EVENT, syncBill);
     window.addEventListener(BUDGET_UPDATED_EVENT, syncBudget);
 
+    void syncEstimatorFromCloud(userId)
+      .catch((error) => {
+        if (!cancelled) {
+          console.warn(
+            "[Estimator cloud] initial sync failed; continuing with local cache:",
+            error instanceof Error ? error.message : error,
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setReady(true);
+      });
+
     return () => {
       cancelled = true;
       window.removeEventListener(BILL_UPDATED_EVENT, syncBill);
@@ -52,7 +64,16 @@ export default function EstimatorCloudSync({ userId }: { userId: string | null }
     };
   }, [userId]);
 
-  return <span className="hidden" data-estimator-cloud-sync={userId ? "active" : "inactive"} />;
-}
+  if (!ready) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-[#071E33] p-6 text-white">
+        <div className="text-center">
+          <p className="text-sm font-bold">Syncing your estimator workspace…</p>
+          <p className="mt-2 text-xs text-white/60">Projects on this device are being reconciled with your account.</p>
+        </div>
+      </div>
+    );
+  }
 
-export { ESTIMATOR_CLOUD_SYNCED_EVENT };
+  return <>{children}</>;
+}
