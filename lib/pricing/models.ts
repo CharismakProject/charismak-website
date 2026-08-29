@@ -142,6 +142,7 @@ export type RateEstimate = {
   id: string;
   projectId?: string | null;
   priceBasisAt?: string | null;
+  priceItemsSnapshot?: PriceItem[];
   title: string;
   projectName: string;
   clientName: string;
