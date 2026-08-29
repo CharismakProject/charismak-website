@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, ArrowRight, PackageSearch, Search, Truck } from "lucide-react";
-
 import type { PriceCategory, PriceItem } from "@/lib/pricing/models";
 import { loadPriceItems, PRICE_LIBRARY_UPDATED_EVENT } from "@/lib/pricing/store";
 
@@ -40,14 +39,47 @@ export default function PublicPriceList() {
   const locations = useMemo(() => ["all", ...new Set(items.map((item) => item.location).filter(Boolean))], [items]);
   const results = useMemo(() => items.filter((item) => (category === "all" || item.category === category) && (location === "all" || item.location === location) && (!query.trim() || `${item.code} ${item.description} ${item.unit}`.toLowerCase().includes(query.trim().toLowerCase()))), [items, category, location, query]);
 
-  return <div className="space-y-6">
-    <section className="overflow-hidden rounded-3xl bg-[#081B36] p-6 text-white md:p-9"><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#E7B34B]">Nigeria building cost reference</p><h1 className="mt-2 max-w-4xl text-3xl font-black md:text-5xl">Material and labour prices in units people actually buy</h1><p className="mt-4 max-w-3xl text-sm leading-7 text-white/70">See the technical measurement and the practical buying equivalent together—m³, tonnes, truck capacity, bags, BRC sheets, bar lengths, pieces and labour points.</p><div className="mt-6 flex flex-wrap gap-3"><Link href="/estimator" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#E7B34B] px-5 py-3 text-sm font-bold text-[#081B36]">Estimate a building <ArrowRight className="h-4 w-4" /></Link><Link href="/marketplace" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/25 px-5 py-3 text-sm font-bold text-white">Find a supplier <Truck className="h-4 w-4" /></Link></div></section>
+  return (
+    <div>
+      <section className="relative overflow-hidden bg-[#071E33] p-7 text-white md:p-10">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_88%_15%,rgba(200,164,93,0.14),transparent_24rem)]" />
+        <div className="relative">
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#F2B544]">Nigeria Building Cost Reference</p>
+          <h1 className="mt-4 max-w-4xl text-3xl font-semibold tracking-[-0.03em] md:text-5xl">Material and labour prices in units people actually buy.</h1>
+          <p className="mt-5 max-w-3xl text-sm leading-7 text-white/68">See technical measurement and practical buying equivalents together—m³, tonnes, truck capacity, bags, sheets, bar lengths, pieces and labour points.</p>
+          <div className="mt-7 flex flex-wrap gap-3">
+            <Link href="/estimator" className="inline-flex min-h-11 items-center gap-2 bg-[#C8A45D] px-5 py-3 text-sm font-bold text-[#071E33] transition hover:bg-white">Estimate a building <ArrowRight className="h-4 w-4" /></Link>
+            <Link href="/marketplace" className="inline-flex min-h-11 items-center gap-2 border border-white/25 bg-white/5 px-5 py-3 text-sm font-bold text-white transition hover:bg-white hover:text-[#071E33]">Find a supplier <Truck className="h-4 w-4" /></Link>
+          </div>
+        </div>
+      </section>
 
-    <section className="rounded-2xl border border-[#F0D39B] bg-[#FFF9ED] p-4 text-xs leading-6 text-[#74520D]"><p className="flex items-start gap-2"><AlertTriangle className="mt-1 h-4 w-4 shrink-0" /><span><strong>Planning references—not live quotations.</strong> Prices vary by city, brand, season, exchange rate, quantity and delivery distance. Verify with suppliers before ordering or contracting work.</span></p></section>
+      <section className="border-x border-b border-[#C8A45D]/30 bg-[#FFFDF7] p-5 text-xs leading-6 text-[#66501D]">
+        <p className="flex items-start gap-2"><AlertTriangle className="mt-1 h-4 w-4 shrink-0 text-[#C8A45D]" /><span><strong>Planning references—not live quotations.</strong> Prices vary by city, brand, season, exchange rate, quantity and delivery distance. Verify with suppliers before ordering or contracting work.</span></p>
+      </section>
 
-    <section className="rounded-2xl border border-[#DCE4EC] bg-white p-4 md:p-5"><div className="flex flex-wrap gap-2">{categories.map((item) => <button key={item.id} type="button" onClick={() => setCategory(item.id)} className={`rounded-full px-4 py-2 text-xs font-bold ${category === item.id ? "bg-[#081B36] text-white" : "bg-[#EEF2F6] text-[#526579]"}`}>{item.label}</button>)}</div><div className="mt-4 grid gap-3 sm:grid-cols-[1fr_220px]"><label className="relative"><Search className="absolute left-3 top-3.5 h-4 w-4 text-[#7A8B9E]" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search cement, BRC, sand, labour…" className="min-h-11 w-full rounded-xl border border-[#CAD5E0] pl-10 pr-3 text-sm" /></label><select aria-label="Price location" value={location} onChange={(event) => setLocation(event.target.value)} className="min-h-11 rounded-xl border border-[#CAD5E0] px-3 text-sm"><option value="all">All available locations</option>{locations.slice(1).map((value) => <option key={value}>{value}</option>)}</select></div></section>
+      <section className="mt-8 border border-[#0D3B66]/10 bg-white p-5 shadow-[0_8px_28px_rgba(7,30,51,0.05)]">
+        <div className="flex flex-wrap gap-2">
+          {categories.map((item) => <button key={item.id} type="button" onClick={() => setCategory(item.id)} className={`px-4 py-2 text-xs font-bold transition ${category === item.id ? "bg-[#0D3B66] text-white" : "border border-[#0D3B66]/10 bg-[#F7F8FA] text-[#3A4653] hover:border-[#C8A45D]"}`}>{item.label}</button>)}
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_220px]">
+          <label className="relative"><Search className="absolute left-3 top-3.5 h-4 w-4 text-[#3A4653]/55" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search cement, BRC, sand, labour…" className="min-h-11 w-full border border-[#0D3B66]/15 pl-10 pr-3 text-sm" /></label>
+          <select aria-label="Price location" value={location} onChange={(event) => setLocation(event.target.value)} className="min-h-11 border border-[#0D3B66]/15 px-3 text-sm"><option value="all">All available locations</option>{locations.slice(1).map((value) => <option key={value}>{value}</option>)}</select>
+        </div>
+      </section>
 
-    <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{results.map((item) => <article key={item.id} className="rounded-2xl border border-[#DCE4EC] bg-white p-5"><div className="flex items-start justify-between gap-3"><span className="rounded-full bg-[#EEF2F6] px-2.5 py-1 text-[9px] font-bold uppercase text-[#617286]">{item.category}</span><span className="text-[10px] font-semibold text-[#7A8B9E]">{item.code}</span></div><h2 className="mt-4 min-h-12 text-base font-bold leading-6 text-[#081B36]">{item.description}</h2><div className="mt-3 rounded-xl bg-[#F5F8FB] p-4"><span className="text-[10px] font-bold uppercase tracking-[0.13em] text-[#617286]">Reference per {item.unit}</span><strong className={`mt-1 block text-xl ${item.rate === null ? "text-[#B45B09]" : "text-[#081B36]"}`}>{money(item.rate, item.currency)}</strong><span className="mt-1 block text-[10px] text-[#7A8B9E]">{item.location} · {new Date(item.updatedAt).toLocaleDateString("en-NG")}</span></div><div className="mt-3 flex gap-2 rounded-xl border border-[#E3EAF0] p-3"><PackageSearch className="mt-0.5 h-4 w-4 shrink-0 text-[#175FC4]" /><p className="text-[11px] leading-5 text-[#526579]">{buyingGuide(item)}</p></div></article>)}</section>
-    {!results.length ? <section className="rounded-2xl border border-dashed border-[#B8C7D6] bg-white p-8 text-center text-sm text-[#617286]">No matching price items. Try a broader search.</section> : null}
-  </div>;
+      <section className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        {results.map((item) => (
+          <article key={item.id} className="bg-white p-6 shadow-[0_10px_35px_rgba(7,30,51,0.06)]">
+            <div className="flex items-start justify-between gap-3"><span className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#C8A45D]">{item.category}</span><span className="text-[10px] font-semibold text-[#3A4653]/55">{item.code}</span></div>
+            <h2 className="mt-4 min-h-12 text-base font-semibold leading-6 text-[#071E33]">{item.description}</h2>
+            <div className="mt-4 border-l border-[#C8A45D] bg-[#F7F8FA] p-4"><span className="text-[10px] font-bold uppercase tracking-[0.13em] text-[#3A4653]/65">Reference per {item.unit}</span><strong className={`mt-1 block text-xl ${item.rate === null ? "text-[#8B6B23]" : "text-[#071E33]"}`}>{money(item.rate, item.currency)}</strong><span className="mt-1 block text-[10px] text-[#3A4653]/55">{item.location} · {new Date(item.updatedAt).toLocaleDateString("en-NG")}</span></div>
+            <div className="mt-4 flex gap-3 border-t border-[#0D3B66]/10 pt-4"><PackageSearch className="mt-0.5 h-4 w-4 shrink-0 text-[#0D3B66]" /><p className="text-[11px] leading-5 text-[#3A4653]">{buyingGuide(item)}</p></div>
+          </article>
+        ))}
+      </section>
+
+      {!results.length ? <section className="mt-6 border border-dashed border-[#0D3B66]/20 bg-white p-8 text-center text-sm text-[#3A4653]">No matching price items. Try a broader search.</section> : null}
+    </div>
+  );
 }
