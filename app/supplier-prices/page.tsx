@@ -4,6 +4,11 @@ export const metadata = {
   title: "Supplier Price Update | Charismak Project",
   description:
     "Suppliers can update current Nigerian construction material, equipment and specialist rates through one simple Charismak portal.",
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+  },
 };
 
 export default function SupplierPricesPage() {
