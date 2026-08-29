@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { persistWorkspaceCloud } from "@/lib/estimator/cloud";
 import { calculateFenceSectionPhysicalLayout } from "@/lib/fence/physical-layout-calculator";
 import type {
   FenceSection,
@@ -12,12 +13,17 @@ import type {
 const STORAGE_KEY = "charismak-estimator-draft";
 
 type ProjectInfo = {
+  projectId: string | null;
   projectName: string;
   clientName: string;
   location: string;
   currency: string;
   measurement: string;
   designCategory: string;
+};
+
+type StartEstimateProject = Partial<ProjectInfo> & {
+  estimateBillId?: string | null;
 };
 
 type SectionState = FenceSection & { grossLengthM: number };
@@ -27,9 +33,11 @@ type EstimateState = {
   teamMode: boolean;
   projectInfo: ProjectInfo;
   sections: SectionState[];
-  setProjectField: (field: keyof ProjectInfo, value: string) => void;
+  estimateBillId: string | null;
+  setEstimateBillId: (id: string | null) => void;
+  setProjectField: (field: Exclude<keyof ProjectInfo, "projectId">, value: string) => void;
   setActiveStage: (n: number) => void;
-  startNewEstimate: (project?: Partial<ProjectInfo>) => boolean;
+  startNewEstimate: (project?: StartEstimateProject) => boolean;
   clearDraft: () => void;
   addSection: (
     section?: Partial<SectionState>,
@@ -48,6 +56,7 @@ type EstimateState = {
 const EstimateContext = createContext<EstimateState | null>(null);
 
 const defaultProject: ProjectInfo = {
+  projectId: null,
   projectName: "",
   clientName: "",
   location: "",
@@ -96,9 +105,10 @@ function makeEmptySection(idSuffix = "", opts?: { position?: any; name?: string 
 
 export function EstimateProvider({ children }: { children: React.ReactNode }) {
   const [activeStage, setActiveStageState] = useState<number>(0);
-  const [teamMode, setTeamMode] = useState(true);
+  const [teamMode] = useState(true);
   const [projectInfo, setProjectInfo] = useState<ProjectInfo>(defaultProject);
   const [sections, setSections] = useState<SectionState[]>([]);
+  const [estimateBillId, setEstimateBillId] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -109,9 +119,10 @@ export function EstimateProvider({ children }: { children: React.ReactNode }) {
     }
     try {
       const parsed = JSON.parse(raw);
-      if (parsed.projectInfo) setProjectInfo(parsed.projectInfo);
+      if (parsed.projectInfo) setProjectInfo({ ...defaultProject, ...parsed.projectInfo });
       if (parsed.sections) setSections(parsed.sections);
       if (typeof parsed.activeStage === "number") setActiveStageState(parsed.activeStage);
+      if (typeof parsed.estimateBillId === "string") setEstimateBillId(parsed.estimateBillId);
     } catch {
       localStorage.removeItem(STORAGE_KEY);
     } finally {
@@ -127,18 +138,37 @@ export function EstimateProvider({ children }: { children: React.ReactNode }) {
     } catch {
       current = {};
     }
-    const payload = JSON.stringify({
-      ...current,
+    const workspaceUpdatedAt = new Date().toISOString();
+    const workspace = {
       projectInfo,
       sections,
       activeStage,
-    });
-    localStorage.setItem(STORAGE_KEY, payload);
-  }, [projectInfo, sections, activeStage, hydrated]);
+      estimateBillId,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      ...current,
+      ...workspace,
+      workspaceUpdatedAt,
+    }));
+    persistWorkspaceCloud(workspace, workspaceUpdatedAt);
+  }, [projectInfo, sections, activeStage, estimateBillId, hydrated]);
 
-  const setProjectField = (field: keyof ProjectInfo, value: string) => setProjectInfo((p) => ({ ...p, [field]: value }));
+  const setProjectField = (
+    field: Exclude<keyof ProjectInfo, "projectId">,
+    value: string,
+  ) => setProjectInfo((p) => ({ ...p, [field]: value }));
 
-  const startNewEstimate = (project?: Partial<ProjectInfo>) => {
+  const startNewEstimate = (project?: StartEstimateProject) => {
+    if (
+      project?.projectId &&
+      projectInfo.projectId === project.projectId &&
+      (projectInfo.projectName.trim().length > 0 || sections.length > 0)
+    ) {
+      if (project.estimateBillId !== undefined) setEstimateBillId(project.estimateBillId);
+      if (activeStage < 1) setActiveStageState(1);
+      return true;
+    }
+
     const hasDraft =
       projectInfo.projectName.trim().length > 0 || sections.length > 0;
     if (hasDraft) {
@@ -154,10 +184,15 @@ export function EstimateProvider({ children }: { children: React.ReactNode }) {
       delete current.projectInfo;
       delete current.sections;
       delete current.activeStage;
+      delete current.estimateBillId;
+      delete current.workspaceUpdatedAt;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
     }
-    setProjectInfo({ ...defaultProject, ...project });
+
+    const { estimateBillId: nextBillId = null, ...projectPatch } = project ?? {};
+    setProjectInfo({ ...defaultProject, ...projectPatch });
     setSections([]);
+    setEstimateBillId(nextBillId);
     setActiveStageState(1);
     return true;
   };
@@ -175,14 +210,16 @@ export function EstimateProvider({ children }: { children: React.ReactNode }) {
     delete current.projectInfo;
     delete current.sections;
     delete current.activeStage;
+    delete current.estimateBillId;
+    delete current.workspaceUpdatedAt;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
     setProjectInfo(defaultProject);
     setSections([]);
+    setEstimateBillId(null);
     setActiveStageState(0);
   };
 
-  const addSection = (section?: Partial<SectionState>, position?: FenceSection['position'], name?: string) => {
-    // If a position is provided and already exists, confirm duplication
+  const addSection = (section?: Partial<SectionState>, position?: FenceSection["position"], name?: string) => {
     if (position) {
       const exists = sections.some((s) => s.position === position);
       if (exists) {
@@ -210,18 +247,17 @@ export function EstimateProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addGateToSection = (sectionId: string, gate: Gate) => {
-    setSections((cur) => cur.map((s) => (s.id === sectionId ? { ...s, gates: [...s.gates, gate] } : s)));
+    setSections((cur) => cur.map((s) => (s.id === sectionId ? { ...s, gates: [...s.gates, gate] } : s));
   };
 
   const removeGateFromSection = (sectionId: string, gateId: string) => {
-    setSections((cur) => cur.map((s) => (s.id === sectionId ? { ...s, gates: s.gates.filter((g) => g.id !== gateId) } : s)));
+    setSections((cur) => cur.map((s) => (s.id === sectionId ? { ...s, gates: s.gates.filter((g) => g.id !== gateId) } : s));
   };
 
   const calculateSectionLayout = (sectionId: string) => {
     const s = sections.find((x) => x.id === sectionId);
     if (!s) return null;
 
-    // build minimal section object expected by the engine
     const engineSection: Partial<FenceSection> = {
       id: s.id,
       grossLengthM: s.grossLengthM,
@@ -237,8 +273,7 @@ export function EstimateProvider({ children }: { children: React.ReactNode }) {
     } as FenceSection;
 
     try {
-      const result = calculateFenceSectionPhysicalLayout({ section: engineSection as any, specifications: defaultColumnSpecifications });
-      return result;
+      return calculateFenceSectionPhysicalLayout({ section: engineSection as any, specifications: defaultColumnSpecifications });
     } catch (err) {
       return { error: err instanceof Error ? err.message : String(err) };
     }
@@ -255,6 +290,8 @@ export function EstimateProvider({ children }: { children: React.ReactNode }) {
     teamMode,
     projectInfo,
     sections,
+    estimateBillId,
+    setEstimateBillId,
     setProjectField,
     setActiveStage: setActiveStageState,
     startNewEstimate,
