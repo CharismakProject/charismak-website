@@ -1,9 +1,9 @@
-import MaterialSupplierDetail from "@/components/pricing/material-supplier-detail";
+import MaterialPriceDetail from "@/components/pricing/material-price-detail";
 
 export const metadata = {
-  title: "Material Suppliers & Prices",
+  title: "Material Prices & Suppliers",
   description:
-    "Compare approved supplier submissions for a specific Nigerian construction material or equipment item.",
+    "Compare current construction material prices, available suppliers, locations and delivery options in Nigeria.",
 };
 
 export default async function MaterialSupplierPage({
@@ -16,7 +16,7 @@ export default async function MaterialSupplierPage({
   return (
     <main className="min-h-screen bg-[#F5F7FA] pt-20">
       <div className="mx-auto max-w-7xl px-4 py-8 md:px-8 md:py-12">
-        <MaterialSupplierDetail itemId={decodeURIComponent(itemId)} />
+        <MaterialPriceDetail itemId={decodeURIComponent(itemId)} />
       </div>
     </main>
   );
