@@ -247,11 +247,21 @@ export function EstimateProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addGateToSection = (sectionId: string, gate: Gate) => {
-    setSections((cur) => cur.map((s) => (s.id === sectionId ? { ...s, gates: [...s.gates, gate] } : s));
+    setSections((cur) =>
+      cur.map((s) =>
+        s.id === sectionId ? { ...s, gates: [...s.gates, gate] } : s,
+      ),
+    );
   };
 
   const removeGateFromSection = (sectionId: string, gateId: string) => {
-    setSections((cur) => cur.map((s) => (s.id === sectionId ? { ...s, gates: s.gates.filter((g) => g.id !== gateId) } : s));
+    setSections((cur) =>
+      cur.map((s) =>
+        s.id === sectionId
+          ? { ...s, gates: s.gates.filter((g) => g.id !== gateId) }
+          : s,
+      ),
+    );
   };
 
   const calculateSectionLayout = (sectionId: string) => {
