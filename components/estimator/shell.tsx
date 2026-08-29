@@ -188,15 +188,14 @@ function EstimatorShellContent() {
 
     if (!linkedBill) {
       linkedBill = createNewBill({
+        projectId: project.id,
+        priceBasisAt: linkedEstimate.priceBasisAt ?? linkedEstimate.createdAt,
         title: `${project.name} — Bill of Quantities`,
         projectName: project.name,
         clientName: project.clientName,
         location: project.location,
         currency: project.currency,
       });
-      linkedBill.projectId = project.id;
-      linkedBill.priceBasisAt = linkedEstimate.priceBasisAt ?? linkedEstimate.createdAt;
-      linkedBill = saveBill(linkedBill);
     } else {
       selectBill(linkedBill.id);
       if (linkedBill.status === "draft" && linkedBill.projectId !== project.id) {
@@ -307,7 +306,7 @@ function EstimatorShellContent() {
       case "fence": return <Workflow onOpenConcrete={openConcrete} onOpenBlockwork={openBlockwork} onOpenBill={openBill} onOpenEstimates={() => navigate("register")} />;
       case "quick": return <CalculatorShell activeCalculator={activeCalculator} onSelectCalculator={(calculator) => navigate("quick", calculator)} onOpenBill={openBill} />;
       case "bill": return <ReviewWorkspace onOpenConcrete={openConcrete} onOpenBlockwork={openBlockwork} onStartFence={startFence} onOpenEstimates={() => navigate("register")} />;
-      case "estimates": return <EstimateBuilder onOpenRates={() => navigate("rates")} onOpenBill={openBill} />;
+      case "estimates": return <EstimateBuilder project={activeProject} onOpenRates={() => navigate("rates")} onOpenBill={openBill} />;
       case "register": return <EstimatesArchive onOpenBill={openBill} onStartFence={startFence} />;
       case "rates": return <PriceLibrary onOpenEstimate={() => openEstimateWorkspace()} />;
       case "feedback": return <FeedbackPage onBack={() => navigate("dashboard")} />;
