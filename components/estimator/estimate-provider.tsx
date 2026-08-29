@@ -9,6 +9,7 @@ import type {
   Gate,
   FencePanelComposition,
 } from "@/lib/fence/types";
+import { loadProject, saveProject } from "@/lib/projects/store";
 
 const STORAGE_KEY = "charismak-estimator-draft";
 
@@ -152,6 +153,14 @@ export function EstimateProvider({ children }: { children: React.ReactNode }) {
     }));
     persistWorkspaceCloud(workspace, workspaceUpdatedAt);
   }, [projectInfo, sections, activeStage, estimateBillId, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated || !projectInfo.projectId || !estimateBillId) return;
+    const project = loadProject(projectInfo.projectId);
+    if (project && project.linkedBillId !== estimateBillId) {
+      saveProject({ ...project, linkedBillId: estimateBillId });
+    }
+  }, [estimateBillId, hydrated, projectInfo.projectId]);
 
   const setProjectField = (
     field: Exclude<keyof ProjectInfo, "projectId">,
