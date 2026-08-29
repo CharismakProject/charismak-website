@@ -27,6 +27,12 @@ export type SupplierMarketplaceOffer = {
   publishedAt: string | null;
 };
 
+export type SupplierOfferSummary = {
+  count: number;
+  lowestPrice: number;
+  quotedUnit: string;
+};
+
 const toOffer = (row: Record<string, unknown>): SupplierMarketplaceOffer => ({
   id: String(row.id),
   sourceSubmissionId: row.source_submission_id ? String(row.source_submission_id) : null,
@@ -69,4 +75,36 @@ export async function loadSupplierOffersForItem(
 
   if (error || !data) return [];
   return (data as Record<string, unknown>[]).map(toOffer);
+}
+
+export async function loadSupplierOfferSummaries(): Promise<Record<string, SupplierOfferSummary>> {
+  const client = getSupabaseBrowserClient();
+  if (!client) return {};
+
+  const { data, error } = await client
+    .from("supplier_marketplace_offers")
+    .select("catalogue_item_id,unit_price,quoted_unit")
+    .eq("status", "approved")
+    .order("unit_price", { ascending: true });
+
+  if (error || !data) return {};
+
+  const summaries: Record<string, SupplierOfferSummary> = {};
+  for (const row of data as Record<string, unknown>[]) {
+    const itemId = String(row.catalogue_item_id ?? "");
+    if (!itemId) continue;
+    const price = Number(row.unit_price ?? 0);
+    const unit = String(row.quoted_unit ?? "item");
+    const current = summaries[itemId];
+    if (!current) {
+      summaries[itemId] = { count: 1, lowestPrice: price, quotedUnit: unit };
+      continue;
+    }
+    current.count += 1;
+    if (price < current.lowestPrice) {
+      current.lowestPrice = price;
+      current.quotedUnit = unit;
+    }
+  }
+  return summaries;
 }
