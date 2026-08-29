@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
+  ArrowLeft,
   ArrowRight,
   Building2,
   Check,
@@ -28,6 +29,7 @@ type SupplierMode = "new" | "returning";
 type GroupFilter = "All" | SupplierFormGroup;
 
 const STORAGE_KEY = "charismak:supplier-price-categories:v1";
+const COMPLETED_KEY = "charismak:supplier-price-completed:v1";
 
 const groupIcons: Record<SupplierFormGroup, typeof Building2> = {
   "Core materials": Building2,
@@ -46,6 +48,7 @@ export default function SupplierPricePortal() {
   const [group, setGroup] = useState<GroupFilter>("All");
   const [query, setQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [completedIds, setCompletedIds] = useState<string[]>([]);
   const [activeForm, setActiveForm] = useState<
     SupplierFormDefinition | "ENTRY" | null
   >(null);
@@ -63,6 +66,15 @@ export default function SupplierPricePortal() {
           setSelectedIds(valid);
         }
       }
+      const completed = window.localStorage.getItem(COMPLETED_KEY);
+      if (completed) {
+        const parsed = JSON.parse(completed) as string[];
+        if (Array.isArray(parsed)) {
+          setCompletedIds(
+            parsed.filter((id) => SUPPLIER_FORMS.some((form) => form.id === id)),
+          );
+        }
+      }
     } catch {
       // A supplier can still use the portal if browser storage is unavailable.
     } finally {
@@ -74,10 +86,11 @@ export default function SupplierPricePortal() {
     if (!hydrated) return;
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(selectedIds));
+      window.localStorage.setItem(COMPLETED_KEY, JSON.stringify(completedIds));
     } catch {
       // Browser storage is a convenience only, never a requirement.
     }
-  }, [hydrated, selectedIds]);
+  }, [hydrated, selectedIds, completedIds]);
 
   const filteredForms = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -116,6 +129,25 @@ export default function SupplierPricePortal() {
       ? "Supplier profile"
       : activeForm?.shortTitle || "Supplier price update";
 
+  const nextPendingForm =
+    activeForm && activeForm !== "ENTRY"
+      ? selectedForms.find(
+          (form) => form.id !== activeForm.id && !completedIds.includes(form.id),
+        ) ?? null
+      : null;
+
+  const finishActiveForm = () => {
+    if (!activeForm) return;
+    if (activeForm === "ENTRY") {
+      setActiveForm(null);
+      return;
+    }
+    setCompletedIds((current) =>
+      current.includes(activeForm.id) ? current : [...current, activeForm.id],
+    );
+    setActiveForm(nextPendingForm);
+  };
+
   return (
     <div className="space-y-8">
       <section className="relative overflow-hidden rounded-[2rem] bg-[#071E33] px-5 py-9 text-white shadow-[0_25px_70px_rgba(7,30,51,0.18)] md:px-9 md:py-12">
@@ -135,7 +167,7 @@ export default function SupplierPricePortal() {
             {[
               ["1", "Choose what you sell"],
               ["2", "Update only those prices"],
-              ["3", "Submit to Charismak"],
+              ["3", "Submit and return here"],
             ].map(([number, label]) => (
               <div
                 key={number}
@@ -274,6 +306,7 @@ export default function SupplierPricePortal() {
         <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {filteredForms.map((form) => {
             const selected = selectedIds.includes(form.id);
+            const completed = completedIds.includes(form.id);
             const Icon = groupIcons[form.group];
             return (
               <button
@@ -313,6 +346,11 @@ export default function SupplierPricePortal() {
                   <span className="mt-2 block text-xs leading-5 text-[#6F7F90]">
                     {form.audience}
                   </span>
+                  {completed ? (
+                    <span className="mt-2 inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#197447]">
+                      <CheckCircle2 className="h-3.5 w-3.5" /> Submitted this session
+                    </span>
+                  ) : null}
                 </span>
               </button>
             );
@@ -340,13 +378,16 @@ export default function SupplierPricePortal() {
                 : "Select at least one category above"}
             </h2>
             <p className="mt-2 max-w-xl text-sm leading-6 text-white/65">
-              Open each selected category, update what you sell, submit, then come back here for the next one.
+              Submit a form, use the Charismak bar below it to leave Google Forms, then continue to the next category.
             </p>
           </div>
           {selectedForms.length > 1 ? (
             <button
               type="button"
-              onClick={() => setSelectedIds([])}
+              onClick={() => {
+                setSelectedIds([]);
+                setCompletedIds([]);
+              }}
               className="text-left text-xs font-bold text-white/60 underline underline-offset-4 hover:text-white md:text-right"
             >
               Clear selection
@@ -356,22 +397,25 @@ export default function SupplierPricePortal() {
 
         {selectedForms.length ? (
           <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {selectedForms.map((form, index) => (
-              <button
-                key={form.id}
-                type="button"
-                onClick={() => setActiveForm(form)}
-                className="flex min-h-16 items-center justify-between gap-3 rounded-2xl bg-white px-4 py-3 text-left text-[#071E33] transition hover:bg-[#FFF9ED]"
-              >
-                <span className="flex min-w-0 items-center gap-3">
-                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#F2B544] text-xs font-black">
-                    {index + 1}
+            {selectedForms.map((form, index) => {
+              const completed = completedIds.includes(form.id);
+              return (
+                <button
+                  key={form.id}
+                  type="button"
+                  onClick={() => setActiveForm(form)}
+                  className={`flex min-h-16 items-center justify-between gap-3 rounded-2xl px-4 py-3 text-left text-[#071E33] transition ${completed ? "bg-[#E9F8F1]" : "bg-white hover:bg-[#FFF9ED]"}`}
+                >
+                  <span className="flex min-w-0 items-center gap-3">
+                    <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-black ${completed ? "bg-[#197447] text-white" : "bg-[#F2B544]"}`}>
+                      {completed ? <Check className="h-4 w-4" /> : index + 1}
+                    </span>
+                    <span className="text-sm font-black leading-5">{form.shortTitle}</span>
                   </span>
-                  <span className="text-sm font-black leading-5">{form.shortTitle}</span>
-                </span>
-                <ArrowRight className="h-4 w-4 shrink-0 text-[#A82B05]" />
-              </button>
-            ))}
+                  <ArrowRight className="h-4 w-4 shrink-0 text-[#A82B05]" />
+                </button>
+              );
+            })}
           </div>
         ) : null}
       </section>
@@ -379,7 +423,7 @@ export default function SupplierPricePortal() {
       {activeUrl ? (
         <div className="fixed inset-0 z-[100] bg-[#071E33]/70 p-0 backdrop-blur-sm md:p-4">
           <div className="mx-auto flex h-full max-w-6xl flex-col overflow-hidden bg-white shadow-2xl md:rounded-2xl">
-            <header className="flex min-h-16 items-center justify-between gap-3 border-b border-[#DCE4EC] bg-white px-4 md:px-5">
+            <header className="flex min-h-16 shrink-0 items-center justify-between gap-3 border-b border-[#DCE4EC] bg-white px-4 md:px-5">
               <div className="min-w-0">
                 <span className="block text-[9px] font-black uppercase tracking-[0.14em] text-[#A82B05]">
                   Charismak supplier update
@@ -400,10 +444,12 @@ export default function SupplierPricePortal() {
                 <button
                   type="button"
                   onClick={() => setActiveForm(null)}
-                  aria-label="Close form"
-                  className="grid h-10 w-10 place-items-center rounded-lg bg-[#071E33] text-white transition hover:bg-[#A82B05]"
+                  aria-label="Exit form and return to categories"
+                  className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-[#071E33] px-3 text-xs font-black text-white transition hover:bg-[#A82B05]"
                 >
-                  <X className="h-5 w-5" />
+                  <ArrowLeft className="h-4 w-4" />
+                  <span className="hidden sm:inline">Back to categories</span>
+                  <X className="h-4 w-4 sm:hidden" />
                 </button>
               </div>
             </header>
@@ -413,6 +459,25 @@ export default function SupplierPricePortal() {
               className="min-h-0 flex-1 border-0 bg-[#F4F2FF]"
               loading="eager"
             />
+            <footer className="shrink-0 border-t border-[#DCE4EC] bg-white px-3 py-3 shadow-[0_-8px_24px_rgba(7,30,51,0.08)] sm:px-5">
+              <div className="mx-auto flex max-w-5xl flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-[11px] leading-5 text-[#617286] sm:text-xs">
+                  After you tap <strong className="text-[#071E33]">Submit</strong> in Google Forms, use this button to leave the form and continue in Charismak.
+                </p>
+                <button
+                  type="button"
+                  onClick={finishActiveForm}
+                  className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#A82B05] px-5 text-sm font-black text-white transition hover:bg-[#8B1E00]"
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  {activeForm === "ENTRY"
+                    ? "Profile done — back to categories"
+                    : nextPendingForm
+                      ? "Done — next category"
+                      : "Done — back to categories"}
+                </button>
+              </div>
+            </footer>
           </div>
         </div>
       ) : null}
