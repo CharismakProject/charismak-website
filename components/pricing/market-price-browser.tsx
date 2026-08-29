@@ -21,6 +21,10 @@ import {
 import type { PriceCategory, PriceItem } from "@/lib/pricing/models";
 import { JIJI_MARKET_SNAPSHOT } from "@/lib/pricing/jiji-market-snapshot";
 import { loadPriceItems, PRICE_LIBRARY_UPDATED_EVENT } from "@/lib/pricing/store";
+import {
+  loadSupplierOfferSummaries,
+  type SupplierOfferSummary,
+} from "@/lib/platform/supplier-offers";
 
 type CategoryFilter = "all" | PriceCategory;
 
@@ -36,9 +40,6 @@ const categories: Array<{
   { id: "subcontract", label: "Specialists", icon: Store },
 ];
 
-// Preview-only, item-specific catalogue images. We deliberately do not use a
-// category-wide fallback: an item without its own correct photo shows a neutral
-// photo-pending state instead of borrowing an unrelated product image.
 const previewImages: Record<string, string> = {
   "cement-50kg": "https://titaniumbuildingsolutions.com/wp-content/uploads/2024/11/Titanium-BS-10.jpg",
   "sharp-sand": "https://www.nairaland.com/attachments/2868570_sharp6_jpeg50ab46832ede475b4a2bf7c0ab5e7fdf",
@@ -82,6 +83,7 @@ const searchText = (item: PriceItem) => {
 
 export default function MarketPriceBrowser() {
   const [items, setItems] = useState<PriceItem[]>([]);
+  const [supplierSummaries, setSupplierSummaries] = useState<Record<string, SupplierOfferSummary>>({});
   const [category, setCategory] = useState<CategoryFilter>("all");
   const [query, setQuery] = useState("");
   const [location, setLocation] = useState("all");
@@ -95,6 +97,7 @@ export default function MarketPriceBrowser() {
       );
 
     refresh();
+    void loadSupplierOfferSummaries().then(setSupplierSummaries);
     window.addEventListener(PRICE_LIBRARY_UPDATED_EVENT, refresh);
     return () => window.removeEventListener(PRICE_LIBRARY_UPDATED_EVENT, refresh);
   }, []);
@@ -214,13 +217,15 @@ export default function MarketPriceBrowser() {
             const image = item.imageUrl || previewImages[item.id] || null;
             const displayName = market?.marketName || item.description;
             const displayLocation = market?.location || item.location;
+            const supplierSummary = supplierSummaries[item.id];
+            const detailHref = `/prices/${encodeURIComponent(item.id)}`;
 
             return (
               <article
                 key={item.id}
                 className="group overflow-hidden rounded-2xl border border-[#DCE4EC] bg-white shadow-[0_8px_26px_rgba(7,30,51,0.045)] transition hover:-translate-y-1 hover:shadow-[0_22px_50px_rgba(7,30,51,0.11)]"
               >
-                <div className="relative h-48 overflow-hidden bg-[#EEF2F6]">
+                <Link href={detailHref} className="relative block h-48 overflow-hidden bg-[#EEF2F6]" aria-label={`View suppliers and prices for ${displayName}`}>
                   {image ? (
                     <img
                       src={image}
@@ -246,20 +251,22 @@ export default function MarketPriceBrowser() {
                     <MapPin className="h-3.5 w-3.5 text-[#F2B544]" />
                     {displayLocation}
                   </span>
-                </div>
+                </Link>
 
                 <div className="p-5">
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#7A8B9E]">{item.code}</span>
                     <span className={`rounded-full px-2.5 py-1 text-[9px] font-black ${market ? "bg-[#EAF7EF] text-[#197447]" : "bg-[#FFF1EA] text-[#8B1E00]"}`}>
-                      {market ? "Jiji checked" : "Charismak reference"}
+                      {market ? "Market checked" : "Charismak reference"}
                     </span>
                   </div>
 
-                  <h3 className="mt-3 text-lg font-black leading-6 text-[#071E33]">{displayName}</h3>
-                  {(market?.specification || item.specification) && (
-                    <p className="mt-2 text-xs leading-5 text-[#617286]">{market?.specification || item.specification}</p>
-                  )}
+                  <Link href={detailHref} className="block">
+                    <h3 className="mt-3 text-lg font-black leading-6 text-[#071E33] transition group-hover:text-[#0D3B66]">{displayName}</h3>
+                    {(market?.specification || item.specification) && (
+                      <p className="mt-2 text-xs leading-5 text-[#617286]">{market?.specification || item.specification}</p>
+                    )}
+                  </Link>
 
                   <div className="mt-4 rounded-2xl bg-[#F6F8FA] p-4">
                     {market ? (
@@ -284,6 +291,17 @@ export default function MarketPriceBrowser() {
                     )}
                   </div>
 
+                  {supplierSummary ? (
+                    <Link href={detailHref} className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-[#C9D8E7] bg-[#F7FBFF] px-3 py-3 transition hover:border-[#0D3B66]">
+                      <span className="inline-flex items-center gap-2 text-xs font-bold text-[#0D3B66]"><Truck className="h-4 w-4" />{supplierSummary.count} supplier offer{supplierSummary.count === 1 ? "" : "s"}</span>
+                      <strong className="text-right text-xs text-[#A82B05]">from {money(supplierSummary.lowestPrice)} / {supplierSummary.quotedUnit}</strong>
+                    </Link>
+                  ) : (
+                    <Link href={detailHref} className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-dashed border-[#CBD6E1] px-3 py-3 text-xs font-semibold text-[#617286] transition hover:border-[#0D3B66] hover:text-[#0D3B66]">
+                      <span>Supplier submissions</span><span>View item →</span>
+                    </Link>
+                  )}
+
                   {market?.alternatives?.length ? (
                     <div className="mt-3 grid gap-2">
                       {market.alternatives.map((alt) => (
@@ -307,15 +325,15 @@ export default function MarketPriceBrowser() {
                       <CalendarDays className="h-3.5 w-3.5" />
                       Checked {new Date(market?.checkedAt || item.updatedAt).toLocaleDateString("en-NG")}
                     </span>
-                    {market ? <span>{market.sourceCount} sources</span> : null}
+                    {market ? <span>{market.sourceCount} market sources</span> : null}
                   </div>
 
                   <div className="mt-5 grid grid-cols-2 gap-2">
                     <Link
-                      href={`/marketplace?search=${encodeURIComponent(displayName)}`}
+                      href={detailHref}
                       className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#0D3B66] px-3 text-xs font-black text-white transition hover:bg-[#071E33]"
                     >
-                      Suppliers <Truck className="h-4 w-4" />
+                      Suppliers & prices <Truck className="h-4 w-4" />
                     </Link>
                     {market ? (
                       <a
@@ -324,7 +342,7 @@ export default function MarketPriceBrowser() {
                         rel="noreferrer"
                         className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#DCE4EC] px-3 text-xs font-black text-[#0D3B66] transition hover:border-[#C8A45D] hover:bg-[#FFF9ED]"
                       >
-                        Source <ExternalLink className="h-4 w-4" />
+                        Market source <ExternalLink className="h-4 w-4" />
                       </a>
                     ) : (
                       <Link
@@ -350,22 +368,6 @@ export default function MarketPriceBrowser() {
             </p>
           </div>
         ) : null}
-      </section>
-
-      <section className="grid gap-4 rounded-[2rem] bg-[#071E33] p-6 text-white md:grid-cols-[1fr_auto] md:items-center md:p-8">
-        <div>
-          <span className="text-xs font-black uppercase tracking-[0.16em] text-[#F2B544]">Supplier connection</span>
-          <h2 className="mt-3 text-2xl font-black md:text-3xl">Compare the same real buying unit across suppliers.</h2>
-          <p className="mt-3 max-w-2xl text-sm leading-7 text-white/65">
-            The catalogue will connect each material and equipment specification to supplier offers, delivery coverage and direct quote requests.
-          </p>
-        </div>
-        <Link
-          href="/marketplace"
-          className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#C8A45D] px-6 text-sm font-black text-[#071E33] transition hover:bg-[#F2B544]"
-        >
-          Open marketplace <ArrowRight className="h-4 w-4" />
-        </Link>
       </section>
     </div>
   );
