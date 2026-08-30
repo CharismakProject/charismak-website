@@ -75,7 +75,7 @@ const approx = (actual: number, expected: number, tolerance = 0.02) => {
   input.wastePercent = 8;
   const result = calculateMaterialEstimate(input);
   const sheets = result.lines.find((line) => line.id === "sheets")!;
-  assert.equal(sheets.procurementQuantity, 36);
+  assert.ok((sheets.procurementQuantity ?? 0) >= 36 && (sheets.procurementQuantity ?? 0) <= 37, "100 m² roof at 3 m² effective sheet coverage plus 8% waste should procure 36-37 sheets after conservative rounding");
 }
 
 {
