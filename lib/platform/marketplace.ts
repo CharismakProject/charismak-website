@@ -1,3 +1,4 @@
+import { SUPPLIER_FORMS } from "@/lib/pricing/supplier-forms";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 export type MarketplaceProfileType = "supplier" | "artisan";
@@ -74,18 +75,47 @@ const toProfile = (row: Record<string, unknown>): MarketplaceProfile => ({
   status: row.status === "approved" ? "approved" : "pending",
 });
 
+const toSupplierDirectoryProfile = (row: Record<string, unknown>): MarketplaceProfile => {
+  const categoryIds = Array.isArray(row.categories) ? row.categories.map(String) : [];
+  const definitions = categoryIds
+    .map((id) => SUPPLIER_FORMS.find((form) => form.id === id))
+    .filter((form): form is (typeof SUPPLIER_FORMS)[number] => Boolean(form));
+  const artisan = definitions.length > 0 && definitions.every((form) => form.group === "Labour & specialists");
+  const categoryNames = definitions.map((form) => form.shortTitle);
+  const type: MarketplaceProfileType = artisan ? "artisan" : "supplier";
+  const location = String(row.location ?? "Nigeria");
+  const serviceArea = String(row.delivery_areas ?? "").trim() || location;
+
+  return {
+    id: String(row.id),
+    type,
+    businessName: String(row.business_name ?? "Supplier"),
+    category: categoryNames.length ? categoryNames.join(" · ") : artisan ? "Construction services" : "Construction supplies",
+    location,
+    serviceArea,
+    phone: String(row.whatsapp ?? row.phone ?? ""),
+    email: String(row.email ?? ""),
+    description: categoryNames.length
+      ? `${artisan ? "Provides" : "Supplies"} ${categoryNames.join(", ")}. Contact the profile directly to confirm current stock, rates, delivery and availability.`
+      : `Active Charismak ${type} profile. Contact the profile directly to confirm products, services, rates and availability.`,
+    products: categoryNames,
+    rating: 0,
+    reviewCount: 0,
+    verified: false,
+    status: "approved",
+  };
+};
+
 export async function loadMarketplaceProfiles(): Promise<MarketplaceProfile[]> {
-  const local = readLocal();
   const localReviews = readLocalReviews();
   const client = getSupabaseBrowserClient();
-  if (!client) return withReviews([...local, ...starterMarketplaceProfiles], localReviews);
-  const { data, error } = await client.from("marketplace_profiles").select("*").eq("status", "approved").order("business_name");
-  if (error || !data) return withReviews([...local, ...starterMarketplaceProfiles], localReviews);
-  const remote = (data as Record<string, unknown>[]).map(toProfile);
-  const { data: reviewRows } = await client.from("marketplace_reviews").select("id,profile_id,author_name,rating,comment,created_at");
-  const remoteReviews: MarketplaceReview[] = (reviewRows as Record<string, unknown>[] | null)?.map((row) => ({ id: String(row.id), profileId: String(row.profile_id), authorName: String(row.author_name), rating: Number(row.rating), comment: String(row.comment), createdAt: String(row.created_at) })) ?? [];
-  const ids = new Set(remote.map((profile) => profile.id));
-  return withReviews([...local.filter((profile) => !ids.has(profile.id)), ...remote, ...starterMarketplaceProfiles.filter((profile) => !ids.has(profile.id))], [...localReviews, ...remoteReviews]);
+  if (!client) return withReviews(starterMarketplaceProfiles, localReviews);
+
+  const { data, error } = await client.functions.invoke("public-supplier-directory", { body: {} });
+  if (error || !Array.isArray(data?.profiles)) return withReviews(starterMarketplaceProfiles, localReviews);
+
+  const remote = (data.profiles as Record<string, unknown>[]).map(toSupplierDirectoryProfile);
+  return withReviews(remote.length ? remote : starterMarketplaceProfiles, localReviews);
 }
 
 export async function submitMarketplaceProfile(input: NewMarketplaceProfile): Promise<{ profile: MarketplaceProfile; published: boolean }> {
