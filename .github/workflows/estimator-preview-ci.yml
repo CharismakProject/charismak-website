@@ -6,13 +6,18 @@ on:
       - preview/homepage-combined-design
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: preview/homepage-combined-design
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -20,8 +25,21 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Synchronize package lock
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+
+      - name: Commit synchronized lockfile when needed
+        run: |
+          if ! git diff --quiet -- package-lock.json; then
+            git config user.name "charismak-estimator-ci"
+            git config user.email "charismakprojectnigltd@gmail.com"
+            git add package-lock.json
+            git commit -m "Sync package lock for estimator dependencies"
+            git push origin HEAD:preview/homepage-combined-design
+          fi
+
+      - name: Clean install dependencies
+        run: npm ci --no-audit --no-fund
 
       - name: Verify public estimator and build site
         run: npm run build
