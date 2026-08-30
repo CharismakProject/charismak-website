@@ -35,7 +35,7 @@
     overflow-wrap: anywhere;
   }
 
-  .adminPage :global(td::before) {
+  .adminPage :global(td)::before {
     color: #617286;
     font-size: 0.625rem;
     font-weight: 900;
@@ -44,19 +44,19 @@
     text-transform: uppercase;
   }
 
-  .adminPage :global(td:nth-child(1)::before) {
+  .adminPage :global(td:nth-child(1))::before {
     content: "Supplier";
   }
 
-  .adminPage :global(td:nth-child(2)::before) {
+  .adminPage :global(td:nth-child(2))::before {
     content: "Submission";
   }
 
-  .adminPage :global(td:nth-child(3)::before) {
+  .adminPage :global(td:nth-child(3))::before {
     content: "Status";
   }
 
-  .adminPage :global(td:nth-child(4)::before) {
+  .adminPage :global(td:nth-child(4))::before {
     content: "Action";
   }
 
