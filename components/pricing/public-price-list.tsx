@@ -4,13 +4,12 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, ArrowRight, PackageSearch, Search, Truck } from "lucide-react";
 import type { PriceCategory, PriceItem } from "@/lib/pricing/models";
+import { formatPriceRange, getPriceHistorySummary } from "@/lib/pricing/price-history";
 import { loadPriceItems, PRICE_LIBRARY_UPDATED_EVENT } from "@/lib/pricing/store";
 
 const categories: Array<{ id: "all" | PriceCategory; label: string }> = [
   { id: "all", label: "All" }, { id: "material", label: "Materials" }, { id: "labour", label: "Labour" }, { id: "plant", label: "Plant" }, { id: "subcontract", label: "Subcontract" },
 ];
-
-const money = (value: number | null, currency: string) => value === null ? "Price required" : new Intl.NumberFormat("en-NG", { style: "currency", currency, maximumFractionDigits: 0 }).format(value);
 
 const buyingGuide = (item: PriceItem) => {
   if (item.id === "sharp-sand") return "Technical: 1 m³ ≈ 1.6 tonnes. Ask suppliers for a named truck capacity such as 5, 10 or 20 m³.";
@@ -55,7 +54,7 @@ export default function PublicPriceList() {
       </section>
 
       <section className="border-x border-b border-[#C8A45D]/30 bg-[#FFFDF7] p-5 text-xs leading-6 text-[#66501D]">
-        <p className="flex items-start gap-2"><AlertTriangle className="mt-1 h-4 w-4 shrink-0 text-[#C8A45D]" /><span><strong>Planning references—not live quotations.</strong> Prices vary by city, brand, season, exchange rate, quantity and delivery distance. Verify with suppliers before ordering or contracting work.</span></p>
+        <p className="flex items-start gap-2"><AlertTriangle className="mt-1 h-4 w-4 shrink-0 text-[#C8A45D]" /><span><strong>Planning references—not live quotations.</strong> When more than one recent price is still within its validity period, Charismak shows the valid market range. Expired prices are removed from the live range automatically and retained only in price history. Verify with suppliers before ordering or contracting work.</span></p>
       </section>
 
       <section className="mt-8 border border-[#0D3B66]/10 bg-white p-5 shadow-[0_8px_28px_rgba(7,30,51,0.05)]">
@@ -69,14 +68,24 @@ export default function PublicPriceList() {
       </section>
 
       <section className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-        {results.map((item) => (
-          <article key={item.id} className="bg-white p-6 shadow-[0_10px_35px_rgba(7,30,51,0.06)]">
-            <div className="flex items-start justify-between gap-3"><span className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#C8A45D]">{item.category}</span><span className="text-[10px] font-semibold text-[#3A4653]/55">{item.code}</span></div>
-            <h2 className="mt-4 min-h-12 text-base font-semibold leading-6 text-[#071E33]">{item.description}</h2>
-            <div className="mt-4 border-l border-[#C8A45D] bg-[#F7F8FA] p-4"><span className="text-[10px] font-bold uppercase tracking-[0.13em] text-[#3A4653]/65">Reference per {item.unit}</span><strong className={`mt-1 block text-xl ${item.rate === null ? "text-[#8B6B23]" : "text-[#071E33]"}`}>{money(item.rate, item.currency)}</strong><span className="mt-1 block text-[10px] text-[#3A4653]/55">{item.location} · {new Date(item.updatedAt).toLocaleDateString("en-NG")}</span></div>
-            <div className="mt-4 flex gap-3 border-t border-[#0D3B66]/10 pt-4"><PackageSearch className="mt-0.5 h-4 w-4 shrink-0 text-[#0D3B66]" /><p className="text-[11px] leading-5 text-[#3A4653]">{buyingGuide(item)}</p></div>
-          </article>
-        ))}
+        {results.map((item) => {
+          const summary = getPriceHistorySummary(item);
+          const livePrice = formatPriceRange(item);
+          const latestDate = summary.latestValid?.recordedAt ?? summary.latestRecorded?.recordedAt ?? item.updatedAt;
+          return (
+            <article key={item.id} className="bg-white p-6 shadow-[0_10px_35px_rgba(7,30,51,0.06)]">
+              <div className="flex items-start justify-between gap-3"><span className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#C8A45D]">{item.category}</span><span className="text-[10px] font-semibold text-[#3A4653]/55">{item.code}</span></div>
+              <h2 className="mt-4 min-h-12 text-base font-semibold leading-6 text-[#071E33]">{item.description}</h2>
+              <div className="mt-4 border-l border-[#C8A45D] bg-[#F7F8FA] p-4">
+                <span className="text-[10px] font-bold uppercase tracking-[0.13em] text-[#3A4653]/65">Reference per {item.unit}</span>
+                <strong className={`mt-1 block text-xl ${livePrice ? "text-[#071E33]" : "text-[#8B6B23]"}`}>{livePrice ?? "Price update required"}</strong>
+                <span className="mt-1 block text-[10px] text-[#3A4653]/55">{item.location} · latest {new Date(latestDate).toLocaleDateString("en-NG")}</span>
+                {summary.currentCount > 1 ? <span className="mt-2 inline-flex bg-[#EAF4EF] px-2 py-1 text-[9px] font-bold uppercase tracking-[0.1em] text-[#225B3D]">{summary.currentCount} valid prices in range</span> : summary.currentCount === 1 ? <span className="mt-2 inline-flex bg-[#EEF3F7] px-2 py-1 text-[9px] font-bold uppercase tracking-[0.1em] text-[#0D3B66]">Current valid price</span> : <span className="mt-2 inline-flex bg-[#FFF4E5] px-2 py-1 text-[9px] font-bold uppercase tracking-[0.1em] text-[#875B14]">Last price expired</span>}
+              </div>
+              <div className="mt-4 flex gap-3 border-t border-[#0D3B66]/10 pt-4"><PackageSearch className="mt-0.5 h-4 w-4 shrink-0 text-[#0D3B66]" /><p className="text-[11px] leading-5 text-[#3A4653]">{buyingGuide(item)}</p></div>
+            </article>
+          );
+        })}
       </section>
 
       {!results.length ? <section className="mt-6 border border-dashed border-[#0D3B66]/20 bg-white p-8 text-center text-sm text-[#3A4653]">No matching price items. Try a broader search.</section> : null}
