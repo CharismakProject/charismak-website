@@ -4,13 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node --import tsx scripts/verify-public-estimator.ts && node --import tsx scripts/verify-material-estimator.ts && next build",
+    "build": "npm run test:public-estimator && npm run test:material-estimator && npm run test:estimator-foundation && npm run test:supplier-price-validity && next build",
     "start": "next start",
     "lint": "eslint",
     "test:fence-boq": "node --import tsx scripts/verify-fence-boq.ts",
     "test:bill-lifecycle": "node --import tsx scripts/verify-bill-lifecycle.ts",
     "test:public-estimator": "node --import tsx scripts/verify-public-estimator.ts",
-    "test:material-estimator": "node --import tsx scripts/verify-material-estimator.ts"
+    "test:material-estimator": "node --import tsx scripts/verify-material-estimator.ts",
+    "test:estimator-foundation": "node --import tsx scripts/verify-estimator-foundation.ts",
+    "test:supplier-price-validity": "node --import tsx scripts/verify-supplier-price-validity.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.2",
