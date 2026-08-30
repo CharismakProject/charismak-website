@@ -20,6 +20,7 @@ import Link from "next/link";
 import { isAdminEmail } from "@/lib/auth/admin";
 import { loadPriceItems } from "@/lib/pricing/store";
 import type { PriceItem } from "@/lib/pricing/models";
+import { DEFAULT_SUPPLIER_PRICE_VALIDITY_DAYS } from "@/lib/platform/supplier-offers";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 type Batch = {
@@ -75,6 +76,22 @@ type Line = {
   match_confidence: number | null;
   status: "pending" | "approved" | "rejected";
   marketplace_offer_id: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
+type ExistingOffer = {
+  id: string;
+  catalogue_item_id: string;
+  unit_price: number;
+  quoted_unit: string;
+  location: string;
+  brand: string | null;
+  specification: string | null;
+  valid_until: string | null;
+  submitted_at: string | null;
+  published_at: string | null;
+  created_at: string | null;
 };
 
 type AuthState = "checking" | "signed-out" | "forbidden" | "ready";
@@ -87,6 +104,26 @@ const money = (value: number | null) =>
         currency: "NGN",
         maximumFractionDigits: 0,
       }).format(value);
+
+const validityDateFrom = (
+  baseValue?: string | null,
+  days = DEFAULT_SUPPLIER_PRICE_VALIDITY_DAYS,
+) => {
+  const parsed = baseValue ? new Date(baseValue) : new Date();
+  const date = Number.isFinite(parsed.getTime()) ? parsed : new Date();
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+};
+
+const normalized = (value?: string | null) => (value || "").trim().toLowerCase();
+
+const offerMatchesLine = (offer: ExistingOffer, line: Line, location: string) =>
+  offer.catalogue_item_id === line.catalogue_item_id &&
+  Number(offer.unit_price) === Number(line.unit_price) &&
+  normalized(offer.quoted_unit) === normalized(line.quoted_unit) &&
+  normalized(offer.location) === normalized(location) &&
+  normalized(offer.brand) === normalized(line.brand) &&
+  normalized(offer.specification) === normalized(line.specification);
 
 function NumberInput({ value, onChange, placeholder }: { value: number | null; onChange: (value: number | null) => void; placeholder?: string }) {
   return (
@@ -148,7 +185,10 @@ export default function SupplierReviewPanel({ batchId }: { batchId: string }) {
       .eq("batch_id", batchId)
       .order("created_at", { ascending: true });
     if (lineError) setError(lineError.message);
-    setLines((lineData || []) as Line[]);
+    setLines(((lineData || []) as Line[]).map((line) => ({
+      ...line,
+      valid_until: line.valid_until || validityDateFrom(line.updated_at || line.created_at || typedBatch.submitted_at),
+    })));
 
     if (typedBatch.supplier_id) {
       const { data: profileData } = await client
@@ -239,7 +279,7 @@ export default function SupplierReviewPanel({ batchId }: { batchId: string }) {
             location: line.location || null,
             service_area: line.service_area || null,
             availability: line.availability || null,
-            valid_until: line.valid_until || null,
+            valid_until: line.valid_until || validityDateFrom(),
             supplier_remarks: line.supplier_remarks || null,
             status: nextStatus === "rejected" ? "rejected" : line.status,
             updated_at: new Date().toISOString(),
@@ -289,41 +329,71 @@ export default function SupplierReviewPanel({ batchId }: { batchId: string }) {
     setBusy(true);
     try {
       const now = new Date().toISOString();
-      for (const line of approvableLines) {
-        const offerPayload = {
-          source_submission_id: `${batch.source_submission_id || batch.id}:${line.id}`,
-          supplier_id: profile?.id || batch.supplier_id || null,
-          supplier_name: profile?.business_name || batch.supplier_name,
-          catalogue_item_id: line.catalogue_item_id,
-          product_name: line.product_name,
-          specification: line.specification || null,
-          brand: line.brand || null,
-          quoted_unit: line.quoted_unit || "item",
-          unit_price: line.unit_price,
-          bulk_price: line.bulk_price,
-          minimum_qty: line.minimum_qty,
-          delivery_fee: line.delivery_fee,
-          delivery_included: line.delivery_included,
-          location: line.location || profile?.location || batch.supplier_location || "Nigeria",
-          service_area: line.service_area || profile?.delivery_areas || null,
-          availability: line.availability || null,
-          phone: profile?.phone || batch.supplier_phone || null,
-          whatsapp: profile?.whatsapp || profile?.phone || batch.supplier_phone || null,
-          email: profile?.email || batch.supplier_email || null,
-          valid_until: line.valid_until || null,
-          supplier_remarks: line.supplier_remarks || null,
-          status: "approved",
-          source_type: "google_form",
-          submitted_at: batch.submitted_at,
-          published_at: now,
-          updated_at: now,
-        };
+      const publishNonce = Date.now();
+      const publishedOfferIds = new Map<string, string>();
 
-        let offerId = line.marketplace_offer_id;
-        if (offerId) {
-          const { error: updateError } = await client.from("supplier_marketplace_offers").update(offerPayload).eq("id", offerId);
-          if (updateError) throw updateError;
-        } else {
+      for (const [lineIndex, line] of approvableLines.entries()) {
+        const resolvedLocation = line.location || profile?.location || batch.supplier_location || "Nigeria";
+        const resolvedValidUntil = line.valid_until || validityDateFrom(now);
+        let existingOffer: ExistingOffer | null = null;
+
+        if (line.marketplace_offer_id) {
+          const { data: existingData } = await client
+            .from("supplier_marketplace_offers")
+            .select("id,catalogue_item_id,unit_price,quoted_unit,location,brand,specification,valid_until,submitted_at,published_at,created_at")
+            .eq("id", line.marketplace_offer_id)
+            .maybeSingle();
+          existingOffer = (existingData as ExistingOffer | null) || null;
+
+          if (existingOffer && !existingOffer.valid_until) {
+            const legacyValidUntil = validityDateFrom(
+              existingOffer.published_at || existingOffer.submitted_at || existingOffer.created_at || now,
+            );
+            await client
+              .from("supplier_marketplace_offers")
+              .update({ valid_until: legacyValidUntil })
+              .eq("id", existingOffer.id);
+            existingOffer = { ...existingOffer, valid_until: legacyValidUntil };
+          }
+        }
+
+        const canReuseExisting = Boolean(
+          batch.status === "approved" &&
+          existingOffer &&
+          offerMatchesLine(existingOffer, line, resolvedLocation),
+        );
+
+        let offerId = canReuseExisting && existingOffer ? existingOffer.id : null;
+        if (!offerId) {
+          const offerPayload = {
+            source_submission_id: `${batch.source_submission_id || batch.id}:${line.id}:${publishNonce}-${lineIndex}`,
+            supplier_id: profile?.id || batch.supplier_id || null,
+            supplier_name: profile?.business_name || batch.supplier_name,
+            catalogue_item_id: line.catalogue_item_id,
+            product_name: line.product_name,
+            specification: line.specification || null,
+            brand: line.brand || null,
+            quoted_unit: line.quoted_unit || "item",
+            unit_price: line.unit_price,
+            bulk_price: line.bulk_price,
+            minimum_qty: line.minimum_qty,
+            delivery_fee: line.delivery_fee,
+            delivery_included: line.delivery_included,
+            location: resolvedLocation,
+            service_area: line.service_area || profile?.delivery_areas || null,
+            availability: line.availability || null,
+            phone: profile?.phone || batch.supplier_phone || null,
+            whatsapp: profile?.whatsapp || profile?.phone || batch.supplier_phone || null,
+            email: profile?.email || batch.supplier_email || null,
+            valid_until: resolvedValidUntil,
+            supplier_remarks: line.supplier_remarks || null,
+            status: "approved",
+            source_type: "google_form",
+            submitted_at: batch.submitted_at,
+            published_at: now,
+            updated_at: now,
+          };
+
           const { data: offer, error: insertError } = await client
             .from("supplier_marketplace_offers")
             .insert(offerPayload)
@@ -332,6 +402,7 @@ export default function SupplierReviewPanel({ batchId }: { batchId: string }) {
           if (insertError || !offer) throw insertError || new Error("Marketplace offer was not created.");
           offerId = String(offer.id);
         }
+        publishedOfferIds.set(line.id, offerId);
 
         const { error: lineError } = await client
           .from("supplier_review_lines")
@@ -349,7 +420,7 @@ export default function SupplierReviewPanel({ batchId }: { batchId: string }) {
             location: line.location || null,
             service_area: line.service_area || null,
             availability: line.availability || null,
-            valid_until: line.valid_until || null,
+            valid_until: resolvedValidUntil,
             supplier_remarks: line.supplier_remarks || null,
             status: "approved",
             marketplace_offer_id: offerId,
@@ -372,8 +443,13 @@ export default function SupplierReviewPanel({ batchId }: { batchId: string }) {
       if (batchError) throw batchError;
 
       setBatch({ ...batch, status: "approved", reviewer_notes: notes || null });
-      setLines((current) => current.map((line) => approvableLines.some((approved) => approved.id === line.id) ? { ...line, status: "approved" } : line));
-      setMessage(`${approvableLines.length} supplier price${approvableLines.length === 1 ? "" : "s"} published. The Prices page will now read them from the marketplace data.`);
+      setLines((current) => current.map((line) => {
+        const offerId = publishedOfferIds.get(line.id);
+        return offerId
+          ? { ...line, status: "approved", marketplace_offer_id: offerId, valid_until: line.valid_until || validityDateFrom(now) }
+          : line;
+      }));
+      setMessage(`${approvableLines.length} supplier price${approvableLines.length === 1 ? "" : "s"} published with validity dates. Earlier approved prices remain in history and automatically leave the live range when they expire.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to approve and publish.");
     } finally {
@@ -443,7 +519,7 @@ export default function SupplierReviewPanel({ batchId }: { batchId: string }) {
       {message ? <div className="flex items-start gap-2 rounded-xl border border-[#CFE4D7] bg-[#F3FBF6] px-4 py-3 text-sm text-[#197447]"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />{message}</div> : null}
 
       <section className="rounded-[2rem] border border-[#DCE4EC] bg-white p-5 md:p-7">
-        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between"><div><p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#A82B05]">Price lines</p><h2 className="mt-2 text-2xl font-black text-[#071E33]">Check what will appear under each material</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-[#617286]">Map every supplier price to the correct Charismak Price List item. Approval publishes the supplier profile, price and delivery details under that material.</p></div><div className="rounded-xl bg-[#F7F9FB] px-4 py-3 text-xs text-[#617286]"><strong className="text-[#071E33]">{lines.length}</strong> parsed line{lines.length === 1 ? "" : "s"}</div></div>
+        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between"><div><p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#A82B05]">Price lines</p><h2 className="mt-2 text-2xl font-black text-[#071E33]">Check what will appear under each material</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-[#617286]">Map every supplier price to the correct Charismak Price List item. Approval publishes a new dated price observation; earlier valid prices remain in the live range until their validity expires.</p></div><div className="rounded-xl bg-[#F7F9FB] px-4 py-3 text-xs text-[#617286]"><strong className="text-[#071E33]">{lines.length}</strong> parsed line{lines.length === 1 ? "" : "s"}</div></div>
 
         {lines.length ? (
           <div className="mt-6 space-y-4">
@@ -461,6 +537,7 @@ export default function SupplierReviewPanel({ batchId }: { batchId: string }) {
                     <label><span className="mb-1.5 block text-[10px] font-black uppercase tracking-[0.1em] text-[#617286]">Bulk price</span><NumberInput value={line.bulk_price} onChange={(value) => updateLine(line.id, "bulk_price", value)} /></label>
                     <label><span className="mb-1.5 block text-[10px] font-black uppercase tracking-[0.1em] text-[#617286]">Location</span><input value={line.location || profile?.location || batch.supplier_location || ""} onChange={(event) => updateLine(line.id, "location", event.target.value || null)} className="min-h-10 w-full rounded-lg border border-[#DCE4EC] bg-white px-3 text-xs outline-none" /></label>
                     <label><span className="mb-1.5 block text-[10px] font-black uppercase tracking-[0.1em] text-[#617286]">Availability</span><input value={line.availability || ""} onChange={(event) => updateLine(line.id, "availability", event.target.value || null)} placeholder="In stock / on order" className="min-h-10 w-full rounded-lg border border-[#DCE4EC] bg-white px-3 text-xs outline-none" /></label>
+                    <label><span className="mb-1.5 block text-[10px] font-black uppercase tracking-[0.1em] text-[#617286]">Price valid until *</span><input type="date" value={line.valid_until || validityDateFrom()} min={new Date().toISOString().slice(0, 10)} onChange={(event) => updateLine(line.id, "valid_until", event.target.value || validityDateFrom())} className="min-h-10 w-full rounded-lg border border-[#DCE4EC] bg-white px-3 text-xs font-bold text-[#071E33] outline-none" /><span className="mt-1 block text-[10px] text-[#7A8B9E]">Default {DEFAULT_SUPPLIER_PRICE_VALIDITY_DAYS} days. After this date the price moves to archive automatically.</span></label>
                   </div>
                 </article>
               );
@@ -473,7 +550,7 @@ export default function SupplierReviewPanel({ batchId }: { batchId: string }) {
 
       <section className="rounded-[2rem] border border-[#DCE4EC] bg-white p-5 md:p-7"><label className="block"><span className="mb-2 block text-xs font-black text-[#071E33]">Reviewer notes</span><textarea value={notes} onChange={(event) => setNotes(event.target.value)} rows={3} placeholder="Optional internal note…" className="w-full rounded-xl border border-[#DCE4EC] p-4 text-sm outline-none focus:border-[#0D3B66]" /></label><div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div className="text-xs text-[#617286]">{missingMappings.length ? <span className="font-bold text-[#A82B05]">{missingMappings.length} mapped material{missingMappings.length === 1 ? " is" : "s are"} still required before publishing.</span> : approvableLines.length ? <span className="font-bold text-[#197447]">Ready to publish {approvableLines.length} supplier price{approvableLines.length === 1 ? "" : "s"}.</span> : "No publishable price lines yet."}</div><div className="flex flex-wrap gap-2"><button type="button" disabled={busy} onClick={() => void saveReview("rejected")} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#E6B7AD] px-4 text-xs font-black text-[#A82B05] disabled:opacity-50"><XCircle className="h-4 w-4" />Reject</button><button type="button" disabled={busy} onClick={() => void saveReview("review")} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#C8D3DE] px-4 text-xs font-black text-[#071E33] disabled:opacity-50"><Save className="h-4 w-4" />Save review</button><button type="button" disabled={busy || Boolean(missingMappings.length) || !approvableLines.length} onClick={approveAndPublish} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#197447] px-5 text-xs font-black text-white disabled:cursor-not-allowed disabled:opacity-45"><BadgeCheck className="h-4 w-4" />{busy ? "Publishing…" : "Approve & publish"}</button></div></div></section>
 
-      {batch.status === "approved" && approvableLines.some((line) => line.catalogue_item_id) ? <section className="rounded-2xl border border-[#CFE4D7] bg-[#F3FBF6] p-5"><div className="flex items-start gap-3"><Eye className="mt-0.5 h-5 w-5 text-[#197447]" /><div><strong className="text-[#071E33]">Published supplier prices</strong><p className="mt-1 text-sm leading-6 text-[#617286]">Open the relevant Price List material to see this supplier alongside other available suppliers.</p><div className="mt-3 flex flex-wrap gap-2">{Array.from(new Set(approvableLines.map((line) => line.catalogue_item_id).filter(Boolean))).map((itemId) => <Link key={itemId} href={`/prices/${itemId}`} className="rounded-lg bg-white px-3 py-2 text-xs font-black text-[#0D3B66] shadow-sm">View {priceItems.find((item) => item.id === itemId)?.description || itemId} →</Link>)}</div></div></div></section> : null}
+      {batch.status === "approved" && approvableLines.some((line) => line.catalogue_item_id) ? <section className="rounded-2xl border border-[#CFE4D7] bg-[#F3FBF6] p-5"><div className="flex items-start gap-3"><Eye className="mt-0.5 h-5 w-5 text-[#197447]" /><div><strong className="text-[#071E33]">Published supplier prices</strong><p className="mt-1 text-sm leading-6 text-[#617286]">Open the relevant Price List material to see current valid prices and the archived history.</p><div className="mt-3 flex flex-wrap gap-2">{Array.from(new Set(approvableLines.map((line) => line.catalogue_item_id).filter(Boolean))).map((itemId) => <Link key={itemId} href={`/prices/${itemId}`} className="rounded-lg bg-white px-3 py-2 text-xs font-black text-[#0D3B66] shadow-sm">View {priceItems.find((item) => item.id === itemId)?.description || itemId} →</Link>)}</div></div></div></section> : null}
     </div>
   );
 }
