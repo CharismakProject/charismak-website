@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowLeft, ClipboardList } from "lucide-react";
 import MaterialEstimator from "@/components/public/material-estimator";
 import SpecialistMaterialEstimator from "@/components/public/specialist-material-estimator";
+import styles from "./materials-mobile.module.css";
 
 export const metadata: Metadata = {
   title: "Construction Material Estimate",
@@ -36,8 +37,8 @@ export default function MaterialEstimatePage() {
         </div>
       </section>
 
-      <div id="structural-architectural-materials" className="scroll-mt-24"><MaterialEstimator /></div>
-      <div id="services-specialist-materials" className="scroll-mt-24"><SpecialistMaterialEstimator /></div>
+      <div id="structural-architectural-materials" className={`${styles.materialCards} scroll-mt-24`}><MaterialEstimator /></div>
+      <div id="services-specialist-materials" className={`${styles.specialistCards} scroll-mt-24`}><SpecialistMaterialEstimator /></div>
     </main>
   );
 }
