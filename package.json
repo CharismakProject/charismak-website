@@ -4,12 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run test:estimator-foundation && next build",
+    "build": "npm run test:estimator-foundation && npm run test:supplier-price-validity && next build",
     "start": "next start",
     "lint": "eslint",
     "test:fence-boq": "node --import tsx scripts/verify-fence-boq.ts",
     "test:bill-lifecycle": "node --import tsx scripts/verify-bill-lifecycle.ts",
-    "test:estimator-foundation": "node --import tsx scripts/verify-estimator-foundation.ts"
+    "test:estimator-foundation": "node --import tsx scripts/verify-estimator-foundation.ts",
+    "test:supplier-price-validity": "node --import tsx scripts/verify-supplier-price-validity.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.2",
