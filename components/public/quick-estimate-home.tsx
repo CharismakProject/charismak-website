@@ -6,6 +6,7 @@ import {
   ArrowRight,
   Building2,
   Calculator,
+  Download,
   Factory,
   Hammer,
   Layers3,
@@ -16,6 +17,7 @@ import {
 import { calculateEstimateV2, type EstimateCategory, type EstimateInput, type SpecLevel } from "@/lib/projects/public-estimate-engine-v2";
 import { createInitialEstimateInput, saveQuickEstimateTransfer } from "@/lib/projects/public-estimate-defaults";
 import { validateEstimateInput } from "@/lib/projects/public-estimate-decisions";
+import { downloadEstimateBoqPdf } from "@/lib/projects/estimate-pdf";
 import type { BuildingUse } from "@/lib/projects/guided-estimate";
 
 const money = (value: number) => new Intl.NumberFormat("en-NG", {
@@ -173,11 +175,12 @@ export default function QuickEstimateHome() {
 
                   {result.costDrivers.length ? <div className="mt-5 border border-[#0D3B66]/10 p-4"><p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#0D3B66]">Main factors affecting this result</p><div className="mt-2 space-y-1">{result.costDrivers.slice(0, 4).map((item) => <p key={item} className="text-xs leading-5 text-[#3A4653]">• {item}</p>)}</div></div> : null}
 
-                  <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-                    <button type="button" onClick={continueDetailed} className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 bg-[#C8A45D] px-5 py-3 text-xs font-bold text-[#071E33]">Continue to Detailed Estimate <ArrowRight className="h-4 w-4" /></button>
+                  <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                    <button type="button" onClick={() => downloadEstimateBoqPdf({ input, result, level: "Quick" })} className="inline-flex min-h-12 items-center justify-center gap-2 border border-[#0D3B66]/15 px-5 py-3 text-xs font-bold text-[#0D3B66]"><Download className="h-4 w-4" />Download BOQ PDF</button>
+                    <button type="button" onClick={continueDetailed} className="inline-flex min-h-12 items-center justify-center gap-2 bg-[#C8A45D] px-5 py-3 text-xs font-bold text-[#071E33]">Continue to Detailed <ArrowRight className="h-4 w-4" /></button>
                     <button type="button" onClick={() => router.push("/contact")} className="inline-flex min-h-12 items-center justify-center border border-[#0D3B66]/15 px-5 py-3 text-xs font-bold text-[#0D3B66]">Contact Charismak</button>
                   </div>
-                  <p className="mt-4 text-[10px] leading-5 text-[#3A4653]/55">Everything entered here carries into the Detailed Estimate, so you continue from this project rather than starting again.</p>
+                  <p className="mt-4 text-[10px] leading-5 text-[#3A4653]/55">The downloaded document is a branded preliminary elemental BOQ / cost plan. Everything entered here also carries into the Detailed Estimate.</p>
                 </div>
               </div>
             ) : null}
