@@ -1,0 +1,27 @@
+name: Estimator Preview Verification
+
+on:
+  push:
+    branches:
+      - preview/homepage-combined-design
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify public estimator and build site
+        run: npm run build
