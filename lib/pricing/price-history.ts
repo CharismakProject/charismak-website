@@ -1,6 +1,7 @@
 import type { PriceItem, PriceObservation } from "./models";
 
 export const DEFAULT_PRICE_VALIDITY_DAYS = 30;
+const RAPID_EDIT_WINDOW_MS = 5_000;
 
 const toMs = (value: string | null | undefined) => {
   if (!value) return Number.NaN;
@@ -89,8 +90,9 @@ export function withRecordedPrice(
   },
 ): PriceItem {
   const recordedAt = options?.recordedAt ?? new Date().toISOString();
+  const recordedAtMs = toMs(recordedAt);
   const validityDays = Math.max(1, Math.round(options?.validityDays ?? item.validityDays ?? DEFAULT_PRICE_VALIDITY_DAYS));
-  const existing = (item.priceHistory ?? []).slice();
+  const existing = (item.priceHistory ?? []).slice().sort((a, b) => toMs(b.recordedAt) - toMs(a.recordedAt));
 
   if (!existing.length && item.rate !== null && Number.isFinite(item.rate)) {
     const previousDays = Math.max(1, Math.round(item.validityDays ?? validityDays));
@@ -106,6 +108,7 @@ export function withRecordedPrice(
       recordedAt: item.updatedAt,
       validUntil: item.validUntil ?? addDaysIso(item.updatedAt, previousDays),
     });
+    existing.sort((a, b) => toMs(b.recordedAt) - toMs(a.recordedAt));
   }
 
   const observation: PriceObservation = {
@@ -121,8 +124,21 @@ export function withRecordedPrice(
     validUntil: addDaysIso(recordedAt, validityDays),
   };
 
-  const history = [...existing, observation]
-    .sort((a, b) => toMs(b.recordedAt) - toMs(a.recordedAt));
+  const latest = existing[0];
+  const isRapidSameEntry = Boolean(
+    latest &&
+    Number.isFinite(recordedAtMs) &&
+    recordedAtMs >= toMs(latest.recordedAt) &&
+    recordedAtMs - toMs(latest.recordedAt) <= RAPID_EDIT_WINDOW_MS &&
+    latest.currency === observation.currency &&
+    latest.location.trim().toLowerCase() === observation.location.trim().toLowerCase() &&
+    latest.unit.trim().toLowerCase() === observation.unit.trim().toLowerCase() &&
+    latest.source.trim().toLowerCase() === observation.source.trim().toLowerCase(),
+  );
+
+  const history = isRapidSameEntry
+    ? [{ ...observation, id: latest.id }, ...existing.slice(1)]
+    : [observation, ...existing];
 
   return {
     ...item,
