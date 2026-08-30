@@ -1,4 +1,4 @@
-import MaterialPriceDetail from "@/components/pricing/material-price-detail";
+import MaterialPriceDetailRuntime from "@/components/pricing/material-price-detail-runtime";
 
 export const metadata = {
   title: "Material Prices & Suppliers",
@@ -16,7 +16,7 @@ export default async function MaterialSupplierPage({
   return (
     <main className="min-h-screen bg-[#F5F7FA] pt-20">
       <div className="mx-auto max-w-7xl px-4 py-8 md:px-8 md:py-12">
-        <MaterialPriceDetail itemId={decodeURIComponent(itemId)} />
+        <MaterialPriceDetailRuntime itemId={decodeURIComponent(itemId)} />
       </div>
     </main>
   );
