@@ -210,7 +210,7 @@ export default function QuickCostEstimator() {
               {[
                 ["70%+", "Quick estimate", "Core project information"],
                 ["85%+", "Detailed estimate", "Structure, finishes and MEP"],
-                ["High detail", "Next step", "Measured drawings / BOQ in full app"],
+                ["Professional", "Next step", "Contact Charismak for drawings / BOQ review"],
               ].map(([value, title, text]) => (
                 <div key={title} className="border-l border-[#C8A45D] pl-4">
                   <strong className="text-lg text-[#071E33]">{value}</strong>
@@ -224,8 +224,8 @@ export default function QuickCostEstimator() {
               <Link href="/prices" className="inline-flex items-center gap-2 text-[#0D3B66] hover:text-[#C8A45D]">
                 View price references <ArrowRight className="h-4 w-4" />
               </Link>
-              <Link href="/estimator/app#projects" className="inline-flex items-center gap-2 text-[#0D3B66] hover:text-[#C8A45D]">
-                Open professional estimator <ArrowRight className="h-4 w-4" />
+              <Link href="/contact" className="inline-flex items-center gap-2 text-[#0D3B66] hover:text-[#C8A45D]">
+                Contact us for detailed estimate <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           </div>
@@ -520,6 +520,8 @@ function OtherWorkDetails({
 }
 
 function EstimateResult({ input, result }: { input: PublicEstimateInput; result: ReturnType<typeof calculatePublicEstimate> }) {
+  const basisUnit = input.category === "structural-steel" && input.steelTonnes > 0 ? "tonnes" : "m²";
+
   return (
     <div className="mt-7 overflow-hidden border border-[#0D3B66]/10 bg-white">
       <div className="bg-[#071E33] p-6 text-white md:p-8">
@@ -531,7 +533,7 @@ function EstimateResult({ input, result }: { input: PublicEstimateInput; result:
           </div>
           <div className="min-w-[170px] border border-white/15 bg-white/5 p-4">
             <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/45">Cost basis</p>
-            <strong className="mt-2 block text-lg">{Math.round(result.basisQuantity).toLocaleString()} m²</strong>
+            <strong className="mt-2 block text-lg">{Math.round(result.basisQuantity).toLocaleString()} {basisUnit}</strong>
             <span className="text-xs text-white/55">{result.basisLabel}</span>
           </div>
         </div>
@@ -579,10 +581,10 @@ function EstimateResult({ input, result }: { input: PublicEstimateInput; result:
         <div className="mt-6 flex flex-col justify-between gap-4 border-t border-[#0D3B66]/10 pt-6 sm:flex-row sm:items-center">
           <div>
             <p className="text-sm font-semibold text-[#071E33]">Need a more defensible figure?</p>
-            <p className="mt-1 text-xs text-[#3A4653]/65">Move into the full estimator for drawings, measured quantities, BOQ and editable rates.</p>
+            <p className="mt-1 text-xs text-[#3A4653]/65">Contact Charismak with your drawings, BOQ or project details for measured quantities, specification review and a project-specific estimate.</p>
           </div>
-          <Link href="/estimator/app#projects" className="inline-flex shrink-0 items-center justify-center gap-2 bg-[#C8A45D] px-5 py-3 text-xs font-bold text-[#071E33]">
-            Build detailed estimate <ArrowRight className="h-4 w-4" />
+          <Link href="/contact" className="inline-flex shrink-0 items-center justify-center gap-2 bg-[#C8A45D] px-5 py-3 text-xs font-bold text-[#071E33]">
+            Contact us for a detailed estimate <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
       </div>
