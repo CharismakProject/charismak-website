@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Loader2 } from "lucide-react";
 
 import SupplierPricePortal from "@/components/pricing/supplier-price-portal";
@@ -16,16 +16,16 @@ export default function SupplierPriceExperience() {
   const [profile, setProfile] = useState<SupplierProfile | null>(null);
   const [checking, setChecking] = useState(true);
   const [showBulk, setShowBulk] = useState(false);
+  const knownTokenRef = useRef("");
 
   useEffect(() => {
     let cancelled = false;
-    let knownToken = "";
 
     const sync = async () => {
       const token = window.localStorage.getItem(PROFILE_TOKEN_KEY) || "";
 
       if (!token) {
-        knownToken = "";
+        knownTokenRef.current = "";
         if (!cancelled) {
           setProfile(null);
           setShowBulk(false);
@@ -34,8 +34,8 @@ export default function SupplierPriceExperience() {
         return;
       }
 
-      if (token === knownToken && profile) return;
-      knownToken = token;
+      if (token === knownTokenRef.current) return;
+      knownTokenRef.current = token;
 
       try {
         const next = await getSupplierProfile(token);
@@ -45,6 +45,7 @@ export default function SupplierPriceExperience() {
         }
       } catch {
         window.localStorage.removeItem(PROFILE_TOKEN_KEY);
+        knownTokenRef.current = "";
         if (!cancelled) {
           setProfile(null);
           setShowBulk(false);
@@ -60,7 +61,7 @@ export default function SupplierPriceExperience() {
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, [profile]);
+  }, []);
 
   if (checking) {
     return (
