@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Building2, Calculator, CheckCircle2, ClipboardList, ContactRound, HardHat, Layers3 } from "lucide-react";
-import QuickCostEstimator from "@/components/public/quick-cost-estimator";
+import PublicFeasibilityEstimatorV2 from "@/components/public/public-feasibility-estimator-v2";
 
 export const metadata: Metadata = {
   title: "Construction Cost Estimator",
@@ -62,7 +62,7 @@ export default function EstimatorPage() {
         </div>
       </section>
 
-      <QuickCostEstimator />
+      <PublicFeasibilityEstimatorV2 />
 
       <section id="how-it-works" className="px-5 py-20 md:px-8">
         <div className="mx-auto max-w-7xl">
