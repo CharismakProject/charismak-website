@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, PackageSearch, Tags } from "lucide-react";
 
-import MarketPriceAdmin from "@/components/pricing/market-price-admin";
+import MarketPriceAdminCatalogueGate from "@/components/pricing/market-price-admin-catalogue-gate";
 
 export const metadata: Metadata = {
   title: "Market Price Admin",
@@ -25,7 +25,7 @@ export default function MarketPriceAdminPage() {
           </div>
           <Link href="/catalogue-admin" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#071E33] px-4 text-xs font-black text-white"><PackageSearch className="h-4 w-4" />Catalogue Management</Link>
         </section>
-        <MarketPriceAdmin />
+        <MarketPriceAdminCatalogueGate />
       </div>
     </main>
   );
