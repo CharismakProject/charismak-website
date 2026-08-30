@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Mail, MapPin, Phone } from "lucide-react";
+import { ArrowRight, Mail, MapPin, Phone } from "lucide-react";
 import { company } from "../site-data";
 
 export default function Footer() {
@@ -8,101 +8,93 @@ export default function Footer() {
 
   return (
     <footer className="bg-[#071E33] text-white">
-      <section className="border-b border-white/10 px-5 py-16 md:px-8">
-        <div className="mx-auto max-w-7xl rounded-[24px] border border-white/10 bg-white/[0.035] px-6 py-8 shadow-[0_24px_70px_rgba(0,0,0,0.14)] backdrop-blur md:px-8 md:py-10">
-          <div className="grid gap-10 lg:grid-cols-[1fr_0.45fr] lg:items-center">
-            <div>
-              <p className="mb-4 text-xs font-bold uppercase tracking-[0.28em] text-[#C8A45D]">
-                Work With Charismak
-              </p>
+      <section className="border-b border-white/10 px-5 py-16 md:px-8 lg:py-20">
+        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1fr_auto] lg:items-end">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#C8A45D]">
+              Work With Charismak
+            </p>
+            <h2 className="mt-4 max-w-4xl text-4xl font-semibold leading-tight tracking-[-0.04em] md:text-6xl">
+              Let’s build something that performs as well as it looks.
+            </h2>
+            <p className="mt-6 max-w-2xl text-base leading-8 text-white/65">
+              Construction, renovation, engineering and project delivery supported by clear planning, disciplined supervision and practical commercial control.
+            </p>
+          </div>
 
-              <h2 className="max-w-4xl text-3xl font-semibold leading-tight md:text-5xl lg:text-6xl">
-                Let’s build your next project together.
-              </h2>
-
-              <p className="mt-5 max-w-2xl text-base leading-8 text-white/68 md:text-lg">
-                We are ready to deliver value, quality and excellence on your next
-                construction requirement.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-3 lg:justify-end">
-              <Link
-                href={whatsappLink}
-                target="_blank"
-                className="inline-flex items-center gap-3 rounded-xl bg-[#8B1E00] px-7 py-4 font-bold text-white shadow-[0_10px_24px_rgba(139,30,0,0.18)] transition hover:-translate-y-0.5 hover:bg-[#A82B05]"
-              >
-                WhatsApp Us <Phone className="h-5 w-5" />
-              </Link>
-
-              <Link
-                href={`mailto:${company.email}`}
-                className="inline-flex items-center gap-3 rounded-xl border border-white/20 bg-white/[0.025] px-7 py-4 font-bold text-white transition hover:-translate-y-0.5 hover:border-[#C8A45D] hover:bg-white/5"
-              >
-                Email Us <Mail className="h-5 w-5" />
-              </Link>
-            </div>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/quote"
+              className="inline-flex items-center gap-3 bg-[#C8A45D] px-6 py-4 text-sm font-bold text-[#071E33] hover:bg-[#E8C77F]"
+            >
+              Start a Project <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link
+              href={whatsappLink}
+              target="_blank"
+              className="inline-flex items-center gap-3 border border-white/20 px-6 py-4 text-sm font-bold text-white hover:border-white/45 hover:bg-white/5"
+            >
+              WhatsApp <Phone className="h-4 w-4" />
+            </Link>
           </div>
         </div>
       </section>
 
-      <section className="px-5 py-14 md:px-8 md:py-16">
-        <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1.3fr_0.8fr_1fr]">
+      <section className="px-5 py-14 md:px-8">
+        <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1.3fr_0.8fr_0.8fr_1fr]">
           <div>
-            <h3 className="text-2xl font-bold uppercase tracking-[0.18em]">
-              Charismak
-            </h3>
-            <p className="mt-3 text-sm font-medium text-[#C8A45D]">
+            <h3 className="text-xl font-black tracking-[0.08em]">CHARISMAK</h3>
+            <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#C8A45D]">
               Project Nigeria Limited
             </p>
-            <p className="mt-6 max-w-md leading-7 text-white/62">
+            <p className="mt-6 max-w-md text-sm leading-7 text-white/55">
               {company.about}
             </p>
-            <p className="mt-6 inline-flex rounded-full border border-white/10 bg-white/[0.035] px-4 py-2 text-xs font-semibold text-white/50">
+            <p className="mt-5 text-xs font-semibold uppercase tracking-[0.14em] text-white/35">
               {company.rcNumber}
             </p>
           </div>
 
           <div>
-            <h4 className="text-sm font-bold uppercase tracking-[0.22em] text-[#C8A45D]">
-              Quick Links
+            <h4 className="text-xs font-bold uppercase tracking-[0.22em] text-[#C8A45D]">
+              Company
             </h4>
-
-            <div className="mt-6 grid gap-3 text-sm text-white/62">
-              {[
-                ["About", "/about"],
-                ["Services", "/services"],
-                ["Projects", "/projects"],
-                ["Construction Estimator", "/estimator"],
-                ["Leadership", "/leadership"],
-                ["MD Profile", "/md-profile"],
-                ["Contact", "/contact"],
-              ].map(([label, href]) => (
-                <Link key={href} href={href} className="w-fit transition hover:text-[#C8A45D]">
-                  {label}
-                </Link>
-              ))}
+            <div className="mt-6 flex flex-col gap-3 text-sm text-white/58">
+              <Link className="hover:text-white" href="/about">About</Link>
+              <Link className="hover:text-white" href="/services">Services</Link>
+              <Link className="hover:text-white" href="/projects">Projects</Link>
+              <Link className="hover:text-white" href="/leadership">Leadership</Link>
+              <Link className="hover:text-white" href="/contact">Contact</Link>
             </div>
           </div>
 
           <div>
-            <h4 className="text-sm font-bold uppercase tracking-[0.22em] text-[#C8A45D]">
+            <h4 className="text-xs font-bold uppercase tracking-[0.22em] text-[#C8A45D]">
+              Digital Tools
+            </h4>
+            <div className="mt-6 flex flex-col gap-3 text-sm text-white/58">
+              <Link className="hover:text-white" href="/estimator">Estimator</Link>
+              <Link className="hover:text-white" href="/prices">Prices</Link>
+              <Link className="hover:text-white" href="/marketplace">Marketplace</Link>
+              <Link className="hover:text-white" href="/blog">Blog</Link>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="text-xs font-bold uppercase tracking-[0.22em] text-[#C8A45D]">
               Contact
             </h4>
-
-            <div className="mt-6 space-y-5 text-sm leading-6 text-white/62">
-              <p className="flex gap-3">
-                <Mail className="mt-0.5 h-5 w-5 shrink-0 text-[#C8A45D]" />
+            <div className="mt-6 space-y-5 text-sm text-white/58">
+              <Link href={`mailto:${company.email}`} className="flex gap-3 hover:text-white">
+                <Mail className="h-4 w-4 shrink-0 text-[#C8A45D]" />
                 <span>{company.email}</span>
-              </p>
-
+              </Link>
               <p className="flex gap-3">
-                <Phone className="mt-0.5 h-5 w-5 shrink-0 text-[#C8A45D]" />
+                <Phone className="h-4 w-4 shrink-0 text-[#C8A45D]" />
                 <span>{company.phones[0]}</span>
               </p>
-
-              <p className="flex gap-3">
-                <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-[#C8A45D]" />
+              <p className="flex gap-3 leading-6">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#C8A45D]" />
                 <span>{company.addresses[0]}</span>
               </p>
             </div>
@@ -110,14 +102,10 @@ export default function Footer() {
         </div>
       </section>
 
-      <section className="border-t border-white/10 px-5 py-6 text-sm text-white/42 md:px-8">
-        <div className="mx-auto flex max-w-7xl flex-col justify-between gap-3 md:flex-row">
-          <p>
-            © {new Date().getFullYear()} Charismak Project Nigeria Limited. All
-            rights reserved.
-          </p>
-
-          <p>Construction • Engineering • Project Delivery</p>
+      <section className="border-t border-white/10 px-5 py-6 md:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col justify-between gap-3 text-xs text-white/35 md:flex-row">
+          <p>© {new Date().getFullYear()} Charismak Project Nigeria Limited. All rights reserved.</p>
+          <p>Design · Cost · Build</p>
         </div>
       </section>
     </footer>
