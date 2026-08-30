@@ -6,6 +6,7 @@ import { AlertTriangle, ArrowRight, BadgeCheck, BarChart3, CalendarRange, CheckC
 import type { PriceItem } from "@/lib/pricing/models";
 import { loadPriceItems } from "@/lib/pricing/store";
 import type { EstimateInput, EstimateResult } from "@/lib/projects/public-estimate-engine-v2";
+import { downloadEstimateBoqPdf } from "@/lib/projects/estimate-pdf";
 import {
   buildCashFlow,
   buildComparisons,
@@ -100,43 +101,7 @@ export default function EstimatorResultExperience({
   };
 
   const downloadPdf = async () => {
-    const { jsPDF } = await import("jspdf");
-    const doc = new jsPDF({ unit: "mm", format: "a4" });
-    const left = 16;
-    const width = 178;
-    let y = 18;
-    const line = (text: string, size = 10, bold = false, gap = 5) => {
-      doc.setFont("helvetica", bold ? "bold" : "normal");
-      doc.setFontSize(size);
-      const lines = doc.splitTextToSize(text, width) as string[];
-      doc.text(lines, left, y);
-      y += lines.length * gap;
-      if (y > 278) { doc.addPage(); y = 18; }
-    };
-    doc.setTextColor(7, 30, 51);
-    line("CHARISMAK PROJECT NIGERIA LIMITED", 15, true, 6);
-    doc.setTextColor(100, 82, 35);
-    line("PRELIMINARY CONSTRUCTION FEASIBILITY ESTIMATE", 9, true, 5);
-    doc.setTextColor(30, 40, 50);
-    line(`Generated: ${new Date().toLocaleDateString("en-NG")}`, 9, false, 5);
-    line(`${categoryLabels[input.category]} · ${input.location}`, 12, true, 6);
-    line(`Planning range: ${fullMoney(result.low)} – ${fullMoney(result.high)}`, 14, true, 7);
-    line(`Likely planning figure: ${fullMoney(result.midpoint)}`, 11, true, 6);
-    line(`Detail/completeness: ${score}% · Cost basis: ${qty(result.basisQuantity)} ${result.basisUnit} (${result.basisLabel})`, 9, false, 5);
-    y += 2;
-    line("COST BREAKDOWN", 10, true, 6);
-    result.sections.forEach((item) => line(`${item.label}: ${fullMoney(item.low)} – ${fullMoney(item.high)}. ${item.explanation}`, 8.5, false, 4.5));
-    y += 2;
-    line("PROGRAMME & CASH FLOW", 10, true, 6);
-    line(`Indicative duration: ${duration.lowWeeks}–${duration.highWeeks} weeks.`, 9, false, 5);
-    cashFlow.forEach((phase) => line(`${phase.label}: ${(phase.share * 100).toFixed(0)}% · ${fullMoney(phase.low)} – ${fullMoney(phase.high)}`, 8.5, false, 4.5));
-    y += 2;
-    line("KEY ASSUMPTIONS / LIMITATIONS", 10, true, 6);
-    result.assumptions.forEach((item) => line(`• ${item}`, 8.5, false, 4.5));
-    scope.excluded.forEach((item) => line(`• Excluded/not specifically allowed: ${item}`, 8.5, false, 4.5));
-    y += 2;
-    line("This document is a preliminary planning estimate, not a tender, BOQ, quotation or contract price. Contact Charismak for project-specific measurement and specification review.", 8.5, true, 4.5);
-    doc.save(`Charismak-${input.category}-preliminary-estimate.pdf`);
+    await downloadEstimateBoqPdf({ input, result, level: "Detailed", score });
   };
 
   return (
@@ -243,8 +208,8 @@ export default function EstimatorResultExperience({
 
       <section className="border border-[#0D3B66]/10 bg-[#071E33] p-6 text-white md:p-8">
         <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-center">
-          <div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#C8A45D]">Keep or continue this estimate</p><h3 className="mt-2 text-2xl font-semibold">Download, share or send the exact scope to Charismak.</h3><p className="mt-3 max-w-2xl text-xs leading-6 text-white/60">The Contact handoff carries this project type, location, cost range, likely figure and scope summary so you do not have to type the estimator information again.</p>{shareMessage ? <p className="mt-2 text-xs text-[#E8C77F]">{shareMessage}</p> : null}</div>
-          <div className="flex flex-wrap gap-3"><button type="button" onClick={downloadPdf} className="inline-flex items-center gap-2 border border-white/20 px-4 py-3 text-xs font-bold hover:bg-white/5"><Download className="h-4 w-4" />Download PDF</button><button type="button" onClick={shareEstimate} className="inline-flex items-center gap-2 border border-white/20 px-4 py-3 text-xs font-bold hover:bg-white/5"><Share2 className="h-4 w-4" />Share estimate</button><Link href={contactHref} className="inline-flex items-center gap-2 bg-[#C8A45D] px-5 py-3 text-xs font-bold text-[#071E33]">Contact us for detailed estimate <ArrowRight className="h-4 w-4" /></Link></div>
+          <div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#C8A45D]">Keep or continue this estimate</p><h3 className="mt-2 text-2xl font-semibold">Download the BOQ-style cost plan, share it or send the exact scope to Charismak.</h3><p className="mt-3 max-w-2xl text-xs leading-6 text-white/60">The branded PDF includes the project summary, elemental preliminary BOQ, programme, cash flow, assumptions and exclusions, with a faint Charismak watermark on every page.</p>{shareMessage ? <p className="mt-2 text-xs text-[#E8C77F]">{shareMessage}</p> : null}</div>
+          <div className="flex flex-wrap gap-3"><button type="button" onClick={downloadPdf} className="inline-flex items-center gap-2 border border-white/20 px-4 py-3 text-xs font-bold hover:bg-white/5"><Download className="h-4 w-4" />Download BOQ PDF</button><button type="button" onClick={shareEstimate} className="inline-flex items-center gap-2 border border-white/20 px-4 py-3 text-xs font-bold hover:bg-white/5"><Share2 className="h-4 w-4" />Share estimate</button><Link href={contactHref} className="inline-flex items-center gap-2 bg-[#C8A45D] px-5 py-3 text-xs font-bold text-[#071E33]">Contact us for detailed estimate <ArrowRight className="h-4 w-4" /></Link></div>
         </div>
       </section>
     </div>
