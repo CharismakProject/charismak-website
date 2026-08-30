@@ -4,16 +4,18 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node --import tsx scripts/verify-public-estimator.ts && next build",
     "start": "next start",
     "lint": "eslint",
     "test:fence-boq": "node --import tsx scripts/verify-fence-boq.ts",
-    "test:bill-lifecycle": "node --import tsx scripts/verify-bill-lifecycle.ts"
+    "test:bill-lifecycle": "node --import tsx scripts/verify-bill-lifecycle.ts",
+    "test:public-estimator": "node --import tsx scripts/verify-public-estimator.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.2",
     "@vercel/analytics": "^2.0.1",
     "framer-motion": "^12.40.0",
+    "jspdf": "^2.5.2",
     "lucide-react": "^1.17.0",
     "next": "16.2.7",
     "nodemailer": "^9.0.3",
