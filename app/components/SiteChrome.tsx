@@ -4,8 +4,18 @@ import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
 import CatalogueRuntime from "@/components/pricing/catalogue-runtime";
+import MarketPriceRuntime from "@/components/pricing/market-price-runtime";
 import Footer from "./Footer";
 import Navbar from "./Navbar";
+
+function PricingRuntime() {
+  return (
+    <>
+      <MarketPriceRuntime />
+      <CatalogueRuntime />
+    </>
+  );
+}
 
 export default function SiteChrome({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -14,7 +24,7 @@ export default function SiteChrome({ children }: { children: ReactNode }) {
   if (estimatorApp) {
     return (
       <>
-        <CatalogueRuntime />
+        <PricingRuntime />
         {children}
       </>
     );
@@ -22,7 +32,7 @@ export default function SiteChrome({ children }: { children: ReactNode }) {
 
   return (
     <>
-      <CatalogueRuntime />
+      <PricingRuntime />
       <Navbar />
       {children}
       <Footer />
