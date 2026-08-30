@@ -1,7 +1,31 @@
 import type { EstimateInput } from "./public-estimate-engine-v2";
 
+const QUICK_ESTIMATE_TRANSFER_KEY = "charismak-quick-estimate-transfer-v1";
+
+export function saveQuickEstimateTransfer(input: Partial<EstimateInput>) {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(QUICK_ESTIMATE_TRANSFER_KEY, JSON.stringify(input));
+  } catch {
+    // The estimator still works if browser storage is unavailable.
+  }
+}
+
+function readQuickEstimateTransfer(): Partial<EstimateInput> | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.sessionStorage.getItem(QUICK_ESTIMATE_TRANSFER_KEY);
+    if (!raw) return null;
+    window.sessionStorage.removeItem(QUICK_ESTIMATE_TRANSFER_KEY);
+    const parsed = JSON.parse(raw) as Partial<EstimateInput>;
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
 export function createInitialEstimateInput(): EstimateInput {
-  return {
+  const base: EstimateInput = {
     category: "new-building",
     buildingUse: "residential",
     location: "Abuja",
@@ -124,4 +148,7 @@ export function createInitialEstimateInput(): EstimateInput {
     firePoints: 0,
     mepLifts: 0,
   };
+
+  const transferred = readQuickEstimateTransfer();
+  return transferred ? { ...base, ...transferred } : base;
 }
