@@ -1,6 +1,6 @@
 const adminEmails = (
   process.env.NEXT_PUBLIC_ESTIMATOR_ADMIN_EMAILS
-  ?? "md@charismakproject.com,info@charismakproject.com"
+  ?? "md@charismakproject.com,info@charismakproject.com,charismakprojectnigltd@gmail.com"
 )
   .split(",")
   .map((email) => email.trim().toLowerCase())
