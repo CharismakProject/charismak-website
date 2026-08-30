@@ -1,5 +1,4 @@
-import SupplierPricePortal from "@/components/pricing/supplier-price-portal";
-import SupplierQuickPricePanel from "@/components/pricing/supplier-quick-price-panel";
+import SupplierPriceExperience from "@/components/pricing/supplier-price-experience";
 
 export const metadata = {
   title: "Supplier Price Update | Charismak Project",
@@ -16,9 +15,8 @@ export default function SupplierPricesPage() {
   return (
     <main className="min-h-screen bg-[#F5F7FA] pt-20">
       <div className="mx-auto max-w-7xl px-4 py-10 md:px-8 md:py-14">
-        <SupplierPricePortal />
+        <SupplierPriceExperience />
       </div>
-      <SupplierQuickPricePanel />
     </main>
   );
 }
