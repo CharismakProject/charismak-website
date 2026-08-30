@@ -6,6 +6,11 @@ export type BlogArticle = {
   publishedAt: string;
   readTime: string;
   sections: Array<{ heading: string; paragraphs: string[]; points?: string[] }>;
+  contentType?: "news" | "learning";
+  imageUrl?: string | null;
+  imageAlt?: string | null;
+  featured?: boolean;
+  author?: string;
 };
 
 export const blogArticles: BlogArticle[] = [
@@ -16,6 +21,7 @@ export const blogArticles: BlogArticle[] = [
     category: "Cost planning",
     publishedAt: "2026-08-15",
     readTime: "6 min read",
+    contentType: "learning",
     sections: [
       { heading: "Start with the information you actually know", paragraphs: ["An early estimate does not need to pretend that a full drawing and bill of quantities already exist. Start with the proposed location, approximate floor area, number of floors, room mix and expected finish level.", "The result should be shown as a range. A single precise-looking number at this stage can hide uncertainty in the design, market prices and site conditions."] },
       { heading: "Separate the main cost sections", paragraphs: ["A useful building estimate separates foundations, frame, walls, roof, openings, finishes, services, external works and preliminaries. This makes the figure easier to review and later replace with measured quantities."], points: ["Confirm whether the floor area is per floor or total for all floors.", "Treat external works and professional fees separately.", "Record every major assumption beside the estimate."] },
@@ -29,6 +35,7 @@ export const blogArticles: BlogArticle[] = [
     category: "Materials",
     publishedAt: "2026-08-15",
     readTime: "5 min read",
+    contentType: "learning",
     sections: [
       { heading: "Measured area is not the purchase quantity", paragraphs: ["The oversite area is measured in square metres. BRC or welded mesh is supplied in sheets, so the estimator must also consider the actual sheet size, laps between sheets, cutting waste and the need to round up to whole sheets."] },
       { heading: "The designation matters", paragraphs: ["A98, A142, A193 and A252 are not interchangeable labels. Each designation represents a different steel area and mesh weight. The structural drawing or engineer's specification should control the selection."], points: ["Confirm the mesh designation.", "Confirm the supplier's sheet dimensions.", "Add the specified lap and practical cutting allowance.", "Do not substitute mesh strength without design approval."] },
@@ -42,6 +49,7 @@ export const blogArticles: BlogArticle[] = [
     category: "Procurement",
     publishedAt: "2026-08-15",
     readTime: "5 min read",
+    contentType: "learning",
     sections: [
       { heading: "A truck is not a fixed unit", paragraphs: ["The word ‘truck’ does not guarantee one volume or one weight. Body dimensions, loading practice, material density and moisture all affect the delivered quantity. Ask the supplier to state the truck capacity in cubic metres or tonnes."] },
       { heading: "Keep the conversion visible", paragraphs: ["Sand used in an estimate is normally measured by volume, while granite is commonly quoted by weight or truck load. The app can show both, using a stated density for the conversion. The assumed density should stay editable because material and moisture conditions vary."], points: ["Record the technical requirement in m³.", "Record the assumed density in tonnes per m³.", "Record the selected truck capacity and whether it is volume- or weight-based.", "Round up trips only after comparing the remaining quantity."] },
@@ -55,6 +63,7 @@ export const blogArticles: BlogArticle[] = [
     category: "BOQ basics",
     publishedAt: "2026-08-15",
     readTime: "6 min read",
+    contentType: "learning",
     sections: [
       { heading: "What a BOQ does", paragraphs: ["A bill of quantities organises construction work into measurable descriptions. It gives contractors a common basis for pricing and gives the client a clearer way to review where the money is expected to go."] },
       { heading: "Read the five basic parts", paragraphs: ["Most items can be understood through the item code, description, unit, quantity and rate. The amount is normally the bill quantity multiplied by the selected rate."], points: ["Description: exactly what work or material is included.", "Unit: how the work is measured, such as m, m², m³, kg or number.", "Quantity: the measured amount.", "Rate: the price per unit.", "Amount: quantity multiplied by rate."] },
@@ -68,6 +77,7 @@ export const blogArticles: BlogArticle[] = [
     category: "Marketplace",
     publishedAt: "2026-08-15",
     readTime: "5 min read",
+    contentType: "learning",
     sections: [
       { heading: "Compare like with like", paragraphs: ["A low quotation is only meaningful when the material specification, quantity, delivery location, tax, offloading and payment terms match. Ask every supplier to use the same request description."] },
       { heading: "Check evidence before commitment", paragraphs: ["For artisans, review similar completed work, agree the measurable scope and record who provides tools, access equipment and materials. For suppliers, confirm the brand, source, capacity and delivery schedule."], points: ["Use written scope and price information.", "Confirm contact and service area.", "Avoid paying the full value before verifiable progress or delivery.", "Record factual reviews about quality, timing and communication."] },
