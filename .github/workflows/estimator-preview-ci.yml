@@ -1,0 +1,86 @@
+name: Estimator Preview Verification
+
+on:
+  push:
+    branches:
+      - preview/homepage-combined-design
+      - preview/final-website-integration
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Reconcile guided steel estimator on integration branch
+        if: github.ref_name == 'preview/final-website-integration'
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('lib/projects/guided-estimate.ts')
+          text = path.read_text()
+          replacements = [
+            ('const totalFloorArea = Math.max(1, footprint * floors);', 'const totalFloorArea = footprint > 0 ? footprint * floors : 0;'),
+            ('const basisQuantity = isSteel ? Math.max(1, positive(scope.floorAreaM2)) : totalFloorArea;', 'const basisQuantity = isSteel ? positive(scope.steelWeightTonnes) : totalFloorArea;'),
+            ('const basisUnit = isSteel ? "tonne planning equivalent" : "m²";', 'const basisUnit = isSteel ? "tonne" : "m²";'),
+            ('const externalLow = scope.includeExternalWorks ? openArea * 25_000 : 0;', 'const externalLow = !isSteel && scope.includeExternalWorks ? openArea * 25_000 : 0;'),
+            ('const externalHigh = scope.includeExternalWorks ? openArea * 65_000 : 0;', 'const externalHigh = !isSteel && scope.includeExternalWorks ? openArea * 65_000 : 0;'),
+            ('...(prelimPercent ? [{ id: "preliminaries", label: "Project preliminaries", low: prelimLow, high: prelimHigh, explanation: `Optional ${prelimPercent}% allowance for project setup, supervision and general requirements.` }] : []),', '...(prelimPercent && basisQuantity > 0 ? [{ id: "preliminaries", label: "Project preliminaries", low: prelimLow, high: prelimHigh, explanation: `Optional ${prelimPercent}% allowance for project setup, supervision and general requirements.` }] : []),'),
+            ('...(scope.includeExternalWorks && openArea ? [{ id: "external", label: "External works allowance", low: externalLow, high: externalHigh, explanation: `Planning allowance for approximately ${Math.round(openArea)} m² of remaining open land.` }] : []),', '...(!isSteel && scope.includeExternalWorks && openArea ? [{ id: "external", label: "External works allowance", low: externalLow, high: externalHigh, explanation: `Planning allowance for approximately ${Math.round(openArea)} m² of remaining open land.` }] : []),'),
+            ('const suppliedDimensions = positive(scope.floorAreaM2) > 0 || (positive(scope.buildingLengthM) > 0 && positive(scope.buildingWidthM) > 0);', 'const suppliedBasis = isSteel\n    ? positive(scope.steelWeightTonnes) > 0\n    : positive(scope.floorAreaM2) > 0 || (positive(scope.buildingLengthM) > 0 && positive(scope.buildingWidthM) > 0);'),
+            ('basisLabel: isSteel ? "Selected steel quantity" : "Total estimated floor area",', 'basisLabel: isSteel ? "Approximate steel quantity" : "Total estimated floor area",'),
+            ('confidence: suppliedDimensions ? "detailed" : "rough",', 'confidence: suppliedBasis ? "detailed" : "rough",'),
+            ('`Starter ${finish} specification benchmark for ${projectType.replace(/-/g, " ")}.`,\n      "Rates are planning references', '`Starter ${finish} specification benchmark for ${projectType.replace(/-/g, " ")}.`,\n      ...(isSteel && !basisQuantity ? ["Enter an approximate structural steel tonnage before using this planning estimate."] : []),\n      "Rates are planning references'),
+          ]
+          changed = False
+          for old, new in replacements:
+              if old in text:
+                  text = text.replace(old, new, 1)
+                  changed = True
+          if changed:
+              path.write_text(text)
+          PY
+
+      - name: Commit integration repair when needed
+        if: github.ref_name == 'preview/final-website-integration'
+        run: |
+          if ! git diff --quiet -- lib/projects/guided-estimate.ts; then
+            git config user.name "charismak-integration-ci"
+            git config user.email "charismakprojectnigltd@gmail.com"
+            git add lib/projects/guided-estimate.ts
+            git commit -m "Reconcile guided structural steel basis after branch merge"
+            git push origin HEAD:${{ github.ref_name }}
+          fi
+
+      - name: Synchronize package lock
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+
+      - name: Commit synchronized lockfile when needed
+        run: |
+          if ! git diff --quiet -- package-lock.json; then
+            git config user.name "charismak-estimator-ci"
+            git config user.email "charismakprojectnigltd@gmail.com"
+            git add package-lock.json
+            git commit -m "Sync package lock for estimator dependencies"
+            git push origin HEAD:${{ github.ref_name }}
+          fi
+
+      - name: Clean install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Verify integrated website and build site
+        run: npm run build

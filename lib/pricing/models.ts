@@ -1,12 +1,15 @@
 export type PriceCategory = "material" | "labour" | "plant" | "subcontract";
 export type PriceConfidence = "starter" | "manual" | "index-adjusted" | "verified";
 export type EstimateRateSource = "default" | "analysed" | "manual";
+export type PriceMarketMode = "buy" | "rent" | "buy-or-rent" | "service";
 
 export type PriceItem = {
   id: string;
   code: string;
   description: string;
   category: PriceCategory;
+
+  // Technical/QS unit used by rate analysis and estimating calculations.
   unit: string;
   rate: number | null;
   defaultRate?: number | null;
@@ -19,6 +22,26 @@ export type PriceItem = {
   confidence?: PriceConfidence;
   updatedAt: string;
   active: boolean;
+
+  // Optional public-marketplace metadata. These fields deliberately remain
+  // optional so existing estimator/rate-analysis IDs and calculations continue
+  // to work unchanged while the public catalogue grows into a richer market feed.
+  imageUrl?: string | null;
+  imageAlt?: string | null;
+  brand?: string | null;
+  specification?: string | null;
+  priceLow?: number | null;
+  priceHigh?: number | null;
+  sourceCount?: number | null;
+  deliveryIncluded?: boolean | null;
+
+  // Human-facing Nigerian buying units. The public marketplace should lead with
+  // these (tipper, tonne, bag, 12 m length, carton, bucket, sheet, hire/day, etc.)
+  // and only show `unit` as a secondary QS conversion reference.
+  marketUnit?: string | null;
+  marketUnitOptions?: string[];
+  marketMode?: PriceMarketMode;
+  marketNote?: string | null;
 };
 
 export type RateComponent = {
@@ -117,6 +140,9 @@ export type EstimateLine = {
 
 export type RateEstimate = {
   id: string;
+  projectId?: string | null;
+  priceBasisAt?: string | null;
+  priceItemsSnapshot?: PriceItem[];
   title: string;
   projectName: string;
   clientName: string;

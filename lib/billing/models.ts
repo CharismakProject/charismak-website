@@ -75,6 +75,8 @@ export type BillSection = {
 
 export type Bill = {
   id: string;
+  projectId?: string | null;
+  priceBasisAt?: string | null;
   billNumber?: string | null;
   status: BillStatus;
   version: number;

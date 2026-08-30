@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { Mail, MapPin, Phone } from "lucide-react";
+import ContactEstimateForm from "@/components/public/contact-estimate-form";
 import { company } from "../site-data";
 
 export const metadata = {
@@ -8,82 +8,77 @@ export const metadata = {
     "Contact Charismak Project Nigeria Limited in Abuja for construction, renovation, steel fabrication, and project management enquiries.",
 };
 
-export default function ContactPage() {
+type SearchParams = Record<string, string | string[] | undefined>;
+const first = (value: string | string[] | undefined) => Array.isArray(value) ? value[0] ?? "" : value ?? "";
+
+export default async function ContactPage({ searchParams }: { searchParams?: Promise<SearchParams> }) {
+  const params = searchParams ? await searchParams : {};
+  const fromEstimator = first(params.source) === "estimator";
+  const service = first(params.service) || "Construction enquiry";
+  const location = first(params.location);
+  const estimate = first(params.estimate);
+
   return (
-    <main className="bg-white pt-20">
-      <section className="bg-[#071E33] px-5 py-24 text-white md:px-8">
-        <div className="mx-auto max-w-7xl">
-          <p className="mb-4 text-xs font-bold uppercase tracking-[0.28em] text-[#C8A45D]">
-            Contact
-          </p>
-          <h1 className="max-w-4xl text-4xl font-black leading-tight md:text-7xl">
-            Get in touch with Charismak.
+    <main className="overflow-hidden bg-white pt-20">
+      <section className="relative overflow-hidden bg-[#071E33] px-5 py-24 text-white md:px-8 lg:py-32">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_82%_18%,rgba(200,164,93,0.15),transparent_28rem)]" />
+        <div className="relative mx-auto max-w-7xl">
+          <p className="mb-5 text-xs font-bold uppercase tracking-[0.32em] text-[#F2B544]">Contact Charismak</p>
+          <h1 className="max-w-5xl text-5xl font-semibold leading-[1.02] tracking-[-0.04em] sm:text-6xl lg:text-7xl">
+            {fromEstimator ? "Turn the planning estimate into a project conversation." : "Tell us what you want to build."}
           </h1>
-          <p className="mt-6 max-w-2xl text-base leading-8 text-white/75">
-            Speak with us about construction, renovation, steel fabrication,
-            consultancy, project management and finishing works.
+          <p className="mt-7 max-w-3xl text-base leading-8 text-white/72 md:text-lg">
+            {fromEstimator
+              ? "Your estimator summary has been carried into the enquiry form below. Add your contact details and, if available, attach drawings, a BOQ or project images for a more specific review."
+              : "Share your project brief, location and the stage you are currently at. We can discuss construction, renovation, engineering, project management or specialist works."}
           </p>
         </div>
       </section>
 
-      <section className="px-5 py-20 md:px-8">
-        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.85fr_1.15fr]">
-          <div className="space-y-10">
-            <div>
-              <Phone className="h-7 w-7 text-[#8B1E00]" />
-              <h3 className="mt-4 text-lg font-bold text-[#0D3B66]">Phone</h3>
-              <div className="mt-3 space-y-2 text-[#3A4653]">
-                {company.phones.map((phone) => (
-                  <p key={phone}>{phone}</p>
-                ))}
-              </div>
-            </div>
+      <section className="bg-[#F7F8FA] px-5 py-20 md:px-8">
+        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.72fr_1.28fr]">
+          <div className="bg-[#0D3B66] p-8 text-white md:p-10">
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#F2B544]">Reach Us Directly</p>
+            <h2 className="mt-5 text-3xl font-semibold tracking-[-0.03em] md:text-4xl">Let’s start with a conversation.</h2>
 
-            <div>
-              <Mail className="h-7 w-7 text-[#8B1E00]" />
-              <h3 className="mt-4 text-lg font-bold text-[#0D3B66]">Email</h3>
-              <p className="mt-3 text-[#3A4653]">{company.email}</p>
-            </div>
-
-            <div>
-              <MapPin className="h-7 w-7 text-[#8B1E00]" />
-              <h3 className="mt-4 text-lg font-bold text-[#0D3B66]">
-                Office Address
-              </h3>
-              <div className="mt-3 space-y-2 text-[#3A4653]">
-                {company.addresses.map((address) => (
-                  <p key={address}>{address}</p>
-                ))}
-              </div>
+            <div className="mt-10 space-y-8">
+              <ContactItem icon={Phone} label="Phone">
+                {company.phones.map((phone) => <p key={phone}>{phone}</p>)}
+              </ContactItem>
+              <ContactItem icon={Mail} label="Email">
+                <p>{company.email}</p>
+              </ContactItem>
+              <ContactItem icon={MapPin} label="Office">
+                {company.addresses.map((address) => <p key={address}>{address}</p>)}
+              </ContactItem>
             </div>
           </div>
 
-          <form className="grid gap-4 bg-[#F7F8FA] p-8">
-            <input
-              className="border border-[#0D3B66]/10 bg-white p-4 text-[#151B22] outline-none placeholder:text-[#9AA3AF] focus:border-[#8B1E00]"
-              placeholder="Your Name"
-            />
-            <input
-              className="border border-[#0D3B66]/10 bg-white p-4 text-[#151B22] outline-none placeholder:text-[#9AA3AF] focus:border-[#8B1E00]"
-              placeholder="Your Email"
-            />
-            <input
-              className="border border-[#0D3B66]/10 bg-white p-4 text-[#151B22] outline-none placeholder:text-[#9AA3AF] focus:border-[#8B1E00]"
-              placeholder="Phone Number"
-            />
-            <textarea
-              className="min-h-[160px] border border-[#0D3B66]/10 bg-white p-4 text-[#151B22] outline-none placeholder:text-[#9AA3AF] focus:border-[#8B1E00]"
-              placeholder="Your Message"
-            />
-            <Link
-              href={`mailto:${company.email}`}
-              className="bg-[#8B1E00] px-6 py-4 text-center font-bold text-white transition hover:bg-[#C8A45D]"
-            >
-              Send Message
-            </Link>
-          </form>
+          <div className="bg-white p-8 shadow-[0_14px_45px_rgba(7,30,51,0.08)] md:p-10">
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#C8A45D]">Project Enquiry</p>
+            <h2 className="mt-5 text-3xl font-semibold tracking-[-0.03em] text-[#071E33] md:text-4xl">{fromEstimator ? "Your estimate is already attached to the conversation." : "Send us the basics."}</h2>
+            <p className="mt-4 max-w-2xl text-sm leading-7 text-[#3A4653]">
+              The more context you provide, the easier it is for us to understand what kind of support you need. PDF drawings, BOQs, images, Excel and Word files can be attached directly.
+            </p>
+
+            <ContactEstimateForm initialService={service} initialLocation={location} initialEstimate={estimate} />
+          </div>
         </div>
       </section>
     </main>
+  );
+}
+
+function ContactItem({ icon: Icon, label, children }: { icon: typeof Phone; label: string; children: React.ReactNode }) {
+  return (
+    <div className="grid grid-cols-[44px_1fr] gap-4 border-t border-white/10 pt-6 first:border-t-0 first:pt-0">
+      <div className="grid h-11 w-11 place-items-center border border-[#C8A45D]/35 bg-[#C8A45D]/10">
+        <Icon className="h-5 w-5 text-[#F2B544]" />
+      </div>
+      <div>
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/45">{label}</p>
+        <div className="mt-2 space-y-1 text-sm leading-6 text-white/78">{children}</div>
+      </div>
+    </div>
   );
 }

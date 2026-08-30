@@ -4,16 +4,21 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run test:public-estimator && npm run test:material-estimator && npm run test:estimator-foundation && npm run test:supplier-price-validity && next build",
     "start": "next start",
     "lint": "eslint",
     "test:fence-boq": "node --import tsx scripts/verify-fence-boq.ts",
-    "test:bill-lifecycle": "node --import tsx scripts/verify-bill-lifecycle.ts"
+    "test:bill-lifecycle": "node --import tsx scripts/verify-bill-lifecycle.ts",
+    "test:public-estimator": "node --import tsx scripts/verify-public-estimator.ts",
+    "test:material-estimator": "node --import tsx scripts/verify-material-estimator.ts",
+    "test:estimator-foundation": "node --import tsx scripts/verify-estimator-foundation.ts",
+    "test:supplier-price-validity": "node --import tsx scripts/verify-supplier-price-validity.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.2",
     "@vercel/analytics": "^2.0.1",
     "framer-motion": "^12.40.0",
+    "jspdf": "^2.5.2",
     "lucide-react": "^1.17.0",
     "next": "16.2.7",
     "nodemailer": "^9.0.3",

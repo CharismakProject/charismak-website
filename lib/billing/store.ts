@@ -1,3 +1,4 @@
+import { deleteBillCloud, persistBillCloud } from "@/lib/estimator/cloud";
 import type {
   Bill,
   BillAdjustment,
@@ -51,6 +52,8 @@ function makeBillId(): string {
 
 function normalizeBill(bill: Bill): Bill {
   const createdAt = bill.createdAt ?? new Date().toISOString();
+  bill.projectId ??= null;
+  bill.priceBasisAt ??= createdAt;
   bill.status ??= "draft";
   bill.version ??= 1;
   bill.rootBillId ??= bill.id;
@@ -136,6 +139,7 @@ function persistBill(bill: Bill, allowCompleted = false): Bill {
     : [...bills, normalized];
   writeBillCollection(nextBills, normalized.id);
   notifyBillUpdated(normalized);
+  persistBillCloud(normalized);
   return normalized;
 }
 
@@ -158,6 +162,10 @@ export function loadBillById(id: string): Bill | null {
   return readBillCollection().bills.find((bill) => bill.id === id) ?? null;
 }
 
+export function loadBillsForProject(projectId: string): Bill[] {
+  return loadBills().filter((bill) => bill.projectId === projectId);
+}
+
 export function selectBill(id: string): Bill {
   const { bills } = readBillCollection();
   const bill = bills.find((candidate) => candidate.id === id);
@@ -176,6 +184,8 @@ export function createNewBill(overrides?: Partial<Bill>): Bill {
   const now = new Date().toISOString();
   const bill: Bill = {
     id,
+    projectId: overrides?.projectId ?? null,
+    priceBasisAt: overrides?.priceBasisAt ?? now,
     billNumber: overrides?.billNumber ?? null,
     status: "draft",
     version: 1,
@@ -189,7 +199,7 @@ export function createNewBill(overrides?: Partial<Bill>): Bill {
     createdAt: now,
     updatedAt: now,
     completedAt: null,
-    sourceModules: [],
+    sourceModules: overrides?.sourceModules ?? [],
     rateMode: overrides?.rateMode ?? "all-in",
     sections: overrides?.sections ?? [],
     materials: overrides?.materials ?? [],
@@ -295,6 +305,7 @@ export function deleteDraftBill(id: string): Bill | null {
   writeBillCollection(nextBills, nextActiveId);
   const nextActive =
     nextBills.find((bill) => bill.id === nextActiveId) ?? null;
+  deleteBillCloud(id);
   notifyBillUpdated(nextActive);
   return nextActive;
 }

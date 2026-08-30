@@ -2,7 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { createNewBill, loadBill } from "@/lib/billing/store";
+import {
+  createNewBill,
+  loadBill,
+  loadBillById,
+} from "@/lib/billing/store";
 import WorkDiagram from "@/components/estimator/visuals/work-diagram";
 import { calculateAnalysedRate } from "@/lib/pricing/analysis";
 import { getDefaultAssumptionValues } from "@/lib/pricing/assumptions";
@@ -23,9 +27,12 @@ import {
   loadRateEstimate,
   loadRateEstimates,
   loadRateTemplates,
+  refreshRateEstimatePriceBasis,
   saveRateEstimate,
   selectRateEstimate,
 } from "@/lib/pricing/store";
+import type { UniversalProject } from "@/lib/projects/models";
+import { saveProject } from "@/lib/projects/store";
 
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 
@@ -59,13 +66,16 @@ const getModuleTitle = (module: string) => ({
 export default function EstimateBuilder({
   onOpenRates,
   onOpenBill,
+  project = null,
 }: {
   onOpenRates: () => void;
   onOpenBill: () => void;
+  project?: UniversalProject | null;
 }) {
   const [estimate, setEstimate] = useState<RateEstimate | null>(null);
   const [estimates, setEstimates] = useState<RateEstimate[]>([]);
   const [prices, setPrices] = useState<PriceItem[]>([]);
+  const [newerPricesAvailable, setNewerPricesAvailable] = useState(false);
   const [templates] = useState<RateTemplate[]>(() => loadRateTemplates());
   const [selectedTemplateId, setSelectedTemplateId] = useState(
     templates[0]?.id ?? "custom",
@@ -74,22 +84,54 @@ export default function EstimateBuilder({
   const [message, setMessage] = useState<string | null>(null);
   const selectedTemplate = templates.find((item) => item.id === selectedTemplateId);
 
-  useEffect(() => {
-    let current = loadRateEstimate();
-    if (!current) current = createRateEstimate();
-    setEstimate(current);
-    setEstimates(loadRateEstimates());
-    setPrices(loadPriceItems());
+  const scopedEstimates = (items: RateEstimate[]) =>
+    project ? items.filter((item) => item.projectId === project.id) : items;
 
-    const refreshPrices = () => setPrices(loadPriceItems());
-    const refreshEstimates = () => setEstimates(loadRateEstimates());
-    window.addEventListener(PRICE_LIBRARY_UPDATED_EVENT, refreshPrices);
+  const activateEstimate = (current: RateEstimate) => {
+    setEstimate(current);
+    setPrices(clone(current.priceItemsSnapshot?.length ? current.priceItemsSnapshot : loadPriceItems()));
+    setNewerPricesAvailable(false);
+  };
+
+  useEffect(() => {
+    let current: RateEstimate | null = null;
+    if (project?.linkedEstimateId) {
+      try {
+        current = selectRateEstimate(project.linkedEstimateId);
+      } catch {
+        current = null;
+      }
+    }
+    if (!current && project) {
+      current = scopedEstimates(loadRateEstimates())[0] ?? null;
+    }
+    if (!current && !project) current = loadRateEstimate();
+    if (!current) {
+      current = createRateEstimate({
+        projectId: project?.id ?? null,
+        title: project ? `${project.name} Estimate` : "New Construction Estimate",
+        projectName: project?.name ?? "",
+        clientName: project?.clientName ?? "",
+        location: project?.location ?? "Abuja",
+        currency: project?.currency ?? "NGN",
+      });
+      if (project) saveProject({ ...project, linkedEstimateId: current.id });
+    }
+    activateEstimate(current);
+    setEstimates(scopedEstimates(loadRateEstimates()));
+
+    const markNewPrices = () => setNewerPricesAvailable(true);
+    const refreshEstimates = () => setEstimates(scopedEstimates(loadRateEstimates()));
+    window.addEventListener(PRICE_LIBRARY_UPDATED_EVENT, markNewPrices);
     window.addEventListener(RATE_ESTIMATE_UPDATED_EVENT, refreshEstimates);
     return () => {
-      window.removeEventListener(PRICE_LIBRARY_UPDATED_EVENT, refreshPrices);
+      window.removeEventListener(PRICE_LIBRARY_UPDATED_EVENT, markNewPrices);
       window.removeEventListener(RATE_ESTIMATE_UPDATED_EVENT, refreshEstimates);
     };
-  }, []);
+    // The project identity is the boundary for this workspace. Its data changes
+    // are saved by the stores without remounting this editor on every keystroke.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project?.id, project?.linkedEstimateId]);
 
   const commit = (update: (draft: RateEstimate) => void) => {
     if (!estimate) return;
@@ -278,24 +320,53 @@ export default function EstimateBuilder({
 
   const startNew = () => {
     const next = createRateEstimate({
-      title: "New Construction Estimate",
-      location: estimate?.location || "Abuja",
-      currency: estimate?.currency || "NGN",
+      projectId: project?.id ?? null,
+      title: project ? `${project.name} Estimate` : "New Construction Estimate",
+      projectName: project?.name ?? estimate?.projectName ?? "",
+      clientName: project?.clientName ?? estimate?.clientName ?? "",
+      location: project?.location ?? estimate?.location ?? "Abuja",
+      currency: project?.currency ?? estimate?.currency ?? "NGN",
     });
-    setEstimate(next);
-    setMessage("New estimate created. Earlier estimates remain saved.");
+    if (project) saveProject({ ...project, linkedEstimateId: next.id });
+    activateEstimate(next);
+    setEstimates(scopedEstimates(loadRateEstimates()));
+    setMessage("New estimate created with a fresh price-basis snapshot. Earlier estimates remain saved.");
   };
 
   const openEstimate = (id: string) => {
     const selected = selectRateEstimate(id);
-    setEstimate(selected);
-    setMessage("Saved estimate opened for editing.");
+    if (project && selected.projectId !== project.id) {
+      setMessage("That estimate belongs to another project and was not opened here.");
+      return;
+    }
+    activateEstimate(selected);
+    setMessage("Saved estimate opened with its original price basis.");
+  };
+
+  const refreshPriceBasis = () => {
+    if (!estimate) return;
+    const updated = refreshRateEstimatePriceBasis(estimate.id);
+    activateEstimate(updated);
+    setMessage(`Price basis refreshed to ${new Date(updated.priceBasisAt ?? updated.updatedAt).toLocaleDateString("en-NG")}. Review changed unit rates before issuing the BOQ.`);
   };
 
   const removeEstimate = () => {
     if (!estimate || !window.confirm(`Delete “${estimate.title}”?`)) return;
-    const next = deleteRateEstimate(estimate.id) ?? createRateEstimate();
-    setEstimate(next);
+    const deletedId = estimate.id;
+    const nextAvailable = deleteRateEstimate(deletedId);
+    const projectNext = project
+      ? scopedEstimates(loadRateEstimates())[0] ?? createRateEstimate({
+          projectId: project.id,
+          title: `${project.name} Estimate`,
+          projectName: project.name,
+          clientName: project.clientName,
+          location: project.location,
+          currency: project.currency,
+        })
+      : nextAvailable ?? createRateEstimate();
+    if (project) saveProject({ ...project, linkedEstimateId: projectNext.id });
+    activateEstimate(projectNext);
+    setEstimates(scopedEstimates(loadRateEstimates()));
     setMessage("Estimate deleted.");
   };
 
@@ -305,14 +376,33 @@ export default function EstimateBuilder({
       return;
     }
     try {
-      const bill = loadBill() ?? createNewBill({
-        title: `${estimate.title} — Bill of Quantities`,
-      });
+      let bill = project?.linkedBillId ? loadBillById(project.linkedBillId) : null;
+      if (!bill && project) {
+        bill = createNewBill({
+          projectId: project.id,
+          priceBasisAt: estimate.priceBasisAt ?? estimate.createdAt,
+          title: `${estimate.title} — Bill of Quantities`,
+          projectName: project.name,
+          clientName: project.clientName,
+          location: project.location,
+          currency: project.currency,
+        });
+        saveProject({ ...project, linkedEstimateId: estimate.id, linkedBillId: bill.id });
+      }
+      if (!bill) {
+        bill = loadBill() ?? createNewBill({
+          projectId: estimate.projectId ?? null,
+          priceBasisAt: estimate.priceBasisAt ?? estimate.createdAt,
+          title: `${estimate.title} — Bill of Quantities`,
+        });
+      }
+      bill.projectId = project?.id ?? estimate.projectId ?? bill.projectId ?? null;
+      bill.priceBasisAt = estimate.priceBasisAt ?? bill.priceBasisAt ?? estimate.createdAt;
       applyRateEstimateToBill({ bill, estimate, prices, templates });
       setMessage(
         missingPriceCount
           ? `BOQ updated. ${missingPriceCount} rate component(s) remain unpriced.`
-          : "BOQ updated from the current analysed estimate.",
+          : "BOQ updated from the current estimate using its frozen price basis.",
       );
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Unable to update BOQ.");
@@ -321,6 +411,14 @@ export default function EstimateBuilder({
 
   if (!estimate) return null;
 
+  const priceBasisLabel = new Date(
+    estimate.priceBasisAt ?? estimate.createdAt,
+  ).toLocaleDateString("en-NG", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+
   return (
     <div className="space-y-6">
       <section className="overflow-hidden rounded-[32px] bg-[#071E33] p-6 text-white shadow-[0_24px_70px_rgba(7,30,51,0.18)] md:p-8">
@@ -328,7 +426,7 @@ export default function EstimateBuilder({
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#E7B34B]">Internal cost planning</p>
             <input value={estimate.title} onChange={(event) => commit((draft) => { draft.title = event.target.value; })} className="mt-3 w-full border-b border-white/20 bg-transparent py-2 text-3xl font-bold text-white outline-none" />
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-white/70">Build project costs from editable unit-rate analyses. Updating the Price Library recalculates this draft automatically; generated completed bills remain frozen.</p>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-white/70">Build project costs from editable unit-rate analyses. This estimate keeps its own price snapshot so later market updates do not silently change your tender basis.</p>
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
               <input value={estimate.projectName} onChange={(event) => commit((draft) => { draft.projectName = event.target.value; })} placeholder="Project name" className="rounded-2xl bg-white/10 px-4 py-3 text-sm text-white outline-none placeholder:text-white/40" />
               <input value={estimate.clientName} onChange={(event) => commit((draft) => { draft.clientName = event.target.value; })} placeholder="Client" className="rounded-2xl bg-white/10 px-4 py-3 text-sm text-white outline-none placeholder:text-white/40" />
@@ -339,12 +437,13 @@ export default function EstimateBuilder({
             <p className="text-xs uppercase tracking-[0.16em] text-white/60">Current estimate</p>
             <strong className="mt-3 block text-3xl">{money(total, estimate.currency)}</strong>
             <div className="mt-4 grid grid-cols-2 gap-3 text-sm"><div><span className="text-white/55">Work items</span><strong className="block text-xl">{estimate.lines.length}</strong></div><div><span className="text-white/55">Missing prices</span><strong className={`block text-xl ${missingPriceCount ? "text-[#FFD5C7]" : "text-[#BFF5DB]"}`}>{missingPriceCount}</strong></div></div>
+            <div className="mt-4 border-t border-white/10 pt-4"><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-white/50">Price basis</span><strong className="mt-1 block text-sm">{priceBasisLabel}</strong>{newerPricesAvailable ? <button type="button" onClick={refreshPriceBasis} className="mt-3 rounded-full bg-[#F2B544] px-3 py-2 text-xs font-black text-[#071E33]">Refresh to current prices</button> : <span className="mt-2 block text-[10px] text-[#BFF5DB]">Snapshot protected</span>}</div>
           </div>
         </div>
         <div className="mt-6 flex flex-wrap gap-3 border-t border-white/12 pt-5">
           <button type="button" onClick={sendToBoq} className="rounded-full bg-[#C8320A] px-5 py-3 text-sm font-bold text-white">Generate / Update BOQ</button>
           <button type="button" onClick={onOpenBill} className="rounded-full border border-white/35 px-5 py-3 text-sm font-bold text-white">View BOQ</button>
-          <button type="button" onClick={onOpenRates} className="rounded-full border border-white/35 px-5 py-3 text-sm font-bold text-white">Update Price List</button>
+          <button type="button" onClick={onOpenRates} className="rounded-full border border-white/35 px-5 py-3 text-sm font-bold text-white">Open Current Price List</button>
           <button type="button" onClick={startNew} className="rounded-full px-5 py-3 text-sm font-semibold text-white/75">New Estimate</button>
           <button type="button" onClick={removeEstimate} className="rounded-full px-5 py-3 text-sm font-semibold text-[#FFD5C7]">Delete</button>
         </div>
