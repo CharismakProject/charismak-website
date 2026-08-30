@@ -106,10 +106,6 @@ export function calculateGuidedEstimate(projectType: ProjectType, scope: Project
   };
 }
 
-// ---------------------------------------------------------------------------
-// Public feasibility estimator
-// ---------------------------------------------------------------------------
-
 export type PublicEstimateCategory =
   | "new-building"
   | "renovation"
@@ -251,10 +247,10 @@ const clamp = (value: number, min: number, max: number) => Math.min(max, Math.ma
 
 function locationFactor(location: string) {
   const value = location.toLowerCase();
+  if (value.includes("lekki") || value.includes("ikoyi") || value.includes("victoria island")) return 1.22;
   if (value.includes("lagos")) return 1.14;
   if (value.includes("abuja") || value.includes("fct")) return 1.08;
   if (value.includes("port harcourt") || value.includes("rivers")) return 1.1;
-  if (value.includes("lekki") || value.includes("ikoyi") || value.includes("victoria island")) return 1.22;
   if (value.includes("kano") || value.includes("kaduna")) return 0.96;
   if (value.includes("ibadan") || value.includes("oyo")) return 0.94;
   if (value.includes("akure") || value.includes("ondo") || value.includes("ekiti")) return 0.92;
@@ -364,6 +360,46 @@ function genericPublicEstimate(input: PublicEstimateInput): PublicEstimateResult
   };
 }
 
+type ResolvedFrame = Exclude<PublicEstimateInput["frameType"], "recommend">;
+
+type ElementShares = {
+  substructure: number;
+  frame: number;
+  walls: number;
+  roof: number;
+  openings: number;
+  finishes: number;
+  mep: number;
+  joinery: number;
+};
+
+function inferFrame(input: PublicEstimateInput, totalFloors: number): ResolvedFrame {
+  if (input.frameType !== "recommend") return input.frameType;
+  if (input.buildingUse === "warehouse" || input.buildingUse === "industrial") return "steel";
+  if (input.buildingUse === "residential" && totalFloors === 1) return "masonry";
+  return "reinforced-concrete";
+}
+
+function elementShares(input: PublicEstimateInput, totalFloors: number, frame: ResolvedFrame): ElementShares {
+  if (input.buildingUse === "warehouse" || input.buildingUse === "industrial") {
+    return { substructure: 0.12, frame: 0.26, walls: 0.08, roof: 0.15, openings: 0.06, finishes: 0.09, mep: 0.16, joinery: 0.08 };
+  }
+
+  if (totalFloors === 1 && frame === "masonry") {
+    return { substructure: 0.14, frame: 0.10, walls: 0.15, roof: 0.11, openings: 0.09, finishes: 0.18, mep: 0.14, joinery: 0.09 };
+  }
+
+  if (totalFloors === 1) {
+    return { substructure: 0.14, frame: 0.14, walls: 0.13, roof: 0.10, openings: 0.09, finishes: 0.17, mep: 0.14, joinery: 0.09 };
+  }
+
+  if (totalFloors === 2) {
+    return { substructure: 0.13, frame: 0.19, walls: 0.12, roof: 0.07, openings: 0.09, finishes: 0.17, mep: 0.14, joinery: 0.09 };
+  }
+
+  return { substructure: 0.12, frame: 0.23, walls: 0.11, roof: 0.05, openings: 0.09, finishes: 0.16, mep: 0.15, joinery: 0.09 };
+}
+
 export function calculatePublicEstimate(input: PublicEstimateInput): PublicEstimateResult {
   if (input.category !== "new-building") return genericPublicEstimate(input);
 
@@ -375,10 +411,13 @@ export function calculatePublicEstimate(input: PublicEstimateInput): PublicEstim
   const baseLow = area * rate[0] * finishFactor * loc;
   const baseHigh = area * rate[1] * finishFactor * loc;
 
+  const resolvedFrame = inferFrame(input, totalFloors);
+  const shares = elementShares(input, totalFloors, resolvedFrame);
+
   const siteFactor = { good: 0.94, normal: 1, weak: 1.16, waterlogged: 1.28, unknown: 1.08 }[input.siteCondition];
   const foundationFactor = { recommend: 1, "strip-pad": 0.98, raft: 1.14, pile: 1.34 }[input.foundationType];
-  const frameFactor = { recommend: 1, masonry: 0.94, "reinforced-concrete": 1, steel: 1.12, composite: 1.18 }[input.frameType];
-  const floorFactor = 1 + Math.max(0, totalFloors - 1) * 0.045 + input.lifts * 0.035;
+  const frameFactor = { masonry: 0.92, "reinforced-concrete": 1, steel: 1.12, composite: 1.18 }[resolvedFrame];
+  const floorFactor = 1 + Math.max(0, totalFloors - 1) * 0.025 + input.lifts * 0.025;
   const roofFactor = { "pitched-aluminium": 1, "stone-coated": 1.2, "flat-concrete": 1.3, "steel-roof": 1.08, combination: 1.22 }[input.roofType] * { simple: 0.96, moderate: 1.06, complex: 1.22 }[input.roofComplexity];
   const openingFactor = { "standard-aluminium": 0.96, "premium-aluminium": 1.12, upvc: 1.16, "double-glazed": 1.38, "curtain-wall": 1.62 }[input.windowSpec] * { basic: 0.92, standard: 1, premium: 1.18, "security-premium": 1.32 }[input.doorSpec];
   const facadeFactor = { "paint-render": 0.94, "mixed-cladding": 1.08, "stone-tile": 1.18, alucobond: 1.22, "curtain-wall": 1.42 }[input.facadeSpec];
@@ -391,23 +430,29 @@ export function calculatePublicEstimate(input: PublicEstimateInput): PublicEstim
   const waterFactor = { basic: 0.9, borehole: 1, "borehole-treatment": 1.12, "enhanced-storage": 1.1 }[input.waterSystem];
   const wasteFactor = { "public-sewer": 0.92, septic: 1, "treatment-plant": 1.2 }[input.wasteSystem];
   const powerFactor = { grid: 0.86, generator: 1, inverter: 1.05, solar: 1.16, hybrid: 1.24 }[input.powerSystem];
-  const mepFactor = ((electricalFactor + acFactor + waterFactor + wasteFactor + powerFactor) / 5) * (input.includeSecurity ? 1.04 : 1) * (input.includeFireSystem ? 1.05 : 1);
+  const useMepFactor = { residential: 1, apartments: 1.05, commercial: 1.05, hotel: 1.16, school: 0.92, healthcare: 1.25, warehouse: 0.72, industrial: 1.12, religious: 0.86, "mixed-use": 1.08 }[input.buildingUse];
+  const mepFactor = ((electricalFactor + acFactor + waterFactor + wasteFactor + powerFactor) / 5) * useMepFactor * (input.includeSecurity ? 1.04 : 1) * (input.includeFireSystem ? 1.05 : 1);
 
   const expectedBathrooms = Math.max(1, area / 48);
-  const wetRoomAdjustment = input.bathrooms > expectedBathrooms ? 1 + Math.min(0.28, (input.bathrooms - expectedBathrooms) * 0.025) : 1;
-  const wallComplexity = 1 + Math.min(0.16, ((input.bedrooms + input.livingRooms + input.kitchens + input.familyLounges + input.studies) / Math.max(1, area / 20)) * 0.04);
+  const wetRoomAdjustment = input.bathrooms > expectedBathrooms ? 1 + Math.min(0.24, (input.bathrooms - expectedBathrooms) * 0.022) : 1;
+  const wallComplexity = 1 + Math.min(0.14, ((input.bedrooms + input.livingRooms + input.kitchens + input.familyLounges + input.studies) / Math.max(1, area / 20)) * 0.035);
   const finishSectionFactor = ((floorFinishFactor + ceilingFactor + facadeFactor) / 3) * wetRoomAdjustment;
   const joineryFactor = ((kitchenFactor + bathroomFactor) / 2) * (input.includeWardrobes ? 1.12 : 1) * (input.includeKitchenJoinery ? 1.08 : 1);
 
+  const structuralLabel = resolvedFrame === "masonry" ? "Structural concrete & support" : "Structural frame";
+  const structuralExplanation = resolvedFrame === "masonry"
+    ? "Allowance for lintels, ring beams, local columns and other structural concrete/support. No suspended upper-floor slab is assumed for this ground-floor masonry profile."
+    : `Structural ${resolvedFrame.replace("-", " ")} system, including the associated frame, reinforcement/formwork or steelwork allowance.`;
+
   const core: GuidedEstimateSection[] = [
-    section("substructure", "Foundation & ground works", baseLow, baseHigh, 0.13, siteFactor * foundationFactor, "Excavation, earthworks, foundations, filling and ground-floor construction adjusted for selected site/foundation condition."),
-    section("frame", "Structural frame", baseLow, baseHigh, 0.22, frameFactor * floorFactor, "Concrete, reinforcement, formwork or structural frame adjusted for storeys and selected structural system."),
-    section("walls", "Walls & partitions", baseLow, baseHigh, 0.1, wallComplexity, "External walls, internal partitions, lintels and related masonry adjusted for room density."),
-    section("roof", "Roof", baseLow, baseHigh, 0.09, roofFactor, "Roof structure and covering adjusted for selected roof type and complexity."),
-    section("openings", "Doors, windows & façade", baseLow, baseHigh, 0.08, openingFactor * facadeFactor, "Windows, doors, glazing and façade treatment adjusted for selected specification."),
-    section("finishes", "Internal & architectural finishes", baseLow, baseHigh, 0.17, finishSectionFactor, "Floor, wall and ceiling finishes adjusted for detailed finish selections and wet-room intensity."),
-    section("mep", "Electrical, plumbing & building services", baseLow, baseHigh, 0.14, mepFactor * wetRoomAdjustment, "Electrical, plumbing, cooling, water, waste, power and selected life-safety/security systems."),
-    section("joinery", "Kitchen, sanitary & fitted joinery", baseLow, baseHigh, 0.07, joineryFactor, "Kitchen fittings, sanitary fittings, wardrobes and related fitted joinery allowances."),
+    section("substructure", "Foundation & ground works", baseLow, baseHigh, shares.substructure, siteFactor * foundationFactor, "Excavation, earthworks, foundations, filling, DPM/hardcore and ground-floor construction adjusted for selected site/foundation condition."),
+    section("frame", structuralLabel, baseLow, baseHigh, shares.frame, frameFactor * floorFactor, structuralExplanation),
+    section("walls", "Walls & partitions", baseLow, baseHigh, shares.walls, wallComplexity, "External walls, internal partitions, lintels and related masonry adjusted for room density."),
+    section("roof", "Roof", baseLow, baseHigh, shares.roof, roofFactor, "Roof structure, covering and rainwater goods adjusted for selected roof type and complexity."),
+    section("openings", "Doors, windows & façade", baseLow, baseHigh, shares.openings, openingFactor * facadeFactor, "Windows, doors, glazing and façade treatment adjusted for selected specification."),
+    section("finishes", "Internal & architectural finishes", baseLow, baseHigh, shares.finishes, finishSectionFactor, "Floor, wall and ceiling finishes adjusted for detailed finish selections and wet-room intensity."),
+    section("mep", "Electrical, plumbing & building services", baseLow, baseHigh, shares.mep, mepFactor * wetRoomAdjustment, "Electrical, plumbing, cooling, water, waste, power and selected life-safety/security systems, adjusted for building use and wet-room density."),
+    section("joinery", "Kitchen, sanitary & fitted joinery", baseLow, baseHigh, shares.joinery, joineryFactor, "Kitchen fittings, sanitary fittings, wardrobes and related fitted joinery allowances."),
   ];
 
   const coreLow = core.reduce((sum, item) => sum + item.low, 0);
@@ -421,10 +466,8 @@ export function calculatePublicEstimate(input: PublicEstimateInput): PublicEstim
   let externalHigh = 0;
   const externalItems: string[] = [];
   if (input.includeExternalWorks && openLand > 0) {
-    const baseExternal = openLand * 28_000;
-    const baseExternalHigh = openLand * 72_000;
-    externalLow += baseExternal;
-    externalHigh += baseExternalHigh;
+    externalLow += openLand * 28_000;
+    externalHigh += openLand * 72_000;
     externalItems.push("general site development");
   }
   if (input.includePaving && openLand > 0) { externalLow += openLand * 18_000; externalHigh += openLand * 42_000; externalItems.push("paving/driveways"); }
@@ -456,15 +499,17 @@ export function calculatePublicEstimate(input: PublicEstimateInput): PublicEstim
   if (input.bathrooms || input.bedrooms) score += 3;
   if (input.detailedMode) score += 5;
   if (input.detailedMode && input.siteCondition !== "unknown") score += 2;
-  if (input.detailedMode) score += 2; // structure and roof detail
-  if (input.detailedMode) score += 2; // finishes detail
-  if (input.detailedMode) score += 2; // MEP detail
+  if (input.detailedMode) score += 2;
+  if (input.detailedMode) score += 2;
+  if (input.detailedMode) score += 2;
   if (input.includeExternalWorks || input.includeFurniture) score += 1;
   score = clamp(score, 70, 100);
 
   const costDrivers: string[] = [];
+  if (resolvedFrame === "masonry" && totalFloors === 1) costDrivers.push("Ground-floor masonry construction uses a reduced structural-frame allowance; no suspended upper-floor slab is assumed.");
   if (input.siteCondition === "waterlogged" || input.foundationType === "pile") costDrivers.push("Difficult ground/foundation requirements are materially increasing substructure cost.");
   if (totalFloors >= 3 || input.lifts > 0) costDrivers.push("Additional storeys and/or lifts increase structural and building-services allowances.");
+  if (input.roofType === "flat-concrete") costDrivers.push("A flat reinforced-concrete roof increases both roof and structural requirements compared with a light pitched roof.");
   if (["double-glazed", "curtain-wall"].includes(input.windowSpec) || ["alucobond", "curtain-wall"].includes(input.facadeSpec)) costDrivers.push("High-specification glazing/façade selections are increasing the envelope cost.");
   if (["vrf", "central"].includes(input.acSpec)) costDrivers.push("Central/VRF cooling is a major MEP cost driver.");
   if (["premium", "luxury"].includes(input.kitchenSpec) || ["premium", "luxury"].includes(input.bathroomSpec)) costDrivers.push("Premium kitchen and sanitary specifications are increasing fitted-out cost.");
@@ -484,6 +529,7 @@ export function calculatePublicEstimate(input: PublicEstimateInput): PublicEstim
     costDrivers,
     assumptions: [
       `Planning benchmark for a ${input.buildingUse.replace("-", " ")} project with ${input.finishLevel.replace("-", " ")} specification.`,
+      input.frameType === "recommend" ? `Structural system inferred as ${resolvedFrame.replace("-", " ")} from building use and number of floors.` : `Selected structural system: ${resolvedFrame.replace("-", " ")}.`,
       "100% questionnaire completion means input completeness, not a guaranteed final contract-price accuracy.",
       "Final cost depends on drawings, structural design, measured quantities, procurement strategy and current local quotations.",
       "Location adjustments are broad planning factors until live city-specific rate libraries are connected.",
