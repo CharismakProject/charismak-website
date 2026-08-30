@@ -75,7 +75,6 @@ export default function Footer() {
             <div className="mt-6 flex flex-col gap-3 text-sm text-white/58">
               <Link className="hover:text-white" href="/estimator">Estimator</Link>
               <Link className="hover:text-white" href="/prices">Prices</Link>
-              <Link className="hover:text-white" href="/marketplace">Marketplace</Link>
               <Link className="hover:text-white" href="/blog">Blog</Link>
             </div>
           </div>
