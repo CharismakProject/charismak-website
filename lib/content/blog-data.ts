@@ -12,6 +12,11 @@ export type ManagedBlogArticle = BlogArticle & {
   id: string;
   status: BlogPostStatus;
   updatedAt: string;
+  contentType: "news" | "learning";
+  imageUrl: string | null;
+  imageAlt: string | null;
+  featured: boolean;
+  author: string;
 };
 
 type BlogPostRow = {
@@ -25,6 +30,18 @@ type BlogPostRow = {
   sections: BlogArticle["sections"];
   status: BlogPostStatus;
   updated_at: string;
+  content_type?: "news" | "learning" | null;
+  image_url?: string | null;
+  image_alt?: string | null;
+  featured?: boolean | null;
+  author?: string | null;
+};
+
+const inferContentType = (row: BlogPostRow): "news" | "learning" => {
+  if (row.content_type === "news" || row.content_type === "learning") return row.content_type;
+  const category = row.category.toLowerCase();
+  return ["news", "market update", "industry", "regulation", "project update"]
+    .some((term) => category.includes(term)) ? "news" : "learning";
 };
 
 export const blogRowToArticle = (row: BlogPostRow): ManagedBlogArticle => ({
@@ -38,6 +55,11 @@ export const blogRowToArticle = (row: BlogPostRow): ManagedBlogArticle => ({
   sections: Array.isArray(row.sections) ? row.sections : [],
   status: row.status,
   updatedAt: row.updated_at,
+  contentType: inferContentType(row),
+  imageUrl: row.image_url ?? null,
+  imageAlt: row.image_alt ?? null,
+  featured: Boolean(row.featured),
+  author: row.author?.trim() || "Charismak Editorial Desk",
 });
 
 const publicHeaders = {
