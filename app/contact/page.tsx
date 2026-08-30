@@ -1,5 +1,5 @@
-import Link from "next/link";
-import { Mail, MapPin, Phone, ArrowRight } from "lucide-react";
+import { Mail, MapPin, Phone } from "lucide-react";
+import ContactEstimateForm from "@/components/public/contact-estimate-form";
 import { company } from "../site-data";
 
 export const metadata = {
@@ -8,7 +8,16 @@ export const metadata = {
     "Contact Charismak Project Nigeria Limited in Abuja for construction, renovation, steel fabrication, and project management enquiries.",
 };
 
-export default function ContactPage() {
+type SearchParams = Record<string, string | string[] | undefined>;
+const first = (value: string | string[] | undefined) => Array.isArray(value) ? value[0] ?? "" : value ?? "";
+
+export default async function ContactPage({ searchParams }: { searchParams?: Promise<SearchParams> }) {
+  const params = searchParams ? await searchParams : {};
+  const fromEstimator = first(params.source) === "estimator";
+  const service = first(params.service) || "Construction enquiry";
+  const location = first(params.location);
+  const estimate = first(params.estimate);
+
   return (
     <main className="overflow-hidden bg-white pt-20">
       <section className="relative overflow-hidden bg-[#071E33] px-5 py-24 text-white md:px-8 lg:py-32">
@@ -16,10 +25,12 @@ export default function ContactPage() {
         <div className="relative mx-auto max-w-7xl">
           <p className="mb-5 text-xs font-bold uppercase tracking-[0.32em] text-[#F2B544]">Contact Charismak</p>
           <h1 className="max-w-5xl text-5xl font-semibold leading-[1.02] tracking-[-0.04em] sm:text-6xl lg:text-7xl">
-            Tell us what you want to build.
+            {fromEstimator ? "Turn the planning estimate into a project conversation." : "Tell us what you want to build."}
           </h1>
           <p className="mt-7 max-w-3xl text-base leading-8 text-white/72 md:text-lg">
-            Share your project brief, location and the stage you are currently at. We can discuss construction, renovation, engineering, project management or specialist works.
+            {fromEstimator
+              ? "Your estimator summary has been carried into the enquiry form below. Add your contact details and, if available, attach drawings, a BOQ or project images for a more specific review."
+              : "Share your project brief, location and the stage you are currently at. We can discuss construction, renovation, engineering, project management or specialist works."}
           </p>
         </div>
       </section>
@@ -45,23 +56,12 @@ export default function ContactPage() {
 
           <div className="bg-white p-8 shadow-[0_14px_45px_rgba(7,30,51,0.08)] md:p-10">
             <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#C8A45D]">Project Enquiry</p>
-            <h2 className="mt-5 text-3xl font-semibold tracking-[-0.03em] text-[#071E33] md:text-4xl">Send us the basics.</h2>
+            <h2 className="mt-5 text-3xl font-semibold tracking-[-0.03em] text-[#071E33] md:text-4xl">{fromEstimator ? "Your estimate is already attached to the conversation." : "Send us the basics."}</h2>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-[#3A4653]">
-              The more context you provide, the easier it is for us to understand what kind of support you need.
+              The more context you provide, the easier it is for us to understand what kind of support you need. PDF drawings, BOQs, images, Excel and Word files can be attached directly.
             </p>
 
-            <form className="mt-8 grid gap-5">
-              <div className="grid gap-5 sm:grid-cols-2">
-                <input className="border border-[#0D3B66]/15 bg-white p-4 text-[#151B22] outline-none" placeholder="Your name" />
-                <input className="border border-[#0D3B66]/15 bg-white p-4 text-[#151B22] outline-none" placeholder="Phone number" />
-              </div>
-              <input className="border border-[#0D3B66]/15 bg-white p-4 text-[#151B22] outline-none" placeholder="Email address" />
-              <input className="border border-[#0D3B66]/15 bg-white p-4 text-[#151B22] outline-none" placeholder="Project location" />
-              <textarea className="min-h-[170px] border border-[#0D3B66]/15 bg-white p-4 text-[#151B22] outline-none" placeholder="Tell us about the project" />
-              <Link href={`mailto:${company.email}`} className="inline-flex items-center justify-center gap-3 bg-[#0D3B66] px-7 py-4 text-sm font-bold text-white transition hover:bg-[#C8A45D] hover:text-[#071E33]">
-                Send Enquiry <ArrowRight className="h-5 w-5" />
-              </Link>
-            </form>
+            <ContactEstimateForm initialService={service} initialLocation={location} initialEstimate={estimate} />
           </div>
         </div>
       </section>
