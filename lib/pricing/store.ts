@@ -1,4 +1,5 @@
 import { DEFAULT_PRICE_ITEMS, DEFAULT_RATE_TEMPLATES } from "./defaults";
+import { applyLivePriceState, DEFAULT_PRICE_VALIDITY_DAYS, withRecordedPrice } from "./price-history";
 import type { PriceItem, RateEstimate, RateTemplate } from "./models";
 
 const PRICE_KEY = "charismak-price-library-v1";
@@ -14,7 +15,7 @@ const notify = (name: string) => {
   if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent(name));
 };
 
-export function loadPriceItems(): PriceItem[] {
+function mergeStoredPrices(): PriceItem[] {
   if (!canUseStorage()) return clone(DEFAULT_PRICE_ITEMS);
   try {
     const raw = localStorage.getItem(PRICE_KEY);
@@ -33,13 +34,50 @@ export function loadPriceItems(): PriceItem[] {
   }
 }
 
+export function loadPriceItems(): PriceItem[] {
+  return mergeStoredPrices().map((item) => applyLivePriceState(item));
+}
+
 export function savePriceItems(items: PriceItem[]): PriceItem[] {
   if (canUseStorage()) localStorage.setItem(PRICE_KEY, JSON.stringify(items));
   notify(PRICE_LIBRARY_UPDATED_EVENT);
-  return items;
+  return items.map((item) => applyLivePriceState(item));
+}
+
+export function recordPriceUpdate(
+  id: string,
+  rate: number,
+  options?: {
+    validityDays?: number;
+    source?: string;
+    sourceUrl?: string | null;
+    confidence?: PriceItem["confidence"];
+    location?: string;
+    recordedAt?: string;
+  },
+): PriceItem[] {
+  const items = loadPriceItems().map((item) =>
+    item.id === id ? withRecordedPrice(item, rate, options) : item,
+  );
+  return savePriceItems(items);
 }
 
 export function updatePriceItem(id: string, patch: Partial<PriceItem>): PriceItem[] {
+  const current = loadPriceItems().find((item) => item.id === id);
+  if (current && patch.rate !== undefined && patch.rate !== null && patch.rate !== current.rate) {
+    const { rate, ...rest } = patch;
+    const preUpdated = loadPriceItems().map((item) => item.id === id ? { ...item, ...rest } : item);
+    const target = preUpdated.find((item) => item.id === id)!;
+    const recorded = withRecordedPrice(target, rate, {
+      validityDays: target.validityDays ?? DEFAULT_PRICE_VALIDITY_DAYS,
+      source: target.source,
+      sourceUrl: target.sourceUrl,
+      confidence: target.confidence ?? "manual",
+      location: target.location,
+    });
+    return savePriceItems(preUpdated.map((item) => item.id === id ? recorded : item));
+  }
+
   const now = new Date().toISOString();
   const items = loadPriceItems().map((item) =>
     item.id === id ? { ...item, ...patch, updatedAt: now } : item,
@@ -66,6 +104,9 @@ export function addPriceItem(input?: Partial<PriceItem>): PriceItem {
     confidence: input?.confidence ?? "manual",
     updatedAt: now,
     active: input?.active ?? true,
+    validityDays: input?.validityDays ?? DEFAULT_PRICE_VALIDITY_DAYS,
+    validUntil: input?.validUntil ?? null,
+    priceHistory: input?.priceHistory ?? [],
   };
   savePriceItems([...loadPriceItems(), item]);
   return item;
