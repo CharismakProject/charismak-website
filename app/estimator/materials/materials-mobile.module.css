@@ -40,8 +40,8 @@
     overflow-wrap: anywhere;
   }
 
-  .materialCards :global(td::before),
-  .specialistCards :global(td::before) {
+  .materialCards :global(td)::before,
+  .specialistCards :global(td)::before {
     color: #617286;
     font-size: 0.6rem;
     font-weight: 900;
@@ -50,38 +50,38 @@
     text-transform: uppercase;
   }
 
-  .materialCards :global(td:nth-child(1)::before),
-  .specialistCards :global(td:nth-child(1)::before) {
+  .materialCards :global(td:nth-child(1))::before,
+  .specialistCards :global(td:nth-child(1))::before {
     content: "Material";
   }
 
-  .materialCards :global(td:nth-child(2)::before),
-  .specialistCards :global(td:nth-child(2)::before) {
+  .materialCards :global(td:nth-child(2))::before,
+  .specialistCards :global(td:nth-child(2))::before {
     content: "Unit";
   }
 
-  .materialCards :global(td:nth-child(3)::before),
-  .specialistCards :global(td:nth-child(3)::before) {
+  .materialCards :global(td:nth-child(3))::before,
+  .specialistCards :global(td:nth-child(3))::before {
     content: "Calculated";
   }
 
-  .materialCards :global(td:nth-child(4)::before) {
+  .materialCards :global(td:nth-child(4))::before {
     content: "Procurement";
   }
 
-  .materialCards :global(td:nth-child(5)::before) {
+  .materialCards :global(td:nth-child(5))::before {
     content: "Basis / note";
   }
 
-  .specialistCards :global(td:nth-child(4)::before) {
+  .specialistCards :global(td:nth-child(4))::before {
     content: "Waste";
   }
 
-  .specialistCards :global(td:nth-child(5)::before) {
+  .specialistCards :global(td:nth-child(5))::before {
     content: "Procurement";
   }
 
-  .specialistCards :global(td:nth-child(6)::before) {
+  .specialistCards :global(td:nth-child(6))::before {
     content: "Basis / note";
   }
 
