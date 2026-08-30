@@ -2,6 +2,19 @@ export type PriceCategory = "material" | "labour" | "plant" | "subcontract";
 export type PriceConfidence = "starter" | "manual" | "index-adjusted" | "verified";
 export type EstimateRateSource = "default" | "analysed" | "manual";
 
+export type PriceObservation = {
+  id: string;
+  rate: number;
+  currency: string;
+  location: string;
+  unit: string;
+  source: string;
+  sourceUrl?: string | null;
+  confidence?: PriceConfidence;
+  recordedAt: string;
+  validUntil: string;
+};
+
 export type PriceItem = {
   id: string;
   code: string;
@@ -19,6 +32,9 @@ export type PriceItem = {
   confidence?: PriceConfidence;
   updatedAt: string;
   active: boolean;
+  validityDays?: number;
+  validUntil?: string | null;
+  priceHistory?: PriceObservation[];
 };
 
 export type RateComponent = {
