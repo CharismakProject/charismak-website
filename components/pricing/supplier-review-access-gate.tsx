@@ -67,6 +67,11 @@ export default function SupplierReviewAccessGate({ batchId }: Props) {
     return cleanEmail;
   };
 
+  const getReviewRedirectUrl = () => {
+    if (typeof window === "undefined") return undefined;
+    return `${window.location.origin}/supplier-review/${encodeURIComponent(batchId)}`;
+  };
+
   const setup = async () => {
     if (!client) return;
     const cleanEmail = validate(true);
@@ -77,6 +82,9 @@ export default function SupplierReviewAccessGate({ batchId }: Props) {
       const { data, error: signupError } = await client.auth.signUp({
         email: cleanEmail,
         password,
+        options: {
+          emailRedirectTo: getReviewRedirectUrl(),
+        },
       });
       if (signupError) {
         const text = signupError.message || "Unable to create reviewer access.";
@@ -94,7 +102,7 @@ export default function SupplierReviewAccessGate({ batchId }: Props) {
         return;
       }
 
-      setMessage("Reviewer account created. Check this email inbox for the Supabase confirmation email, confirm it once, then return here and sign in with the password you just chose.");
+      setMessage("Reviewer account created. Check this email inbox and confirm it once. The confirmation link will return you to this supplier review page, where you can sign in with the password you just chose.");
       setMode("signin");
       setConfirmPassword("");
     } finally {
