@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
+  Archive,
   ArrowLeft,
   CalendarDays,
   ExternalLink,
+  History,
   ImageIcon,
   Mail,
   MapPin,
@@ -20,7 +22,9 @@ import { JIJI_MARKET_SNAPSHOT } from "@/lib/pricing/jiji-market-snapshot";
 import type { PriceItem } from "@/lib/pricing/models";
 import { loadPriceItems } from "@/lib/pricing/store";
 import {
-  loadSupplierOffersForItem,
+  getSupplierOfferEffectiveValidUntil,
+  loadSupplierOfferHistoryForItem,
+  summarizeSupplierOfferHistory,
   type SupplierMarketplaceOffer,
 } from "@/lib/platform/supplier-offers";
 
@@ -46,6 +50,9 @@ const money = (value: number | null, currency = "NGN") =>
         maximumFractionDigits: 0,
       }).format(value);
 
+const dateText = (value: string | null) =>
+  value ? new Date(`${value.slice(0, 10)}T12:00:00Z`).toLocaleDateString("en-NG") : "—";
+
 const whatsappHref = (offer: SupplierMarketplaceOffer, productName: string) => {
   const phone = (offer.whatsapp || offer.phone || "").replace(/[^0-9]/g, "");
   if (!phone) return null;
@@ -55,9 +62,12 @@ const whatsappHref = (offer: SupplierMarketplaceOffer, productName: string) => {
   return `https://wa.me/${phone}?text=${message}`;
 };
 
+const distinctSupplierCount = (offers: SupplierMarketplaceOffer[]) =>
+  new Set(offers.map((offer) => offer.supplierId || offer.supplierName.toLowerCase())).size;
+
 export default function MaterialPriceDetail({ itemId }: { itemId: string }) {
   const [item, setItem] = useState<PriceItem | null>(null);
-  const [offers, setOffers] = useState<SupplierMarketplaceOffer[]>([]);
+  const [allOffers, setAllOffers] = useState<SupplierMarketplaceOffer[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -69,16 +79,11 @@ export default function MaterialPriceDetail({ itemId }: { itemId: string }) {
       return;
     }
 
-    void loadSupplierOffersForItem(itemId).then((rows) => {
-      setOffers(rows);
+    void loadSupplierOfferHistoryForItem(itemId).then((rows) => {
+      setAllOffers(rows);
       setLoading(false);
     });
   }, [itemId]);
-
-  const supplierLocations = useMemo(
-    () => Array.from(new Set(offers.map((offer) => offer.location).filter(Boolean))),
-    [offers],
-  );
 
   if (!item) {
     return (
@@ -95,8 +100,23 @@ export default function MaterialPriceDetail({ itemId }: { itemId: string }) {
   const displayName = market?.marketName || item.description;
   const displayLocation = market?.location || item.location;
   const image = item.imageUrl || previewImages[item.id] || null;
-  const lowestOffer = offers[0] ?? null;
   const unit = market?.unit || item.marketUnit || item.unit;
+  const history = summarizeSupplierOfferHistory(allOffers, {
+    location: displayLocation,
+    quotedUnit: unit,
+  });
+  const offers = history.live;
+  const archivedOffers = history.archived;
+  const supplierLocations = Array.from(new Set(offers.map((offer) => offer.location).filter(Boolean)));
+  const liveSupplierCount = distinctSupplierCount(offers);
+  const supplierRange = history.low === null
+    ? null
+    : history.high !== null && history.high !== history.low
+      ? `${money(history.low, item.currency)} – ${money(history.high, item.currency)}`
+      : money(history.low, item.currency);
+  const fallbackRange = market
+    ? `${money(market.priceLow, item.currency)} – ${money(market.priceHigh, item.currency)}`
+    : money(item.rate, item.currency);
 
   return (
     <div className="space-y-7">
@@ -126,7 +146,12 @@ export default function MaterialPriceDetail({ itemId }: { itemId: string }) {
               </span>
               {offers.length > 0 ? (
                 <span className="rounded-full bg-[#EAF7EF] px-3 py-1 text-[10px] font-black text-[#197447]">
-                  {offers.length} supplier{offers.length === 1 ? "" : "s"} listed
+                  {offers.length} valid price update{offers.length === 1 ? "" : "s"}
+                </span>
+              ) : null}
+              {archivedOffers.length > 0 ? (
+                <span className="rounded-full bg-[#F3F5F7] px-3 py-1 text-[10px] font-black text-[#617286]">
+                  {archivedOffers.length} archived
                 </span>
               ) : null}
             </div>
@@ -141,26 +166,38 @@ export default function MaterialPriceDetail({ itemId }: { itemId: string }) {
 
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
               <div className="rounded-2xl bg-[#071E33] p-5 text-white">
-                <span className="text-[10px] font-black uppercase tracking-[0.13em] text-white/55">Typical market price / {unit}</span>
-                <strong className="mt-2 block text-2xl">{market ? money(market.reference) : money(item.rate, item.currency)}</strong>
-                {market ? (
-                  <span className="mt-2 block text-xs text-white/60">Current guide: {money(market.priceLow)} – {money(market.priceHigh)}</span>
-                ) : (
-                  <span className="mt-2 block text-xs text-white/60">Charismak price guide</span>
-                )}
+                <span className="text-[10px] font-black uppercase tracking-[0.13em] text-white/55">
+                  {supplierRange ? `Current valid price / ${unit}` : `Market guide / ${unit}`}
+                </span>
+                <strong className="mt-2 block text-2xl">{supplierRange || fallbackRange}</strong>
+                <span className="mt-2 block text-xs leading-5 text-white/60">
+                  {supplierRange
+                    ? offers.length > 1
+                      ? `Range from ${offers.length} currently valid price observations.`
+                      : `Latest valid supplier price. Valid to ${dateText(getSupplierOfferEffectiveValidUntil(offers[0]))}.`
+                    : "No current supplier price is available, so the Charismak market guide is shown."}
+                </span>
               </div>
 
               <div className="rounded-2xl border border-[#DCE4EC] bg-[#F8FAFC] p-5">
-                <span className="text-[10px] font-black uppercase tracking-[0.13em] text-[#617286]">Supplier prices</span>
-                <strong className="mt-2 block text-2xl text-[#071E33]">{offers.length}</strong>
-                <span className="mt-2 block text-xs text-[#617286]">
-                  {lowestOffer ? `From ${money(lowestOffer.unitPrice)} / ${lowestOffer.quotedUnit}` : "No supplier price listed yet"}
+                <span className="text-[10px] font-black uppercase tracking-[0.13em] text-[#617286]">Current supplier coverage</span>
+                <strong className="mt-2 block text-2xl text-[#071E33]">{liveSupplierCount}</strong>
+                <span className="mt-2 block text-xs leading-5 text-[#617286]">
+                  {offers.length
+                    ? `${offers.length} valid price record${offers.length === 1 ? "" : "s"}${history.latest ? ` · latest ${money(history.latest.unitPrice)} / ${history.latest.quotedUnit}` : ""}`
+                    : "No currently valid supplier price listed yet"}
                 </span>
               </div>
             </div>
 
+            {supplierRange && market ? (
+              <p className="mt-4 rounded-xl bg-[#FFF9ED] px-4 py-3 text-xs leading-5 text-[#74520D]">
+                Charismak market benchmark: {money(market.priceLow, item.currency)} – {money(market.priceHigh, item.currency)} / {unit}. The headline above uses currently valid supplier observations.
+              </p>
+            ) : null}
+
             <p className="mt-5 text-xs leading-6 text-[#617286]">
-              Compare supplier prices, location, brand and delivery options below. Confirm stock and final delivery cost directly with the supplier before purchase.
+              Compare currently valid supplier prices, location, brand and delivery options below. Expired prices are removed from the live range automatically and retained only as history.
             </p>
           </div>
         </div>
@@ -170,7 +207,7 @@ export default function MaterialPriceDetail({ itemId }: { itemId: string }) {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.16em] text-[#A82B05]">Available suppliers</p>
-            <h2 className="mt-2 text-2xl font-black text-[#071E33]">Compare prices and delivery options</h2>
+            <h2 className="mt-2 text-2xl font-black text-[#071E33]">Compare current prices and delivery options</h2>
           </div>
           {supplierLocations.length ? (
             <p className="text-xs text-[#617286]">Supplier locations: {supplierLocations.join(", ")}</p>
@@ -191,7 +228,7 @@ export default function MaterialPriceDetail({ itemId }: { itemId: string }) {
                         <Store className="h-5 w-5" />
                       </span>
                       <div className="min-w-0">
-                        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[#A82B05]">{index === 0 ? "Lowest listed price" : "Supplier"}</p>
+                        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[#A82B05]">{index === 0 ? "Lowest valid price" : "Current supplier"}</p>
                         <h3 className="mt-1 truncate text-lg font-black text-[#071E33]">{offer.supplierName}</h3>
                         <p className="mt-1 flex items-center gap-1.5 text-xs text-[#617286]">
                           <MapPin className="h-3.5 w-3.5" /> {offer.location}{offer.serviceArea ? ` · delivers to ${offer.serviceArea}` : ""}
@@ -219,7 +256,7 @@ export default function MaterialPriceDetail({ itemId }: { itemId: string }) {
                     {offer.submittedAt ? (
                       <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5" /> Price updated {new Date(offer.submittedAt).toLocaleDateString("en-NG")}</span>
                     ) : null}
-                    {offer.validUntil ? <span>Price valid to {new Date(offer.validUntil).toLocaleDateString("en-NG")}</span> : null}
+                    <span>Valid to {dateText(getSupplierOfferEffectiveValidUntil(offer))}</span>
                   </div>
 
                   <div className="mt-5 grid gap-2 sm:grid-cols-3">
@@ -246,19 +283,53 @@ export default function MaterialPriceDetail({ itemId }: { itemId: string }) {
         ) : (
           <div className="mt-5 rounded-2xl border border-dashed border-[#B8C7D6] bg-white p-9 text-center">
             <Truck className="mx-auto h-8 w-8 text-[#7A8B9E]" />
-            <h3 className="mt-3 text-lg font-black text-[#071E33]">No supplier prices listed yet</h3>
+            <h3 className="mt-3 text-lg font-black text-[#071E33]">No current supplier prices listed</h3>
             <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-[#617286]">
-              We’re still adding suppliers for this item. Use the market price guide above for budgeting and check back as new supplier prices are added.
+              Existing supplier observations may have expired. Use the market guide above for budgeting and check back as new verified prices are added.
             </p>
           </div>
         )}
       </section>
 
+      {archivedOffers.length ? (
+        <details className="group rounded-2xl border border-[#DCE4EC] bg-white">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5 md:p-6">
+            <div className="flex items-start gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#F3F5F7] text-[#617286]"><Archive className="h-5 w-5" /></span>
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-[#617286]">Archived price history</p>
+                <p className="mt-1 text-sm text-[#526579]">{archivedOffers.length} expired price record{archivedOffers.length === 1 ? "" : "s"} retained for reference.</p>
+              </div>
+            </div>
+            <History className="h-5 w-5 text-[#0D3B66]" />
+          </summary>
+          <div className="border-t border-[#E7ECF1] p-5 md:p-6">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[720px] text-left text-xs">
+                <thead><tr className="border-b border-[#DCE4EC] text-[10px] font-black uppercase tracking-[0.1em] text-[#7A8B9E]"><th className="pb-3 pr-4">Supplier</th><th className="pb-3 pr-4">Price</th><th className="pb-3 pr-4">Brand/spec</th><th className="pb-3 pr-4">Recorded</th><th className="pb-3">Expired</th></tr></thead>
+                <tbody>
+                  {archivedOffers.map((offer) => (
+                    <tr key={offer.id} className="border-b border-[#EEF2F5] text-[#526579]">
+                      <td className="py-3 pr-4 font-bold text-[#071E33]">{offer.supplierName}</td>
+                      <td className="py-3 pr-4 font-bold text-[#071E33]">{money(offer.unitPrice)} / {offer.quotedUnit}</td>
+                      <td className="py-3 pr-4">{[offer.brand, offer.specification].filter(Boolean).join(" · ") || "—"}</td>
+                      <td className="py-3 pr-4">{offer.submittedAt ? new Date(offer.submittedAt).toLocaleDateString("en-NG") : "—"}</td>
+                      <td className="py-3">{dateText(getSupplierOfferEffectiveValidUntil(offer))}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-4 text-[11px] leading-5 text-[#7A8B9E]">Archived prices are historical observations only. They are not included in the current live range and should not be treated as available quotations.</p>
+          </div>
+        </details>
+      ) : null}
+
       {market ? (
         <section className="rounded-2xl border border-[#DCE4EC] bg-white p-5 md:p-6">
-          <p className="text-xs font-black uppercase tracking-[0.14em] text-[#617286]">Market price guide</p>
+          <p className="text-xs font-black uppercase tracking-[0.14em] text-[#617286]">Charismak market price guide</p>
           <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm leading-6 text-[#526579]">Use the market range as a general benchmark, then compare supplier prices above for actual buying options.</p>
+            <p className="text-sm leading-6 text-[#526579]">Benchmark: {money(market.priceLow, item.currency)} – {money(market.priceHigh, item.currency)} / {unit}. Use valid supplier prices above for actual buying options.</p>
             <a href={market.primarySourceUrl} target="_blank" rel="noreferrer" className="inline-flex shrink-0 items-center gap-2 text-sm font-bold text-[#0D3B66]">
               View market source <ExternalLink className="h-4 w-4" />
             </a>
