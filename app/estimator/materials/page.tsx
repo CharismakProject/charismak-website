@@ -5,7 +5,7 @@ import MaterialEstimator from "@/components/public/material-estimator";
 
 export const metadata: Metadata = {
   title: "Construction Material Estimate",
-  description: "Estimate construction material quantities for concrete, reinforcement, blockwork, partitions, curtain wall, cladding, screed, tiles, painting, roofing and formwork.",
+  description: "Estimate construction material quantities and practical procurement allowances for concrete, reinforcement, blockwork, partitions, curtain wall, cladding, screed, tiles, painting, roofing and formwork.",
 };
 
 export default function MaterialEstimatePage() {
