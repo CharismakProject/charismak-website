@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - preview/grey-blue-white-refresh
+      - upgrade/admin-catalogue-content
   workflow_dispatch:
 
 permissions:
