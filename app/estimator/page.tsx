@@ -8,13 +8,14 @@ import {
   Clock3,
   Gauge,
   Layers3,
+  PackageCheck,
   Send,
 } from "lucide-react";
 import QuickEstimateHome from "@/components/public/quick-estimate-home";
 
 export const metadata: Metadata = {
-  title: "Construction Cost Estimator",
-  description: "Choose a quick construction cost estimate using major project cost drivers or continue into Charismak's detailed public estimator for buildings, renovation, steel, finishes, MEP, external works and furniture.",
+  title: "Construction Cost & Material Estimator",
+  description: "Choose a quick construction cost estimate, detailed estimate or material quantity estimate for buildings, renovation, steel, finishes, MEP, external works and furniture.",
 };
 
 export default function EstimatorPage() {
@@ -22,39 +23,44 @@ export default function EstimatorPage() {
     <main className="overflow-hidden bg-[#F7F8FA] pt-20">
       <section className="relative overflow-hidden bg-[#071E33] px-5 py-20 text-white md:px-8 lg:py-28">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_18%,rgba(200,164,93,0.17),transparent_30rem)]" />
-        <div className="relative mx-auto grid max-w-7xl gap-14 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-          <div>
+        <div className="relative mx-auto max-w-7xl">
+          <div className="max-w-4xl">
             <div className="flex flex-wrap items-center gap-3">
               <span className="border border-[#C8A45D]/35 bg-[#C8A45D]/10 px-3 py-2 text-xs font-bold uppercase tracking-[0.2em] text-[#F2B544]">Charismak Cost Planner</span>
               <span className="text-xs font-bold uppercase tracking-[0.2em] text-white/45">No account required</span>
             </div>
-            <h1 className="mt-7 text-5xl font-semibold leading-[1.02] tracking-[-0.04em] sm:text-6xl lg:text-7xl">
-              Start with the level of
-              <span className="mt-2 block text-[#E8C77F]">detail you have.</span>
-            </h1>
-            <p className="mt-7 max-w-2xl text-base leading-8 text-white/72 md:text-lg">Need a useful number quickly? Enter the major project facts that actually affect cost. Have more information? Continue into the detailed estimator for measured quantities, technical systems and deeper project decisions.</p>
+            <h1 className="mt-7 text-5xl font-semibold leading-[1.02] tracking-[-0.04em] sm:text-6xl lg:text-7xl">Start with what you need to know.</h1>
+            <p className="mt-7 max-w-3xl text-base leading-8 text-white/72 md:text-lg">Get an early project budget, work through a detailed construction estimate, or calculate the actual quantities of materials you need for a specific work item.</p>
             <div className="mt-9 flex flex-wrap gap-4">
-              <a href="#quick-estimate" className="inline-flex items-center gap-3 bg-[#C8A45D] px-7 py-4 text-sm font-bold text-[#071E33] transition hover:bg-white">Get a quick estimate <ArrowRight className="h-5 w-5" /></a>
-              <Link href="/estimator/detailed" className="inline-flex items-center gap-3 border border-white/25 bg-white/5 px-7 py-4 text-sm font-bold text-white transition hover:bg-white hover:text-[#071E33]">Open detailed estimate <ClipboardList className="h-5 w-5" /></Link>
+              <a href="#quick-estimate" className="inline-flex items-center gap-3 bg-[#C8A45D] px-7 py-4 text-sm font-bold text-[#071E33] transition hover:bg-white">Quick cost estimate <ArrowRight className="h-5 w-5" /></a>
+              <Link href="/estimator/detailed" className="inline-flex items-center gap-3 border border-white/25 bg-white/5 px-7 py-4 text-sm font-bold text-white transition hover:bg-white hover:text-[#071E33]">Detailed estimate <ClipboardList className="h-5 w-5" /></Link>
+              <Link href="/estimator/materials" className="inline-flex items-center gap-3 border border-[#C8A45D]/40 bg-[#C8A45D]/10 px-7 py-4 text-sm font-bold text-[#E8C77F] transition hover:bg-[#C8A45D] hover:text-[#071E33]">Material estimate <PackageCheck className="h-5 w-5" /></Link>
             </div>
-            <p className="mt-5 text-xs leading-6 text-white/48">Both use the same underlying Charismak planning logic. Quick uses the major cost drivers; Detailed replaces more assumptions with project-specific information.</p>
           </div>
 
-          <div className="grid gap-px overflow-hidden border border-white/12 bg-white/10 shadow-[0_32px_90px_rgba(0,0,0,0.28)] md:grid-cols-2">
+          <div className="mt-14 grid gap-px overflow-hidden border border-white/12 bg-white/10 shadow-[0_32px_90px_rgba(0,0,0,0.28)] md:grid-cols-3">
             <article className="bg-[#0B2944] p-7 md:p-8">
-              <div className="flex items-start justify-between gap-4"><span className="grid h-12 w-12 place-items-center bg-[#C8A45D] text-[#071E33]"><Gauge className="h-6 w-6" /></span><span className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/40">About 2–3 minutes</span></div>
+              <div className="flex items-start justify-between gap-4"><span className="grid h-12 w-12 place-items-center bg-[#C8A45D] text-[#071E33]"><Gauge className="h-6 w-6" /></span><span className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/40">About 2-3 minutes</span></div>
               <p className="mt-8 text-xs font-bold uppercase tracking-[0.2em] text-[#F2B544]">Quick Estimate</p>
-              <h2 className="mt-3 text-2xl font-semibold">Fast, but meaningful.</h2>
-              <p className="mt-4 text-sm leading-7 text-white/65">Location, building/work type, size, floors, rooms or measurable scope, finish level and major extras such as external works.</p>
+              <h2 className="mt-3 text-2xl font-semibold">Fast early project budget.</h2>
+              <p className="mt-4 text-sm leading-7 text-white/65">Major cost drivers such as use, rooms, floors, finishing, roof, external works and category-specific quantities.</p>
               <a href="#quick-estimate" className="mt-7 inline-flex items-center gap-2 text-sm font-bold text-white">Start quick <ArrowRight className="h-4 w-4 text-[#F2B544]" /></a>
             </article>
 
             <article className="bg-[#071E33] p-7 md:p-8">
               <div className="flex items-start justify-between gap-4"><span className="grid h-12 w-12 place-items-center border border-[#C8A45D]/40 bg-[#C8A45D]/10 text-[#F2B544]"><Layers3 className="h-6 w-6" /></span><span className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/40">More project detail</span></div>
               <p className="mt-8 text-xs font-bold uppercase tracking-[0.2em] text-[#F2B544]">Detailed Estimate</p>
-              <h2 className="mt-3 text-2xl font-semibold">The full estimator you already know.</h2>
-              <p className="mt-4 text-sm leading-7 text-white/65">Measured quantities, construction details, systems, comparisons, savings, budget checks, programme, cash flow and project handoff to Charismak.</p>
+              <h2 className="mt-3 text-2xl font-semibold">A deeper construction cost model.</h2>
+              <p className="mt-4 text-sm leading-7 text-white/65">Measured quantities, construction systems, comparisons, savings, budget checks, programme, cash flow and project handoff.</p>
               <Link href="/estimator/detailed" className="mt-7 inline-flex items-center gap-2 text-sm font-bold text-white">Open detailed estimate <ArrowRight className="h-4 w-4 text-[#F2B544]" /></Link>
+            </article>
+
+            <article className="bg-[#0B2944] p-7 md:p-8">
+              <div className="flex items-start justify-between gap-4"><span className="grid h-12 w-12 place-items-center border border-[#C8A45D]/40 bg-[#C8A45D]/10 text-[#F2B544]"><PackageCheck className="h-6 w-6" /></span><span className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/40">Quantity / procurement</span></div>
+              <p className="mt-8 text-xs font-bold uppercase tracking-[0.2em] text-[#F2B544]">Material Estimate</p>
+              <h2 className="mt-3 text-2xl font-semibold">How much material do I need?</h2>
+              <p className="mt-4 text-sm leading-7 text-white/65">Concrete mix materials, reinforcement, blocks, plaster, partitions, curtain wall, cladding, tiles, paint, roofing and formwork.</p>
+              <Link href="/estimator/materials" className="mt-7 inline-flex items-center gap-2 text-sm font-bold text-white">Estimate materials <ArrowRight className="h-4 w-4 text-[#F2B544]" /></Link>
             </article>
           </div>
         </div>
@@ -67,7 +73,7 @@ export default function EstimatorPage() {
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#C8A45D]">Quick or Detailed?</p>
           <div className="mt-4 grid gap-8 lg:grid-cols-[0.62fr_1.38fr] lg:items-end">
             <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-[-0.03em] text-[#071E33] md:text-5xl">Use the right level of certainty for the decision you are making.</h2>
-            <p className="max-w-md text-sm leading-7 text-[#3A4653] lg:justify-self-end">Quick now captures the major cost drivers, while Detailed goes into the technical information needed to reduce assumptions further.</p>
+            <p className="max-w-md text-sm leading-7 text-[#3A4653] lg:justify-self-end">A quick answer is useful when the project is still an idea. As drawings, quantities and specifications become available, move into the detailed estimator rather than forcing precision too early.</p>
           </div>
 
           <div className="mt-10 overflow-hidden border border-[#0D3B66]/10 bg-white shadow-[0_16px_50px_rgba(7,30,51,0.06)]">
@@ -78,9 +84,8 @@ export default function EstimatorPage() {
             </div>
             {[
               ["Project is only an early idea", "Best fit", "Optional"],
-              ["You know size, floors and room counts", "Best fit", "Best fit"],
-              ["You know major finishes / external works", "Included", "Included"],
-              ["You know structural / MEP technical details", "Some", "Recommended"],
+              ["You know approximate size and location", "Best fit", "Best fit"],
+              ["You know room counts / systems / finishes", "Included", "Recommended"],
               ["You have measured quantities or drawings", "Too broad", "Recommended"],
               ["You want option comparisons and savings", "No", "Included"],
               ["You want programme / cash-flow guidance", "No", "Included"],
@@ -92,6 +97,8 @@ export default function EstimatorPage() {
               </div>
             ))}
           </div>
+
+          <div className="mt-8 border border-[#C8A45D]/30 bg-[#FFF9ED] p-6 md:flex md:items-center md:justify-between md:gap-8"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#9A6416]">Need quantities instead of cost?</p><h3 className="mt-2 text-2xl font-semibold text-[#071E33]">Use the Material Estimate.</h3><p className="mt-2 max-w-3xl text-sm leading-7 text-[#74520D]">For example: cement/sand/granite for concrete, block quantities for walling, reinforcement weight, gypsum partition components, curtain-wall modules or roofing sheets.</p></div><Link href="/estimator/materials" className="mt-5 inline-flex shrink-0 items-center gap-2 bg-[#071E33] px-5 py-3 text-xs font-bold text-white md:mt-0">Open Material Estimate <ArrowRight className="h-4 w-4" /></Link></div>
         </div>
       </section>
 
@@ -99,8 +106,8 @@ export default function EstimatorPage() {
         <div className="mx-auto grid max-w-7xl gap-px overflow-hidden border border-[#0D3B66]/10 bg-[#0D3B66]/10 md:grid-cols-3">
           {[
             { icon: Calculator, title: "Same cost logic", text: "Quick and Detailed are built on the same core estimating engine, so moving forward means adding information rather than starting a different calculation." },
-            { icon: Clock3, title: "Progressive detail", text: "Start with the major project drivers, then continue into the detailed questionnaire when you want more assumptions replaced by actual quantities and specifications." },
-            { icon: Send, title: "Connected handoff", text: "Everything entered in Quick carries into Detailed, and the detailed result can move directly into Contact Charismak with the project summary and supporting documents." },
+            { icon: Clock3, title: "Progressive detail", text: "Start with the information you have, then replace assumptions with actual quantities and specifications as the project develops." },
+            { icon: Send, title: "Connected handoff", text: "The detailed result can move directly into Contact Charismak with the project summary, estimate and supporting documents." },
           ].map(({ icon: Icon, title, text }) => <article key={title} className="bg-white p-7 md:p-8"><Icon className="h-6 w-6 text-[#0D3B66]" /><h3 className="mt-6 text-xl font-semibold text-[#071E33]">{title}</h3><p className="mt-3 text-sm leading-7 text-[#3A4653]">{text}</p></article>)}
         </div>
       </section>
