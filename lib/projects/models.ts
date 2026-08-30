@@ -55,6 +55,7 @@ export type ProjectScope = {
   buildingLengthM?: number | null;
   buildingWidthM?: number | null;
   floorAreaM2?: number | null;
+  steelWeightTonnes?: number | null;
   floors?: number;
   finishLevel?: FinishLevel;
   includeExternalWorks?: boolean;

@@ -39,5 +39,8 @@ export function applyPriceLibraryRates(input: {
     item.notes = `${item.notes ? `${item.notes} ` : ""}Rate refreshed from Price Library.`;
     pricedItemCount += 1;
   }
+  if (pricedItemCount > 0) {
+    bill.priceBasisAt = new Date().toISOString();
+  }
   return { bill: saveBill(bill), pricedItemCount, skippedItemCount };
 }

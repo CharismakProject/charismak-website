@@ -167,7 +167,10 @@ export default function BoqImportWorkspace({
         notes: `Imported from ${fileName}${sheetName ? ` · ${sheetName}` : ""}`,
       })),
     }));
+    const priceBasisAt = new Date().toISOString();
     const bill = createNewBill({
+      projectId: project.id,
+      priceBasisAt,
       title: `${project.name} BOQ`,
       projectName: project.name,
       clientName: project.clientName,
@@ -176,7 +179,10 @@ export default function BoqImportWorkspace({
       rateMode: "all-in",
       sourceModules: ["BOQ import"],
       sections: billSections,
-      assumptions: [{ id: makeId("import-assumption", 0), label: "Imported source", value: `${fileName} · ${sheetName}` }],
+      assumptions: [
+        { id: makeId("import-assumption", 0), label: "Imported source", value: `${fileName} · ${sheetName}` },
+        { id: makeId("import-assumption", 1), label: "Price basis", value: `Imported rates frozen on ${new Date(priceBasisAt).toLocaleDateString("en-NG")}.` },
+      ],
     });
     saveProject({
       ...project,
