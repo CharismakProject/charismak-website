@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - preview/homepage-combined-design
+      - preview/final-website-integration
   workflow_dispatch:
 
 permissions:
@@ -17,7 +18,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: preview/homepage-combined-design
+          ref: ${{ github.ref_name }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -35,11 +36,11 @@ jobs:
             git config user.email "charismakprojectnigltd@gmail.com"
             git add package-lock.json
             git commit -m "Sync package lock for estimator dependencies"
-            git push origin HEAD:preview/homepage-combined-design
+            git push origin HEAD:${{ github.ref_name }}
           fi
 
       - name: Clean install dependencies
         run: npm ci --no-audit --no-fund
 
-      - name: Verify public estimator and build site
+      - name: Verify integrated website and build site
         run: npm run build
