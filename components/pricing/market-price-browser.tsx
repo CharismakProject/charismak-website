@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 
 import type { PriceCategory, PriceItem } from "@/lib/pricing/models";
+import { DEFAULT_PRICE_ITEMS } from "@/lib/pricing/defaults";
 import { JIJI_MARKET_SNAPSHOT } from "@/lib/pricing/jiji-market-snapshot";
 import { loadPriceItems, PRICE_LIBRARY_UPDATED_EVENT } from "@/lib/pricing/store";
 import {
@@ -39,6 +40,10 @@ const categories: Array<{
   { id: "labour", label: "Labour", icon: HardHat },
   { id: "subcontract", label: "Specialists", icon: Store },
 ];
+
+const initialItems = DEFAULT_PRICE_ITEMS.filter(
+  (item) => item.countryCode === "NG" && item.active,
+);
 
 const previewImages: Record<string, string> = {
   "cement-50kg": "https://titaniumbuildingsolutions.com/wp-content/uploads/2024/11/Titanium-BS-10.jpg",
@@ -82,7 +87,10 @@ const searchText = (item: PriceItem) => {
 };
 
 export default function MarketPriceBrowser() {
-  const [items, setItems] = useState<PriceItem[]>([]);
+  // Use deterministic defaults for the first server/client render so the page
+  // never flashes "0 current items" and hydration remains stable. Cloud/local
+  // catalogue changes layer on immediately after mount.
+  const [items, setItems] = useState<PriceItem[]>(initialItems);
   const [supplierSummaries, setSupplierSummaries] = useState<Record<string, SupplierOfferSummary>>({});
   const [category, setCategory] = useState<CategoryFilter>("all");
   const [query, setQuery] = useState("");
@@ -207,7 +215,7 @@ export default function MarketPriceBrowser() {
             </h2>
           </div>
           <p className="text-xs text-[#617286]">
-            {liveCount} items refreshed from current Jiji observations
+            {liveCount} items refreshed from current market observations
           </p>
         </div>
 
@@ -335,7 +343,7 @@ export default function MarketPriceBrowser() {
                     >
                       Suppliers & prices <Truck className="h-4 w-4" />
                     </Link>
-                    {market ? (
+                    {market?.primarySourceUrl ? (
                       <a
                         href={market.primarySourceUrl}
                         target="_blank"
