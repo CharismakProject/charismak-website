@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Loader2 } from "lucide-react";
 
 import SupplierAccountAccess from "@/components/pricing/supplier-account-access";
-import SupplierPricePortal from "@/components/pricing/supplier-price-portal";
+import SupplierBulkPriceUpdate from "@/components/pricing/supplier-bulk-price-update";
 import SupplierProfileManager from "@/components/pricing/supplier-profile-manager";
 import SupplierReturningDashboard from "@/components/pricing/supplier-returning-dashboard";
 import { getSupplierProfile, type SupplierProfile } from "@/lib/platform/supplier-profiles";
@@ -111,8 +111,8 @@ export default function SupplierPriceExperience() {
             </p>
             <p className="mt-1 text-sm leading-6 text-[#617286]">
               {showBulk
-                ? "Use this when several prices in one category changed."
-                : "You can submit without an account. Creating an account makes future updates much faster."}
+                ? "Use this when several prices in one category changed. Your supplier account remains active while you complete the relevant forms."
+                : "You can submit without an account. Complete only the category that applies to what you sell or provide."}
             </p>
           </div>
           <button
@@ -126,7 +126,7 @@ export default function SupplierPriceExperience() {
             <ArrowLeft className="h-4 w-4" /> Back to supplier account
           </button>
         </div>
-        <SupplierPricePortal />
+        <SupplierBulkPriceUpdate profile={profile} />
       </div>
     );
   }
