@@ -2,9 +2,11 @@
 
 import { useEffect } from "react";
 
+import { loadSupplierOfferSummaries } from "@/lib/platform/supplier-offers";
+import { syncCatalogueFromCloud } from "@/lib/pricing/catalogue-cloud";
 import { JIJI_MARKET_SNAPSHOT } from "@/lib/pricing/jiji-market-snapshot";
 import { loadMarketPriceOverrides } from "@/lib/pricing/market-overrides";
-import { PRICE_LIBRARY_UPDATED_EVENT } from "@/lib/pricing/store";
+import { loadPriceItems, savePriceItems } from "@/lib/pricing/store";
 
 export const MARKET_OVERRIDES_UPDATED_EVENT = "charismak:market-overrides-updated";
 
@@ -12,7 +14,14 @@ export default function MarketPriceRuntime() {
   useEffect(() => {
     let cancelled = false;
 
-    void loadMarketPriceOverrides().then((overrides) => {
+    const refresh = async () => {
+      // Cloud catalogue edits must be present before market/supplier observations
+      // are layered on top of the base rate library.
+      await syncCatalogueFromCloud();
+      const [overrides, supplierSummaries] = await Promise.all([
+        loadMarketPriceOverrides(),
+        loadSupplierOfferSummaries(),
+      ]);
       if (cancelled) return;
 
       Object.values(overrides).forEach((override) => {
@@ -31,19 +40,62 @@ export default function MarketPriceRuntime() {
           checkedAt: override.checkedAt,
           note: override.note || previous?.note,
           primarySourceUrl: override.sourceUrl || previous?.primarySourceUrl || "",
-          sourceUrls: override.sourceUrl
-            ? [override.sourceUrl]
-            : previous?.sourceUrls ?? [],
+          sourceUrls: override.sourceUrl ? [override.sourceUrl] : previous?.sourceUrls ?? [],
           alternatives: previous?.alternatives,
         };
       });
 
-      window.dispatchEvent(new CustomEvent(PRICE_LIBRARY_UPDATED_EVENT));
+      const now = new Date().toISOString();
+      const connected = loadPriceItems().map((item) => {
+        const summary = supplierSummaries[item.id];
+        if (!summary) return item;
+
+        const previousMarket = JIJI_MARKET_SNAPSHOT[item.id];
+        JIJI_MARKET_SNAPSHOT[item.id] = {
+          itemId: item.id,
+          marketName: previousMarket?.marketName || item.description,
+          unit: summary.quotedUnit || item.marketUnit || previousMarket?.unit || item.unit,
+          priceLow: summary.lowestPrice,
+          priceHigh: summary.highestPrice,
+          reference: summary.latestPrice,
+          location: summary.locations.length === 1 ? summary.locations[0] : previousMarket?.location || item.location,
+          specification: item.specification || previousMarket?.specification,
+          sourceLabel: "Approved supplier prices",
+          sourceCount: summary.count,
+          checkedAt: summary.latestPublishedAt || now,
+          note: `${summary.count} currently valid approved supplier price${summary.count === 1 ? "" : "s"}.`,
+          primarySourceUrl: "",
+          sourceUrls: [],
+          alternatives: previousMarket?.alternatives,
+        };
+
+        return {
+          ...item,
+          priceLow: summary.lowestPrice,
+          priceHigh: summary.highestPrice,
+          sourceCount: summary.count,
+          marketUnit: summary.quotedUnit || item.marketUnit,
+          source: "Approved supplier prices",
+          confidence: "verified" as const,
+          updatedAt: summary.latestPublishedAt || now,
+        };
+      });
+
+      savePriceItems(connected);
       window.dispatchEvent(new CustomEvent(MARKET_OVERRIDES_UPDATED_EVENT));
-    });
+    };
+
+    void refresh();
+    const timer = window.setInterval(() => void refresh(), 60_000);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void refresh();
+    };
+    document.addEventListener("visibilitychange", onVisible);
 
     return () => {
       cancelled = true;
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, []);
 
