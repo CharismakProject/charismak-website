@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Archive,
   ArrowLeft,
@@ -104,6 +104,7 @@ export default function MaterialPriceDetail({ itemId }: { itemId: string }) {
   const history = summarizeSupplierOfferHistory(allOffers, {
     location: displayLocation,
     quotedUnit: unit,
+    strictLocation: false,
   });
   const offers = history.live;
   const archivedOffers = history.archived;
@@ -330,9 +331,11 @@ export default function MaterialPriceDetail({ itemId }: { itemId: string }) {
           <p className="text-xs font-black uppercase tracking-[0.14em] text-[#617286]">Charismak market price guide</p>
           <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm leading-6 text-[#526579]">Benchmark: {money(market.priceLow, item.currency)} – {money(market.priceHigh, item.currency)} / {unit}. Use valid supplier prices above for actual buying options.</p>
-            <a href={market.primarySourceUrl} target="_blank" rel="noreferrer" className="inline-flex shrink-0 items-center gap-2 text-sm font-bold text-[#0D3B66]">
-              View market source <ExternalLink className="h-4 w-4" />
-            </a>
+            {market.primarySourceUrl ? (
+              <a href={market.primarySourceUrl} target="_blank" rel="noreferrer" className="inline-flex shrink-0 items-center gap-2 text-sm font-bold text-[#0D3B66]">
+                View market source <ExternalLink className="h-4 w-4" />
+              </a>
+            ) : null}
           </div>
         </section>
       ) : null}

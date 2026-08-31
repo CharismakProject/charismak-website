@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, BookOpen, Newspaper, PackageSearch, Tags } from "lucide-react";
+import { ArrowRight, Building2, Newspaper, PackageSearch, Settings2, Store, Tags, UserRoundCog, Users, Wrench } from "lucide-react";
 
 import { isAdminEmail } from "@/lib/auth/admin";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
@@ -35,12 +35,24 @@ export default function AdminPrimaryActions() {
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#A82B05]">Management shortcuts</p>
             <h2 className="mt-2 text-2xl font-black text-[#071E33]">What do you want to manage?</h2>
-            <p className="mt-2 text-sm leading-6 text-[#617286]">The two main publishing areas are always available here: construction catalogue and website content.</p>
+            <p className="mt-2 text-sm leading-6 text-[#617286]">Open any part of the website that needs updating without returning to the code.</p>
           </div>
           <Link href="/admin" className="text-xs font-black text-[#0D3B66]">Control Centre</Link>
         </div>
 
-        <div className="mt-5 grid gap-4 lg:grid-cols-2">
+        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <Link href="/admin/projects" className="group rounded-2xl bg-[#071E33] p-5 text-white transition hover:-translate-y-0.5 md:p-6">
+            <div className="flex items-start justify-between gap-4"><span className="grid h-11 w-11 place-items-center rounded-xl bg-white/10 text-[#F2B544]"><Building2 className="h-5 w-5" /></span><ArrowRight className="h-5 w-5 text-white/55 transition group-hover:translate-x-1" /></div>
+            <h3 className="mt-5 text-xl font-black">Projects</h3>
+            <p className="mt-2 text-sm leading-6 text-white/68">Add, edit, publish, feature, reorder or remove projects and manage their images.</p>
+          </Link>
+
+          <Link href="/admin/leadership" className="group rounded-2xl bg-[#0A2A49] p-5 text-white transition hover:-translate-y-0.5 md:p-6">
+            <div className="flex items-start justify-between gap-4"><span className="grid h-11 w-11 place-items-center rounded-xl bg-white/10 text-[#F2B544]"><Users className="h-5 w-5" /></span><ArrowRight className="h-5 w-5 text-white/55 transition group-hover:translate-x-1" /></div>
+            <h3 className="mt-5 text-xl font-black">Leadership & Team</h3>
+            <p className="mt-2 text-sm leading-6 text-white/68">Manage names, roles, biographies, photographs, groups and display order.</p>
+          </Link>
+
           <Link href="/catalogue-admin" className="group rounded-2xl bg-[#0D3B66] p-5 text-white transition hover:-translate-y-0.5 md:p-6">
             <div className="flex items-start justify-between gap-4"><span className="grid h-11 w-11 place-items-center rounded-xl bg-white/10 text-[#F2B544]"><PackageSearch className="h-5 w-5" /></span><ArrowRight className="h-5 w-5 text-white/55 transition group-hover:translate-x-1" /></div>
             <h3 className="mt-5 text-xl font-black">Catalogue Management</h3>
@@ -56,9 +68,12 @@ export default function AdminPrimaryActions() {
           </Link>
         </div>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+          <Link href="/admin/services" className="flex min-h-12 items-center justify-between rounded-xl border border-[#DCE4EC] px-4 text-sm font-black text-[#071E33]"><span className="inline-flex items-center gap-2"><Wrench className="h-4 w-4 text-[#A82B05]" />Services</span><ArrowRight className="h-4 w-4" /></Link>
+          <Link href="/admin/content" className="flex min-h-12 items-center justify-between rounded-xl border border-[#DCE4EC] px-4 text-sm font-black text-[#071E33]"><span className="inline-flex items-center gap-2"><Settings2 className="h-4 w-4 text-[#A82B05]" />Website Content</span><ArrowRight className="h-4 w-4" /></Link>
           <Link href="/price-admin" className="flex min-h-12 items-center justify-between rounded-xl border border-[#DCE4EC] px-4 text-sm font-black text-[#071E33]"><span className="inline-flex items-center gap-2"><Tags className="h-4 w-4 text-[#A82B05]" />Market Price Management</span><ArrowRight className="h-4 w-4" /></Link>
-          <Link href="/blog" target="_blank" className="flex min-h-12 items-center justify-between rounded-xl border border-[#DCE4EC] px-4 text-sm font-black text-[#071E33]"><span className="inline-flex items-center gap-2"><BookOpen className="h-4 w-4 text-[#A82B05]" />View News & Learning</span><ArrowRight className="h-4 w-4" /></Link>
+          <Link href="/admin/suppliers" className="flex min-h-12 items-center justify-between rounded-xl border border-[#DCE4EC] px-4 text-sm font-black text-[#071E33]"><span className="inline-flex items-center gap-2"><UserRoundCog className="h-4 w-4 text-[#A82B05]" />Supplier Profiles</span><ArrowRight className="h-4 w-4" /></Link>
+          <Link href="/admin/supplier-reviews" className="flex min-h-12 items-center justify-between rounded-xl border border-[#DCE4EC] px-4 text-sm font-black text-[#071E33]"><span className="inline-flex items-center gap-2"><Store className="h-4 w-4 text-[#A82B05]" />Supplier Reviews</span><ArrowRight className="h-4 w-4" /></Link>
         </div>
       </div>
     </section>

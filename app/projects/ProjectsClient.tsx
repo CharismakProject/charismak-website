@@ -4,7 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, BriefcaseBusiness, CheckCircle2, Filter, MapPin } from "lucide-react";
 import { useMemo, useState } from "react";
-import { projects, type EngagementTag, type Project } from "../site-data";
+
+import type { EngagementTag, Project } from "../site-data";
 
 type FilterValue = "All Projects" | EngagementTag;
 
@@ -18,12 +19,12 @@ const filters: FilterValue[] = [
   "Expatriate Experience",
 ];
 
-export default function ProjectsClient() {
+export default function ProjectsClient({ initialProjects }: { initialProjects: Project[] }) {
   const [activeFilter, setActiveFilter] = useState<FilterValue>("All Projects");
 
   const visibleProjects = useMemo(
-    () => projects.filter((project) => project.showOnProjectsPage !== false),
-    []
+    () => initialProjects.filter((project) => project.showOnProjectsPage !== false),
+    [initialProjects],
   );
 
   const filteredProjects = useMemo(() => {
@@ -31,11 +32,11 @@ export default function ProjectsClient() {
     return visibleProjects.filter((project) => project.engagementTag === activeFilter);
   }, [activeFilter, visibleProjects]);
 
-  const companyProjectCount = projects.filter(
-    (project) => project.publicCategory === "Charismak Project"
+  const companyProjectCount = visibleProjects.filter(
+    (project) => project.publicCategory === "Charismak Project",
   ).length;
-  const professionalProjectCount = projects.filter(
-    (project) => project.publicCategory === "MD Professional Experience"
+  const professionalProjectCount = visibleProjects.filter(
+    (project) => project.publicCategory === "MD Professional Experience",
   ).length;
 
   return (
@@ -43,40 +44,40 @@ export default function ProjectsClient() {
       <section className="relative overflow-hidden bg-[#071E33] px-5 py-24 text-white md:px-8 lg:py-32">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_82%_18%,rgba(200,164,93,0.15),transparent_30rem)]" />
         <div className="relative mx-auto max-w-7xl">
-          <p className="mb-5 text-xs font-bold uppercase tracking-[0.32em] text-[#F2B544]">Selected Work</p>
+          <p className="mb-5 text-xs font-bold uppercase tracking-[0.32em] text-[#F2B544]">Selected Projects</p>
           <h1 className="max-w-5xl text-5xl font-semibold leading-[1.02] tracking-[-0.04em] sm:text-6xl lg:text-7xl">
-            Projects that show
-            <span className="mt-2 block text-[#E8C77F]">how we work.</span>
+            Construction experience
+            <span className="mt-2 block text-[#E8C77F]">across different project environments.</span>
           </h1>
           <p className="mt-7 max-w-3xl text-base leading-8 text-white/72 md:text-lg">
-            Explore selected company contracts and professional project references across construction, renovation, cost management and consultancy.
+            A selection of Charismak contracts and professional project experience across construction, renovation, specialist works, quantity surveying and project delivery.
           </p>
         </div>
       </section>
 
       <section className="border-b border-[#0D3B66]/10 bg-white px-5 py-12 md:px-8">
         <div className="mx-auto grid max-w-7xl gap-8 sm:grid-cols-3">
-          <ProjectStat value={companyProjectCount} label="Charismak References" />
-          <ProjectStat value={professionalProjectCount} label="Professional References" />
-          <ProjectStat value={visibleProjects.length} label="Projects Displayed" />
+          <ProjectStat value={companyProjectCount} label="Charismak Projects" />
+          <ProjectStat value={professionalProjectCount} label="Professional Experience" />
+          <ProjectStat value={visibleProjects.length} label="Selected References" />
         </div>
       </section>
 
       <section className="bg-[#F7F8FA] px-5 py-20 md:px-8">
         <div className="mx-auto max-w-7xl">
-          <div className="grid gap-8 lg:grid-cols-[0.6fr_1.4fr] lg:items-end">
+          <div className="grid gap-8 lg:grid-cols-[0.7fr_1.3fr] lg:items-end">
             <div>
               <p className="mb-4 text-xs font-bold uppercase tracking-[0.28em] text-[#C8A45D]">Portfolio</p>
-              <h2 className="text-3xl font-semibold leading-tight tracking-[-0.03em] text-[#071E33] md:text-5xl">Explore by role and engagement.</h2>
+              <h2 className="text-3xl font-semibold leading-tight tracking-[-0.03em] text-[#071E33] md:text-5xl">Selected work and project experience.</h2>
             </div>
             <p className="max-w-2xl text-base leading-8 text-[#3A4653] lg:justify-self-end">
-              Filters separate direct Charismak work from consultancy, supervision and individual professional experience so the role on each project remains clear.
+              From direct construction and specialist delivery to quantity surveying and construction management assignments, each reference reflects a defined role on a real project.
             </p>
           </div>
 
           <div className="mt-10 border-y border-[#0D3B66]/10 py-5">
             <div className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-[#3A4653]/70">
-              <Filter className="h-4 w-4 text-[#C8A45D]" /> Filter Projects
+              <Filter className="h-4 w-4 text-[#C8A45D]" /> Project Type
             </div>
             <div className="flex flex-wrap gap-2">
               {filters.map((filter) => {
@@ -101,7 +102,7 @@ export default function ProjectsClient() {
             </div>
           ) : (
             <div className="mt-10 bg-white p-10 text-center shadow-[0_10px_35px_rgba(7,30,51,0.05)]">
-              <h3 className="text-xl font-semibold text-[#071E33]">No project currently matches this filter.</h3>
+              <h3 className="text-xl font-semibold text-[#071E33]">No project currently matches this selection.</h3>
               <button type="button" onClick={() => setActiveFilter("All Projects")} className="mt-5 bg-[#0D3B66] px-6 py-3 text-sm font-bold text-white">View All Projects</button>
             </div>
           )}
@@ -110,13 +111,13 @@ export default function ProjectsClient() {
             <div className="flex gap-4">
               <BriefcaseBusiness className="mt-1 h-6 w-6 shrink-0 text-[#C8A45D]" />
               <div>
-                <h3 className="font-semibold text-[#071E33]">Managing Director’s professional portfolio</h3>
+                <h3 className="font-semibold text-[#071E33]">Professional project experience</h3>
                 <p className="mt-2 max-w-4xl text-sm leading-7 text-[#3A4653]">
-                  Selected references include projects in which the Managing Director participated while professionally engaged by other organisations.
+                  The portfolio also includes selected assignments delivered by the Managing Director while working with established construction organisations in Nigeria and internationally.
                 </p>
               </div>
             </div>
-            <Link href="/md-profile#professional-projects" className="inline-flex shrink-0 items-center gap-2 text-sm font-bold text-[#0D3B66] transition hover:text-[#C8A45D]">View MD Portfolio <ArrowRight className="h-4 w-4" /></Link>
+            <Link href="/md-profile#professional-projects" className="inline-flex shrink-0 items-center gap-2 text-sm font-bold text-[#0D3B66] transition hover:text-[#C8A45D]">View Professional Profile <ArrowRight className="h-4 w-4" /></Link>
           </div>
         </div>
       </section>
@@ -135,11 +136,12 @@ function ProjectStat({ value, label }: { value: number; label: string }) {
 
 function ProjectCard({ project }: { project: Project }) {
   const isProfessionalReference = project.publicCategory === "MD Professional Experience";
+  const image = project.cover || project.heroImages[0] || project.images[0] || "/Images/Projects/coco/hero.jpg";
 
   return (
     <Link href={`/projects/${project.slug}`} className="group overflow-hidden bg-white shadow-[0_10px_35px_rgba(7,30,51,0.06)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_22px_55px_rgba(7,30,51,0.13)]">
       <div className="relative h-[310px] overflow-hidden bg-[#071E33]">
-        <Image src={project.cover} alt={project.title} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover transition duration-700 group-hover:scale-105" />
+        <Image src={image} alt={project.title} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover transition duration-700 group-hover:scale-105" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#071E33]/88 via-[#071E33]/5 to-transparent" />
         <div className="absolute left-5 top-5 border border-white/15 bg-[#071E33]/65 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.14em] text-white backdrop-blur">{project.engagementTag}</div>
         {isProfessionalReference && <div className="absolute right-5 top-5 bg-[#C8A45D] px-3 py-2 text-[9px] font-bold uppercase tracking-[0.12em] text-[#071E33]">Professional Experience</div>}

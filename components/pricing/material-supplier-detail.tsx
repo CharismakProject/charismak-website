@@ -136,7 +136,7 @@ export default function MaterialSupplierDetail({ itemId }: { itemId: string }) {
               </div>
             </div>
 
-            <p className="mt-5 text-xs leading-6 text-[#617286]">Supplier offers below come from the supplier price-update system and only appear here after Charismak review. Brand, specification, unit and location stay attached to the supplier's submitted price.</p>
+            <p className="mt-5 text-xs leading-6 text-[#617286]">Supplier offers below come from the supplier price-update system and only appear here after Charismak review. Brand, specification, unit and location stay attached to the supplier&apos;s submitted price.</p>
           </div>
         </div>
       </section>

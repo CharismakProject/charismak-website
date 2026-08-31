@@ -189,7 +189,6 @@ export default function CatalogueManager() {
       }
     });
     return () => { mounted = false; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [client]);
 
   const filtered = useMemo(() => {

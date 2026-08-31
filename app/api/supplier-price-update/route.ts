@@ -37,6 +37,9 @@ export async function POST(request: Request) {
       );
     }
 
+    const reviewPath = String(result.reviewPath || `/supplier-review/${result.batchId}`);
+    const reviewUrl = new URL(reviewPath, request.url).toString();
+
     let emailSent = false;
     try {
       if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
@@ -60,13 +63,17 @@ export async function POST(request: Request) {
             `Supplier: ${result.supplierName}`,
             `Item: ${result.productName}`,
             `New price: ₦${Number(result.unitPrice).toLocaleString("en-NG")} / ${result.quotedUnit}`,
-            body.previousPrice ? `Previous price: ₦${Number(body.previousPrice).toLocaleString("en-NG")}` : "Previous price: Not recorded",
+            body.previousPrice
+              ? `Previous price: ₦${Number(body.previousPrice).toLocaleString("en-NG")}`
+              : "Previous price: Not recorded",
             body.brand ? `Brand / make: ${body.brand}` : "",
             body.specification ? `Specification: ${body.specification}` : "",
             body.location ? `Location: ${body.location}` : "",
             "",
-            `Review and publish: ${result.reviewUrl}`,
-          ].filter(Boolean).join("\n"),
+            `Review and publish: ${reviewUrl}`,
+          ]
+            .filter(Boolean)
+            .join("\n"),
         });
         emailSent = true;
       }
@@ -74,7 +81,7 @@ export async function POST(request: Request) {
       console.error("Supplier price review email error:", emailError);
     }
 
-    return NextResponse.json({ ...result, emailSent });
+    return NextResponse.json({ ...result, reviewPath, reviewUrl, emailSent });
   } catch (error) {
     console.error("Supplier quick price update error:", error);
     return NextResponse.json(

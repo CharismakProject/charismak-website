@@ -9,8 +9,6 @@ const ACTIVE_PROJECT_KEY = "charismak-active-project-v1";
 const ESTIMATE_KEY = "charismak-rate-estimates-v1";
 const DRAFT_KEY = "charismak-estimator-draft";
 const BUDGET_KEY = "charismak-project-budgets-v1";
-const PRICE_KEY = "charismak-price-library-v1";
-
 const PROJECTS_UPDATED_EVENT = "charismak:projects-updated";
 const RATE_ESTIMATE_UPDATED_EVENT = "charismak:rate-estimate-updated";
 const BILL_UPDATED_EVENT = "charismak:bill-updated";
