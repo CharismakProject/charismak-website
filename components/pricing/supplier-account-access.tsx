@@ -87,15 +87,15 @@ export default function SupplierAccountAccess({ onReady, onGuest }: Props) {
   return (
     <div className="space-y-5 sm:space-y-7">
       <section className="overflow-hidden rounded-[1.5rem] bg-[#071E33] p-5 text-white shadow-[0_24px_65px_rgba(7,30,51,0.18)] sm:rounded-[2rem] sm:p-8">
-        <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-[#F2B544]"><Store className="h-4 w-4" />Supplier portal</span>
-        <h1 className="mt-4 max-w-3xl text-3xl font-black leading-tight sm:text-5xl">Create your supplier profile.</h1>
-        <p className="mt-4 max-w-2xl text-sm leading-7 text-white/70">For material suppliers, equipment vendors and specialist trade teams.</p>
+        <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-[#F2B544]"><Store className="h-4 w-4" />Supplier network</span>
+        <h1 className="mt-4 max-w-3xl text-3xl font-black leading-tight sm:text-5xl">Put your business in front of construction buyers.</h1>
+        <p className="mt-4 max-w-2xl text-sm leading-7 text-white/70">Materials, equipment and specialist services from suppliers and trade teams across Nigeria.</p>
       </section>
 
       <section className="rounded-[1.5rem] border border-[#DCE4EC] bg-white p-4 shadow-[0_10px_35px_rgba(7,30,51,0.05)] sm:rounded-[2rem] sm:p-7">
         <div className="grid grid-cols-2 gap-1.5 rounded-2xl bg-[#F3F6F9] p-1.5">
-          <button type="button" onClick={() => { setMode("create"); setError(""); }} className={`min-h-12 rounded-xl px-3 text-sm font-black ${mode === "create" ? "bg-[#0D3B66] text-white shadow-sm" : "text-[#617286]"}`}><span className="inline-flex items-center gap-2"><UserPlus className="h-4 w-4" />New supplier</span></button>
-          <button type="button" onClick={() => { setMode("signin"); setError(""); }} className={`min-h-12 rounded-xl px-3 text-sm font-black ${mode === "signin" ? "bg-[#071E33] text-white shadow-sm" : "text-[#617286]"}`}><span className="inline-flex items-center gap-2"><KeyRound className="h-4 w-4" />Sign in</span></button>
+          <button type="button" onClick={() => { setMode("create"); setError(""); }} className={`min-h-12 rounded-xl px-3 text-sm font-black ${mode === "create" ? "bg-[#0D3B66] text-white shadow-sm" : "text-[#617286]"}`}><span className="inline-flex items-center gap-2"><UserPlus className="h-4 w-4" />Join network</span></button>
+          <button type="button" onClick={() => { setMode("signin"); setError(""); }} className={`min-h-12 rounded-xl px-3 text-sm font-black ${mode === "signin" ? "bg-[#071E33] text-white shadow-sm" : "text-[#617286]"}`}><span className="inline-flex items-center gap-2"><KeyRound className="h-4 w-4" />Supplier sign-in</span></button>
         </div>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -112,7 +112,7 @@ export default function SupplierAccountAccess({ onReady, onGuest }: Props) {
           <Field label={mode === "create" ? "Create PIN" : "PIN"} value={pin} onChange={(value) => setPin(value.replace(/\D/g, "").slice(0, 6))} required inputMode="numeric" placeholder="4–6 digits" />
         </div>
 
-        {mode === "signin" ? <div className="mt-4 flex flex-col gap-2 rounded-xl border border-[#CFE4D7] bg-[#F3FBF6] p-4 sm:flex-row sm:items-center sm:justify-between"><p className="text-xs leading-5 text-[#526579]"><strong className="text-[#071E33]">Forgot your PIN?</strong> Account resets are verified through the registered contact.</p><a href={supportWhatsApp(businessName, phone)} target="_blank" rel="noreferrer" className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#197447] px-4 text-xs font-black text-white"><MessageCircle className="h-4 w-4" />WhatsApp</a></div> : null}
+        {mode === "signin" ? <div className="mt-4 flex flex-col gap-2 rounded-xl border border-[#CFE4D7] bg-[#F3FBF6] p-4 sm:flex-row sm:items-center sm:justify-between"><p className="text-xs leading-5 text-[#526579]"><strong className="text-[#071E33]">Forgot your PIN?</strong> Reset access is verified against the registered contact.</p><a href={supportWhatsApp(businessName, phone)} target="_blank" rel="noreferrer" className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#197447] px-4 text-xs font-black text-white"><MessageCircle className="h-4 w-4" />WhatsApp</a></div> : null}
 
         {error ? <p className="mt-4 rounded-xl border border-[#F0C4BA] bg-[#FFF4F1] p-3 text-sm text-[#8B1E00]">{error}</p> : null}
 
@@ -121,7 +121,7 @@ export default function SupplierAccountAccess({ onReady, onGuest }: Props) {
           {busy ? "Please wait…" : mode === "create" ? "Create profile" : "Sign in"}
         </button>
 
-        <div className="mt-6 border-t border-[#E4E9EE] pt-5"><button type="button" onClick={onGuest} className="text-xs font-bold text-[#0D3B66] underline underline-offset-4">Price update only</button></div>
+        <div className="mt-6 border-t border-[#E4E9EE] pt-5"><button type="button" onClick={onGuest} className="text-xs font-bold text-[#0D3B66] underline underline-offset-4">Submit prices without a profile</button></div>
       </section>
     </div>
   );
