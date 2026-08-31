@@ -49,7 +49,7 @@ export type SupplierOfferHistory = {
 };
 
 const toOffer = (row: Record<string, unknown>): SupplierMarketplaceOffer => ({
-  id: String(row.id),
+  id: String(row.id ?? ""),
   sourceSubmissionId: row.source_submission_id ? String(row.source_submission_id) : null,
   supplierId: row.supplier_id ? String(row.supplier_id) : null,
   supplierName: String(row.supplier_name ?? "Supplier"),
@@ -121,9 +121,10 @@ export function supplierOfferMatchesMarket(
   const location = options?.location?.trim();
   const quotedUnit = options?.quotedUnit?.trim();
 
-  // Material pages show all approved suppliers for the selected comparable unit.
-  // A locality only becomes a hard filter when a caller explicitly requests it.
-  if (options?.strictLocation && location) {
+  // Location isolation is the safe default for price-range calculations.
+  // Individual material pages may explicitly opt out so buyers can compare
+  // approved suppliers from more than one city without contaminating other calculations.
+  if ((options?.strictLocation ?? true) && location) {
     const left = normalize(offer.location);
     const right = normalize(location);
     if (left && right && left !== right && !left.includes(right) && !right.includes(left)) return false;
@@ -143,18 +144,46 @@ export function summarizeSupplierOfferHistory(
 ): SupplierOfferHistory {
   const relevant = offers.filter((offer) => supplierOfferMatchesMarket(offer, options));
   const now = options?.now ?? new Date();
-  const live = relevant.filter((offer) => isSupplierOfferCurrent(offer, now)).sort((left, right) => left.unitPrice - right.unitPrice);
-  const archived = relevant.filter((offer) => !isSupplierOfferCurrent(offer, now)).sort((left, right) => offerTimestamp(right) - offerTimestamp(left));
+  const live = relevant
+    .filter((offer) => isSupplierOfferCurrent(offer, now))
+    .sort((left, right) => left.unitPrice - right.unitPrice);
+  const archived = relevant
+    .filter((offer) => !isSupplierOfferCurrent(offer, now))
+    .sort((left, right) => offerTimestamp(right) - offerTimestamp(left));
   const byRecency = live.slice().sort((left, right) => offerTimestamp(right) - offerTimestamp(left));
-  return { live, archived, low: live.length ? Math.min(...live.map((offer) => offer.unitPrice)) : null, high: live.length ? Math.max(...live.map((offer) => offer.unitPrice)) : null, latest: byRecency[0] ?? null };
+  return {
+    live,
+    archived,
+    low: live.length ? Math.min(...live.map((offer) => offer.unitPrice)) : null,
+    high: live.length ? Math.max(...live.map((offer) => offer.unitPrice)) : null,
+    latest: byRecency[0] ?? null,
+  };
 }
 
 async function loadApprovedOffers(catalogueItemId?: string) {
   const client = getSupabaseBrowserClient();
   if (!client) return [] as SupplierMarketplaceOffer[];
+
   let query = client.from("supplier_marketplace_offers").select("*").eq("status", "approved");
   if (catalogueItemId) query = query.eq("catalogue_item_id", catalogueItemId);
+
   const { data, error } = await query.order("published_at", { ascending: false, nullsFirst: false });
+  if (error || !data) return [];
+  return (data as Record<string, unknown>[]).map(toOffer);
+}
+
+async function loadApprovedSummaryOffers() {
+  const client = getSupabaseBrowserClient();
+  if (!client) return [] as SupplierMarketplaceOffer[];
+
+  // The public catalogue only needs a small subset of supplier data to build
+  // its ranges. Avoid transferring contact/details columns on every price-page visit.
+  const { data, error } = await client
+    .from("supplier_marketplace_offers")
+    .select("id,supplier_id,supplier_name,catalogue_item_id,product_name,quoted_unit,unit_price,location,valid_until,submitted_at,published_at")
+    .eq("status", "approved")
+    .order("published_at", { ascending: false, nullsFirst: false });
+
   if (error || !data) return [];
   return (data as Record<string, unknown>[]).map(toOffer);
 }
@@ -191,7 +220,7 @@ function pickComparableUnitGroup(offers: SupplierMarketplaceOffer[]) {
 }
 
 export async function loadSupplierOfferSummaries(): Promise<Record<string, SupplierOfferSummary>> {
-  const rows = await loadApprovedOffers();
+  const rows = await loadApprovedSummaryOffers();
   const byItem = new Map<string, SupplierMarketplaceOffer[]>();
   for (const offer of rows) {
     if (!offer.catalogueItemId) continue;
@@ -199,6 +228,7 @@ export async function loadSupplierOfferSummaries(): Promise<Record<string, Suppl
     current.push(offer);
     byItem.set(offer.catalogueItemId, current);
   }
+
   const summaries: Record<string, SupplierOfferSummary> = {};
   for (const [itemId, allOffers] of byItem) {
     const offers = pickComparableUnitGroup(allOffers);

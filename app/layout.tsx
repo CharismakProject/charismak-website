@@ -1,19 +1,18 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/react";
 import SiteChrome from "./components/SiteChrome";
+import Footer from "./components/Footer";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
+const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+// Managed website content is intentionally cached and revalidated instead of
+// being fetched from Supabase for every request. This keeps the public site
+// responsive and friendly to the current free hosting/database tiers.
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: {
@@ -30,9 +29,7 @@ export const metadata: Metadata = {
     "renovation contractor Abuja",
     "project management construction Nigeria",
   ],
-  icons: {
-    icon: "/icon.png",
-  },
+  icons: { icon: "/icon.png" },
   openGraph: {
     title: "Charismak Project Nigeria Limited",
     description:
@@ -44,15 +41,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body className="bg-white text-[#151B22] antialiased">
-        <SiteChrome>{children}</SiteChrome>
+        <SiteChrome footer={<Footer />}>{children}</SiteChrome>
         <Analytics />
       </body>
     </html>

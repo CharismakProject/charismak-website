@@ -5,26 +5,23 @@ import type { ReactNode } from "react";
 
 import CatalogueRuntime from "@/components/pricing/catalogue-runtime";
 import MarketPriceRuntime from "@/components/pricing/market-price-runtime";
-import Footer from "./Footer";
 import Navbar from "./Navbar";
 
-function PricingRuntime() {
-  return (
-    <>
-      <MarketPriceRuntime />
-      <CatalogueRuntime />
-    </>
-  );
-}
+type Props = {
+  children: ReactNode;
+  footer: ReactNode;
+};
 
-export default function SiteChrome({ children }: { children: ReactNode }) {
+export default function SiteChrome({ children, footer }: Props) {
   const pathname = usePathname();
   const estimatorApp = pathname.startsWith("/estimator/app");
+  const needsLivePricing = pathname.startsWith("/prices") || pathname.startsWith("/estimator");
+  const needsCatalogueOnly = pathname.startsWith("/price-admin") || pathname.startsWith("/catalogue-admin");
 
   if (estimatorApp) {
     return (
       <>
-        <PricingRuntime />
+        <MarketPriceRuntime />
         {children}
       </>
     );
@@ -32,10 +29,10 @@ export default function SiteChrome({ children }: { children: ReactNode }) {
 
   return (
     <>
-      <PricingRuntime />
+      {needsLivePricing ? <MarketPriceRuntime /> : needsCatalogueOnly ? <CatalogueRuntime /> : null}
       <Navbar />
       {children}
-      <Footer />
+      {footer}
     </>
   );
 }
