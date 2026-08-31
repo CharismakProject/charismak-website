@@ -14,6 +14,7 @@ const links = [
   { href: "/price-admin", label: "Market Prices", icon: CircleDollarSign },
   { href: "/admin/suppliers", label: "Supplier Profiles", icon: UserRoundCog },
   { href: "/admin/supplier-reviews", label: "Supplier Reviews", icon: Store },
+  { href: "/admin/supplier-prices", label: "Approved Prices", icon: CircleDollarSign },
   { href: "/admin/content", label: "Website Content", icon: Settings2 },
 ];
 
