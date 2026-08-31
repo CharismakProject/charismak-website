@@ -10,7 +10,7 @@ export const metadata = {
   description: "Meet the leadership and project delivery team behind Charismak Project Nigeria Limited.",
 };
 
-export const revalidate = 60;
+export const revalidate = 300;
 
 export default async function LeadershipPage() {
   const people = await loadPublishedPeople();
