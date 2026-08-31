@@ -65,7 +65,7 @@ export default function SupplierProfileManager({ profile, onDone, onSignOut }: {
   return (
     <section className="rounded-[1.5rem] border border-[#DCE4EC] bg-white p-4 shadow-[0_10px_35px_rgba(7,30,51,.06)] sm:rounded-[2rem] sm:p-7">
       <button onClick={() => onDone(profile)} className="inline-flex items-center gap-2 text-sm font-black text-[#0D3B66]"><ArrowLeft className="h-4 w-4" />Back to prices</button>
-      <div className="mt-5"><p className="text-[10px] font-black uppercase tracking-[.14em] text-[#A82B05]">Supplier profile</p><h2 className="mt-2 text-2xl font-black text-[#071E33]">Business details</h2><p className="mt-2 text-sm leading-6 text-[#617286]">Update your contact details, service areas and the products or trades shown on your marketplace profile.</p></div>
+      <div className="mt-5"><p className="text-[10px] font-black uppercase tracking-[.14em] text-[#A82B05]">Supplier profile</p><h2 className="mt-2 text-2xl font-black text-[#071E33]">Business details</h2></div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <Field label="Business name *" value={businessName} onChange={setBusinessName} />
