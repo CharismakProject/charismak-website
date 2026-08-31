@@ -5,8 +5,8 @@ import {
   Award,
   BriefcaseBusiness,
   Building2,
+  ExternalLink,
   GraduationCap,
-  Linkedin,
   Mail,
   MapPin,
   Phone,
@@ -147,7 +147,7 @@ export default function MDProfilePage() {
                 <span className="inline-flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-[#C09543]" />Abuja, Nigeria</span>
                 <Link href="mailto:md@charismakproject.com" className="inline-flex items-center gap-1.5 hover:text-[#0D3B66]"><Mail className="h-3.5 w-3.5 text-[#C09543]" />md@charismakproject.com</Link>
                 <Link href={`tel:${mdProfile.phone.replace(/\s/g, "")}`} className="inline-flex items-center gap-1.5 hover:text-[#0D3B66]"><Phone className="h-3.5 w-3.5 text-[#C09543]" />{mdProfile.phone}</Link>
-                <Link href={mdProfile.linkedin} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 hover:text-[#0D3B66]"><Linkedin className="h-3.5 w-3.5 text-[#C09543]" />LinkedIn</Link>
+                <Link href={mdProfile.linkedin} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 hover:text-[#0D3B66]"><ExternalLink className="h-3.5 w-3.5 text-[#C09543]" />LinkedIn</Link>
               </div>
             </div>
           </header>
@@ -175,7 +175,7 @@ export default function MDProfilePage() {
                       </div>
                       <p className="text-[11px] text-[#6B7784]">{item.location}</p>
                     </div>
-                    <ul className="mt-2.5 space-y-1.5 text-[12px] leading-5.5 text-[#44515E]">
+                    <ul className="mt-2.5 space-y-1.5 text-[12px] leading-5 text-[#44515E]">
                       {item.points.map((point) => (
                         <li key={point} className="grid grid-cols-[8px_1fr] gap-2">
                           <span className="mt-[8px] h-1 w-1 rounded-full bg-[#C09543]" />
