@@ -1,5 +1,4 @@
-﻿import type { LucideIcon } from "lucide-react";
-
+import type { LucideIcon } from "lucide-react";
 import {
   BadgeCheck,
   Building2,
@@ -16,10 +15,6 @@ import {
   Wrench,
 } from "lucide-react";
 
-/* -------------------------------------------------------------------------- */
-/*                                   BRAND                                    */
-/* -------------------------------------------------------------------------- */
-
 export const brand = {
   navy: "#0D3B66",
   deepNavy: "#071E33",
@@ -33,51 +28,30 @@ export const brand = {
   white: "#FFFFFF",
 };
 
-/* -------------------------------------------------------------------------- */
-/*                                  COMPANY                                   */
-/* -------------------------------------------------------------------------- */
-
+/** Canonical fallbacks. Public pages prefer the managed CMS values. */
 export const company = {
   name: "Charismak Project Nigeria Limited",
   shortName: "Charismak",
   tagline: "Design, Cost & Build",
   rcNumber: "RC No: 1982890",
-
   logo: "/Images/logo/logo.png",
-
   email: "info@charismakproject.com",
-
   emailAliases: [
     "md@charismakproject.com",
     "projects@charismakproject.com",
     "account@charismakproject.com",
     "secretary@charismakproject.com",
   ],
-
-  phones: [
-    "+234 706 661 9598",
-    "+234 701 378 4027",
-    "+234 906 875 5320",
-  ],
-
-  addresses: [
-    "Sankuru Close, off El-Amin Street, Maitama, Abuja",
-    "No. 268, Kajola Street, Ikere-Ekiti, Ekiti State",
-    "Back of Crush Rock, Mpape, Abuja",
-  ],
-
+  phones: ["+234 706 661 9598"],
+  addresses: ["Sankuru Close, off El-Amin Street, Maitama, Abuja"],
   about:
     "Charismak Project Nigeria Limited is a registered Nigerian construction company providing building construction, civil engineering, renovation, steel fabrication, project management, technical consultancy, facility maintenance and architectural finishing services.",
-
   overview:
     "We combine practical construction experience, technical competence, commercial awareness, quality supervision and transparent communication to support clients from project planning through execution and handover.",
-
   vision:
     "To become a trusted benchmark for construction delivery, engineering excellence and professional project execution across Nigeria and Africa.",
-
   mission:
     "To deliver reliable construction, engineering, renovation, fabrication and project management solutions through integrity, accountability, technical competence and client-focused service.",
-
   values: [
     "Integrity",
     "Transparency",
@@ -85,16 +59,9 @@ export const company = {
     "Technical Excellence",
     "Client Satisfaction",
   ],
-
   profilePdf: "/company-profile.pdf",
-
-  mdProfilePdf:
-    "/documents/company-profile.pdf",
+  mdProfilePdf: "/documents/company-profile.pdf",
 };
-
-/* -------------------------------------------------------------------------- */
-/*                                   TYPES                                    */
-/* -------------------------------------------------------------------------- */
 
 export type Service = {
   title: string;
@@ -102,10 +69,7 @@ export type Service = {
   icon: LucideIcon;
 };
 
-export type ProjectCategory =
-  | "Charismak Project"
-  | "MD Professional Experience";
-
+export type ProjectCategory = "Charismak Project" | "MD Professional Experience";
 export type EngagementTag =
   | "Direct Contract"
   | "Subcontract"
@@ -118,28 +82,21 @@ export type Project = {
   slug: string;
   title: string;
   heroTitle?: string;
-
   publicCategory: ProjectCategory;
   engagementTag: EngagementTag;
-
   role: string;
   organisation: string;
   location: string;
   status: string;
   client?: string;
-
   summary: string;
   attribution: string;
-
   cover: string;
   heroImages: string[];
-
   images: string[];
   videos: string[];
   services: string[];
-
   featured?: boolean;
-
   showOnProjectsPage?: boolean;
 };
 
@@ -167,22 +124,10 @@ export type ResourceItem = {
   href: string;
 };
 
-/* -------------------------------------------------------------------------- */
-/*                              MEDIA GENERATORS                              */
-/* -------------------------------------------------------------------------- */
-
-function projectGallery(
-  folder: string,
-  count = 5,
-  extension = "jpg"
-): string[] {
+function projectGallery(folder: string, count = 5, extension = "jpg"): string[] {
   return Array.from(
     { length: count },
-    (_, index) =>
-      `/Images/Projects/${folder}/${String(index + 1).padStart(
-        2,
-        "0"
-      )}.${extension}`
+    (_, index) => `/Images/Projects/${folder}/${String(index + 1).padStart(2, "0")}.${extension}`,
   );
 }
 
@@ -193,14 +138,6 @@ function projectCover(folder: string, extension = "jpg"): string {
 function projectHero(folder: string, extension = "jpg"): string {
   return `/Images/Projects/${folder}/hero.${extension}`;
 }
-
-function projectVideo(folder: string, available = false): string[] {
-  return available ? [`/videos/${folder}/video.mp4`] : [];
-}
-
-/* -------------------------------------------------------------------------- */
-/*                                  SERVICES                                  */
-/* -------------------------------------------------------------------------- */
 
 export const services: Service[] = [
   {
@@ -253,74 +190,59 @@ export const services: Service[] = [
   },
 ];
 
-/* -------------------------------------------------------------------------- */
-/*                                  PROJECTS                                  */
-/* -------------------------------------------------------------------------- */
-
+/**
+ * Clean migration fallback for the project CMS. Keep this list aligned with the
+ * approved public portfolio so a CMS outage cannot resurrect removed/incorrect work.
+ */
 export const projects: Project[] = [
   {
     slug: "coco-gwarimpa-project",
-    title: "COCO Gwarimpa Project",
-    heroTitle: "Building value. Delivering excellence.",
-
+    title: "COCO Gwarimpa Showroom, Office & Workshop",
+    heroTitle:
+      "Renovation and completion of a multi-use commercial facility in Gwarimpa, Abuja.",
     publicCategory: "Charismak Project",
     engagementTag: "Direct Contract",
-
     role: "Main Contractor",
     organisation: "Charismak Project Nigeria Limited",
     location: "Gwarimpa, Abuja",
     status: "Completed",
-    client: "Private Residential Client",
-
     summary:
-      "Premium residential construction delivered directly by Charismak through structured supervision, quality finishing, coordinated site operations and disciplined project control.",
-
-    attribution:
-      "This project was undertaken directly by Charismak Project Nigeria Limited as the main contractor.",
-
+      "Renovation and completion works for a combined showroom, office and workshop facility in Gwarimpa. Charismak coordinated the remaining building works, finishes, services interfaces and close-out activities required to bring the facility into operational use.",
+    attribution: "Direct Charismak contract.",
     cover: projectCover("coco"),
     heroImages: [projectHero("coco"), projectCover("coco")],
     images: projectGallery("coco", 10),
     videos: [],
-
     services: [
-      "Building Construction",
+      "Renovation & Completion",
       "Project Management",
-      "Site Coordination",
-      "Interior Finishing",
-      "Quality Supervision",
-      "Procurement Coordination",
+      "Construction Coordination",
+      "Building Services Coordination",
+      "Architectural Finishing",
+      "Close-out Works",
     ],
-
     featured: true,
     showOnProjectsPage: true,
   },
-
   {
     slug: "flawless-spa-renovation",
     title: "Flawless Spa Renovation",
-    heroTitle: "Transforming spaces through refined finishing.",
-
+    heroTitle: "Interior renovation and finishing for a contemporary wellness environment.",
     publicCategory: "Charismak Project",
     engagementTag: "Subcontract",
-
     role: "Specialist Subcontractor",
     organisation: "Charismak Project Nigeria Limited",
     location: "Abuja, Nigeria",
     status: "Completed",
     client: "Flawless Spa",
-
     summary:
-      "Interior renovation and premium finishing works executed by Charismak as a specialist delivery partner, with attention to detailing, lighting coordination, fittings and modern space transformation.",
-
+      "Specialist renovation and finishing works for a premium wellness space in Abuja, covering interior finishes, ceiling and wall treatments, lighting coordination, fittings and detailed close-out.",
     attribution:
-      "Charismak Project Nigeria Limited participated in this project as a specialist subcontractor.",
-
+      "Specialist subcontract works delivered by Charismak Project Nigeria Limited.",
     cover: projectCover("Flawless"),
     heroImages: [projectHero("Flawless"), projectCover("Flawless")],
     images: projectGallery("Flawless", 10),
     videos: [],
-
     services: [
       "Interior Renovation",
       "Architectural Finishing",
@@ -328,36 +250,28 @@ export const projects: Project[] = [
       "Lighting Coordination",
       "Finishing Supervision",
     ],
-
     featured: true,
     showOnProjectsPage: true,
   },
-
   {
     slug: "jahi-project-development",
     title: "Jahi Residential Development",
     heroTitle:
-      "Structured specialist delivery for a modern residential development.",
-
+      "Specialist construction delivery for a residential development in Jahi, Abuja.",
     publicCategory: "Charismak Project",
     engagementTag: "Subcontract",
-
     role: "Specialist Subcontractor",
     organisation: "Charismak Project Nigeria Limited",
     location: "Jahi, Abuja",
     status: "Ongoing",
-
     summary:
-      "Residential development support involving staged construction activities, masonry works, temporary works, ceiling, tiling, plumbing coordination, finishing supervision and quality monitoring.",
-
+      "Specialist construction works within an ongoing residential development in Jahi, including masonry, temporary works, ceiling and tiling activities, plumbing coordination, finishing works and quality monitoring.",
     attribution:
-      "Charismak Project Nigeria Limited is participating in this development as a specialist subcontractor.",
-
+      "Specialist subcontract works delivered by Charismak Project Nigeria Limited.",
     cover: projectCover("Jahi"),
     heroImages: [projectHero("Jahi"), projectCover("Jahi")],
     images: projectGallery("Jahi", 10),
     videos: [],
-
     services: [
       "Specialist Construction Works",
       "Masonry Coordination",
@@ -366,83 +280,27 @@ export const projects: Project[] = [
       "Finishing Coordination",
       "Quality Monitoring",
     ],
-
     featured: true,
     showOnProjectsPage: true,
   },
-
-  {
-    slug: "block-of-flats-student-hostels",
-    title: "Block of Flats (Student Hostels)",
-    heroTitle:
-      "Direct project management and architectural delivery in Ikere-Ekiti.",
-
-    publicCategory: "Charismak Project",
-    engagementTag: "Direct Contract",
-
-    role: "Project Manager / Architect",
-    organisation: "Charismak Project Nigeria Limited",
-    location: "Ikere-Ekiti, Ekiti State",
-    status: "Carcass Stage Completed",
-
-    summary:
-      "A block of student hostel flats developed directly by Charismak, covering architectural design, project management, site supervision and construction coordination through to carcass completion.",
-
-    attribution:
-      "This project was undertaken directly by Charismak Project Nigeria Limited, with the Managing Director serving as Project Manager and Architect.",
-
-    cover: "/Images/Projects/flats/cover.png",
-    heroImages: [
-      "/Images/Projects/flats/hero.png",
-      "/Images/Projects/flats/cover.png",
-    ],
-    images: [
-      "/Images/Projects/flats/1.png",
-      "/Images/Projects/flats/2.png",
-      "/Images/Projects/flats/3.png",
-      "/Images/Projects/flats/4.png",
-      "/Images/Projects/flats/5.png",
-      "/Images/Projects/flats/6.png",
-    ],
-    videos: [],
-
-    services: [
-      "Architectural Design",
-      "Project Management",
-      "Site Supervision",
-      "Construction Coordination",
-      "Cost Awareness",
-    ],
-
-    featured: false,
-    showOnProjectsPage: true,
-  },
-
   {
     slug: "djibouti-residential-estate",
     title: "Djibouti Residential Estate",
     heroTitle:
-      "International quantity surveying and construction management experience.",
-
+      "International quantity surveying and construction delivery experience in Djibouti.",
     publicCategory: "MD Professional Experience",
     engagementTag: "Expatriate Experience",
-
     role: "Project Quantity Surveyor",
     organisation: "ERSA Construction SARL",
     location: "Djibouti, East Africa",
     status: "Completed Professional Reference",
-
     summary:
-      "International residential development experience involving quantity surveying, measurement, valuation, cost control, construction supervision, technical coordination and project delivery support.",
-
-    attribution:
-      "This project forms part of the Managing Director's professional career portfolio and was not undertaken as a Charismak contract.",
-
+      "Residential estate experience with ERSA Construction SARL covering measurement, valuation, cost control, quantity surveying, construction supervision and multidisciplinary project coordination.",
+    attribution: "Professional experience with ERSA Construction SARL.",
     cover: projectCover("Djibouti"),
     heroImages: [projectHero("Djibouti"), projectCover("Djibouti")],
     images: projectGallery("Djibouti", 10),
     videos: [],
-
     services: [
       "Quantity Surveying",
       "Cost Control",
@@ -451,36 +309,27 @@ export const projects: Project[] = [
       "Technical Coordination",
       "Project Reporting",
     ],
-
     featured: true,
     showOnProjectsPage: true,
   },
-
   {
     slug: "steel-fabrication-km-steel",
     title: "Steel Fabrication Works",
     heroTitle:
-      "Structural and fabrication experience supported by technical control.",
-
+      "Commercial and technical experience across structural steel fabrication and installation.",
     publicCategory: "MD Professional Experience",
     engagementTag: "Quantity Surveying",
-
     role: "Quantity Surveyor / Project Coordinator",
     organisation: "KM Steel & Structure",
     location: "Abuja, Nigeria",
     status: "Professional Project Reference",
-
     summary:
-      "Steel fabrication and structural works experience involving measurement, cost review, production monitoring, installation coordination, valuation and site delivery supervision.",
-
-    attribution:
-      "This reference reflects the Managing Director's professional experience while working with KM Steel & Structure and is not presented as a Charismak contract.",
-
+      "Structural steel and fabrication experience with KM Steel & Structure, including measurement, cost review, production monitoring, valuation, installation coordination and site delivery support.",
+    attribution: "Professional experience with KM Steel & Structure.",
     cover: projectCover("fabrication"),
     heroImages: [projectHero("fabrication"), projectCover("fabrication")],
     images: projectGallery("fabrication", 10),
     videos: [],
-
     services: [
       "Quantity Surveying",
       "Steelwork Measurement",
@@ -489,36 +338,27 @@ export const projects: Project[] = [
       "Installation Coordination",
       "Valuation and Reporting",
     ],
-
     featured: true,
     showOnProjectsPage: true,
   },
-
   {
     slug: "office-renovation-cannon",
     title: "Office Renovation & Completion",
     heroTitle:
-      "Commercial renovation experience supported by cost and site coordination.",
-
+      "Commercial renovation and completion supported by cost and site coordination.",
     publicCategory: "MD Professional Experience",
     engagementTag: "Supervision",
-
     role: "Quantity Surveyor / Construction Manager",
     organisation: "Cannon Projects",
     location: "Abuja, Nigeria",
     status: "Completed Professional Reference",
-
     summary:
-      "Commercial office renovation and completion experience involving measurement, cost monitoring, procurement coordination, interior finishes, ceiling works, fittings and project reporting.",
-
-    attribution:
-      "This project forms part of the Managing Director's professional experience while working with Cannon Projects and was not undertaken as a Charismak contract.",
-
+      "Office renovation and completion experience with Cannon Projects covering measurement, cost monitoring, procurement coordination, interior finishes, ceiling works, fittings and progress reporting.",
+    attribution: "Professional experience with Cannon Projects.",
     cover: projectCover("Office"),
     heroImages: [projectHero("Office"), projectCover("Office")],
     images: projectGallery("Office", 10),
     videos: [],
-
     services: [
       "Quantity Surveying",
       "Construction Supervision",
@@ -527,39 +367,26 @@ export const projects: Project[] = [
       "Progress Valuation",
       "Project Reporting",
     ],
-
     featured: false,
     showOnProjectsPage: true,
   },
-
   {
     slug: "block-of-flats-cvl",
     title: "Block of Flats for CVL",
-    heroTitle:
-      "Residential cost and construction management experience.",
-
+    heroTitle: "Residential cost management and construction coordination experience.",
     publicCategory: "MD Professional Experience",
     engagementTag: "Quantity Surveying",
-
     role: "Quantity Surveyor",
     organisation: "Cannon Projects",
     location: "Nigeria",
     status: "Professional Project Reference",
-
     summary:
-      "Residential block-of-flats experience involving measurement, bill preparation, cost monitoring, valuation, procurement review and construction coordination.",
-
-    attribution:
-      "This reference reflects the Managing Director's professional involvement while working with Cannon Projects and is not a Charismak contract.",
-
+      "Block-of-flats experience with Cannon Projects covering measurement, bill preparation, procurement review, valuation, cost monitoring and construction coordination.",
+    attribution: "Professional experience with Cannon Projects.",
     cover: projectCover("Block-of-flat-cvl"),
-    heroImages: [
-      projectHero("Block-of-flat-cvl"),
-      projectCover("Block-of-flat-cvl"),
-    ],
+    heroImages: [projectHero("Block-of-flat-cvl"), projectCover("Block-of-flat-cvl")],
     images: projectGallery("Block-of-flat-cvl", 10),
     videos: [],
-
     services: [
       "Quantity Surveying",
       "Bill Preparation",
@@ -568,39 +395,27 @@ export const projects: Project[] = [
       "Procurement Review",
       "Construction Coordination",
     ],
-
     featured: false,
     showOnProjectsPage: true,
   },
-
   {
     slug: "hillside-mansions",
     title: "Hillside Mansions",
     heroTitle:
-      "Premium residential experience supported by commercial control.",
-
+      "Premium residential delivery experience supported by commercial control.",
     publicCategory: "MD Professional Experience",
     engagementTag: "Quantity Surveying",
-
     role: "Quantity Surveyor / Project Professional",
     organisation: "Cannon Projects",
     location: "Abuja, Nigeria",
     status: "Professional Project Reference",
-
     summary:
-      "Residential mansion development experience involving cost planning, measurement, valuation, procurement review, technical coordination and construction monitoring.",
-
-    attribution:
-      "This project is presented as part of the Managing Director's professional career experience with Cannon Projects, not as a Charismak contract.",
-
+      "Residential mansion development experience with Cannon Projects covering cost planning, measurement, valuation, procurement review, technical coordination and construction monitoring.",
+    attribution: "Professional experience with Cannon Projects.",
     cover: projectCover("hillside", "png"),
-    heroImages: [
-      projectHero("hillside", "png"),
-      projectCover("hillside", "png"),
-    ],
+    heroImages: [projectHero("hillside", "png"), projectCover("hillside", "png")],
     images: projectGallery("hillside", 7, "png"),
     videos: [],
-
     services: [
       "Cost Planning",
       "Quantity Surveying",
@@ -609,39 +424,27 @@ export const projects: Project[] = [
       "Project Coordination",
       "Construction Monitoring",
     ],
-
     featured: false,
     showOnProjectsPage: true,
   },
-
   {
     slug: "hilltop-pentagon",
     title: "Hilltop & Pentagon Developments",
     heroTitle:
-      "Building development experience shaped by cost and technical coordination.",
-
+      "Cost management and project coordination experience on building developments in Maitama.",
     publicCategory: "MD Professional Experience",
     engagementTag: "Supervision",
-
     role: "Quantity Surveyor / Assistant Project Manager",
     organisation: "Cannon Projects",
     location: "Maitama, Abuja",
     status: "Professional Project Reference",
-
     summary:
-      "Building development experience involving quantity surveying, cost reporting, contractor valuation, procurement coordination and construction monitoring.",
-
-    attribution:
-      "This project forms part of the Managing Director's professional experience with Cannon Projects and is not represented as a Charismak contract.",
-
+      "Building development experience with Cannon Projects covering quantity surveying, cost reporting, contractor valuation, procurement coordination and construction monitoring.",
+    attribution: "Professional experience with Cannon Projects.",
     cover: projectCover("hilltop-pentagon"),
-    heroImages: [
-      projectHero("hilltop-pentagon"),
-      projectCover("hilltop-pentagon"),
-    ],
+    heroImages: [projectHero("hilltop-pentagon"), projectCover("hilltop-pentagon")],
     images: projectGallery("hilltop-pentagon", 10),
     videos: [],
-
     services: [
       "Quantity Surveying",
       "Cost Reporting",
@@ -649,31 +452,23 @@ export const projects: Project[] = [
       "Procurement Coordination",
       "Construction Monitoring",
     ],
-
     featured: false,
     showOnProjectsPage: true,
   },
-
   {
     slug: "architectural-department-building",
     title: "Architectural Department Building",
     heroTitle:
-      "Institutional construction experience supported by quantity surveying.",
-
+      "Institutional building experience supported by quantity surveying and cost control.",
     publicCategory: "MD Professional Experience",
     engagementTag: "Quantity Surveying",
-
     role: "Quantity Surveyor",
     organisation: "Three O's Nigeria Limited",
     location: "Nigeria",
     status: "Professional Project Reference",
-
     summary:
-      "Institutional building experience involving measurement, bill preparation, valuation, materials assessment, cost control and construction coordination.",
-
-    attribution:
-      "This project forms part of the Managing Director's earlier professional career experience with Three O's Nigeria Limited and was not undertaken as a Charismak contract.",
-
+      "Institutional construction experience with Three O's Nigeria Limited covering measurement, bill preparation, valuation, materials assessment, cost control and construction coordination.",
+    attribution: "Professional experience with Three O's Nigeria Limited.",
     cover: projectCover("architectural-department"),
     heroImages: [
       projectHero("architectural-department"),
@@ -681,7 +476,6 @@ export const projects: Project[] = [
     ],
     images: projectGallery("architectural-department", 12),
     videos: [],
-
     services: [
       "Quantity Surveying",
       "Bill Preparation",
@@ -690,36 +484,26 @@ export const projects: Project[] = [
       "Materials Assessment",
       "Cost Control",
     ],
-
     featured: false,
     showOnProjectsPage: true,
   },
-
   {
     slug: "residential-development-asiwaju",
     title: "Residential Development for Asiwaju",
-    heroTitle:
-      "Private residential experience supported by cost management.",
-
+    heroTitle: "Residential quantity surveying and cost management experience.",
     publicCategory: "MD Professional Experience",
     engagementTag: "Quantity Surveying",
-
     role: "Quantity Surveyor",
     organisation: "Three O's Nigeria Limited",
     location: "Nigeria",
     status: "Professional Project Reference",
-
     summary:
-      "Private residential development experience involving quantity take-off, cost planning, valuation, procurement support and construction monitoring.",
-
-    attribution:
-      "This project is included as part of the Managing Director's professional career experience with Three O's Nigeria Limited and is not a Charismak contract.",
-
+      "Private residential development experience with Three O's Nigeria Limited covering quantity take-off, cost planning, valuation, procurement support and construction monitoring.",
+    attribution: "Professional experience with Three O's Nigeria Limited.",
     cover: projectCover("asiwaju"),
     heroImages: [projectHero("asiwaju"), projectCover("asiwaju")],
     images: projectGallery("asiwaju", 2),
     videos: [],
-
     services: [
       "Quantity Take-Off",
       "Cost Planning",
@@ -727,39 +511,27 @@ export const projects: Project[] = [
       "Procurement Support",
       "Construction Monitoring",
     ],
-
     featured: false,
     showOnProjectsPage: true,
   },
-
   {
     slug: "block-of-flats-asokoro",
     title: "Block of Flats at Asokoro",
     heroTitle:
-      "Residential quantity surveying experience in a premium Abuja location.",
-
+      "Residential quantity surveying and commercial coordination in Asokoro, Abuja.",
     publicCategory: "MD Professional Experience",
     engagementTag: "Quantity Surveying",
-
     role: "Quantity Surveyor / Project Professional",
     organisation: "Cannon Projects",
     location: "Asokoro, Abuja",
     status: "Professional Project Reference",
-
     summary:
-      "Residential block-of-flats experience involving measurement, cost control, contractor valuation, procurement review and construction coordination.",
-
-    attribution:
-      "This project forms part of the Managing Director's professional career portfolio while working with Cannon Projects and was not undertaken as a Charismak contract.",
-
+      "Block-of-flats experience with Cannon Projects covering measurement, cost control, contractor valuation, procurement review and construction coordination.",
+    attribution: "Professional experience with Cannon Projects.",
     cover: projectCover("asokoro", "png"),
-    heroImages: [
-      projectHero("asokoro", "png"),
-      projectCover("asokoro", "png"),
-    ],
+    heroImages: [projectHero("asokoro", "png"), projectCover("asokoro", "png")],
     images: projectGallery("asokoro", 10, "png"),
     videos: [],
-
     services: [
       "Quantity Surveying",
       "Measurement",
@@ -768,22 +540,15 @@ export const projects: Project[] = [
       "Procurement Review",
       "Construction Coordination",
     ],
-
     featured: false,
     showOnProjectsPage: true,
   },
 ];
 
-/* -------------------------------------------------------------------------- */
-/*                                   PEOPLE                                   */
-/* -------------------------------------------------------------------------- */
-
 export const people: Person[] = [
-  /* ---------------------------------- ACTIVE TEAM ---------------------------------- */
-
   {
     name: "Abiodun Christopher Akinola",
-    role: "General Project Director",
+    role: "Project Director, Managing Director",
     image: "/Images/Team/md.png",
     group: "Active Team",
     category: "Leadership",
@@ -826,9 +591,6 @@ export const people: Person[] = [
     bio:
       "Supports site supervision, workforce coordination, logistics and daily construction operations.",
   },
-
-  /* ---------------------------------- SUPPORTING TEAM ---------------------------------- */
-
   {
     name: "Seyi Fituyi",
     role: "Project Director (South)",
@@ -885,42 +647,22 @@ export const people: Person[] = [
   },
 ];
 
-/* -------------------------------------------------------------------------- */
-/*                                MD PROFILE                                  */
-/* -------------------------------------------------------------------------- */
-
 export const mdProfile = {
   name: "Abiodun Christopher Akinola, MNIQS",
-
-  position: "Managing Director / Executive Director",
-
-  title: "Managing Director / Executive Director",
-
+  position: "Project Director, Managing Director",
+  title: "Project Director, Managing Director",
   subtitle:
     "Quantity Surveyor | Construction Project Manager | Cost Consultant | Construction Executive",
-
   image: "/Images/Team/md-profile.png",
-
-  resume:
-    "/md-profile.pdf",
-
-  profilePdf:
-    "/md-profile.pdf",
-
+  resume: "/md-profile.pdf",
+  profilePdf: "/md-profile.pdf",
   phone: "+2347066619598",
-
   email: "info@charismakproject.com",
-
   personalEmail: "akinolaca@gmail.com",
-
-  linkedin:
-    "https://linkedin.com/in/abiodun-christopher-akinola-80364b11b",
-
+  linkedin: "https://linkedin.com/in/abiodun-christopher-akinola-80364b11b",
   location: "Abuja, Nigeria",
-
   summary:
     "Construction and cost management professional with extensive experience across quantity surveying, project management, building construction, steel fabrication, renovation, construction supervision, digital reporting systems and international project assignments across Nigeria and East Africa.",
-
   highlights: [
     "Managing Director of Charismak Project Nigeria Limited",
     "Professional Member, Nigerian Institute of Quantity Surveyors",
@@ -928,7 +670,6 @@ export const mdProfile = {
     "International construction and quantity surveying experience in Djibouti, East Africa",
     "Professional involvement across residential, commercial, institutional, renovation, infrastructure and steel fabrication projects",
   ],
-
   expertise: [
     "Quantity Surveying",
     "Construction Project Management",
@@ -943,7 +684,6 @@ export const mdProfile = {
     "Steel Fabrication Coordination",
     "Digital Construction Systems",
   ],
-
   education: [
     {
       degree: "B.Tech Quantity Surveying",
@@ -958,7 +698,6 @@ export const mdProfile = {
       note: "Distinction",
     },
   ],
-
   certifications: [
     "Professional Member, Nigerian Institute of Quantity Surveyors",
     "Member, Green Building Council Nigeria",
@@ -968,10 +707,6 @@ export const mdProfile = {
     "NYSC Discharge Certificate",
   ],
 };
-
-/* -------------------------------------------------------------------------- */
-/*                              TRUST & QUALITY                               */
-/* -------------------------------------------------------------------------- */
 
 export const trustItems = [
   {
@@ -994,10 +729,6 @@ export const trustItems = [
   },
 ];
 
-/* -------------------------------------------------------------------------- */
-/*                                TESTIMONIALS                                */
-/* -------------------------------------------------------------------------- */
-
 export type Testimonial = {
   quote: string;
   name: string;
@@ -1010,7 +741,7 @@ export const testimonials: Testimonial[] = [
     quote:
       "Charismak Project delivered with strong attention to detail and met their commitments as agreed. Their level of consistency stood out compared to other vendors we have worked with.",
     name: "Wandel International Limited",
-    role: "Client, Coco Gwarimpa Project",
+    role: "Client, COCO Gwarimpa Project",
     project: "coco-gwarimpa-project",
   },
   {
@@ -1027,65 +758,47 @@ export const testimonials: Testimonial[] = [
   },
 ];
 
-/* -------------------------------------------------------------------------- */
-/*                              INSPIRATION HUB                               */
-/* -------------------------------------------------------------------------- */
-
 export const inspirationHub: InspirationItem[] = [
   {
     title: "Modern Residential Ideas",
     category: "Residential Design",
-    description:
-      "Contemporary facade, layout and residential development references.",
+    description: "Contemporary facade, layout and residential development references.",
     image: "/Images/Inspiration/residential.jpg",
-    link:
-      "https://www.pinterest.com/search/pins/?q=modern%20residential%20architecture",
+    link: "https://www.pinterest.com/search/pins/?q=modern%20residential%20architecture",
   },
   {
     title: "Gate House & Entrance Ideas",
     category: "Estate Infrastructure",
-    description:
-      "Gate house, entrance gate and estate access design inspiration.",
+    description: "Gate house, entrance gate and estate access design inspiration.",
     image: "/Images/Inspiration/gate-house.jpg",
-    link:
-      "https://www.pinterest.com/search/pins/?q=modern%20gatehouse%20design",
+    link: "https://www.pinterest.com/search/pins/?q=modern%20gatehouse%20design",
   },
   {
     title: "Interior Finishing",
     category: "Interior Design",
-    description:
-      "Modern lighting, ceiling, wall finish and interior detailing references.",
+    description: "Modern lighting, ceiling, wall finish and interior detailing references.",
     image: "/Images/Inspiration/interior.jpg",
-    link:
-      "https://www.pinterest.com/search/pins/?q=modern%20interior%20finishing",
+    link: "https://www.pinterest.com/search/pins/?q=modern%20interior%20finishing",
   },
   {
     title: "Steel and Staircase Concepts",
     category: "Steel Fabrication",
-    description:
-      "Steel staircases, railings, frames and fabrication design ideas.",
+    description: "Steel staircases, railings, frames and fabrication design ideas.",
     image: "/Images/Inspiration/steel.jpg",
-    link:
-      "https://www.pinterest.com/search/pins/?q=modern%20steel%20staircase%20design",
+    link: "https://www.pinterest.com/search/pins/?q=modern%20steel%20staircase%20design",
   },
 ];
-
-/* -------------------------------------------------------------------------- */
-/*                                  RESOURCES                                 */
-/* -------------------------------------------------------------------------- */
 
 export const resources: ResourceItem[] = [
   {
     title: "Company Profile",
-    description:
-      "Download the official Charismak Project Nigeria Limited company profile.",
+    description: "Download the official Charismak Project Nigeria Limited company profile.",
     icon: FileText,
     href: "/company-profile.pdf",
   },
   {
     title: "Managing Director Profile",
-    description:
-      "View and download the Managing Director's professional profile.",
+    description: "View and download the Managing Director's professional profile.",
     icon: FileText,
     href: "/md-profile",
   },
