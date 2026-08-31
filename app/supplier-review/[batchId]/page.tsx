@@ -1,3 +1,4 @@
+import AdminNav from "@/components/admin/admin-nav";
 import SupplierReviewCatalogueGate from "@/components/pricing/supplier-review-catalogue-gate";
 
 export const metadata = {
@@ -14,6 +15,7 @@ export default async function SupplierReviewPage({
   const { batchId } = await params;
   return (
     <main className="min-h-screen bg-[#F5F7FA] pt-20">
+      <AdminNav />
       <div className="mx-auto max-w-7xl px-4 py-8 md:px-8 md:py-12">
         <SupplierReviewCatalogueGate batchId={batchId} />
       </div>
