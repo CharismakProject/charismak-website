@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, KeyRound, Loader2, Store, UserPlus } from "lucide-react";
+import { ArrowRight, KeyRound, Loader2, MessageCircle, Store, UserPlus } from "lucide-react";
 
 import {
   createSupplierProfile,
@@ -14,8 +14,18 @@ const PROFILE_TOKEN_KEY = "charismak:supplier-profile-token:v1";
 type Mode = "create" | "signin";
 
 type Props = {
-  onReady: (profile: SupplierProfile) => void;
+  onReady: (profile: SupplierProfile, created?: boolean) => void;
   onGuest: () => void;
+};
+
+const supportWhatsApp = (businessName: string, phone: string) => {
+  const message = [
+    "Hello Charismak Project, I need help resetting my supplier account PIN.",
+    businessName.trim() ? `Business: ${businessName.trim()}` : "",
+    phone.trim() ? `Registered phone: ${phone.trim()}` : "",
+    "I understand that you will verify the account before enabling a new PIN.",
+  ].filter(Boolean).join("\n");
+  return `https://wa.me/2347066619598?text=${encodeURIComponent(message)}`;
 };
 
 export default function SupplierAccountAccess({ onReady, onGuest }: Props) {
@@ -61,7 +71,9 @@ export default function SupplierAccountAccess({ onReady, onGuest }: Props) {
           deliveryAreas: deliveryAreas.trim(),
           pin,
         });
-        keep(result.profile);
+        window.localStorage.setItem(PROFILE_TOKEN_KEY, result.profile.accessToken);
+        window.dispatchEvent(new CustomEvent("charismak:supplier-account-ready"));
+        onReady(result.profile, true);
       } else {
         keep(await recoverSupplierProfile(businessName.trim(), phone.trim(), pin));
       }
@@ -93,7 +105,7 @@ export default function SupplierAccountAccess({ onReady, onGuest }: Props) {
             <>
               <Field label="Contact person" value={contactPerson} onChange={setContactPerson} />
               <Field label="Alternative WhatsApp" value={whatsapp} onChange={setWhatsapp} inputMode="tel" />
-              <Field label="Email" value={email} onChange={setEmail} inputMode="email" />
+              <Field label="Email (optional backup)" value={email} onChange={setEmail} inputMode="email" />
               <Field label="Main supply location" value={location} onChange={setLocation} required placeholder="e.g. Abuja" />
               <div className="sm:col-span-2"><Field label="Delivery / service areas" value={deliveryAreas} onChange={setDeliveryAreas} placeholder="e.g. Abuja, Nasarawa, Kaduna" /></div>
             </>
@@ -102,6 +114,12 @@ export default function SupplierAccountAccess({ onReady, onGuest }: Props) {
         </div>
 
         <p className="mt-3 text-xs leading-5 text-[#617286]">Use a PIN you can remember. It is required together with your business name and phone when you return on another device.</p>
+        {mode === "signin" ? (
+          <div className="mt-4 flex flex-col gap-2 rounded-xl border border-[#CFE4D7] bg-[#F3FBF6] p-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs leading-5 text-[#526579]"><strong className="text-[#071E33]">Forgot your PIN?</strong> Ask Charismak to verify the registered phone and release the account for a new PIN.</p>
+            <a href={supportWhatsApp(businessName, phone)} target="_blank" rel="noreferrer" className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#197447] px-4 text-xs font-black text-white"><MessageCircle className="h-4 w-4" />Request on WhatsApp</a>
+          </div>
+        ) : null}
         {error ? <p className="mt-4 rounded-xl border border-[#F0C4BA] bg-[#FFF4F1] p-3 text-sm text-[#8B1E00]">{error}</p> : null}
 
         <button type="button" onClick={() => void submit()} disabled={busy} className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#A82B05] px-5 text-sm font-black text-white disabled:opacity-50 sm:w-auto">

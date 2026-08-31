@@ -163,11 +163,11 @@ function doorsWindows(input: AdditionalMaterialInput): AdditionalMaterialResult 
 function glassPartition(input: AdditionalMaterialInput): AdditionalMaterialResult {
   const area = n(input.glassPartitionAreaM2);
   const height = n(input.glassPartitionHeightM) || 2.7;
-  const module = n(input.glassPartitionModuleWidthM) || 1.2;
+  const moduleWidth = n(input.glassPartitionModuleWidthM) || 1.2;
   const doors = n(input.glassPartitionDoorCount);
   const waste = wf(input);
   const length = area / height;
-  const panels = Math.ceil(length / module);
+  const panels = Math.ceil(length / moduleWidth);
   const perimeterChannel = (2 * length + 2 * height) * waste;
   const verticals = Math.max(0, panels - 1) * height * waste;
   const siliconeJointLength = Math.max(0, panels - 1) * height + 2 * length;
@@ -175,7 +175,7 @@ function glassPartition(input: AdditionalMaterialInput): AdditionalMaterialResul
   return {
     category: input.category,
     title: "Glass / aluminium partition materials",
-    basis: `${area.toFixed(2)} m² partition, ${height.toFixed(2)} m high, approx. ${module.toFixed(2)} m modules`,
+    basis: `${area.toFixed(2)} m² partition, ${height.toFixed(2)} m high, approx. ${moduleWidth.toFixed(2)} m modules`,
     lines: [
       { id: "glass", material: `${input.glassThicknessMm} mm toughened/laminated glass allowance`, unit: "m²", quantityLow: area * waste, quantityHigh: area * waste, procurementQuantity: Number((area * waste).toFixed(2)) },
       { id: "panels", material: "Indicative glass panels", unit: "panels", quantityLow: panels, quantityHigh: panels, procurementQuantity: panels },

@@ -89,7 +89,6 @@ const overrides: Record<string, ProjectOverride> = {
 };
 
 export const publicProjects: Project[] = projects
-  .filter((project) => project.slug !== "block-of-flats-student-hostels")
   .map((project) => ({ ...project, ...(overrides[project.slug] ?? {}) }));
 
 export const publicProjectBySlug = (slug: string) =>

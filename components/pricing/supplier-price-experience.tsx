@@ -17,6 +17,7 @@ export default function SupplierPriceExperience() {
   const [showBulk, setShowBulk] = useState(false);
   const [showGuest, setShowGuest] = useState(false);
   const [showManage, setShowManage] = useState(false);
+  const [showWhatsAppAccess, setShowWhatsAppAccess] = useState(false);
   const knownTokenRef = useRef("");
 
   useEffect(() => {
@@ -89,10 +90,11 @@ export default function SupplierPriceExperience() {
   if (!profile && !showGuest) {
     return (
       <SupplierAccountAccess
-        onReady={(next) => {
+        onReady={(next, created) => {
           knownTokenRef.current = next.accessToken;
           setProfile(next);
           setShowGuest(false);
+          setShowWhatsAppAccess(Boolean(created));
         }}
         onGuest={() => setShowGuest(true)}
       />
@@ -153,6 +155,8 @@ export default function SupplierPriceExperience() {
   return (
     <SupplierReturningDashboard
       profile={profile}
+      showWhatsAppAccess={showWhatsAppAccess}
+      onDismissWhatsAppAccess={() => setShowWhatsAppAccess(false)}
       onBulkUpdate={() => setShowBulk(true)}
       onManageProfile={() => setShowManage(true)}
     />

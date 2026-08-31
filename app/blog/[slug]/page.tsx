@@ -6,7 +6,7 @@ import { blogArticles, type BlogArticle } from "@/lib/content/blog";
 import { loadPublishedBlogArticle, loadPublishedBlogArticles } from "@/lib/content/blog-data";
 
 type Props = { params: Promise<{ slug: string }> };
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 const isNewsArticle = (article: BlogArticle) => article.contentType
   ? article.contentType === "news"
@@ -85,7 +85,7 @@ export default async function BlogArticlePage({ params }: Props) {
               </section>
             ))}
 
-            <aside className="bg-[#071E33] p-7 text-white md:p-8"><p className="text-xs font-bold uppercase tracking-[0.22em] text-[#F2B544]">Put The Information To Work</p><h2 className="mt-4 text-2xl font-semibold">Turn the article into a project decision.</h2><p className="mt-3 text-sm leading-7 text-white/68">Check current price references, calculate materials or develop a preliminary project estimate with Charismak's public construction tools.</p><div className="mt-6 flex flex-wrap gap-3"><Link href="/estimator" className="inline-flex items-center gap-2 bg-[#C8A45D] px-5 py-3 text-sm font-bold text-[#071E33] transition hover:bg-white">Open estimator <ArrowRight className="h-4 w-4" /></Link><Link href="/prices" className="inline-flex items-center gap-2 border border-white/20 px-5 py-3 text-sm font-bold text-white">Check prices</Link></div></aside>
+            <aside className="bg-[#071E33] p-7 text-white md:p-8"><p className="text-xs font-bold uppercase tracking-[0.22em] text-[#F2B544]">Put The Information To Work</p><h2 className="mt-4 text-2xl font-semibold">Turn the article into a project decision.</h2><p className="mt-3 text-sm leading-7 text-white/68">Check current price references, calculate materials or develop a preliminary project estimate with Charismak&apos;s public construction tools.</p><div className="mt-6 flex flex-wrap gap-3"><Link href="/estimator" className="inline-flex items-center gap-2 bg-[#C8A45D] px-5 py-3 text-sm font-bold text-[#071E33] transition hover:bg-white">Open estimator <ArrowRight className="h-4 w-4" /></Link><Link href="/prices" className="inline-flex items-center gap-2 border border-white/20 px-5 py-3 text-sm font-bold text-white">Check prices</Link></div></aside>
           </div>
 
           <aside className="space-y-6 lg:sticky lg:top-28 lg:self-start">

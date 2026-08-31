@@ -166,7 +166,7 @@ function mortarParts(value: string): [number, number] {
 
 function concrete(input: MaterialEstimateInput): MaterialEstimateResult {
   const volume = positive(input.concreteVolumeM3);
-  let [c, s, a] = input.concreteMix === "custom" ? [positive(input.cementRatio) || 1, positive(input.sandRatio), positive(input.aggregateRatio)] : mixParts(input.concreteMix);
+  const [c, s, a] = input.concreteMix === "custom" ? [positive(input.cementRatio) || 1, positive(input.sandRatio), positive(input.aggregateRatio)] : mixParts(input.concreteMix);
   const sum = c + s + a;
   const dryVolume = volume * 1.54;
   const wf = wasteFactor(input);

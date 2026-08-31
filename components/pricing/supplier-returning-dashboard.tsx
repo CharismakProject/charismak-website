@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   CheckCircle2,
   ChevronRight,
@@ -10,7 +10,9 @@ import {
   PackagePlus,
   RefreshCw,
   Search,
+  MessageCircle,
   UserRound,
+  X,
 } from "lucide-react";
 
 import type { SupplierProfile } from "@/lib/platform/supplier-profiles";
@@ -25,6 +27,8 @@ import { loadPriceItems } from "@/lib/pricing/store";
 
 type Props = {
   profile: SupplierProfile;
+  showWhatsAppAccess?: boolean;
+  onDismissWhatsAppAccess?: () => void;
   onBulkUpdate: () => void;
   onManageProfile: () => void;
 };
@@ -79,7 +83,21 @@ function previousFor(item: PriceItem, ownItems: SupplierOwnPriceItem[]) {
     ?? null;
 }
 
-export default function SupplierReturningDashboard({ profile, onBulkUpdate, onManageProfile }: Props) {
+const supplierWhatsAppAccessHref = (profile: SupplierProfile) => {
+  const raw = profile.whatsapp || profile.phone;
+  const digits = raw.replace(/\D/g, "").replace(/^0/, "234");
+  const returnUrl = typeof window === "undefined" ? "https://www.charismakproject.com/supplier-prices" : `${window.location.origin}/supplier-prices`;
+  const message = [
+    "My Charismak supplier account",
+    `Business: ${profile.businessName}`,
+    `Supplier code: ${profile.supplierCode}`,
+    `Return to update prices: ${returnUrl}`,
+    "Sign in with the registered business name, phone number and your private PIN. Never send your PIN to anyone.",
+  ].join("\n");
+  return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
+};
+
+export default function SupplierReturningDashboard({ profile, showWhatsAppAccess = false, onDismissWhatsAppAccess, onBulkUpdate, onManageProfile }: Props) {
   const [ownItems, setOwnItems] = useState<SupplierOwnPriceItem[]>([]);
   const [catalogue, setCatalogue] = useState<PriceItem[]>([]);
   const [query, setQuery] = useState("");
@@ -90,7 +108,7 @@ export default function SupplierReturningDashboard({ profile, onBulkUpdate, onMa
   const [draft, setDraft] = useState<Draft | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
@@ -103,9 +121,9 @@ export default function SupplierReturningDashboard({ profile, onBulkUpdate, onMa
     } finally {
       setLoading(false);
     }
-  };
+  }, [profile.accessToken]);
 
-  useEffect(() => { void load(); }, [profile.accessToken]);
+  useEffect(() => { void load(); }, [load]);
 
   const visibleCatalogue = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -190,6 +208,17 @@ export default function SupplierReturningDashboard({ profile, onBulkUpdate, onMa
 
   return (
     <div className="space-y-5 sm:space-y-7">
+      {showWhatsAppAccess ? (
+        <section className="relative rounded-[1.5rem] border border-[#BFE2CD] bg-[#F0FAF4] p-5 sm:p-6">
+          <button type="button" onClick={onDismissWhatsAppAccess} aria-label="Dismiss account message" className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full bg-white text-[#526579]"><X className="h-4 w-4" /></button>
+          <div className="pr-10">
+            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#197447]">Account created</p>
+            <h2 className="mt-2 text-xl font-black text-[#071E33]">Keep your supplier access link in WhatsApp.</h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-[#526579]">This opens a prepared message to your registered WhatsApp number with the return link, business name and supplier code. Your private PIN is never included.</p>
+            <a href={supplierWhatsAppAccessHref(profile)} target="_blank" rel="noreferrer" className="mt-4 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#197447] px-5 text-sm font-black text-white"><MessageCircle className="h-4 w-4" />Save access details in WhatsApp</a>
+          </div>
+        </section>
+      ) : null}
       <section className="rounded-[1.5rem] bg-[#071E33] p-5 text-white shadow-[0_25px_70px_rgba(7,30,51,0.18)] sm:rounded-[2rem] sm:p-8">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>

@@ -9,7 +9,7 @@ export const metadata = {
   title: "Construction News, Cost Guides & Learning | Charismak",
   description: "Nigeria-focused construction news, cost planning, materials, BOQ, procurement and practical learning for homeowners and industry professionals.",
 };
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 const isNewsArticle = (article: BlogArticle) => {
   if (article.contentType) return article.contentType === "news";

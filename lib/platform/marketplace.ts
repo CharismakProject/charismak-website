@@ -8,8 +8,15 @@ export type MarketplaceOffer = {
   id: string;
   catalogueItemId: string;
   productName: string;
+  specification?: string;
+  brand?: string;
   price: number;
   quotedUnit: string;
+  location?: string;
+  serviceArea?: string;
+  availability?: string;
+  deliveryIncluded?: boolean | null;
+  deliveryFee?: number | null;
   validFrom: string;
   validUntil: string;
 };
@@ -118,10 +125,17 @@ const toSupplierDirectoryProfile = (row: Record<string, unknown>): MarketplacePr
     return {
       id: String(offer.id ?? `${row.id}-${catalogueItemId}`),
       catalogueItemId,
-      productName: productNameFor(catalogueItemId),
+      productName: String(offer.product_name ?? "").trim() || productNameFor(catalogueItemId),
+      specification: String(offer.specification ?? "").trim() || undefined,
+      brand: String(offer.brand ?? "").trim() || undefined,
       price: Number(offer.unit_price ?? 0),
       quotedUnit: String(offer.quoted_unit ?? "unit"),
-      validFrom: String(offer.valid_from ?? ""),
+      location: String(offer.location ?? "").trim() || undefined,
+      serviceArea: String(offer.service_area ?? "").trim() || undefined,
+      availability: String(offer.availability ?? "").trim() || undefined,
+      deliveryIncluded: offer.delivery_included == null ? null : Boolean(offer.delivery_included),
+      deliveryFee: offer.delivery_fee == null ? null : Number(offer.delivery_fee),
+      validFrom: String(offer.published_at ?? offer.submitted_at ?? offer.created_at ?? ""),
       validUntil: String(offer.valid_until ?? ""),
     };
   }).filter((offer) => offer.catalogueItemId && Number.isFinite(offer.price));

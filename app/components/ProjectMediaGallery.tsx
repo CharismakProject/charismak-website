@@ -9,7 +9,7 @@ import {
   PlayCircle,
   X,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 type ProjectMediaGalleryProps = {
   title: string;
@@ -37,21 +37,21 @@ export default function ProjectMediaGallery({
 
   const activeImage = validImages[activeImageIndex];
 
-  const showPreviousImage = () => {
+  const showPreviousImage = useCallback(() => {
     if (validImages.length === 0) return;
 
     setActiveImageIndex((current) =>
       current === 0 ? validImages.length - 1 : current - 1
     );
-  };
+  }, [validImages.length]);
 
-  const showNextImage = () => {
+  const showNextImage = useCallback(() => {
     if (validImages.length === 0) return;
 
     setActiveImageIndex((current) =>
       current === validImages.length - 1 ? 0 : current + 1
     );
-  };
+  }, [validImages.length]);
 
   useEffect(() => {
     if (!lightboxOpen) return;
@@ -77,7 +77,7 @@ export default function ProjectMediaGallery({
       document.body.style.overflow = "";
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [lightboxOpen, validImages.length]);
+  }, [lightboxOpen, showNextImage, showPreviousImage]);
 
   if (validImages.length === 0 && validVideos.length === 0) {
     return (

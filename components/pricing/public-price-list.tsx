@@ -490,7 +490,7 @@ export default function PublicPriceList() {
     );
   }, [items, category, location, query]);
 
-  const usePopularSearch = (value: string) => {
+  const applyPopularSearch = (value: string) => {
     setQuery(value);
     setCategory("all");
   };
@@ -554,7 +554,7 @@ export default function PublicPriceList() {
                 <button
                   key={value}
                   type="button"
-                  onClick={() => usePopularSearch(value)}
+                  onClick={() => applyPopularSearch(value)}
                   className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 font-semibold text-white/85 transition hover:border-[#C8A45D] hover:text-[#F2B544]"
                 >
                   {value}

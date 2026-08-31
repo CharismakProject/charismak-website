@@ -2,8 +2,6 @@
 
 import React, { useState } from "react";
 import Card from "./ui/card";
-import Field from "./ui/field";
-import ShellButton from "./ui/button";
 import { useEstimate } from "./estimate-provider";
 import ReviewWorkspace from "../bill/review-workspace";
 import { adaptFenceScopeToBill } from "@/lib/billing/fence-adapter";
@@ -20,7 +18,7 @@ type WorkflowProps = {
 
 export default function Workflow({ onOpenConcrete, onOpenBlockwork, onOpenBill, onOpenEstimates }: WorkflowProps) {
   const estimate = useEstimate();
-  const { projectInfo, setProjectField, sections, addSection, updateSection, removeSection, duplicateSection, addGateToSection, removeGateFromSection, totals, calculateSectionLayout, setActiveStage, startNewEstimate, clearDraft, estimateBillId, setEstimateBillId } = estimate as any;
+  const { projectInfo, setProjectField, sections, addSection, updateSection, removeSection, duplicateSection, addGateToSection, removeGateFromSection, calculateSectionLayout, setActiveStage, startNewEstimate, clearDraft, estimateBillId, setEstimateBillId } = estimate as any;
 
   const [newGateWidth, setNewGateWidth] = useState(1.2);
   const [newGateType, setNewGateType] = useState("pedestrian");

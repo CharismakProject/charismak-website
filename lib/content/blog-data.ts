@@ -71,7 +71,7 @@ async function readRows(query: string): Promise<BlogPostRow[] | null> {
   try {
     const response = await fetch(`${supabaseUrl}/rest/v1/blog_posts?${query}`, {
       headers: publicHeaders,
-      cache: "no-store",
+      next: { revalidate: 300, tags: ["blog-posts"] },
     });
     if (!response.ok) return null;
     return await response.json() as BlogPostRow[];

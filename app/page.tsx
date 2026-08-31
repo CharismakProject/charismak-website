@@ -6,14 +6,19 @@ import {
   Building2,
   Calculator,
   ClipboardCheck,
+  DraftingCompass,
+  Factory,
   Hammer,
+  HardHat,
+  Home,
   Leaf,
   ShieldCheck,
   Sparkles,
+  Wrench,
 } from "lucide-react";
 
-import { company, services } from "./site-data";
-import { loadPublishedProjects, loadWebsiteContent } from "@/lib/content/website-cms";
+import { company } from "./site-data";
+import { loadPublishedProjects, loadPublishedServices, loadWebsiteContent } from "@/lib/content/website-cms";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return <p className="mb-4 text-xs font-bold uppercase tracking-[0.28em] text-[#C8A45D]">{children}</p>;
@@ -42,8 +47,23 @@ const strengths = [
   { title: "Long-term value", text: "Solutions considered for durability, use, maintenance and overall project performance.", icon: Leaf },
 ];
 
+const serviceIconMap = {
+  building: Building2,
+  hardhat: HardHat,
+  hammer: Hammer,
+  clipboard: ClipboardCheck,
+  factory: Factory,
+  wrench: Wrench,
+  drafting: DraftingCompass,
+  home: Home,
+};
+
 export default async function HomePage() {
-  const [projects, content] = await Promise.all([loadPublishedProjects(), loadWebsiteContent("company")]);
+  const [projects, content, managedServices] = await Promise.all([
+    loadPublishedProjects(),
+    loadWebsiteContent("company"),
+    loadPublishedServices(),
+  ]);
   const byKey = new Map(content.map((record) => [record.contentKey, record.value]));
   const overview = textValue(byKey.get("company.overview"), company.overview);
 
@@ -73,7 +93,7 @@ export default async function HomePage() {
 
       <section className="bg-white px-5 py-20 md:px-8"><div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.72fr_1.28fr] lg:items-start"><div><SectionLabel>About Charismak</SectionLabel><h2 className="max-w-xl text-4xl font-semibold leading-[1.05] tracking-[-0.04em] text-[#071E33] md:text-5xl">Construction capability backed by cost and project delivery experience.</h2><p className="mt-6 max-w-xl text-base leading-8 text-[#3A4653]">{overview}</p><Link href="/about" className="mt-7 inline-flex items-center gap-2 bg-[#0D3B66] px-6 py-3.5 text-sm font-bold text-white transition hover:bg-[#071E33]">About Charismak <ArrowRight className="h-4 w-4" /></Link></div><div className="grid gap-px overflow-hidden border border-[#0D3B66]/10 bg-[#0D3B66]/10 sm:grid-cols-2 lg:grid-cols-4">{strengths.map(({ title, text, icon: Icon }) => <article key={title} className="bg-white p-6"><Icon className="h-7 w-7 text-[#0D3B66]" /><h3 className="mt-6 text-base font-bold text-[#071E33]">{title}</h3><p className="mt-3 text-sm leading-6 text-[#3A4653]">{text}</p></article>)}</div></div></section>
 
-      <section className="bg-[#071E33] px-5 py-20 text-white md:px-8"><div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:items-center"><div><SectionLabel>What We Do</SectionLabel><h2 className="text-4xl font-semibold leading-tight tracking-[-0.03em] md:text-5xl">Integrated capability from planning through completion.</h2><p className="mt-6 max-w-xl text-base leading-8 text-white/68">Construction, renovation, engineering, project management and finishing coordinated around the technical and commercial needs of each project.</p><Link href="/services" className="mt-8 inline-flex items-center gap-2 bg-[#C8A45D] px-6 py-3.5 text-sm font-bold text-[#071E33] transition hover:bg-[#F2B544]">Explore Our Services <ArrowRight className="h-4 w-4" /></Link></div><div className="grid gap-px overflow-hidden border border-white/10 bg-white/10 sm:grid-cols-2 lg:grid-cols-4">{services.slice(0, 8).map((service) => { const Icon = service.icon; return <article key={service.title} className="group bg-[#0A2A49] p-6 transition hover:bg-white hover:text-[#071E33]"><Icon className="h-7 w-7 text-[#F2B544] transition group-hover:text-[#0D3B66]" /><h3 className="mt-6 text-base font-bold">{service.title}</h3><p className="mt-3 text-sm leading-6 text-white/62 transition group-hover:text-[#3A4653]">{service.description}</p></article>; })}</div></div></section>
+      <section className="bg-[#071E33] px-5 py-20 text-white md:px-8"><div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:items-center"><div><SectionLabel>What We Do</SectionLabel><h2 className="text-4xl font-semibold leading-tight tracking-[-0.03em] md:text-5xl">Integrated capability from planning through completion.</h2><p className="mt-6 max-w-xl text-base leading-8 text-white/68">Construction, renovation, engineering, project management and finishing coordinated around the technical and commercial needs of each project.</p><Link href="/services" className="mt-8 inline-flex items-center gap-2 bg-[#C8A45D] px-6 py-3.5 text-sm font-bold text-[#071E33] transition hover:bg-[#F2B544]">Explore Our Services <ArrowRight className="h-4 w-4" /></Link></div><div className="grid gap-px overflow-hidden border border-white/10 bg-white/10 sm:grid-cols-2 lg:grid-cols-4">{managedServices.slice(0, 8).map((service) => { const Icon = serviceIconMap[service.iconKey as keyof typeof serviceIconMap] || Building2; return <article key={service.id} className="group bg-[#0A2A49] p-6 transition hover:bg-white hover:text-[#071E33]"><Icon className="h-7 w-7 text-[#F2B544] transition group-hover:text-[#0D3B66]" /><h3 className="mt-6 text-base font-bold">{service.title}</h3><p className="mt-3 text-sm leading-6 text-white/62 transition group-hover:text-[#3A4653]">{service.description}</p></article>; })}</div></div></section>
 
       <section className="border-b border-[#0D3B66]/10 bg-white px-5 py-20 md:px-8"><div className="mx-auto max-w-7xl"><div className="grid gap-8 lg:grid-cols-[0.55fr_1.45fr] lg:items-end"><div><SectionLabel>Project Delivery</SectionLabel><h2 className="text-3xl font-semibold leading-tight tracking-[-0.03em] text-[#071E33] md:text-5xl">A disciplined route from brief to handover.</h2></div><p className="max-w-2xl text-base leading-8 text-[#3A4653] lg:justify-self-end">The level of detail changes from project to project, but the principles remain the same: understand the work, coordinate the inputs, control execution and close out properly.</p></div><div className="mt-12 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">{processSteps.map(({ number, title, text, icon: Icon }) => <article key={title} className="border-t border-[#0D3B66]/15 pt-7"><div className="flex items-center justify-between"><Icon className="h-6 w-6 text-[#0D3B66]" /><span className="text-xs font-bold tracking-[0.2em] text-[#C8A45D]">{number}</span></div><h3 className="mt-6 text-lg font-bold text-[#071E33]">{title}</h3><p className="mt-3 text-sm leading-7 text-[#3A4653]">{text}</p></article>)}</div></div></section>
 

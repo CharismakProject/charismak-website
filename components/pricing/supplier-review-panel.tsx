@@ -449,7 +449,7 @@ export default function SupplierReviewPanel({ batchId }: { batchId: string }) {
           ? { ...line, status: "approved", marketplace_offer_id: offerId, valid_until: line.valid_until || validityDateFrom(now) }
           : line;
       }));
-      setMessage(`${approvableLines.length} supplier price${approvableLines.length === 1 ? "" : "s"} published with validity dates. Earlier approved prices remain in history and automatically leave the live range when they expire.`);
+      setMessage(`${approvableLines.length} supplier price${approvableLines.length === 1 ? "" : "s"} published with validity dates. Each supplier’s previous current price for the same item is archived automatically.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to approve and publish.");
     } finally {
@@ -504,7 +504,7 @@ export default function SupplierReviewPanel({ batchId }: { batchId: string }) {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Link href="/prices" className="inline-flex items-center gap-2 text-sm font-bold text-[#0D3B66]"><ArrowLeft className="h-4 w-4" />Back to Prices</Link>
+        <Link href="/admin/supplier-reviews" className="inline-flex items-center gap-2 text-sm font-bold text-[#0D3B66]"><ArrowLeft className="h-4 w-4" />Back to Supplier Reviews</Link>
         <span className={`rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] ${batch.status === "approved" ? "bg-[#EAF7EF] text-[#197447]" : batch.status === "rejected" ? "bg-[#FFF1EE] text-[#A82B05]" : "bg-[#FFF7E7] text-[#8A6500]"}`}>{batch.status}</span>
       </div>
 
@@ -519,7 +519,7 @@ export default function SupplierReviewPanel({ batchId }: { batchId: string }) {
       {message ? <div className="flex items-start gap-2 rounded-xl border border-[#CFE4D7] bg-[#F3FBF6] px-4 py-3 text-sm text-[#197447]"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />{message}</div> : null}
 
       <section className="rounded-[2rem] border border-[#DCE4EC] bg-white p-5 md:p-7">
-        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between"><div><p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#A82B05]">Price lines</p><h2 className="mt-2 text-2xl font-black text-[#071E33]">Check what will appear under each material</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-[#617286]">Map every supplier price to the correct Charismak Price List item. Approval publishes a new dated price observation; earlier valid prices remain in the live range until their validity expires.</p></div><div className="rounded-xl bg-[#F7F9FB] px-4 py-3 text-xs text-[#617286]"><strong className="text-[#071E33]">{lines.length}</strong> parsed line{lines.length === 1 ? "" : "s"}</div></div>
+        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between"><div><p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#A82B05]">Price lines</p><h2 className="mt-2 text-2xl font-black text-[#071E33]">Check what will appear under each material</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-[#617286]">Map every supplier price to the correct Charismak Price List item. Approval publishes a dated price observation and automatically replaces that supplier’s previous current price for the same material.</p></div><div className="rounded-xl bg-[#F7F9FB] px-4 py-3 text-xs text-[#617286]"><strong className="text-[#071E33]">{lines.length}</strong> parsed line{lines.length === 1 ? "" : "s"}</div></div>
 
         {lines.length ? (
           <div className="mt-6 space-y-4">
