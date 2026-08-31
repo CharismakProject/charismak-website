@@ -37,17 +37,17 @@ export default function SupplierCategoryPicker({ value, onChange, required = fal
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-black text-[#071E33]">What do you supply?</h3>
+            <h3 className="text-sm font-black text-[#071E33]">Products & services</h3>
             {required ? <span className="text-xs font-black text-[#A82B05]">*</span> : null}
           </div>
-          <p className="mt-1 text-xs leading-5 text-[#617286]">Choose all that apply. These categories appear on your public profile.</p>
+          <p className="mt-1 text-xs leading-5 text-[#617286]">Shown on your marketplace profile.</p>
         </div>
         <span className="text-xs font-bold text-[#0D3B66]">{value.length} selected</span>
       </div>
 
       <label className="relative mt-4 block">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8190A0]" />
-        <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search steel, cement, plumbing, tiles, electrical..." className="min-h-11 w-full rounded-xl border border-[#CBD7E2] bg-white pl-10 pr-3 text-sm text-[#071E33] outline-none focus:border-[#0D3B66]" />
+        <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search cement, steel, plumbing, tiles..." className="min-h-11 w-full rounded-xl border border-[#CBD7E2] bg-white pl-10 pr-3 text-sm text-[#071E33] outline-none focus:border-[#0D3B66]" />
       </label>
 
       <div className={`mt-4 ${compact ? "max-h-[330px] overflow-y-auto pr-1" : ""}`}>
