@@ -107,7 +107,7 @@ export default function ProjectsClient({ initialProjects }: { initialProjects: P
             </div>
           )}
 
-          <div className="mt-12 flex flex-col justify-between gap-6 border-t border-[#0D3B66]/12 pt-8 md:flex-row md:items-center">
+          <div className="mt-12 border-t border-[#0D3B66]/12 pt-8">
             <div className="flex gap-4">
               <BriefcaseBusiness className="mt-1 h-6 w-6 shrink-0 text-[#C8A45D]" />
               <div>
@@ -117,7 +117,6 @@ export default function ProjectsClient({ initialProjects }: { initialProjects: P
                 </p>
               </div>
             </div>
-            <Link href="/md-profile#professional-projects" className="inline-flex shrink-0 items-center gap-2 text-sm font-bold text-[#0D3B66] transition hover:text-[#C8A45D]">View Professional Profile <ArrowRight className="h-4 w-4" /></Link>
           </div>
         </div>
       </section>
