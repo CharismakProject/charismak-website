@@ -26,6 +26,7 @@ type ProfileInput = {
   location: string;
   deliveryAreas?: string;
   categories?: string[];
+  pin?: string;
 };
 
 const toProfile = (row: Record<string, unknown>): SupplierProfile => ({
@@ -47,28 +48,28 @@ const toProfile = (row: Record<string, unknown>): SupplierProfile => ({
 
 async function invoke(body: Record<string, unknown>) {
   const client = getSupabaseBrowserClient();
-  if (!client) throw new Error("Supplier profile service is unavailable.");
+  if (!client) throw new Error("Supplier account service is unavailable.");
   const { data, error } = await client.functions.invoke("supplier-workflow", { body });
-  if (error) throw new Error(error.message || "Supplier profile request failed.");
+  if (error) throw new Error(error.message || "Supplier account request failed.");
   if (data?.error) throw new Error(String(data.error));
-  return data as { profile?: Record<string, unknown>; recovered?: boolean };
+  return data as { profile?: Record<string, unknown>; recovered?: boolean; pinRequired?: boolean };
 }
 
 export async function createSupplierProfile(input: ProfileInput) {
   const data = await invoke({ action: "create_profile", ...input });
-  if (!data.profile) throw new Error("Supplier profile was not returned.");
+  if (!data.profile) throw new Error("Supplier account was not returned.");
   return { profile: toProfile(data.profile), recovered: Boolean(data.recovered) };
 }
 
 export async function getSupplierProfile(accessToken: string) {
   const data = await invoke({ action: "get_profile", accessToken });
-  if (!data.profile) throw new Error("Supplier profile was not returned.");
+  if (!data.profile) throw new Error("Supplier account was not returned.");
   return toProfile(data.profile);
 }
 
-export async function recoverSupplierProfile(businessName: string, phone: string) {
-  const data = await invoke({ action: "recover_profile", businessName, phone });
-  if (!data.profile) throw new Error("Supplier profile was not returned.");
+export async function recoverSupplierProfile(businessName: string, phone: string, pin?: string) {
+  const data = await invoke({ action: "recover_profile", businessName, phone, pin: pin || "" });
+  if (!data.profile) throw new Error("Supplier account was not returned.");
   return toProfile(data.profile);
 }
 
@@ -77,6 +78,6 @@ export async function updateSupplierProfile(
   patch: Partial<ProfileInput>,
 ) {
   const data = await invoke({ action: "update_profile", accessToken, ...patch });
-  if (!data.profile) throw new Error("Supplier profile was not returned.");
+  if (!data.profile) throw new Error("Supplier account was not returned.");
   return toProfile(data.profile);
 }
