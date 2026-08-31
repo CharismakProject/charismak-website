@@ -1,31 +1,30 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowRight, BriefcaseBusiness, Building2, CheckCircle2, MapPin } from "lucide-react";
+import { ArrowLeft, ArrowRight, Building2, CheckCircle2, MapPin } from "lucide-react";
 
 import ProjectMediaGallery from "../../components/ProjectMediaGallery";
-import { projects } from "../../site-data";
+import { publicProjectBySlug, publicProjects } from "@/lib/content/public-projects";
 
 type Props = { params: Promise<{ slug: string }> };
 
 export function generateStaticParams() {
-  return projects.map((project) => ({ slug: project.slug }));
+  return publicProjects.map((project) => ({ slug: project.slug }));
 }
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
-  const project = projects.find((item) => item.slug === slug);
+  const project = publicProjectBySlug(slug);
   if (!project) return { title: "Project Not Found" };
   return { title: project.title, description: project.summary };
 }
 
 export default async function ProjectDetailsPage({ params }: Props) {
   const { slug } = await params;
-  const project = projects.find((item) => item.slug === slug);
+  const project = publicProjectBySlug(slug);
   if (!project) notFound();
 
-  const isProfessionalReference = project.publicCategory === "MD Professional Experience";
-  const relatedProjects = projects
+  const relatedProjects = publicProjects
     .filter((item) => item.slug !== project.slug && item.engagementTag === project.engagementTag)
     .slice(0, 3);
 
@@ -53,18 +52,6 @@ export default async function ProjectDetailsPage({ params }: Props) {
         </div>
       </section>
 
-      {isProfessionalReference && (
-        <section className="bg-[#0D3B66] px-5 py-6 text-white md:px-8">
-          <div className="mx-auto flex max-w-7xl gap-4">
-            <BriefcaseBusiness className="mt-1 h-6 w-6 shrink-0 text-[#F2B544]" />
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#F2B544]">Professional Experience Reference</p>
-              <p className="mt-2 max-w-5xl text-sm leading-7 text-white/72">{project.attribution}</p>
-            </div>
-          </div>
-        </section>
-      )}
-
       <section className="border-b border-[#0D3B66]/10 bg-white px-5 py-12 md:px-8">
         <div className="mx-auto grid max-w-7xl gap-8 sm:grid-cols-2 lg:grid-cols-5">
           <ProjectFact label="Engagement" value={project.engagementTag} />
@@ -79,15 +66,11 @@ export default async function ProjectDetailsPage({ params }: Props) {
         <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.72fr_1.28fr]">
           <div>
             <p className="mb-4 text-xs font-bold uppercase tracking-[0.28em] text-[#C8A45D]">Project Overview</p>
-            <h2 className="text-3xl font-semibold leading-tight tracking-[-0.03em] text-[#071E33] md:text-5xl">The role, scope and delivery behind the project.</h2>
+            <h2 className="text-3xl font-semibold leading-tight tracking-[-0.03em] text-[#071E33] md:text-5xl">Scope and delivery.</h2>
           </div>
           <div>
-            <p className="text-base leading-8 text-[#3A4653]">{project.summary}</p>
-            <div className="mt-8 border-l border-[#C8A45D] bg-[#F7F8FA] p-6">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0D3B66]">Project Attribution</p>
-              <p className="mt-3 text-sm leading-7 text-[#3A4653]">{project.attribution}</p>
-            </div>
-            <div className="mt-8 grid gap-px overflow-hidden border border-[#0D3B66]/10 bg-[#0D3B66]/10 sm:grid-cols-2">
+            <p className="text-lg leading-9 text-[#3A4653]">{project.summary}</p>
+            <div className="mt-10 grid gap-px overflow-hidden border border-[#0D3B66]/10 bg-[#0D3B66]/10 sm:grid-cols-2">
               {project.services.map((service) => (
                 <div key={service} className="flex items-center gap-3 bg-white p-5">
                   <CheckCircle2 className="h-5 w-5 shrink-0 text-[#C8A45D]" />
@@ -101,12 +84,12 @@ export default async function ProjectDetailsPage({ params }: Props) {
 
       <section className="bg-[#F7F8FA] px-5 py-20 md:px-8">
         <div className="mx-auto max-w-7xl">
-          <div className="mb-10 grid gap-8 lg:grid-cols-[0.6fr_1.4fr] lg:items-end">
+          <div className="mb-10 flex flex-col justify-between gap-5 md:flex-row md:items-end">
             <div>
-              <p className="mb-4 text-xs font-bold uppercase tracking-[0.28em] text-[#C8A45D]">Project Media</p>
-              <h2 className="text-3xl font-semibold leading-tight tracking-[-0.03em] text-[#071E33] md:text-5xl">See the work in context.</h2>
+              <p className="mb-4 text-xs font-bold uppercase tracking-[0.28em] text-[#C8A45D]">Project Gallery</p>
+              <h2 className="text-3xl font-semibold leading-tight tracking-[-0.03em] text-[#071E33] md:text-5xl">Selected project images.</h2>
             </div>
-            <p className="max-w-2xl text-sm leading-7 text-[#3A4653] lg:justify-self-end">Selected photographs and videos provide additional context on execution, finishes and project conditions.</p>
+            <p className="max-w-xl text-sm leading-7 text-[#3A4653]">A visual record of the project, including works in progress and completed areas where available.</p>
           </div>
           <ProjectMediaGallery title={project.title} images={project.images} videos={project.videos} />
         </div>
@@ -118,7 +101,7 @@ export default async function ProjectDetailsPage({ params }: Props) {
             <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
               <div>
                 <p className="mb-4 text-xs font-bold uppercase tracking-[0.28em] text-[#C8A45D]">Related Projects</p>
-                <h2 className="text-3xl font-semibold leading-tight tracking-[-0.03em] text-[#071E33] md:text-5xl">More relevant work.</h2>
+                <h2 className="text-3xl font-semibold leading-tight tracking-[-0.03em] text-[#071E33] md:text-5xl">More project experience.</h2>
               </div>
               <Link href="/projects" className="inline-flex items-center gap-2 text-sm font-bold text-[#0D3B66] transition hover:text-[#C8A45D]">All Projects <ArrowRight className="h-4 w-4" /></Link>
             </div>
@@ -147,10 +130,10 @@ export default async function ProjectDetailsPage({ params }: Props) {
       <section className="bg-[#071E33] px-5 py-16 text-white md:px-8">
         <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 md:flex-row md:items-center">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#F2B544]">Explore More</p>
-            <h2 className="mt-3 text-2xl font-semibold md:text-3xl">View the complete project portfolio.</h2>
+            <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#F2B544]">Our Portfolio</p>
+            <h2 className="mt-3 text-2xl font-semibold md:text-3xl">Explore more Charismak projects and professional experience.</h2>
           </div>
-          <Link href="/projects" className="inline-flex items-center justify-center gap-3 bg-[#C8A45D] px-7 py-4 text-sm font-bold text-[#071E33] transition hover:bg-white">Browse All Projects <Building2 className="h-5 w-5" /></Link>
+          <Link href="/projects" className="inline-flex items-center justify-center gap-3 bg-[#C8A45D] px-7 py-4 text-sm font-bold text-[#071E33] transition hover:bg-white">Browse Projects <Building2 className="h-5 w-5" /></Link>
         </div>
       </section>
     </main>
