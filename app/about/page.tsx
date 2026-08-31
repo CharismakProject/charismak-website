@@ -2,13 +2,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, BadgeCheck, Building2, ShieldCheck, Target } from "lucide-react";
 
-import { company, services } from "../site-data";
-import { loadPublishedProjects, loadWebsiteContent } from "@/lib/content/website-cms";
+import { company } from "../site-data";
+import { loadPublishedProjects, loadPublishedServices, loadWebsiteContent } from "@/lib/content/website-cms";
 
 export const metadata = {
   title: "About Us",
   description: "Charismak Project Nigeria Limited is an Abuja-based construction company delivering building construction, renovation, project management, engineering and specialist works.",
 };
+
+export const revalidate = 300;
 
 const textValue = (value: unknown, fallback: string) => {
   if (typeof value === "string") return value || fallback;
@@ -26,12 +28,16 @@ const principles = [
 ];
 
 export default async function AboutPage() {
-  const [projects, records] = await Promise.all([loadPublishedProjects(), loadWebsiteContent("company")]);
+  const [projects, records, managedServices] = await Promise.all([
+    loadPublishedProjects(),
+    loadWebsiteContent("company"),
+    loadPublishedServices(),
+  ]);
   const byKey = new Map(records.map((record) => [record.contentKey, record.value]));
   const about = textValue(byKey.get("company.about"), company.about);
   const overview = textValue(byKey.get("company.overview"), company.overview);
   const projectCount = projects.length;
-  const serviceCount = services.length;
+  const serviceCount = managedServices.length;
   const heroImage = projects.find((project) => project.heroImages?.length)?.heroImages?.[0] || projects[0]?.cover || "/Images/Projects/Djibouti/cover.jpg";
   const secondaryImage = projects.find((project) => project.cover && project.cover !== heroImage)?.cover || "/Images/Projects/Flawless/cover.jpg";
 
