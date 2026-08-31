@@ -5,7 +5,6 @@ import Link from "next/link";
 import { ArrowRight, BriefcaseBusiness, CheckCircle2, Filter, MapPin } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { publicProjects } from "@/lib/content/public-projects";
 import type { EngagementTag, Project } from "../site-data";
 
 type FilterValue = "All Projects" | EngagementTag;
@@ -20,12 +19,12 @@ const filters: FilterValue[] = [
   "Expatriate Experience",
 ];
 
-export default function ProjectsClient() {
+export default function ProjectsClient({ initialProjects }: { initialProjects: Project[] }) {
   const [activeFilter, setActiveFilter] = useState<FilterValue>("All Projects");
 
   const visibleProjects = useMemo(
-    () => publicProjects.filter((project) => project.showOnProjectsPage !== false),
-    [],
+    () => initialProjects.filter((project) => project.showOnProjectsPage !== false),
+    [initialProjects],
   );
 
   const filteredProjects = useMemo(() => {
@@ -33,10 +32,10 @@ export default function ProjectsClient() {
     return visibleProjects.filter((project) => project.engagementTag === activeFilter);
   }, [activeFilter, visibleProjects]);
 
-  const companyProjectCount = publicProjects.filter(
+  const companyProjectCount = visibleProjects.filter(
     (project) => project.publicCategory === "Charismak Project",
   ).length;
-  const professionalProjectCount = publicProjects.filter(
+  const professionalProjectCount = visibleProjects.filter(
     (project) => project.publicCategory === "MD Professional Experience",
   ).length;
 
@@ -137,11 +136,12 @@ function ProjectStat({ value, label }: { value: number; label: string }) {
 
 function ProjectCard({ project }: { project: Project }) {
   const isProfessionalReference = project.publicCategory === "MD Professional Experience";
+  const image = project.cover || project.heroImages[0] || project.images[0] || "/Images/Projects/coco/hero.jpg";
 
   return (
     <Link href={`/projects/${project.slug}`} className="group overflow-hidden bg-white shadow-[0_10px_35px_rgba(7,30,51,0.06)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_22px_55px_rgba(7,30,51,0.13)]">
       <div className="relative h-[310px] overflow-hidden bg-[#071E33]">
-        <Image src={project.cover} alt={project.title} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover transition duration-700 group-hover:scale-105" />
+        <Image src={image} alt={project.title} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover transition duration-700 group-hover:scale-105" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#071E33]/88 via-[#071E33]/5 to-transparent" />
         <div className="absolute left-5 top-5 border border-white/15 bg-[#071E33]/65 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.14em] text-white backdrop-blur">{project.engagementTag}</div>
         {isProfessionalReference && <div className="absolute right-5 top-5 bg-[#C8A45D] px-3 py-2 text-[9px] font-bold uppercase tracking-[0.12em] text-[#071E33]">Professional Experience</div>}
