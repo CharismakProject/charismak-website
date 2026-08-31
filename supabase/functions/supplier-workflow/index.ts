@@ -15,7 +15,7 @@ const cors = {
 
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), {
   status,
-  headers: { ...cors, "Content-Type": "application/json" },
+  headers: { ...cors, "Content-Type": "application/json", "Cache-Control": "no-store" },
 });
 
 const clean = (value: unknown) => String(value ?? "").trim();
@@ -27,10 +27,50 @@ const money = (value: unknown): number | null => {
 };
 const supplierCode = () => `SUP-${crypto.randomUUID().replace(/-/g, "").slice(0, 8).toUpperCase()}`;
 const validPin = (pin: string) => /^\d{4,6}$/.test(pin);
-const hashPin = async (pin: string) => {
+
+const bytesToHex = (bytes: Uint8Array) => Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+const hexToBytes = (hex: string) => new Uint8Array((hex.match(/.{1,2}/g) || []).map((pair) => Number.parseInt(pair, 16)));
+const legacyHashPin = async (pin: string) => {
   const data = new TextEncoder().encode(`charismak-supplier-v1:${pin}`);
   const digest = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
+  return bytesToHex(new Uint8Array(digest));
+};
+const hashPinV2 = async (pin: string, saltHex: string) => {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(pin),
+    "PBKDF2",
+    false,
+    ["deriveBits"],
+  );
+  const bits = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", hash: "SHA-256", salt: hexToBytes(saltHex), iterations: 120_000 },
+    key,
+    256,
+  );
+  return bytesToHex(new Uint8Array(bits));
+};
+const securePinFields = async (pin: string) => {
+  const saltHex = bytesToHex(crypto.getRandomValues(new Uint8Array(16)));
+  return {
+    account_pin_hash: await hashPinV2(pin, saltHex),
+    account_pin_salt: saltHex,
+    account_pin_version: 2,
+  };
+};
+const verifyPin = async (row: Record<string, unknown>, pin: string) => {
+  const stored = clean(row.account_pin_hash);
+  if (!stored) return false;
+  const version = Number(row.account_pin_version ?? 1);
+  const salt = clean(row.account_pin_salt);
+  const candidate = version >= 2 && salt ? await hashPinV2(pin, salt) : await legacyHashPin(pin);
+  return candidate === stored;
+};
+const resetWindowOpen = (row: Record<string, unknown>) => {
+  const value = clean(row.pin_reset_allowed_until);
+  if (!value) return false;
+  const timestamp = new Date(value).getTime();
+  return Number.isFinite(timestamp) && timestamp >= Date.now();
 };
 
 const safeProfile = (row: Record<string, unknown>) => ({
@@ -162,6 +202,15 @@ function parseSubmissionLines(columns: Array<{ header: string; value: string; in
   return lines;
 }
 
+async function findExistingProfile(businessName: string, phone: string) {
+  const phoneDigits = digits(phone);
+  if (!phoneDigits) return null;
+  const { data, error } = await db.from("supplier_profiles").select("*").eq("phone_digits", phoneDigits).limit(20);
+  if (error) throw error;
+  const normalizedBusiness = clean(businessName).toLowerCase();
+  return (data || []).find((row: any) => clean(row.business_name).toLowerCase() === normalizedBusiness) || null;
+}
+
 async function findOrCreateSupplier(payload: any) {
   const businessName = clean(payload.businessName || payload.supplierName);
   const phone = clean(payload.phone);
@@ -169,8 +218,8 @@ async function findOrCreateSupplier(payload: any) {
   const phoneDigits = digits(phone);
   let existing: any = null;
   if (phoneDigits) {
-    const { data } = await db.from("supplier_profiles").select("*").limit(500);
-    existing = (data || []).find((row: any) => digits(row.phone) === phoneDigits) || null;
+    const { data } = await db.from("supplier_profiles").select("*").eq("phone_digits", phoneDigits).limit(20);
+    existing = (data || [])[0] || null;
   }
   if (existing) return existing;
   if (!businessName || !phone) return null;
@@ -192,28 +241,36 @@ async function handleProfile(action: string, body: any) {
     const location = clean(body.location);
     const pin = clean(body.pin);
     if (!businessName || !phone || !location) return json({ error: "Business name, phone and location are required." }, 400);
-    if (pin && !validPin(pin)) return json({ error: "Use a 4–6 digit account PIN." }, 400);
+    if (!validPin(pin)) return json({ error: "Use a 4–6 digit account PIN." }, 400);
 
-    const phoneDigits = digits(phone);
-    const { data: rows } = await db.from("supplier_profiles").select("*").limit(1000);
-    const existing = (rows || []).find((row: any) => digits(row.phone) === phoneDigits && clean(row.business_name).toLowerCase() === businessName.toLowerCase());
+    const existing = await findExistingProfile(businessName, phone);
     if (existing) {
-      if (existing.account_pin_hash) {
-        if (!pin || await hashPin(pin) !== existing.account_pin_hash) return json({ error: "This supplier account already exists. Use Returning Supplier and your PIN." }, 409);
-      } else if (pin) {
-        const { data: claimed, error } = await db.from("supplier_profiles").update({ account_pin_hash: await hashPin(pin), last_login_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", existing.id).select("*").single();
-        if (error) return json({ error: error.message }, 500);
-        return json({ profile: safeProfile(claimed), recovered: true });
-      }
-      return json({ profile: safeProfile(existing), recovered: true });
+      if (existing.account_pin_hash) return json({ error: "This supplier account already exists. Use Returning Supplier and your PIN." }, 409);
+      if (!resetWindowOpen(existing)) return json({ error: "This supplier profile already exists from an earlier submission. Use Returning Supplier. If you never created a PIN, request account verification on WhatsApp first." }, 409);
+
+      const pinFields = await securePinFields(pin);
+      const { data: claimed, error } = await db.from("supplier_profiles").update({
+        ...pinFields,
+        login_failed_attempts: 0,
+        login_locked_until: null,
+        pin_reset_allowed_until: null,
+        pin_reset_released_at: null,
+        pin_reset_released_by: null,
+        last_login_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }).eq("id", existing.id).select("*").single();
+      if (error) return json({ error: error.message }, 500);
+      return json({ profile: safeProfile(claimed), recovered: true });
     }
 
+    const pinFields = await securePinFields(pin);
     const { data, error } = await db.from("supplier_profiles").insert({
       supplier_code: supplierCode(), business_name: businessName, contact_person: clean(body.contactPerson) || null,
       phone, whatsapp: clean(body.whatsapp) || phone, email: clean(body.email) || null,
       location, delivery_areas: clean(body.deliveryAreas) || null,
       categories: Array.isArray(body.categories) ? body.categories : [],
-      account_pin_hash: pin ? await hashPin(pin) : null,
+      ...pinFields,
+      login_failed_attempts: 0,
       last_login_at: new Date().toISOString(),
     }).select("*").single();
     if (error) return json({ error: error.message }, 500);
@@ -229,24 +286,57 @@ async function handleProfile(action: string, body: any) {
   }
 
   if (action === "recover_profile") {
-    const businessName = clean(body.businessName).toLowerCase();
-    const phoneDigits = digits(body.phone);
+    const businessName = clean(body.businessName);
+    const phone = clean(body.phone);
     const pin = clean(body.pin);
-    if (!businessName || !phoneDigits) return json({ error: "Business name and phone are required." }, 400);
-    const { data: rows } = await db.from("supplier_profiles").select("*").limit(1000);
-    const match = (rows || []).find((row: any) => clean(row.business_name).toLowerCase() === businessName && digits(row.phone) === phoneDigits);
+    if (!businessName || !digits(phone)) return json({ error: "Business name and phone are required." }, 400);
+    const match = await findExistingProfile(businessName, phone);
     if (!match) return json({ error: "We could not find that supplier account." }, 404);
+    if (match.status !== "active") return json({ error: "This supplier account is not currently active. Contact Charismak for assistance." }, 403);
 
-    if (match.account_pin_hash) {
-      if (!validPin(pin) || await hashPin(pin) !== match.account_pin_hash) return json({ error: "Incorrect supplier account PIN." }, 401);
-    } else {
-      if (!validPin(pin)) return json({ error: "This older supplier profile needs a 4–6 digit PIN. Enter one now to secure the account." }, 400);
-      const { data: secured, error } = await db.from("supplier_profiles").update({ account_pin_hash: await hashPin(pin), last_login_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", match.id).select("*").single();
+    if (!match.account_pin_hash) {
+      if (!resetWindowOpen(match)) return json({ error: "This supplier profile does not yet have a PIN. Request account verification on WhatsApp before creating one." }, 403);
+      if (!validPin(pin)) return json({ error: "Enter the new 4–6 digit PIN you want to use." }, 400);
+      const pinFields = await securePinFields(pin);
+      const { data: secured, error } = await db.from("supplier_profiles").update({
+        ...pinFields,
+        login_failed_attempts: 0,
+        login_locked_until: null,
+        pin_reset_allowed_until: null,
+        pin_reset_released_at: null,
+        pin_reset_released_by: null,
+        last_login_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }).eq("id", match.id).select("*").single();
       if (error) return json({ error: error.message }, 500);
       return json({ profile: safeProfile(secured) });
     }
 
-    const { data: loggedIn, error } = await db.from("supplier_profiles").update({ last_login_at: new Date().toISOString() }).eq("id", match.id).select("*").single();
+    const lockedUntil = clean(match.login_locked_until);
+    if (lockedUntil && new Date(lockedUntil).getTime() > Date.now()) {
+      return json({ error: "Too many incorrect PIN attempts. Try again later or contact Charismak if you forgot the PIN." }, 429);
+    }
+
+    if (!validPin(pin) || !(await verifyPin(match, pin))) {
+      const failed = Number(match.login_failed_attempts ?? 0) + 1;
+      const shouldLock = failed >= 5;
+      await db.from("supplier_profiles").update({
+        login_failed_attempts: shouldLock ? 0 : failed,
+        login_locked_until: shouldLock ? new Date(Date.now() + 15 * 60_000).toISOString() : null,
+        updated_at: new Date().toISOString(),
+      }).eq("id", match.id);
+      return json({ error: shouldLock ? "Too many incorrect PIN attempts. Try again in 15 minutes." : "Incorrect supplier account PIN." }, shouldLock ? 429 : 401);
+    }
+
+    const version = Number(match.account_pin_version ?? 1);
+    const upgrades = version >= 2 && clean(match.account_pin_salt) ? {} : await securePinFields(pin);
+    const { data: loggedIn, error } = await db.from("supplier_profiles").update({
+      ...upgrades,
+      login_failed_attempts: 0,
+      login_locked_until: null,
+      last_login_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }).eq("id", match.id).select("*").single();
     if (error) return json({ error: error.message }, 500);
     return json({ profile: safeProfile(loggedIn) });
   }
@@ -261,9 +351,15 @@ async function handleProfile(action: string, body: any) {
     if (Array.isArray(body.categories)) patch.categories = body.categories;
     if (body.pin !== undefined && clean(body.pin)) {
       if (!validPin(clean(body.pin))) return json({ error: "Use a 4–6 digit account PIN." }, 400);
-      patch.account_pin_hash = await hashPin(clean(body.pin));
+      Object.assign(patch, await securePinFields(clean(body.pin)), {
+        login_failed_attempts: 0,
+        login_locked_until: null,
+        pin_reset_allowed_until: null,
+        pin_reset_released_at: null,
+        pin_reset_released_by: null,
+      });
     }
-    const { data, error } = await db.from("supplier_profiles").update(patch).eq("access_token", token).select("*").single();
+    const { data, error } = await db.from("supplier_profiles").update(patch).eq("access_token", token).eq("status", "active").select("*").single();
     if (error || !data) return json({ error: error?.message || "Supplier account not found." }, 404);
     return json({ profile: safeProfile(data) });
   }
@@ -271,6 +367,7 @@ async function handleProfile(action: string, body: any) {
 }
 
 async function handleWebhook(req: Request, body: any) {
+  if (!WEBHOOK_SECRET) return json({ error: "Supplier webhook is not configured." }, 503);
   const suppliedSecret = req.headers.get("x-supplier-workflow-secret") || clean(body.secret);
   if (suppliedSecret !== WEBHOOK_SECRET) return json({ error: "Unauthorized webhook." }, 401);
   const columns = Array.isArray(body.columns) ? body.columns.map((c: any, index: number) => ({ header: clean(c.header), value: clean(c.value), index })) : [];
