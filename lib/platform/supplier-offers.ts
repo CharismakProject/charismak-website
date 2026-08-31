@@ -76,7 +76,6 @@ const toOffer = (row: Record<string, unknown>): SupplierMarketplaceOffer => ({
 });
 
 const dateOnly = (value: Date) => value.toISOString().slice(0, 10);
-
 const addDays = (value: string | null, days: number) => {
   const parsed = value ? new Date(value) : new Date();
   const base = Number.isFinite(parsed.getTime()) ? parsed : new Date();
@@ -89,10 +88,7 @@ export function getSupplierOfferEffectiveValidUntil(offer: SupplierMarketplaceOf
   return addDays(offer.publishedAt || offer.submittedAt, DEFAULT_SUPPLIER_PRICE_VALIDITY_DAYS);
 }
 
-export function isSupplierOfferCurrent(
-  offer: SupplierMarketplaceOffer,
-  now = new Date(),
-) {
+export function isSupplierOfferCurrent(offer: SupplierMarketplaceOffer, now = new Date()) {
   return getSupplierOfferEffectiveValidUntil(offer) >= dateOnly(now);
 }
 
@@ -103,7 +99,6 @@ const offerTimestamp = (offer: SupplierMarketplaceOffer) => {
 
 const normalize = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, "");
 
-/** Normalise common buying-unit wording so approved prices compare like-for-like. */
 export function normalizeSupplierQuotedUnit(value: string) {
   const unit = normalize(value);
   if (["50kgbag", "50kg", "bag", "1bag", "cementbag"].includes(unit)) return "50kgbag";
@@ -121,12 +116,14 @@ export function normalizeSupplierQuotedUnit(value: string) {
 
 export function supplierOfferMatchesMarket(
   offer: SupplierMarketplaceOffer,
-  options?: { location?: string | null; quotedUnit?: string | null },
+  options?: { location?: string | null; quotedUnit?: string | null; strictLocation?: boolean },
 ) {
   const location = options?.location?.trim();
   const quotedUnit = options?.quotedUnit?.trim();
 
-  if (location) {
+  // Material pages show all approved suppliers for the selected comparable unit.
+  // A locality only becomes a hard filter when a caller explicitly requests it.
+  if (options?.strictLocation && location) {
     const left = normalize(offer.location);
     const right = normalize(location);
     if (left && right && left !== right && !left.includes(right) && !right.includes(left)) return false;
@@ -137,66 +134,42 @@ export function supplierOfferMatchesMarket(
     const right = normalizeSupplierQuotedUnit(quotedUnit);
     if (left && right && left !== right && !left.includes(right) && !right.includes(left)) return false;
   }
-
   return true;
 }
 
 export function summarizeSupplierOfferHistory(
   offers: SupplierMarketplaceOffer[],
-  options?: { location?: string | null; quotedUnit?: string | null; now?: Date },
+  options?: { location?: string | null; quotedUnit?: string | null; strictLocation?: boolean; now?: Date },
 ): SupplierOfferHistory {
   const relevant = offers.filter((offer) => supplierOfferMatchesMarket(offer, options));
   const now = options?.now ?? new Date();
-  const live = relevant
-    .filter((offer) => isSupplierOfferCurrent(offer, now))
-    .sort((left, right) => left.unitPrice - right.unitPrice);
-  const archived = relevant
-    .filter((offer) => !isSupplierOfferCurrent(offer, now))
-    .sort((left, right) => offerTimestamp(right) - offerTimestamp(left));
+  const live = relevant.filter((offer) => isSupplierOfferCurrent(offer, now)).sort((left, right) => left.unitPrice - right.unitPrice);
+  const archived = relevant.filter((offer) => !isSupplierOfferCurrent(offer, now)).sort((left, right) => offerTimestamp(right) - offerTimestamp(left));
   const byRecency = live.slice().sort((left, right) => offerTimestamp(right) - offerTimestamp(left));
-
-  return {
-    live,
-    archived,
-    low: live.length ? Math.min(...live.map((offer) => offer.unitPrice)) : null,
-    high: live.length ? Math.max(...live.map((offer) => offer.unitPrice)) : null,
-    latest: byRecency[0] ?? null,
-  };
+  return { live, archived, low: live.length ? Math.min(...live.map((offer) => offer.unitPrice)) : null, high: live.length ? Math.max(...live.map((offer) => offer.unitPrice)) : null, latest: byRecency[0] ?? null };
 }
 
 async function loadApprovedOffers(catalogueItemId?: string) {
   const client = getSupabaseBrowserClient();
   if (!client) return [] as SupplierMarketplaceOffer[];
-
-  let query = client
-    .from("supplier_marketplace_offers")
-    .select("*")
-    .eq("status", "approved");
-
+  let query = client.from("supplier_marketplace_offers").select("*").eq("status", "approved");
   if (catalogueItemId) query = query.eq("catalogue_item_id", catalogueItemId);
-
   const { data, error } = await query.order("published_at", { ascending: false, nullsFirst: false });
   if (error || !data) return [];
   return (data as Record<string, unknown>[]).map(toOffer);
 }
 
-export async function loadSupplierOfferHistoryForItem(
-  catalogueItemId: string,
-): Promise<SupplierMarketplaceOffer[]> {
+export async function loadSupplierOfferHistoryForItem(catalogueItemId: string): Promise<SupplierMarketplaceOffer[]> {
   if (!catalogueItemId) return [];
   return loadApprovedOffers(catalogueItemId);
 }
 
-export async function loadSupplierOffersForItem(
-  catalogueItemId: string,
-): Promise<SupplierMarketplaceOffer[]> {
+export async function loadSupplierOffersForItem(catalogueItemId: string): Promise<SupplierMarketplaceOffer[]> {
   const rows = await loadSupplierOfferHistoryForItem(catalogueItemId);
   return summarizeSupplierOfferHistory(rows).live;
 }
 
-export async function loadArchivedSupplierOffersForItem(
-  catalogueItemId: string,
-): Promise<SupplierMarketplaceOffer[]> {
+export async function loadArchivedSupplierOffersForItem(catalogueItemId: string): Promise<SupplierMarketplaceOffer[]> {
   const rows = await loadSupplierOfferHistoryForItem(catalogueItemId);
   return summarizeSupplierOfferHistory(rows).archived;
 }
@@ -209,7 +182,6 @@ function pickComparableUnitGroup(offers: SupplierMarketplaceOffer[]) {
     group.push(offer);
     groups.set(key, group);
   }
-
   return [...groups.values()].sort((left, right) => {
     if (right.length !== left.length) return right.length - left.length;
     const leftLatest = Math.max(...left.map(offerTimestamp));
@@ -227,7 +199,6 @@ export async function loadSupplierOfferSummaries(): Promise<Record<string, Suppl
     current.push(offer);
     byItem.set(offer.catalogueItemId, current);
   }
-
   const summaries: Record<string, SupplierOfferSummary> = {};
   for (const [itemId, allOffers] of byItem) {
     const offers = pickComparableUnitGroup(allOffers);
