@@ -224,8 +224,6 @@ begin
 
   if v_exact_offer = old.id::text then return new; end if;
 
-  -- Moderation removal is allowed without seller approval when commercial values
-  -- remain unchanged. Status and validity may only be changed to remove the listing.
   if old.status = 'approved'
      and new.status = 'expired'
      and old.catalogue_item_id is not distinct from new.catalogue_item_id
@@ -348,49 +346,24 @@ begin
 
   if found then
     update public.supplier_price_review_requests
-    set requested_by = 'admin',
-        requested_by_email = lower(coalesce((select auth.jwt()) ->> 'email', 'admin')),
-        reason = nullif(btrim(p_reason), ''),
-        status = 'awaiting_supplier',
-        authorization_channel = null,
-        otp_salt = null,
-        otp_hash = null,
-        otp_expires_at = null,
-        otp_attempts = 0,
-        verified_at = null,
-        authorization_expires_at = null,
-        consumed_at = null,
-        completed_at = null,
-        proposed_patch = null,
-        proposed_by = null,
-        proposed_at = null,
-        authorized_patch_hash = null,
-        before_snapshot = public.supplier_offer_commercial_snapshot(v_offer),
-        after_snapshot = null,
-        updated_at = now()
-    where id = v_request.id
-    returning * into v_request;
+    set requested_by = 'admin', requested_by_email = lower(coalesce((select auth.jwt()) ->> 'email', 'admin')),
+        reason = nullif(btrim(p_reason), ''), status = 'awaiting_supplier', authorization_channel = null,
+        otp_salt = null, otp_hash = null, otp_expires_at = null, otp_attempts = 0, verified_at = null,
+        authorization_expires_at = null, consumed_at = null, completed_at = null, proposed_patch = null,
+        proposed_by = null, proposed_at = null, authorized_patch_hash = null,
+        before_snapshot = public.supplier_offer_commercial_snapshot(v_offer), after_snapshot = null, updated_at = now()
+    where id = v_request.id returning * into v_request;
   else
-    insert into public.supplier_price_review_requests (
-      offer_id, supplier_id, requested_by, requested_by_email, reason,
-      status, before_snapshot
-    ) values (
-      p_offer_id, v_supplier_id, 'admin',
-      lower(coalesce((select auth.jwt()) ->> 'email', 'admin')),
-      nullif(btrim(p_reason), ''), 'awaiting_supplier',
-      public.supplier_offer_commercial_snapshot(v_offer)
-    ) returning * into v_request;
+    insert into public.supplier_price_review_requests (offer_id, supplier_id, requested_by, requested_by_email, reason, status, before_snapshot)
+    values (p_offer_id, v_supplier_id, 'admin', lower(coalesce((select auth.jwt()) ->> 'email', 'admin')),
+      nullif(btrim(p_reason), ''), 'awaiting_supplier', public.supplier_offer_commercial_snapshot(v_offer))
+    returning * into v_request;
   end if;
-
   return next v_request;
 end;
 $$;
 
-create or replace function public.admin_propose_supplier_price_change(
-  p_offer_id uuid,
-  p_patch jsonb,
-  p_reason text default null
-)
+create or replace function public.admin_propose_supplier_price_change(p_offer_id uuid, p_patch jsonb, p_reason text default null)
 returns setof public.supplier_price_review_requests
 language plpgsql
 security definer
@@ -404,69 +377,39 @@ declare
   v_request public.supplier_price_review_requests%rowtype;
 begin
   if not public.is_charismak_admin() then raise exception 'Administrator access required'; end if;
-
   select * into v_offer from public.supplier_marketplace_offers where id = p_offer_id for update;
   if not found then raise exception 'Supplier price not found'; end if;
   if v_offer.supplier_id is null then raise exception 'This price is unclaimed and can be edited directly by admin'; end if;
   if v_offer.status <> 'approved' then raise exception 'Only a current approved supplier price can be proposed for change'; end if;
-
   select id into v_supplier_id from public.supplier_profiles where id::text = v_offer.supplier_id limit 1;
   if v_supplier_id is null then raise exception 'Linked supplier profile could not be resolved'; end if;
-
   v_before := public.supplier_offer_commercial_snapshot(v_offer);
   v_proposed := public.canonical_supplier_offer_patch(v_offer, p_patch);
   if v_before = v_proposed then raise exception 'The proposed values are the same as the current supplier price'; end if;
-
-  select * into v_request
-  from public.supplier_price_review_requests
-  where offer_id = p_offer_id
+  select * into v_request from public.supplier_price_review_requests where offer_id=p_offer_id
     and status in ('awaiting_supplier','awaiting_code','admin_authorized','supplier_updating')
-  order by created_at desc limit 1 for update;
-
+    order by created_at desc limit 1 for update;
   if found then
     update public.supplier_price_review_requests
-    set requested_by = 'admin',
-        requested_by_email = lower(coalesce((select auth.jwt()) ->> 'email', 'admin')),
-        reason = nullif(btrim(p_reason), ''),
-        status = 'awaiting_supplier',
-        authorization_channel = null,
-        otp_salt = null,
-        otp_hash = null,
-        otp_expires_at = null,
-        otp_attempts = 0,
-        verified_at = null,
-        authorization_expires_at = null,
-        consumed_at = null,
-        completed_at = null,
-        proposed_patch = v_proposed,
-        proposed_by = 'admin',
-        proposed_at = now(),
-        authorized_patch_hash = null,
-        before_snapshot = v_before,
-        after_snapshot = null,
-        updated_at = now()
-    where id = v_request.id
-    returning * into v_request;
+    set requested_by='admin', requested_by_email=lower(coalesce((select auth.jwt()) ->> 'email','admin')),
+        reason=nullif(btrim(p_reason),''), status='awaiting_supplier', authorization_channel=null,
+        otp_salt=null, otp_hash=null, otp_expires_at=null, otp_attempts=0, verified_at=null,
+        authorization_expires_at=null, consumed_at=null, completed_at=null, proposed_patch=v_proposed,
+        proposed_by='admin', proposed_at=now(), authorized_patch_hash=null, before_snapshot=v_before,
+        after_snapshot=null, updated_at=now()
+    where id=v_request.id returning * into v_request;
   else
-    insert into public.supplier_price_review_requests (
-      offer_id, supplier_id, requested_by, requested_by_email, reason, status,
-      proposed_patch, proposed_by, proposed_at, before_snapshot
-    ) values (
-      p_offer_id, v_supplier_id, 'admin',
-      lower(coalesce((select auth.jwt()) ->> 'email', 'admin')),
-      nullif(btrim(p_reason), ''), 'awaiting_supplier',
-      v_proposed, 'admin', now(), v_before
-    ) returning * into v_request;
+    insert into public.supplier_price_review_requests
+      (offer_id,supplier_id,requested_by,requested_by_email,reason,status,proposed_patch,proposed_by,proposed_at,before_snapshot)
+    values (p_offer_id,v_supplier_id,'admin',lower(coalesce((select auth.jwt()) ->> 'email','admin')),
+      nullif(btrim(p_reason),''),'awaiting_supplier',v_proposed,'admin',now(),v_before)
+    returning * into v_request;
   end if;
-
   return next v_request;
 end;
 $$;
 
-create or replace function public.admin_verify_supplier_price_authorization(
-  p_request_id uuid,
-  p_code text
-)
+create or replace function public.admin_verify_supplier_price_authorization(p_request_id uuid, p_code text)
 returns jsonb
 language plpgsql
 security definer
@@ -478,64 +421,37 @@ declare
   v_attempts integer;
 begin
   if not public.is_charismak_admin() then raise exception 'Administrator access required'; end if;
-
-  select * into v_request from public.supplier_price_review_requests where id = p_request_id for update;
-  if not found then return jsonb_build_object('verified', false, 'error', 'Review authorisation request not found'); end if;
-  if v_request.status <> 'awaiting_code' then return jsonb_build_object('verified', false, 'error', 'This authorisation is not awaiting a code', 'status', v_request.status); end if;
-  if v_request.proposed_patch is null or v_request.proposed_patch_hash is null then
-    return jsonb_build_object('verified', false, 'error', 'No exact proposed change is attached to this authorisation');
-  end if;
+  select * into v_request from public.supplier_price_review_requests where id=p_request_id for update;
+  if not found then return jsonb_build_object('verified',false,'error','Review authorisation request not found'); end if;
+  if v_request.status <> 'awaiting_code' then return jsonb_build_object('verified',false,'error','This authorisation is not awaiting a code','status',v_request.status); end if;
+  if v_request.proposed_patch is null or v_request.proposed_patch_hash is null then return jsonb_build_object('verified',false,'error','No exact proposed change is attached to this authorisation'); end if;
   if v_request.otp_expires_at is null or v_request.otp_expires_at <= now() then
-    update public.supplier_price_review_requests set status='expired', updated_at=now() where id=p_request_id;
-    return jsonb_build_object('verified', false, 'error', 'Authorisation code has expired', 'status', 'expired');
+    update public.supplier_price_review_requests set status='expired',updated_at=now() where id=p_request_id;
+    return jsonb_build_object('verified',false,'error','Authorisation code has expired','status','expired');
   end if;
   if v_request.otp_attempts >= 5 then
-    update public.supplier_price_review_requests set status='expired', updated_at=now() where id=p_request_id;
-    return jsonb_build_object('verified', false, 'error', 'Too many incorrect code attempts', 'status', 'expired');
+    update public.supplier_price_review_requests set status='expired',updated_at=now() where id=p_request_id;
+    return jsonb_build_object('verified',false,'error','Too many incorrect code attempts','status','expired');
   end if;
-
-  v_candidate := encode(extensions.digest(coalesce(p_code,'') || ':' || coalesce(v_request.otp_salt,''), 'sha256'), 'hex');
+  v_candidate := encode(extensions.digest(coalesce(p_code,'') || ':' || coalesce(v_request.otp_salt,''),'sha256'),'hex');
   if v_candidate is distinct from v_request.otp_hash then
     v_attempts := v_request.otp_attempts + 1;
-    update public.supplier_price_review_requests
-    set otp_attempts=v_attempts,
-        status=case when v_attempts >= 5 then 'expired' else 'awaiting_code' end,
-        updated_at=now()
-    where id=p_request_id;
-    return jsonb_build_object(
-      'verified', false,
-      'error', case when v_attempts >= 5 then 'Too many incorrect code attempts' else 'Incorrect authorisation code' end,
-      'remaining_attempts', greatest(0, 5-v_attempts),
-      'status', case when v_attempts >= 5 then 'expired' else 'awaiting_code' end
-    );
+    update public.supplier_price_review_requests set otp_attempts=v_attempts,
+      status=case when v_attempts>=5 then 'expired' else 'awaiting_code' end, updated_at=now() where id=p_request_id;
+    return jsonb_build_object('verified',false,
+      'error',case when v_attempts>=5 then 'Too many incorrect code attempts' else 'Incorrect authorisation code' end,
+      'remaining_attempts',greatest(0,5-v_attempts),'status',case when v_attempts>=5 then 'expired' else 'awaiting_code' end);
   end if;
-
   update public.supplier_price_review_requests
-  set status='admin_authorized',
-      verified_at=now(),
-      authorization_expires_at=now()+interval '30 minutes',
-      authorized_patch_hash=proposed_patch_hash,
-      otp_hash=null,
-      otp_salt=null,
-      otp_attempts=0,
-      updated_at=now()
-  where id=p_request_id
-  returning * into v_request;
-
-  return jsonb_build_object(
-    'verified', true,
-    'request_id', v_request.id,
-    'offer_id', v_request.offer_id,
-    'status', v_request.status,
-    'authorization_expires_at', v_request.authorization_expires_at,
-    'authorized_patch_hash', v_request.authorized_patch_hash
-  );
+  set status='admin_authorized',verified_at=now(),authorization_expires_at=now()+interval '30 minutes',
+      authorized_patch_hash=proposed_patch_hash,otp_hash=null,otp_salt=null,otp_attempts=0,updated_at=now()
+  where id=p_request_id returning * into v_request;
+  return jsonb_build_object('verified',true,'request_id',v_request.id,'offer_id',v_request.offer_id,
+    'status',v_request.status,'authorization_expires_at',v_request.authorization_expires_at,'authorized_patch_hash',v_request.authorized_patch_hash);
 end;
 $$;
 
-create or replace function public.admin_apply_authorized_supplier_price_change(
-  p_request_id uuid
-)
+create or replace function public.admin_apply_authorized_supplier_price_change(p_request_id uuid)
 returns setof public.supplier_marketplace_offers
 language plpgsql
 security definer
@@ -546,10 +462,9 @@ declare
   v_offer public.supplier_marketplace_offers%rowtype;
   v_current jsonb;
   v_proposed jsonb;
-  v_admin_email text := lower(coalesce((select auth.jwt()) ->> 'email', 'admin'));
+  v_admin_email text := lower(coalesce((select auth.jwt()) ->> 'email','admin'));
 begin
   if not public.is_charismak_admin() then raise exception 'Administrator access required'; end if;
-
   select * into v_request from public.supplier_price_review_requests where id=p_request_id for update;
   if not found then raise exception 'Authorisation request not found'; end if;
   if v_request.status <> 'admin_authorized' then raise exception 'Seller authorisation is required before applying this change'; end if;
@@ -558,80 +473,40 @@ begin
   if v_request.proposed_patch is null or v_request.proposed_patch_hash is null then raise exception 'Exact proposed change is missing'; end if;
   if v_request.authorized_patch_hash is distinct from v_request.proposed_patch_hash then raise exception 'The proposed change no longer matches what the seller authorised'; end if;
   if public.hash_supplier_price_proposal(v_request.proposed_patch) is distinct from v_request.authorized_patch_hash then raise exception 'The authorised proposal has changed and requires new seller approval'; end if;
-
   select * into v_offer from public.supplier_marketplace_offers where id=v_request.offer_id for update;
   if not found then raise exception 'Supplier price not found'; end if;
   if v_offer.status <> 'approved' then raise exception 'The live supplier price is no longer current'; end if;
   if v_offer.supplier_id is null or v_offer.supplier_id <> v_request.supplier_id::text then raise exception 'Supplier ownership no longer matches this authorisation'; end if;
-
   v_current := public.supplier_offer_commercial_snapshot(v_offer);
-  if v_request.before_snapshot is null or v_current is distinct from v_request.before_snapshot then
-    raise exception 'The live supplier price changed after this proposal was prepared. A new seller authorisation is required';
-  end if;
-
-  v_proposed := public.canonical_supplier_offer_patch(v_offer, v_request.proposed_patch);
-  if public.hash_supplier_price_proposal(v_proposed) is distinct from v_request.authorized_patch_hash then
-    raise exception 'The exact values to apply no longer match the seller-authorised proposal';
-  end if;
-
-  perform set_config('charismak.exact_authorized_supplier_offer_id', v_offer.id::text, true);
-
+  if v_request.before_snapshot is null or v_current is distinct from v_request.before_snapshot then raise exception 'The live supplier price changed after this proposal was prepared. A new seller authorisation is required'; end if;
+  v_proposed := public.canonical_supplier_offer_patch(v_offer,v_request.proposed_patch);
+  if public.hash_supplier_price_proposal(v_proposed) is distinct from v_request.authorized_patch_hash then raise exception 'The exact values to apply no longer match the seller-authorised proposal'; end if;
+  perform set_config('charismak.exact_authorized_supplier_offer_id',v_offer.id::text,true);
   update public.supplier_marketplace_offers
-  set product_name = v_proposed ->> 'product_name',
-      specification = nullif(v_proposed ->> 'specification',''),
-      brand = nullif(v_proposed ->> 'brand',''),
-      quoted_unit = v_proposed ->> 'quoted_unit',
-      unit_price = (v_proposed ->> 'unit_price')::numeric,
-      bulk_price = nullif(v_proposed ->> 'bulk_price','')::numeric,
-      minimum_qty = nullif(v_proposed ->> 'minimum_qty','')::numeric,
-      delivery_fee = nullif(v_proposed ->> 'delivery_fee','')::numeric,
-      delivery_included = case when v_proposed -> 'delivery_included' = 'null'::jsonb then null else (v_proposed ->> 'delivery_included')::boolean end,
-      location = v_proposed ->> 'location',
-      service_area = nullif(v_proposed ->> 'service_area',''),
-      availability = nullif(v_proposed ->> 'availability',''),
-      valid_until = nullif(v_proposed ->> 'valid_until','')::date,
-      supplier_remarks = nullif(v_proposed ->> 'supplier_remarks',''),
-      status = 'approved',
-      published_at = now(),
-      updated_at = now()
-  where id=v_offer.id
-  returning * into v_offer;
-
+  set product_name=v_proposed->>'product_name', specification=nullif(v_proposed->>'specification',''), brand=nullif(v_proposed->>'brand',''),
+      quoted_unit=v_proposed->>'quoted_unit', unit_price=(v_proposed->>'unit_price')::numeric,
+      bulk_price=nullif(v_proposed->>'bulk_price','')::numeric, minimum_qty=nullif(v_proposed->>'minimum_qty','')::numeric,
+      delivery_fee=nullif(v_proposed->>'delivery_fee','')::numeric,
+      delivery_included=case when v_proposed->'delivery_included'='null'::jsonb then null else (v_proposed->>'delivery_included')::boolean end,
+      location=v_proposed->>'location', service_area=nullif(v_proposed->>'service_area',''), availability=nullif(v_proposed->>'availability',''),
+      valid_until=nullif(v_proposed->>'valid_until','')::date, supplier_remarks=nullif(v_proposed->>'supplier_remarks',''),
+      status='approved',published_at=now(),updated_at=now()
+  where id=v_offer.id returning * into v_offer;
   update public.supplier_review_lines
-  set product_name=v_offer.product_name,
-      specification=v_offer.specification,
-      brand=v_offer.brand,
-      quoted_unit=v_offer.quoted_unit,
-      unit_price=v_offer.unit_price,
-      bulk_price=v_offer.bulk_price,
-      minimum_qty=v_offer.minimum_qty,
-      delivery_fee=v_offer.delivery_fee,
-      delivery_included=v_offer.delivery_included,
-      location=v_offer.location,
-      service_area=v_offer.service_area,
-      availability=v_offer.availability,
-      valid_until=v_offer.valid_until,
-      supplier_remarks=v_offer.supplier_remarks,
-      updated_at=now()
+  set product_name=v_offer.product_name,specification=v_offer.specification,brand=v_offer.brand,quoted_unit=v_offer.quoted_unit,
+      unit_price=v_offer.unit_price,bulk_price=v_offer.bulk_price,minimum_qty=v_offer.minimum_qty,delivery_fee=v_offer.delivery_fee,
+      delivery_included=v_offer.delivery_included,location=v_offer.location,service_area=v_offer.service_area,availability=v_offer.availability,
+      valid_until=v_offer.valid_until,supplier_remarks=v_offer.supplier_remarks,updated_at=now()
   where marketplace_offer_id=v_offer.id;
-
   update public.supplier_price_review_requests
-  set status='completed',
-      consumed_at=now(),
-      completed_at=now(),
-      admin_changed_by_email=v_admin_email,
-      after_snapshot=public.supplier_offer_commercial_snapshot(v_offer),
-      updated_at=now()
+  set status='completed',consumed_at=now(),completed_at=now(),admin_changed_by_email=v_admin_email,
+      after_snapshot=public.supplier_offer_commercial_snapshot(v_offer),updated_at=now()
   where id=v_request.id;
-
   return next v_offer;
 end;
 $$;
 
-create or replace function public.admin_update_supplier_marketplace_offer(
-  p_offer_id uuid,
-  p_patch jsonb
-)
+create or replace function public.admin_update_supplier_marketplace_offer(p_offer_id uuid,p_patch jsonb)
 returns setof public.supplier_marketplace_offers
 language plpgsql
 security definer
@@ -642,53 +517,26 @@ declare
   v_patch jsonb;
 begin
   if not public.is_charismak_admin() then raise exception 'Administrator access required'; end if;
-
   select * into v_offer from public.supplier_marketplace_offers where id=p_offer_id for update;
   if not found then raise exception 'Supplier price not found'; end if;
   if v_offer.supplier_id is not null then raise exception 'Supplier-owned prices cannot be edited directly by admin. Use exact seller authorisation'; end if;
   if v_offer.status not in ('approved','expired') then raise exception 'Only approved or removed unclaimed prices can be managed here'; end if;
-
-  v_patch := public.canonical_supplier_offer_patch(v_offer, p_patch);
-
+  v_patch := public.canonical_supplier_offer_patch(v_offer,p_patch);
   update public.supplier_marketplace_offers
-  set product_name=v_patch ->> 'product_name',
-      specification=nullif(v_patch ->> 'specification',''),
-      brand=nullif(v_patch ->> 'brand',''),
-      quoted_unit=v_patch ->> 'quoted_unit',
-      unit_price=(v_patch ->> 'unit_price')::numeric,
-      bulk_price=nullif(v_patch ->> 'bulk_price','')::numeric,
-      minimum_qty=nullif(v_patch ->> 'minimum_qty','')::numeric,
-      delivery_fee=nullif(v_patch ->> 'delivery_fee','')::numeric,
-      delivery_included=case when v_patch -> 'delivery_included'='null'::jsonb then null else (v_patch ->> 'delivery_included')::boolean end,
-      location=v_patch ->> 'location',
-      service_area=nullif(v_patch ->> 'service_area',''),
-      availability=nullif(v_patch ->> 'availability',''),
-      valid_until=nullif(v_patch ->> 'valid_until','')::date,
-      supplier_remarks=nullif(v_patch ->> 'supplier_remarks',''),
-      status='approved',
-      published_at=now(),
-      updated_at=now()
-  where id=p_offer_id
-  returning * into v_offer;
-
+  set product_name=v_patch->>'product_name',specification=nullif(v_patch->>'specification',''),brand=nullif(v_patch->>'brand',''),
+      quoted_unit=v_patch->>'quoted_unit',unit_price=(v_patch->>'unit_price')::numeric,bulk_price=nullif(v_patch->>'bulk_price','')::numeric,
+      minimum_qty=nullif(v_patch->>'minimum_qty','')::numeric,delivery_fee=nullif(v_patch->>'delivery_fee','')::numeric,
+      delivery_included=case when v_patch->'delivery_included'='null'::jsonb then null else (v_patch->>'delivery_included')::boolean end,
+      location=v_patch->>'location',service_area=nullif(v_patch->>'service_area',''),availability=nullif(v_patch->>'availability',''),
+      valid_until=nullif(v_patch->>'valid_until','')::date,supplier_remarks=nullif(v_patch->>'supplier_remarks',''),
+      status='approved',published_at=now(),updated_at=now()
+  where id=p_offer_id returning * into v_offer;
   update public.supplier_review_lines
-  set product_name=v_offer.product_name,
-      specification=v_offer.specification,
-      brand=v_offer.brand,
-      quoted_unit=v_offer.quoted_unit,
-      unit_price=v_offer.unit_price,
-      bulk_price=v_offer.bulk_price,
-      minimum_qty=v_offer.minimum_qty,
-      delivery_fee=v_offer.delivery_fee,
-      delivery_included=v_offer.delivery_included,
-      location=v_offer.location,
-      service_area=v_offer.service_area,
-      availability=v_offer.availability,
-      valid_until=v_offer.valid_until,
-      supplier_remarks=v_offer.supplier_remarks,
-      updated_at=now()
+  set product_name=v_offer.product_name,specification=v_offer.specification,brand=v_offer.brand,quoted_unit=v_offer.quoted_unit,
+      unit_price=v_offer.unit_price,bulk_price=v_offer.bulk_price,minimum_qty=v_offer.minimum_qty,delivery_fee=v_offer.delivery_fee,
+      delivery_included=v_offer.delivery_included,location=v_offer.location,service_area=v_offer.service_area,availability=v_offer.availability,
+      valid_until=v_offer.valid_until,supplier_remarks=v_offer.supplier_remarks,updated_at=now()
   where marketplace_offer_id=p_offer_id;
-
   return next v_offer;
 end;
 $$;
@@ -699,21 +547,14 @@ language plpgsql
 security definer
 set search_path = public
 as $$
-declare
-  v_offer public.supplier_marketplace_offers%rowtype;
+declare v_offer public.supplier_marketplace_offers%rowtype;
 begin
   if not public.is_charismak_admin() then raise exception 'Administrator access required'; end if;
-
-  update public.supplier_marketplace_offers
-  set status='expired', valid_until=current_date-1, updated_at=now()
-  where id=p_offer_id and status='approved'
-  returning * into v_offer;
+  update public.supplier_marketplace_offers set status='expired',valid_until=current_date-1,updated_at=now()
+  where id=p_offer_id and status='approved' returning * into v_offer;
   if not found then raise exception 'Current approved supplier price not found'; end if;
-
-  update public.supplier_price_review_requests
-  set status='cancelled', updated_at=now()
+  update public.supplier_price_review_requests set status='cancelled',updated_at=now()
   where offer_id=p_offer_id and status in ('awaiting_supplier','awaiting_code','admin_authorized','supplier_updating');
-
   return next v_offer;
 end;
 $$;
@@ -724,40 +565,27 @@ language plpgsql
 security definer
 set search_path = public
 as $$
-declare
-  v_profile public.supplier_profiles%rowtype;
+declare v_profile public.supplier_profiles%rowtype;
 begin
   if not public.is_charismak_admin() then raise exception 'Administrator access required'; end if;
-
-  update public.supplier_profiles
-  set status='inactive',
-      pin_reset_allowed_until=null,
-      login_locked_until=null,
-      updated_at=now()
-  where id=p_supplier_id
-  returning * into v_profile;
+  update public.supplier_profiles set status='inactive',pin_reset_allowed_until=null,login_locked_until=null,updated_at=now()
+  where id=p_supplier_id returning * into v_profile;
   if not found then raise exception 'Supplier profile not found'; end if;
-
-  update public.supplier_marketplace_offers
-  set status='expired', valid_until=current_date-1, updated_at=now()
+  update public.supplier_marketplace_offers set status='expired',valid_until=current_date-1,updated_at=now()
   where supplier_id=p_supplier_id::text and status='approved';
-
-  update public.supplier_price_review_requests
-  set status='cancelled', updated_at=now()
+  update public.supplier_price_review_requests set status='cancelled',updated_at=now()
   where supplier_id=p_supplier_id and status in ('awaiting_supplier','awaiting_code','admin_authorized','supplier_updating');
-
   return next v_profile;
 end;
 $$;
 
-revoke all on function public.admin_request_supplier_price_review(uuid,text) from public, anon;
-revoke all on function public.admin_propose_supplier_price_change(uuid,jsonb,text) from public, anon;
-revoke all on function public.admin_verify_supplier_price_authorization(uuid,text) from public, anon;
-revoke all on function public.admin_apply_authorized_supplier_price_change(uuid) from public, anon;
-revoke all on function public.admin_update_supplier_marketplace_offer(uuid,jsonb) from public, anon;
-revoke all on function public.admin_remove_supplier_marketplace_offer(uuid) from public, anon;
-revoke all on function public.admin_remove_supplier_profile(uuid) from public, anon;
-
+revoke all on function public.admin_request_supplier_price_review(uuid,text) from public,anon;
+revoke all on function public.admin_propose_supplier_price_change(uuid,jsonb,text) from public,anon;
+revoke all on function public.admin_verify_supplier_price_authorization(uuid,text) from public,anon;
+revoke all on function public.admin_apply_authorized_supplier_price_change(uuid) from public,anon;
+revoke all on function public.admin_update_supplier_marketplace_offer(uuid,jsonb) from public,anon;
+revoke all on function public.admin_remove_supplier_marketplace_offer(uuid) from public,anon;
+revoke all on function public.admin_remove_supplier_profile(uuid) from public,anon;
 grant execute on function public.admin_request_supplier_price_review(uuid,text) to authenticated;
 grant execute on function public.admin_propose_supplier_price_change(uuid,jsonb,text) to authenticated;
 grant execute on function public.admin_verify_supplier_price_authorization(uuid,text) to authenticated;
@@ -765,11 +593,10 @@ grant execute on function public.admin_apply_authorized_supplier_price_change(uu
 grant execute on function public.admin_update_supplier_marketplace_offer(uuid,jsonb) to authenticated;
 grant execute on function public.admin_remove_supplier_marketplace_offer(uuid) to authenticated;
 grant execute on function public.admin_remove_supplier_profile(uuid) to authenticated;
-
-revoke all on function public.supplier_offer_commercial_snapshot(public.supplier_marketplace_offers) from public, anon, authenticated;
-revoke all on function public.canonical_supplier_offer_patch(public.supplier_marketplace_offers,jsonb) from public, anon, authenticated;
-revoke all on function public.hash_supplier_price_proposal(jsonb) from public, anon, authenticated;
-revoke all on function public.refresh_supplier_price_proposal_hash() from public, anon, authenticated;
-revoke all on function public.protect_supplier_profile_from_admin_edit() from public, anon, authenticated;
-revoke all on function public.protect_supplier_owned_offer_from_admin_edit() from public, anon, authenticated;
-revoke all on function public.protect_supplier_owned_review_line_from_admin_edit() from public, anon, authenticated;
+revoke all on function public.supplier_offer_commercial_snapshot(public.supplier_marketplace_offers) from public,anon,authenticated;
+revoke all on function public.canonical_supplier_offer_patch(public.supplier_marketplace_offers,jsonb) from public,anon,authenticated;
+revoke all on function public.hash_supplier_price_proposal(jsonb) from public,anon,authenticated;
+revoke all on function public.refresh_supplier_price_proposal_hash() from public,anon,authenticated;
+revoke all on function public.protect_supplier_profile_from_admin_edit() from public,anon,authenticated;
+revoke all on function public.protect_supplier_owned_offer_from_admin_edit() from public,anon,authenticated;
+revoke all on function public.protect_supplier_owned_review_line_from_admin_edit() from public,anon,authenticated;
