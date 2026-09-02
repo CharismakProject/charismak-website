@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   AlertTriangle,
   BadgeCheck,
@@ -22,7 +22,7 @@ const isProtectedContactHref = (href: string) => {
   return value.startsWith("tel:") || value.startsWith("mailto:") || value.includes("wa.me/") || value.includes("whatsapp.com/");
 };
 
-const supplierNameFrom = (anchor: HTMLAnchorElement) => {
+const supplierNameFrom = (anchor: HTMLAnchorElement): string | null => {
   const article = anchor.closest("article");
   const articleHeading = article?.querySelector("h2, h3")?.textContent?.trim();
   if (articleHeading) return articleHeading;
@@ -31,7 +31,7 @@ const supplierNameFrom = (anchor: HTMLAnchorElement) => {
   const modalHeading = modal?.querySelector("h2, h3")?.textContent?.trim();
   if (modalHeading) return modalHeading;
 
-  return "this supplier";
+  return null;
 };
 
 export function MarketplaceTransactionGuard() {
@@ -49,8 +49,11 @@ export function MarketplaceTransactionGuard() {
       const href = element.getAttribute("href") || "";
       if (!isProtectedContactHref(href)) return;
 
+      const supplierName = supplierNameFrom(element);
+      if (!supplierName) return;
+
       event.preventDefault();
-      setPending({ href, supplierName: supplierNameFrom(element) });
+      setPending({ href, supplierName });
       setProductConfirmed(false);
       setPaymentConfirmed(false);
       setPlatformConfirmed(false);
@@ -116,7 +119,7 @@ export function MarketplaceTransactionGuard() {
 
           <div className="mt-5 flex flex-col gap-2 sm:flex-row">
             <button type="button" onClick={proceed} disabled={!canContinue} className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-[#0D3B66] px-5 text-sm font-black text-white disabled:cursor-not-allowed disabled:bg-[#AAB6C2]">
-              <CheckCircle2 className="h-4 w-4" /> Continue securely
+              <CheckCircle2 className="h-4 w-4" /> Continue to supplier
             </button>
             <button type="button" onClick={close} className="min-h-12 rounded-xl border border-[#CBD7E2] px-5 text-sm font-black text-[#526579]">Cancel</button>
           </div>
@@ -134,7 +137,7 @@ export function MarketplaceTransactionGuard() {
   );
 }
 
-function SafetyCheck({ checked, onChange, children }: { checked: boolean; onChange: (value: boolean) => void; children: React.ReactNode }) {
+function SafetyCheck({ checked, onChange, children }: { checked: boolean; onChange: (value: boolean) => void; children: ReactNode }) {
   return (
     <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 text-xs leading-5 transition ${checked ? "border-[#9FD0B4] bg-[#F0FAF4] text-[#23583D]" : "border-[#DCE4EC] bg-white text-[#526579]"}`}>
       <input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-[#197447]" />
