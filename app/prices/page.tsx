@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, Store } from "lucide-react";
 import MarketPriceBrowser from "@/components/pricing/market-price-browser";
+import { MarketplaceSafetyNotice } from "@/components/marketplace/transaction-safety";
 
 export const metadata = {
   title: "Nigeria Construction Material & Equipment Prices",
@@ -25,6 +26,9 @@ export default function PricesPage() {
             Supplier directory <ArrowRight className="h-4 w-4" />
           </Link>
         </section>
+        <div className="mb-6">
+          <MarketplaceSafetyNotice />
+        </div>
         <MarketPriceBrowser />
       </div>
     </main>

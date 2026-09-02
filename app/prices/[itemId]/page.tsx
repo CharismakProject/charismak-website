@@ -1,4 +1,5 @@
 import MaterialPriceDetailRuntime from "@/components/pricing/material-price-detail-runtime";
+import { MarketplaceSafetyNotice, MarketplaceTransactionGuard } from "@/components/marketplace/transaction-safety";
 
 export const metadata = {
   title: "Material Prices & Suppliers",
@@ -15,7 +16,11 @@ export default async function MaterialSupplierPage({
 
   return (
     <main className="min-h-screen bg-[#F5F7FA] pt-20">
+      <MarketplaceTransactionGuard />
       <div className="mx-auto max-w-7xl px-4 py-8 md:px-8 md:py-12">
+        <div className="mb-6">
+          <MarketplaceSafetyNotice compact />
+        </div>
         <MaterialPriceDetailRuntime itemId={decodeURIComponent(itemId)} />
       </div>
     </main>
