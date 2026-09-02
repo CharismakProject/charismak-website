@@ -1,4 +1,5 @@
 import MarketplaceDirectory from "@/components/marketplace/marketplace-directory";
+import { MarketplaceSafetyNotice, MarketplaceTransactionGuard } from "@/components/marketplace/transaction-safety";
 
 export const metadata = {
   title: "Construction Suppliers & Artisans",
@@ -8,6 +9,7 @@ export const metadata = {
 export default function MarketplacePage() {
   return (
     <main className="min-h-screen bg-[#F7F8FA] pt-20">
+      <MarketplaceTransactionGuard />
       <section className="relative overflow-hidden bg-[#071E33] px-5 py-20 text-white md:px-8 lg:py-24">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_82%_18%,rgba(200,164,93,0.15),transparent_30rem)]" />
         <div className="relative mx-auto max-w-7xl">
@@ -22,7 +24,8 @@ export default function MarketplacePage() {
         </div>
       </section>
 
-      <div className="mx-auto max-w-7xl px-4 py-10 md:px-8 md:py-14">
+      <div className="mx-auto max-w-7xl space-y-6 px-4 py-10 md:px-8 md:py-14">
+        <MarketplaceSafetyNotice />
         <MarketplaceDirectory embedded />
       </div>
     </main>
