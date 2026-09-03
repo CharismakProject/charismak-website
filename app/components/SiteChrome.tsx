@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import CatalogueRuntime from "@/components/pricing/catalogue-runtime";
 import MarketPriceRuntime from "@/components/pricing/market-price-runtime";
 import Navbar from "./Navbar";
+import NavigationProgress from "./NavigationProgress";
 
 type Props = {
   children: ReactNode;
@@ -22,6 +23,7 @@ export default function SiteChrome({ children, footer }: Props) {
   if (estimatorApp) {
     return (
       <>
+        <NavigationProgress />
         <MarketPriceRuntime />
         {children}
       </>
@@ -29,11 +31,12 @@ export default function SiteChrome({ children, footer }: Props) {
   }
 
   if (executiveProfile) {
-    return <>{children}</>;
+    return <><NavigationProgress />{children}</>;
   }
 
   return (
     <>
+      <NavigationProgress />
       {needsLivePricing ? <MarketPriceRuntime /> : needsCatalogueOnly ? <CatalogueRuntime /> : null}
       <Navbar />
       {children}

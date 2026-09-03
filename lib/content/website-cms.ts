@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { createClient } from "@supabase/supabase-js";
 
 import { people, services, type Person, type Project } from "@/app/site-data";
@@ -30,30 +31,47 @@ const rowToPerson = (row: Record<string, unknown>): ManagedWebsitePerson => ({
   id: String(row.id ?? ""), name: String(row.name ?? ""), role: String(row.role ?? ""), image: String(row.image_url ?? ""), group: String(row.group_name ?? "Supporting Team") as Person["group"], category: String(row.category ?? "Project Delivery"), bio: String(row.bio ?? ""), published: Boolean(row.published), displayOrder: Number(row.display_order ?? 100),
 });
 
-export async function loadPublishedProjects(): Promise<Project[]> {
-  try { const { data, error } = await publicClient().from("website_projects").select("*").eq("published", true).order("display_order", { ascending: true }).order("updated_at", { ascending: false }); if (error || !data?.length) return fallbackProjects; return (data as Record<string, unknown>[]).map(rowToProject); } catch { return fallbackProjects; }
-}
+const cachedPublishedProjects = unstable_cache(async (): Promise<Project[]> => {
+  try {
+    const { data, error } = await publicClient().from("website_projects").select("*").eq("published", true).order("display_order", { ascending: true }).order("updated_at", { ascending: false });
+    if (error || !data?.length) return fallbackProjects;
+    return (data as Record<string, unknown>[]).map(rowToProject);
+  } catch {
+    return fallbackProjects;
+  }
+}, ["website-published-projects-v1"], { revalidate: 300, tags: ["website-projects"] });
 
-export async function loadPublishedProject(slug: string): Promise<Project | null> {
-  try { const { data, error } = await publicClient().from("website_projects").select("*").eq("slug", slug).eq("published", true).maybeSingle(); if (!error && data) return rowToProject(data as Record<string, unknown>); } catch { /* fallback */ }
+const cachedPublishedProject = unstable_cache(async (slug: string): Promise<Project | null> => {
+  try {
+    const { data, error } = await publicClient().from("website_projects").select("*").eq("slug", slug).eq("published", true).maybeSingle();
+    if (!error && data) return rowToProject(data as Record<string, unknown>);
+  } catch { /* fallback */ }
   return fallbackProjects.find((project) => project.slug === slug) ?? null;
-}
+}, ["website-published-project-v1"], { revalidate: 300, tags: ["website-projects"] });
 
-export async function loadPublishedPeople(): Promise<Person[]> {
-  try { const { data, error } = await publicClient().from("website_people").select("*").eq("published", true).order("display_order", { ascending: true }); if (error || !data?.length) return people; return (data as Record<string, unknown>[]).map(rowToPerson); } catch { return people; }
-}
+const cachedPublishedPeople = unstable_cache(async (): Promise<Person[]> => {
+  try {
+    const { data, error } = await publicClient().from("website_people").select("*").eq("published", true).order("display_order", { ascending: true });
+    if (error || !data?.length) return people;
+    return (data as Record<string, unknown>[]).map(rowToPerson);
+  } catch {
+    return people;
+  }
+}, ["website-published-people-v1"], { revalidate: 300, tags: ["website-people"] });
 
-export async function loadWebsiteContent(section?: string): Promise<ManagedWebsiteContent[]> {
+const cachedWebsiteContent = unstable_cache(async (section?: string): Promise<ManagedWebsiteContent[]> => {
   try {
     let query = publicClient().from("website_content").select("*").eq("published", true);
     if (section) query = query.eq("section", section);
     const { data, error } = await query.order("display_order", { ascending: true });
     if (error || !data) return [];
     return (data as Record<string, unknown>[]).map((row) => ({ contentKey: String(row.content_key ?? ""), section: String(row.section ?? ""), label: String(row.label ?? ""), value: row.value, published: Boolean(row.published), displayOrder: Number(row.display_order ?? 100) }));
-  } catch { return []; }
-}
+  } catch {
+    return [];
+  }
+}, ["website-content-v1"], { revalidate: 300, tags: ["website-content"] });
 
-export async function loadPublishedServices(): Promise<ManagedWebsiteService[]> {
+const cachedPublishedServices = unstable_cache(async (): Promise<ManagedWebsiteService[]> => {
   try {
     const { data, error } = await publicClient().from("website_services").select("*").eq("published", true).order("display_order", { ascending: true });
     if (error || !data?.length) throw error || new Error("No managed services");
@@ -61,4 +79,24 @@ export async function loadPublishedServices(): Promise<ManagedWebsiteService[]> 
   } catch {
     return services.map((service, index) => ({ id: `fallback-${index}`, title: service.title, description: service.description, iconKey: ["building","hardhat","hammer","clipboard","factory","wrench","drafting","home"][index] || "building", published: true, displayOrder: (index + 1) * 10 }));
   }
+}, ["website-published-services-v1"], { revalidate: 300, tags: ["website-services"] });
+
+export async function loadPublishedProjects(): Promise<Project[]> {
+  return cachedPublishedProjects();
+}
+
+export async function loadPublishedProject(slug: string): Promise<Project | null> {
+  return cachedPublishedProject(slug);
+}
+
+export async function loadPublishedPeople(): Promise<Person[]> {
+  return cachedPublishedPeople();
+}
+
+export async function loadWebsiteContent(section?: string): Promise<ManagedWebsiteContent[]> {
+  return cachedWebsiteContent(section);
+}
+
+export async function loadPublishedServices(): Promise<ManagedWebsiteService[]> {
+  return cachedPublishedServices();
 }
