@@ -3,7 +3,7 @@
   "version": "0.1.0-dev.2",
   "private": true,
   "scripts": {
-    "postinstall": "tar -xzf source.tgz",
+    "postinstall": "cat source.part.* | base64 -d > /tmp/cm-source.tgz && tar -xzf /tmp/cm-source.tgz",
     "build": "next build"
   },
   "engines": { "node": ">=22.0.0" },
