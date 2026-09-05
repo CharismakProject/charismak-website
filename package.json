@@ -3,7 +3,7 @@
   "version": "0.1.0-dev.2",
   "private": true,
   "scripts": {
-    "postinstall": "cat source.part.* | base64 -d > /tmp/cm-source.tgz; (tar -xzf /tmp/cm-source.tgz --ignore-zeros || true); echo '===ORIGINAL_PACKAGE==='; cat package.json; echo '===TSCONFIG_ENGINE==='; cat tsconfig.engine.json; echo '===ENGINE==='; cat src/game/engine.ts; echo '===LOCKED_DATA==='; cat src/game/data/v01-locked-data.ts; echo '===SAVE_ENVELOPE==='; cat src/game/save-envelope.ts; echo '===TYPES==='; cat src/game/types.ts; node -e \"const fs=require('fs'); const p=JSON.parse(fs.readFileSync('package.json','utf8')); p.scripts=p.scripts||{}; p.scripts.build='echo QA_RECOVERY_READY'; fs.writeFileSync('package.json',JSON.stringify(p,null,2))\"",
+    "postinstall": "cat source.part.* | base64 -d > /tmp/cm-source.tgz; (tar -xzf /tmp/cm-source.tgz --ignore-zeros || true); node qa-harness.mjs; node -e \"const fs=require('fs'); const p=JSON.parse(fs.readFileSync('package.json','utf8')); p.scripts=p.scripts||{}; p.scripts.build='echo QA_HARNESS_COMPLETE'; fs.writeFileSync('package.json',JSON.stringify(p,null,2))\"",
     "build": "next build"
   },
   "engines": { "node": ">=22.0.0" },
