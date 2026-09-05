@@ -3,7 +3,7 @@
   "version": "0.1.0-dev.2",
   "private": true,
   "scripts": {
-    "postinstall": "cat source.part.* | base64 -d > /tmp/cm-source.tgz && tar -xzf /tmp/cm-source.tgz",
+    "postinstall": "cat source.part.* | base64 -d > /tmp/cm-source.tgz; echo '--- archive listing ---'; (tar -tzf /tmp/cm-source.tgz || true); echo '--- recovery extract ---'; (tar -xzf /tmp/cm-source.tgz --ignore-zeros || true); echo '--- recovered files ---'; find . -maxdepth 4 -type f | sort | sed -n '1,260p'",
     "build": "next build"
   },
   "engines": { "node": ">=22.0.0" },
