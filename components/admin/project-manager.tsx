@@ -6,6 +6,15 @@ import { CheckCircle2, ExternalLink, ImagePlus, Loader2, Plus, Save, Search, Tra
 
 import { isAdminEmail } from "@/lib/auth/admin";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
+import ReorderableMediaEditor from "@/components/admin/reorderable-media-editor";
+
+type UpdateDraft = {
+  title: string;
+  summary: string;
+  image_url: string;
+  update_date: string;
+  published: boolean;
+};
 
 type Row = {
   slug: string;
@@ -67,6 +76,9 @@ export default function ProjectManager() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [newGalleryUploads, setNewGalleryUploads] = useState<string[]>([]);
+  const [updatePromptDismissed, setUpdatePromptDismissed] = useState(false);
+  const [updateDraft, setUpdateDraft] = useState<UpdateDraft | null>(null);
 
   const load = async () => {
     if (!client) return;
@@ -93,8 +105,9 @@ export default function ProjectManager() {
     return rows.filter((row) => [row.title, row.location, row.role, row.organisation, row.project_status].join(" ").toLowerCase().includes(q));
   }, [rows, query]);
 
-  const edit = (row: Row) => { setSelected({ ...row, hero_images: [...(row.hero_images || [])], gallery_images: [...(row.gallery_images || [])], videos: [...(row.videos || [])], services: [...(row.services || [])] }); setOriginalSlug(row.slug); setMessage(""); setError(""); };
-  const create = () => { setSelected(blank()); setOriginalSlug(null); setMessage(""); setError(""); };
+  const resetNewUploadState = () => { setNewGalleryUploads([]); setUpdatePromptDismissed(false); setUpdateDraft(null); };
+  const edit = (row: Row) => { setSelected({ ...row, hero_images: [...(row.hero_images || [])], gallery_images: [...(row.gallery_images || [])], videos: [...(row.videos || [])], services: [...(row.services || [])] }); setOriginalSlug(row.slug); setMessage(""); setError(""); resetNewUploadState(); };
+  const create = () => { setSelected(blank()); setOriginalSlug(null); setMessage(""); setError(""); resetNewUploadState(); };
 
   const upload = async (files: FileList | null, target: "cover" | "hero" | "gallery") => {
     if (!client || !selected || !files?.length) return;
@@ -111,7 +124,11 @@ export default function ProjectManager() {
       }
       if (target === "cover") setSelected({ ...selected, cover_url: urls[0] });
       if (target === "hero") setSelected({ ...selected, hero_images: [...selected.hero_images, ...urls] });
-      if (target === "gallery") setSelected({ ...selected, gallery_images: [...selected.gallery_images, ...urls] });
+      if (target === "gallery") {
+        setSelected({ ...selected, gallery_images: [...urls, ...selected.gallery_images] });
+        setNewGalleryUploads((current) => [...urls, ...current]);
+        setUpdatePromptDismissed(false);
+      }
     } catch (uploadError) {
       setError(uploadError instanceof Error ? uploadError.message : "Image upload failed.");
     } finally { setBusy(false); }
@@ -128,14 +145,30 @@ export default function ProjectManager() {
       if (originalSlug && originalSlug !== slug) {
         const { error: insertError } = await client.from("website_projects").insert(payload);
         if (insertError) throw insertError;
+        const { error: updateSlugError } = await client.from("website_project_updates").update({ project_slug: slug, project_title: selected.title, project_location: selected.location }).eq("project_slug", originalSlug);
+        if (updateSlugError) throw updateSlugError;
         const { error: deleteError } = await client.from("website_projects").delete().eq("slug", originalSlug);
         if (deleteError) throw deleteError;
       } else {
         const { error: saveError } = await client.from("website_projects").upsert(payload, { onConflict: "slug" });
         if (saveError) throw saveError;
       }
-      setMessage(selected.published ? "Project saved and published." : "Project saved as unpublished.");
-      setSelected(null); setOriginalSlug(null); await load();
+      if (updateDraft) {
+        const { error: updateError } = await client.from("website_project_updates").insert({
+          project_slug: slug,
+          project_title: selected.title.trim(),
+          project_location: selected.location.trim(),
+          title: updateDraft.title.trim() || "Project update",
+          summary: updateDraft.summary.trim() || null,
+          image_url: updateDraft.image_url,
+          update_date: new Date(`${updateDraft.update_date}T12:00:00Z`).toISOString(),
+          published: updateDraft.published && selected.published,
+          updated_by: session.session?.user.email || null,
+        });
+        if (updateError) throw updateError;
+      }
+      setMessage(updateDraft ? "Project saved and project update recorded." : selected.published ? "Project saved and published." : "Project saved as unpublished.");
+      setSelected(null); setOriginalSlug(null); resetNewUploadState(); await load();
     } catch (saveError) { setError(saveError instanceof Error ? saveError.message : "Unable to save project."); }
     finally { setBusy(false); }
   };
@@ -143,6 +176,8 @@ export default function ProjectManager() {
   const remove = async (row: Row) => {
     if (!client || !window.confirm(`Remove ${row.title} from the website CMS?`)) return;
     setBusy(true); setError("");
+    const { error: updateDeleteError } = await client.from("website_project_updates").delete().eq("project_slug", row.slug);
+    if (updateDeleteError) { setError(updateDeleteError.message); setBusy(false); return; }
     const { error: deleteError } = await client.from("website_projects").delete().eq("slug", row.slug);
     if (deleteError) setError(deleteError.message); else { setMessage("Project removed."); await load(); }
     setBusy(false);
@@ -177,13 +212,14 @@ export default function ProjectManager() {
         <Field label="Project summary *" wide><textarea rows={5} value={selected.summary} onChange={(e) => setSelected({ ...selected, summary: e.target.value })} className="input py-3" /></Field>
         <Field label="Services / scope — one per line" wide><textarea rows={5} value={selected.services.join("\n")} onChange={(e) => setSelected({ ...selected, services: lines(e.target.value) })} className="input py-3" /></Field>
         <Field label="Cover image" wide><div className="flex flex-wrap items-center gap-3"><label className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#F5F7FA] px-4 py-3 text-xs font-black text-[#0D3B66]"><ImagePlus className="h-4 w-4" /> Upload cover<input type="file" accept="image/*" className="hidden" onChange={(e) => void upload(e.target.files, "cover")} /></label>{selected.cover_url ? <a href={selected.cover_url} target="_blank" className="text-xs font-bold text-[#0D3B66]">View current cover</a> : null}</div></Field>
-        <Field label={`Hero images (${selected.hero_images.length})`} wide><MediaEditor urls={selected.hero_images} onRemove={(url) => setSelected({ ...selected, hero_images: selected.hero_images.filter((item) => item !== url) })} /><label className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#F5F7FA] px-4 py-3 text-xs font-black text-[#0D3B66]"><ImagePlus className="h-4 w-4" /> Add hero image<input type="file" multiple accept="image/*" className="hidden" onChange={(e) => void upload(e.target.files, "hero")} /></label></Field>
-        <Field label={`Gallery images (${selected.gallery_images.length})`} wide><MediaEditor urls={selected.gallery_images} onRemove={(url) => setSelected({ ...selected, gallery_images: selected.gallery_images.filter((item) => item !== url) })} /><label className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#F5F7FA] px-4 py-3 text-xs font-black text-[#0D3B66]"><ImagePlus className="h-4 w-4" /> Add gallery images<input type="file" multiple accept="image/*" className="hidden" onChange={(e) => void upload(e.target.files, "gallery")} /></label></Field>
-      </div><footer className="sticky bottom-0 flex justify-end gap-3 border-t border-[#DCE4EC] bg-white px-5 py-4"><button type="button" onClick={() => setSelected(null)} className="min-h-11 rounded-xl border border-[#DCE4EC] px-5 text-sm font-black text-[#526579]">Cancel</button><button type="button" disabled={busy} onClick={() => void save()} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#A82B05] px-5 text-sm font-black text-white disabled:opacity-50">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save project</button></footer></section></div> : null}
+        <Field label={`Hero images (${selected.hero_images.length})`} wide><p className="mb-3 text-xs leading-5 text-[#617286]">Drag images to arrange them. The first image is used first where the hero gallery is shown.</p><ReorderableMediaEditor urls={selected.hero_images} onChange={(hero_images) => setSelected({ ...selected, hero_images })} /><label className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#F5F7FA] px-4 py-3 text-xs font-black text-[#0D3B66]"><ImagePlus className="h-4 w-4" /> Add hero image<input type="file" multiple accept="image/*" className="hidden" onChange={(e) => void upload(e.target.files, "hero")} /></label></Field>
+        <Field label={`Gallery images (${selected.gallery_images.length})`} wide><p className="mb-3 text-xs leading-5 text-[#617286]">Drag images into the exact order visitors should see them. New uploads are placed first automatically, and you can move any image to the first or last position.</p><ReorderableMediaEditor urls={selected.gallery_images} onChange={(gallery_images) => setSelected({ ...selected, gallery_images })} /><label className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#F5F7FA] px-4 py-3 text-xs font-black text-[#0D3B66]"><ImagePlus className="h-4 w-4" /> Add gallery images<input type="file" multiple accept="image/*" className="hidden" onChange={(e) => void upload(e.target.files, "gallery")} /></label>
+        {newGalleryUploads.length > 0 && !updatePromptDismissed && !updateDraft ? <div className="mt-4 rounded-2xl border border-[#C8A45D]/45 bg-[#FFF9EA] p-4"><p className="text-xs font-black uppercase tracking-[0.14em] text-[#8A6508]">New upload detected</p><h3 className="mt-2 text-base font-black text-[#071E33]">Is this a new project update?</h3><p className="mt-2 text-xs leading-5 text-[#526579]">If yes, one of these new photos can appear in the small Recent Project Updates section on the homepage. It will not replace your homepage content.</p><div className="mt-4 flex flex-wrap gap-2"><button type="button" onClick={() => { setUpdateDraft({ title: `${selected.title || "Project"} progress update`, summary: "", image_url: newGalleryUploads[0], update_date: new Date().toISOString().slice(0, 10), published: true }); }} className="rounded-xl bg-[#0D3B66] px-4 py-2.5 text-xs font-black text-white">Yes, create update</button><button type="button" onClick={() => { setUpdatePromptDismissed(true); setNewGalleryUploads([]); }} className="rounded-xl border border-[#DCE4EC] bg-white px-4 py-2.5 text-xs font-black text-[#526579]">No, gallery only</button></div></div> : null}
+        {updateDraft ? <div className="mt-4 rounded-2xl border border-[#DCE4EC] bg-[#F8FAFC] p-4"><div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start"><div><p className="text-xs font-black uppercase tracking-[0.14em] text-[#A82B05]">Project update</p><h3 className="mt-1 text-base font-black text-[#071E33]">Prepare the short public update</h3></div><button type="button" onClick={() => { setUpdateDraft(null); setUpdatePromptDismissed(true); setNewGalleryUploads([]); }} className="text-xs font-black text-[#617286]">Keep gallery only</button></div><div className="mt-4 grid gap-4 sm:grid-cols-2"><label><span className="mb-2 block text-xs font-black text-[#071E33]">Update title</span><input value={updateDraft.title} onChange={(e) => setUpdateDraft({ ...updateDraft, title: e.target.value })} className="input" /></label><label><span className="mb-2 block text-xs font-black text-[#071E33]">Update date</span><input type="date" value={updateDraft.update_date} onChange={(e) => setUpdateDraft({ ...updateDraft, update_date: e.target.value })} className="input" /></label><label className="sm:col-span-2"><span className="mb-2 block text-xs font-black text-[#071E33]">Short note <span className="font-medium text-[#7A8B9E]">(optional)</span></span><textarea rows={3} value={updateDraft.summary} onChange={(e) => setUpdateDraft({ ...updateDraft, summary: e.target.value })} className="input py-3" placeholder="Example: Ceiling and internal finishing works are progressing across the residential units." /></label><div className="sm:col-span-2"><p className="mb-2 text-xs font-black text-[#071E33]">Choose the update photo</p><div className="flex gap-2 overflow-x-auto pb-2">{newGalleryUploads.map((url, index) => <button key={url} type="button" onClick={() => setUpdateDraft({ ...updateDraft, image_url: url })} className={`relative h-20 w-28 shrink-0 overflow-hidden rounded-xl border-2 ${updateDraft.image_url === url ? "border-[#A82B05]" : "border-transparent"}`}><img src={url} alt={`New upload ${index + 1}`} className="h-full w-full object-cover" /></button>)}</div></div><label className="sm:col-span-2 flex items-center gap-2 text-sm font-bold text-[#071E33]"><input type="checkbox" checked={updateDraft.published} onChange={(e) => setUpdateDraft({ ...updateDraft, published: e.target.checked })} /> Show this in Recent Project Updates when the project is published</label><p className="sm:col-span-2 text-xs leading-5 text-[#617286]">The update will be created when you click <strong>Save project</strong>. Only the compact recent-updates area uses it.</p></div></div> : null}</Field>
+      </div><footer className="sticky bottom-0 flex justify-end gap-3 border-t border-[#DCE4EC] bg-white px-5 py-4"><button type="button" onClick={() => { setSelected(null); resetNewUploadState(); }} className="min-h-11 rounded-xl border border-[#DCE4EC] px-5 text-sm font-black text-[#526579]">Cancel</button><button type="button" disabled={busy} onClick={() => void save()} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#A82B05] px-5 text-sm font-black text-white disabled:opacity-50">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save project</button></footer></section></div> : null}
       <style jsx global>{`.input{min-height:3rem;width:100%;border:1px solid #DCE4EC;border-radius:.75rem;padding-left:1rem;padding-right:1rem;font-size:.875rem;color:#071E33;outline:none;background:white}.input:focus{border-color:#0D3B66}`}</style>
     </div>
   );
 }
 
 function Field({ label, children, wide = false }: { label: string; children: React.ReactNode; wide?: boolean }) { return <label className={wide ? "sm:col-span-2" : ""}><span className="mb-2 block text-xs font-black text-[#071E33]">{label}</span>{children}</label>; }
-function MediaEditor({ urls, onRemove }: { urls: string[]; onRemove: (url: string) => void }) { return <div className="grid gap-2 sm:grid-cols-2">{urls.map((url) => <div key={url} className="flex items-center gap-2 rounded-xl border border-[#DCE4EC] p-2"><img src={url} alt="Project media" className="h-14 w-20 rounded-lg object-cover" /><span className="min-w-0 flex-1 truncate text-[10px] text-[#617286]">{url}</span><button type="button" onClick={() => onRemove(url)} className="grid h-8 w-8 place-items-center rounded-lg bg-[#FFF1EE] text-[#A82B05]"><Trash2 className="h-3.5 w-3.5" /></button></div>)}</div>; }
