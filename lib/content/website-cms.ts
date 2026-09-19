@@ -19,6 +19,16 @@ export type ManagedWebsiteProject = Project & { published: boolean; displayOrder
 export type ManagedWebsitePerson = Person & { id: string; published: boolean; displayOrder: number };
 export type ManagedWebsiteContent = { contentKey: string; section: string; label: string; value: unknown; published: boolean; displayOrder: number };
 export type ManagedWebsiteService = { id: string; title: string; description: string; iconKey: string; published: boolean; displayOrder: number };
+export type ManagedProjectUpdate = {
+  id: string;
+  projectSlug: string;
+  projectTitle: string;
+  projectLocation: string;
+  title: string;
+  summary: string;
+  imageUrl: string;
+  updateDate: string;
+};
 
 const rowToProject = (row: Record<string, unknown>): ManagedWebsiteProject => ({
   slug: String(row.slug ?? ""), title: String(row.title ?? "Untitled project"), heroTitle: row.hero_title ? String(row.hero_title) : undefined,
@@ -71,6 +81,30 @@ const cachedWebsiteContent = unstable_cache(async (section?: string): Promise<Ma
   }
 }, ["website-content-v1"], { revalidate: 300, tags: ["website-content"] });
 
+const cachedPublishedProjectUpdates = unstable_cache(async (limit: number): Promise<ManagedProjectUpdate[]> => {
+  try {
+    const { data, error } = await publicClient()
+      .from("website_project_updates")
+      .select("id, project_slug, project_title, project_location, title, summary, image_url, update_date")
+      .eq("published", true)
+      .order("update_date", { ascending: false })
+      .limit(limit);
+    if (error || !data) return [];
+    return (data as Record<string, unknown>[]).map((row) => ({
+      id: String(row.id ?? ""),
+      projectSlug: String(row.project_slug ?? ""),
+      projectTitle: String(row.project_title ?? "Project update"),
+      projectLocation: String(row.project_location ?? ""),
+      title: String(row.title ?? "Project update"),
+      summary: String(row.summary ?? ""),
+      imageUrl: String(row.image_url ?? ""),
+      updateDate: String(row.update_date ?? ""),
+    })).filter((item) => item.projectSlug && item.imageUrl);
+  } catch {
+    return [];
+  }
+}, ["website-project-updates-v1"], { revalidate: 300, tags: ["website-project-updates"] });
+
 const cachedPublishedServices = unstable_cache(async (): Promise<ManagedWebsiteService[]> => {
   try {
     const { data, error } = await publicClient().from("website_services").select("*").eq("published", true).order("display_order", { ascending: true });
@@ -99,4 +133,8 @@ export async function loadWebsiteContent(section?: string): Promise<ManagedWebsi
 
 export async function loadPublishedServices(): Promise<ManagedWebsiteService[]> {
   return cachedPublishedServices();
+}
+
+export async function loadPublishedProjectUpdates(limit = 6): Promise<ManagedProjectUpdate[]> {
+  return cachedPublishedProjectUpdates(Math.max(1, Math.min(limit, 12)));
 }
