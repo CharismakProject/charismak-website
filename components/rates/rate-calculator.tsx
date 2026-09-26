@@ -83,7 +83,7 @@ export default function RateCalculator({ item }: { item: RateBankItem }) {
       <section className="grid gap-4 lg:grid-cols-3">
         <div className="rounded-2xl bg-[#071E33] p-5 text-white">
           <span className="text-[10px] font-black uppercase tracking-[0.14em] text-[#F2B544]">
-            Charismak reference
+            {item.status === "verified" ? "Charismak verified reference" : "Working reference — under validation"}
           </span>
           <strong className="mt-2 block text-3xl">
             {money(publicCalculation.total, item.currency)}
