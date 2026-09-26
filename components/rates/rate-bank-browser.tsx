@@ -125,7 +125,7 @@ export default function RateBankBrowser() {
               Transparent execution cost — not a copied tender rate
             </h2>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-[#617286]">
-              Rates are reconstructed from Charismak project calculations and current market checks. Until a rate passes quantity, material, labour and market-validation checks, it is clearly marked Under validation rather than presented as a verified market rate.
+              Rates are reconstructed from Charismak project calculations and current market checks. Until a rate passes quantity, material, labour and market-validation checks, it is clearly marked Under validation rather than presented as a verified market rate. Formwork is system-specific: a project can use well-sawn plank below ground and marine plywood above ground by selecting the relevant build-ups separately.
             </p>
           </div>
           <Link
