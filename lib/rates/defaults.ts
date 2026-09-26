@@ -1217,45 +1217,47 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "lastReviewed": "2026-09-26",
     "slug": "timber-formwork-foundation-sides",
     "code": "RB-FW-001",
-    "title": "Traditional timber formwork to foundation / slab edges",
-    "shortTitle": "Foundation edge formwork",
+    "title": "Traditional well-sawn plank formwork to below-ground concrete",
+    "shortTitle": "Below-ground plank formwork",
     "section": "Formwork",
     "unit": "m²",
     "status": "review",
-    "specification": "Traditional timber formwork to low foundation and slab-edge faces using reusable sawn plank, 2x2 and 2x3 timber, nails, release agent and carpentry labour.",
-    "methodologyNote": "This low-height formwork intentionally uses plank/timber rather than pretending every formwork application is the same plywood system.",
-    "sourceNote": "2-bedroom/KMSTEEL timber take-offs + Central Park timber/nail rates. Sep 2026 Abuja audit checked plywood, timber, H20/Peri and labour market references; structural/shuttering quantities remain to be validated against a formwork layout.",
+    "specification": "Traditional formwork to footings, ground beams, plinths and low underground concrete faces using well-sawn straight 1x12 plank with four reuse cycles, 2x3 framing, 2x2 bracing, nails/release agent and carpentry labour.",
+    "methodologyNote": "Default facing-board rule: well-sawn 1x12 plank is charged over 4 reuses. Framing and bracing remain separate editable resources. Use this below ground; use a plywood system above ground where the project requires smoother concrete.",
+    "sourceNote": "2-bedroom/KMSTEEL timber take-offs + Central Park timber/nail rates. Sep 2026 Abuja audit checked plywood, timber, H20/Peri and labour market references; structural/shuttering quantities remain to be validated against a formwork layout. User-approved V2 rule: well-sawn normal plank = 4 reuse cycles.",
     "lines": [
       {
         "id": "fwf-plank",
-        "label": "1x12 sawn plank allocation",
+        "label": "Well-sawn 1x12 plank facing — 4 reuses",
         "category": "material",
-        "quantity": 0.18,
-        "unit": "length",
+        "quantity": 0.22768670309653916,
+        "unit": "3.6m length",
         "unitRate": 3000,
-        "note": "Reusable traditional facing board."
+        "note": "1m² facing ÷ (0.305m × 3.6m plank area × 4 reuses)."
       },
       {
         "id": "fwf-2x3",
-        "label": "2x3 timber framing",
+        "label": "2x3 studs and walers — 4 reuses",
         "category": "material",
-        "quantity": 0.25,
-        "unit": "length",
-        "unitRate": 1300
+        "quantity": 0.23152777777777778,
+        "unit": "3.6m length",
+        "unitRate": 1300,
+        "note": "Working geometry: about 1.667m vertical + 1.667m horizontal timber per m², then four reuses."
       },
       {
         "id": "fwf-2x2",
-        "label": "2x2 timber bracing",
+        "label": "2x2 braces/cleats — 4 reuses",
         "category": "material",
-        "quantity": 0.2,
-        "unit": "length",
-        "unitRate": 1000
+        "quantity": 0.034722222222222224,
+        "unit": "3.6m length",
+        "unitRate": 1000,
+        "note": "Working bracing allowance; editable for height and shutter arrangement."
       },
       {
         "id": "fwf-nail",
         "label": "2–3 inch nails",
         "category": "consumable",
-        "quantity": 0.008,
+        "quantity": 0.006,
         "unit": "bag",
         "unitRate": 27000
       },
@@ -1291,7 +1293,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
       "risk": 0.05,
       "op": 0
     },
-    "validationNote": "Under validation. Formwork cannot be verified from material prices alone: member spacing, shutter geometry, reuse cycles, prop/H20 arrangement, rental duration and stripping cycle must be checked for the specific formwork type."
+    "validationNote": "Under validation. The 4-reuse plank rule is fixed as the default, but stud/waler spacing and labour productivity still vary with ground-beam depth, footing geometry and access."
   },
   {
     "countryCode": "NG",
@@ -1302,22 +1304,23 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "lastReviewed": "2026-09-26",
     "slug": "plywood-formwork-columns",
     "code": "RB-FW-002",
-    "title": "Plywood formwork to reinforced concrete columns",
-    "shortTitle": "Column formwork",
+    "title": "Economical marine-plywood formwork to RC columns",
+    "shortTitle": "Column formwork — cheap marine",
     "section": "Formwork",
     "unit": "m²",
     "status": "review",
-    "specification": "18 mm reusable plywood column formwork with 2x2/2x3 framing, 2x6 walers, nails, release agent and fixing/striking labour.",
-    "methodologyNote": "Each timber component is separated. Plywood is allocated over five reuse cycles; user can edit quantities to match column size and reuse plan.",
-    "sourceNote": "FMC plywood/reuse basis + 2-bedroom/KMSTEEL timber methodology; timber market inputs refreshed from recent Abuja references. Sep 2026 Abuja audit checked plywood, timber, H20/Peri and labour market references; structural/shuttering quantities remain to be validated against a formwork layout.",
+    "specification": "18 mm economical marine plywood column formwork with 2x2/2x3 framing, 2x6 walers, nails, release agent and fixing/striking labour.",
+    "methodologyNote": "Each timber component is separated. Plywood is allocated over three reuse cycles; user can edit quantities to match column size and reuse plan.",
+    "sourceNote": "FMC plywood/reuse basis + 2-bedroom/KMSTEEL timber methodology; timber market inputs refreshed from recent Abuja references. Sep 2026 Abuja audit checked plywood, timber, H20/Peri and labour market references; structural/shuttering quantities remain to be validated against a formwork layout. User-approved V2 rule: economical/cheap marine board = 3 casting cycles.",
     "lines": [
       {
         "id": "fwc-ply",
-        "label": "18 mm plywood allocation — 5 reuse cycles",
+        "label": "18 mm economical marine plywood facing — 3 casting cycles",
         "category": "material",
-        "quantity": 0.06718624025799516,
+        "quantity": 0.11197706709665863,
         "unit": "sheet",
-        "unitRate": 40000
+        "unitRate": 27500,
+        "note": "4×8 sheet = 2.9768m²; charged over 3 casting cycles. Abuja construction-board working reference ₦27,500/sheet; editable."
       },
       {
         "id": "fwc-2x3",
@@ -1395,22 +1398,23 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "lastReviewed": "2026-09-26",
     "slug": "plywood-formwork-beams-lintels",
     "code": "RB-FW-003",
-    "title": "Plywood formwork to beams and lintels",
-    "shortTitle": "Beam / lintel formwork",
+    "title": "Economical marine-plywood formwork to beams and lintels",
+    "shortTitle": "Beam/lintel — cheap marine",
     "section": "Formwork",
     "unit": "m²",
     "status": "review",
     "specification": "Beam/lintel formwork with reusable plywood, 2x2 and 2x3 timber, 2x6 bearers, Peri/H20 beam support allowance, nails, release agent and labour.",
     "methodologyNote": "Beam sides and soffits need a stronger support system than simple wall/edge shuttering, so 2x6 and Peri/H20 support are visible inputs.",
-    "sourceNote": "2-bedroom/KMSTEEL formwork logic + FMC plywood basis + current Abuja timber/Peri working observations. Sep 2026 Abuja audit checked plywood, timber, H20/Peri and labour market references; structural/shuttering quantities remain to be validated against a formwork layout.",
+    "sourceNote": "2-bedroom/KMSTEEL formwork logic + FMC plywood basis + current Abuja timber/Peri working observations. Sep 2026 Abuja audit checked plywood, timber, H20/Peri and labour market references; structural/shuttering quantities remain to be validated against a formwork layout. User-approved V2 rule: economical/cheap marine board = 3 casting cycles.",
     "lines": [
       {
         "id": "fwb-ply",
-        "label": "18 mm plywood allocation — 5 reuse cycles",
+        "label": "18 mm economical marine plywood facing — 3 casting cycles",
         "category": "material",
-        "quantity": 0.06718624025799516,
+        "quantity": 0.11197706709665863,
         "unit": "sheet",
-        "unitRate": 40000
+        "unitRate": 27500,
+        "note": "4×8 sheet = 2.9768m²; charged over 3 casting cycles. Abuja construction-board working reference ₦27,500/sheet; editable."
       },
       {
         "id": "fwb-2x3",
@@ -1496,22 +1500,23 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "lastReviewed": "2026-09-26",
     "slug": "plywood-formwork-slab-soffit",
     "code": "RB-FW-004",
-    "title": "Plywood formwork to suspended slab soffit",
-    "shortTitle": "Slab soffit formwork",
+    "title": "Economical marine-plywood formwork to suspended slab soffit",
+    "shortTitle": "Slab soffit — cheap marine",
     "section": "Formwork",
     "unit": "m²",
     "status": "review",
     "specification": "Suspended slab formwork with reusable 18 mm plywood, 2x2/2x3 framing, 2x6 secondary bearers, Peri/H20 primary beams, nails, release agent and erection/striking labour.",
     "methodologyNote": "Suspended slab formwork with reusable 18 mm plywood, timber framing, H20/Peri support and explicit Acrow-prop rental. The prop quantity currently uses a published 175mm slab / 3.0m-height schedule as a working benchmark and must be redesigned for the actual slab.",
-    "sourceNote": "FMC reuse methodology + residential/KMSTEEL timber take-offs + current Abuja Peri/timber working observations. Sep 2026 Abuja audit checked plywood, timber, H20/Peri and labour market references; structural/shuttering quantities remain to be validated against a formwork layout.",
+    "sourceNote": "FMC reuse methodology + residential/KMSTEEL timber take-offs + current Abuja Peri/timber working observations. Sep 2026 Abuja audit checked plywood, timber, H20/Peri and labour market references; structural/shuttering quantities remain to be validated against a formwork layout. User-approved V2 rule: economical/cheap marine board = 3 casting cycles.",
     "lines": [
       {
         "id": "fws-ply",
-        "label": "18 mm plywood allocation — 5 reuse cycles",
+        "label": "18 mm economical marine plywood facing — 3 casting cycles",
         "category": "material",
-        "quantity": 0.06718624025799516,
+        "quantity": 0.11197706709665863,
         "unit": "sheet",
-        "unitRate": 40000
+        "unitRate": 27500,
+        "note": "4×8 sheet = 2.9768m²; charged over 3 casting cycles. Abuja construction-board working reference ₦27,500/sheet; editable."
       },
       {
         "id": "fws-2x3",
@@ -1606,22 +1611,23 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "lastReviewed": "2026-09-26",
     "slug": "plywood-formwork-staircase",
     "code": "RB-FW-005",
-    "title": "Plywood formwork to reinforced concrete staircase",
-    "shortTitle": "Staircase formwork",
+    "title": "Economical marine-plywood formwork to reinforced concrete staircase",
+    "shortTitle": "Staircase — cheap marine",
     "section": "Formwork",
     "unit": "m²",
     "status": "review",
     "specification": "Stair/landing formwork with plywood facing, timber stringers/joists/bracing, 2x6/Peri support allowance, nails, release agent and higher-detail carpentry labour.",
     "methodologyNote": "Stairs attract more cutting, setting-out and striking labour than flat soffits; the labour factor is therefore separately visible and editable.",
-    "sourceNote": "Residential staircase/formwork methodology normalized with current formwork inputs. Sep 2026 Abuja audit checked plywood, timber, H20/Peri and labour market references; structural/shuttering quantities remain to be validated against a formwork layout.",
+    "sourceNote": "Residential staircase/formwork methodology normalized with current formwork inputs. Sep 2026 Abuja audit checked plywood, timber, H20/Peri and labour market references; structural/shuttering quantities remain to be validated against a formwork layout. User-approved V2 rule: economical/cheap marine board = 3 casting cycles.",
     "lines": [
       {
         "id": "fwst-ply",
-        "label": "18 mm plywood allocation — 5 reuse cycles",
+        "label": "18 mm economical marine plywood facing — 3 casting cycles",
         "category": "material",
-        "quantity": 0.06718624025799516,
+        "quantity": 0.11197706709665863,
         "unit": "sheet",
-        "unitRate": 40000
+        "unitRate": 27500,
+        "note": "4×8 sheet = 2.9768m²; charged over 3 casting cycles. Abuja construction-board working reference ₦27,500/sheet; editable."
       },
       {
         "id": "fwst-2x3",
@@ -2005,6 +2011,1846 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
       "op": 0
     },
     "validationNote": "Under validation. The calculation remains usable and editable, but current material/labour inputs are still being checked against fresh market observations and project evidence before verification."
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "status": "review",
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    },
+    "slug": "marine-plywood-formwork-shear-wall",
+    "code": "RB-FW-006",
+    "title": "Economical marine-plywood formwork to RC walls / shear walls",
+    "shortTitle": "Wall formwork — cheap marine",
+    "section": "Formwork",
+    "unit": "m²",
+    "specification": "18 mm economical marine plywood wall formwork on 2x3 studs, 2x6 walers/strongbacks, ties/bracing, nails, release agent and fixing/striking labour. Plywood charged over 3 casting cycles.",
+    "methodologyNote": "Designed for above-ground wall faces. Tie spacing, wall height and concrete pressure govern framing quantity; every resource is editable.",
+    "sourceNote": "Formwork V2 methodology + Abuja Sep-2026 marine-board/H20/timber checks. User-approved cheap marine board reuse: 3 cycles.",
+    "lines": [
+      {
+        "id": "fww-ply",
+        "label": "18 mm economical marine plywood — 3 cycles",
+        "category": "material",
+        "quantity": 0.11197706709665863,
+        "unit": "sheet",
+        "unitRate": 27500
+      },
+      {
+        "id": "fww-2x3",
+        "label": "2x3 vertical studs",
+        "category": "material",
+        "quantity": 0.3,
+        "unit": "3.6m length",
+        "unitRate": 1300
+      },
+      {
+        "id": "fww-2x6",
+        "label": "2x6 walers / strongbacks",
+        "category": "material",
+        "quantity": 0.18,
+        "unit": "3.6m length",
+        "unitRate": 3000
+      },
+      {
+        "id": "fww-ties",
+        "label": "Tie-rod / clamp / spacer allocation",
+        "category": "consumable",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 750
+      },
+      {
+        "id": "fww-nail",
+        "label": "Nails / screws",
+        "category": "consumable",
+        "quantity": 0.008,
+        "unit": "bag",
+        "unitRate": 27000
+      },
+      {
+        "id": "fww-release",
+        "label": "Release agent",
+        "category": "consumable",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 250
+      },
+      {
+        "id": "fww-carp",
+        "label": "Formwork carpenter",
+        "category": "labour",
+        "quantity": 0.2,
+        "unit": "day",
+        "unitRate": 15000
+      },
+      {
+        "id": "fww-help",
+        "label": "Helper / labourer",
+        "category": "labour",
+        "quantity": 0.2,
+        "unit": "day",
+        "unitRate": 8000
+      }
+    ],
+    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "status": "review",
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    },
+    "slug": "plank-formwork-columns",
+    "code": "RB-FW-007",
+    "title": "Well-sawn plank formwork to reinforced concrete columns",
+    "shortTitle": "Column formwork — plank",
+    "section": "Formwork",
+    "unit": "m²",
+    "specification": "Well-sawn straight 1x12 plank column formwork with 2x3 studs, 2x6 walers, 2x2 bracing, nails/release agent and labour. Facing plank charged over 4 reuses.",
+    "methodologyNote": "Alternative to marine plywood where a plank finish is acceptable or cheaper. The 4-reuse plank rule is explicit.",
+    "sourceNote": "Residential/KMSTEEL traditional shuttering logic. User-approved normal well-sawn plank reuse: 4 cycles.",
+    "lines": [
+      {
+        "id": "fwcp-plank",
+        "label": "Well-sawn 1x12 plank facing — 4 reuses",
+        "category": "material",
+        "quantity": 0.22768670309653916,
+        "unit": "3.6m length",
+        "unitRate": 3000
+      },
+      {
+        "id": "fwcp-2x3",
+        "label": "2x3 studs",
+        "category": "material",
+        "quantity": 0.28,
+        "unit": "3.6m length",
+        "unitRate": 1300
+      },
+      {
+        "id": "fwcp-2x6",
+        "label": "2x6 walers",
+        "category": "material",
+        "quantity": 0.14,
+        "unit": "3.6m length",
+        "unitRate": 3000
+      },
+      {
+        "id": "fwcp-2x2",
+        "label": "2x2 bracing/cleats",
+        "category": "material",
+        "quantity": 0.12,
+        "unit": "3.6m length",
+        "unitRate": 1000
+      },
+      {
+        "id": "fwcp-nail",
+        "label": "Nails",
+        "category": "consumable",
+        "quantity": 0.008,
+        "unit": "bag",
+        "unitRate": 27000
+      },
+      {
+        "id": "fwcp-release",
+        "label": "Release agent / ties",
+        "category": "consumable",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 350
+      },
+      {
+        "id": "fwcp-carp",
+        "label": "Formwork carpenter",
+        "category": "labour",
+        "quantity": 0.2,
+        "unit": "day",
+        "unitRate": 15000
+      },
+      {
+        "id": "fwcp-help",
+        "label": "Helper",
+        "category": "labour",
+        "quantity": 0.2,
+        "unit": "day",
+        "unitRate": 8000
+      }
+    ],
+    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "status": "review",
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    },
+    "slug": "plank-formwork-beams-lintels",
+    "code": "RB-FW-008",
+    "title": "Well-sawn plank formwork to beams and lintels",
+    "shortTitle": "Beam/lintel — plank",
+    "section": "Formwork",
+    "unit": "m²",
+    "specification": "Traditional beam/lintel shuttering using well-sawn 1x12 plank facing, 2x3 framing, 2x6 bearers, bracing, nails/release agent and erection/striking labour. Plank charged over 4 reuses.",
+    "methodologyNote": "Useful where projects use plank below and/or above ground instead of marine plywood. Bearer/support quantity changes with beam size and span.",
+    "sourceNote": "Residential and Jahi formwork evidence. User-approved well-sawn plank reuse: 4 cycles.",
+    "lines": [
+      {
+        "id": "fwbp-plank",
+        "label": "Well-sawn 1x12 plank facing — 4 reuses",
+        "category": "material",
+        "quantity": 0.22768670309653916,
+        "unit": "3.6m length",
+        "unitRate": 3000
+      },
+      {
+        "id": "fwbp-2x3",
+        "label": "2x3 side framing",
+        "category": "material",
+        "quantity": 0.3,
+        "unit": "3.6m length",
+        "unitRate": 1300
+      },
+      {
+        "id": "fwbp-2x6",
+        "label": "2x6 bottom bearer / strongback",
+        "category": "material",
+        "quantity": 0.18,
+        "unit": "3.6m length",
+        "unitRate": 3000
+      },
+      {
+        "id": "fwbp-2x2",
+        "label": "2x2 cleats/bracing",
+        "category": "material",
+        "quantity": 0.1,
+        "unit": "3.6m length",
+        "unitRate": 1000
+      },
+      {
+        "id": "fwbp-nail",
+        "label": "Nails",
+        "category": "consumable",
+        "quantity": 0.008,
+        "unit": "bag",
+        "unitRate": 27000
+      },
+      {
+        "id": "fwbp-release",
+        "label": "Release agent / ties",
+        "category": "consumable",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 300
+      },
+      {
+        "id": "fwbp-carp",
+        "label": "Formwork carpenter",
+        "category": "labour",
+        "quantity": 0.22,
+        "unit": "day",
+        "unitRate": 15000
+      },
+      {
+        "id": "fwbp-help",
+        "label": "Helper",
+        "category": "labour",
+        "quantity": 0.22,
+        "unit": "day",
+        "unitRate": 8000
+      }
+    ],
+    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "status": "review",
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    },
+    "slug": "plank-formwork-slab-edges-upstands",
+    "code": "RB-FW-009",
+    "title": "Well-sawn plank formwork to slab edges, kerbs and concrete upstands",
+    "shortTitle": "Slab edge/upstand — plank",
+    "section": "Formwork",
+    "unit": "m²",
+    "specification": "Well-sawn plank shuttering to slab edges, kerbs and upstands with 2x3 framing, 2x2 bracing, nails and release agent. Plank charged over 4 reuses.",
+    "methodologyNote": "Linear work is converted to measured contact area; low heights can have poor labour productivity, so labour remains editable.",
+    "sourceNote": "Traditional formwork methodology; user-approved well-sawn plank reuse: 4 cycles.",
+    "lines": [
+      {
+        "id": "fwup-plank",
+        "label": "Well-sawn 1x12 plank facing — 4 reuses",
+        "category": "material",
+        "quantity": 0.22768670309653916,
+        "unit": "3.6m length",
+        "unitRate": 3000
+      },
+      {
+        "id": "fwup-2x3",
+        "label": "2x3 framing",
+        "category": "material",
+        "quantity": 0.18,
+        "unit": "3.6m length",
+        "unitRate": 1300
+      },
+      {
+        "id": "fwup-2x2",
+        "label": "2x2 pegs/braces",
+        "category": "material",
+        "quantity": 0.1,
+        "unit": "3.6m length",
+        "unitRate": 1000
+      },
+      {
+        "id": "fwup-nail",
+        "label": "Nails",
+        "category": "consumable",
+        "quantity": 0.006,
+        "unit": "bag",
+        "unitRate": 27000
+      },
+      {
+        "id": "fwup-release",
+        "label": "Release agent",
+        "category": "consumable",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 200
+      },
+      {
+        "id": "fwup-carp",
+        "label": "Carpenter labour",
+        "category": "labour",
+        "quantity": 0.15,
+        "unit": "day",
+        "unitRate": 15000
+      },
+      {
+        "id": "fwup-help",
+        "label": "Helper labour",
+        "category": "labour",
+        "quantity": 0.15,
+        "unit": "day",
+        "unitRate": 8000
+      }
+    ],
+    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "status": "review",
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    },
+    "slug": "premium-marine-formwork-slab-soffit",
+    "code": "RB-FW-010",
+    "title": "Premium marine-plywood formwork to suspended slab soffit",
+    "shortTitle": "Slab soffit — premium marine",
+    "section": "Formwork",
+    "unit": "m²",
+    "specification": "Premium 18 mm marine/film-faced plywood slab soffit formwork with H20/Peri beams, Acrow props, secondary timber, nails/release agent and labour. Working plywood reuse: 5 cycles.",
+    "methodologyNote": "Premium-board alternative to the 3-cycle economical marine-board system. Actual reuse depends on brand, handling, release agent and stripping practice.",
+    "sourceNote": "Abuja Sep-2026 premium marine-board listings around ₦39,000–₦43,000/sheet; working 5-cycle reuse for comparison.",
+    "lines": [
+      {
+        "id": "fwp-ply",
+        "label": "Premium 18 mm marine plywood — 5 cycles",
+        "category": "material",
+        "quantity": 0.06718624025799516,
+        "unit": "sheet",
+        "unitRate": 40000
+      },
+      {
+        "id": "fwp-2x3",
+        "label": "2x3 joists/runners",
+        "category": "material",
+        "quantity": 0.25,
+        "unit": "3.6m length",
+        "unitRate": 1300
+      },
+      {
+        "id": "fwp-2x6",
+        "label": "2x6 secondary bearers",
+        "category": "material",
+        "quantity": 0.22,
+        "unit": "3.6m length",
+        "unitRate": 3000
+      },
+      {
+        "id": "fwp-h20",
+        "label": "H20 / Peri primary beam allocation",
+        "category": "material",
+        "quantity": 0.08,
+        "unit": "No.",
+        "unitRate": 16900
+      },
+      {
+        "id": "fwp-prop",
+        "label": "Acrow prop rental — 21-day cycle",
+        "category": "plant",
+        "quantity": 29.22,
+        "unit": "prop-day",
+        "unitRate": 200
+      },
+      {
+        "id": "fwp-nail",
+        "label": "Nails / fixings",
+        "category": "consumable",
+        "quantity": 0.01,
+        "unit": "bag",
+        "unitRate": 27000
+      },
+      {
+        "id": "fwp-release",
+        "label": "Release agent / sundries",
+        "category": "consumable",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 250
+      },
+      {
+        "id": "fwp-carp",
+        "label": "Formwork carpenter",
+        "category": "labour",
+        "quantity": 0.22,
+        "unit": "day",
+        "unitRate": 15000
+      },
+      {
+        "id": "fwp-help",
+        "label": "Helper",
+        "category": "labour",
+        "quantity": 0.22,
+        "unit": "day",
+        "unitRate": 8000
+      }
+    ],
+    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "status": "review",
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    },
+    "slug": "10mm-levelling-screed-1-4-admix",
+    "code": "RB-FN-007",
+    "title": "10 mm 1:4 levelling screed with acrylic admixture",
+    "shortTitle": "10mm levelling screed",
+    "section": "Finishes",
+    "unit": "m²",
+    "specification": "10 mm average cement:sand (1:4) levelling screed with acrylic admixture, placed, ruled level and steel-trowelled.",
+    "methodologyNote": "Uses the Sora project calculation basis: ₦85/mm/m² materials + ₦1,400/m² placing/levelling/trowelling before Rate Bank allowances. Both inputs remain editable.",
+    "sourceNote": "Sora Restaurant corrected-rate workbook, Abuja: explicit screed formula.",
+    "lines": [
+      {
+        "id": "screed-10-mat",
+        "label": "1:4 screed materials + acrylic admixture (10mm)",
+        "category": "material",
+        "quantity": 10,
+        "unit": "mm·m²",
+        "unitRate": 85,
+        "note": "Source formula input; update after current cement/sand/admixture audit."
+      },
+      {
+        "id": "screed-10-lab",
+        "label": "Placing, levelling and steel trowelling",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 1400
+      }
+    ],
+    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "status": "review",
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    },
+    "slug": "20mm-levelling-screed-1-4-admix",
+    "code": "RB-FN-008",
+    "title": "20 mm 1:4 levelling screed with acrylic admixture",
+    "shortTitle": "20mm levelling screed",
+    "section": "Finishes",
+    "unit": "m²",
+    "specification": "20 mm average cement:sand (1:4) levelling screed with acrylic admixture, placed, ruled level and steel-trowelled.",
+    "methodologyNote": "Uses the Sora project calculation basis: ₦85/mm/m² materials + ₦1,400/m² placing/levelling/trowelling before Rate Bank allowances. Both inputs remain editable.",
+    "sourceNote": "Sora Restaurant corrected-rate workbook, Abuja: explicit screed formula.",
+    "lines": [
+      {
+        "id": "screed-20-mat",
+        "label": "1:4 screed materials + acrylic admixture (20mm)",
+        "category": "material",
+        "quantity": 20,
+        "unit": "mm·m²",
+        "unitRate": 85,
+        "note": "Source formula input; update after current cement/sand/admixture audit."
+      },
+      {
+        "id": "screed-20-lab",
+        "label": "Placing, levelling and steel trowelling",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 1400
+      }
+    ],
+    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "status": "review",
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    },
+    "slug": "23mm-levelling-screed-1-4-admix",
+    "code": "RB-FN-009",
+    "title": "23 mm 1:4 levelling screed with acrylic admixture",
+    "shortTitle": "23mm levelling screed",
+    "section": "Finishes",
+    "unit": "m²",
+    "specification": "23 mm average cement:sand (1:4) levelling screed with acrylic admixture, placed, ruled level and steel-trowelled.",
+    "methodologyNote": "Uses the Sora project calculation basis: ₦85/mm/m² materials + ₦1,400/m² placing/levelling/trowelling before Rate Bank allowances. Both inputs remain editable.",
+    "sourceNote": "Sora Restaurant corrected-rate workbook, Abuja: explicit screed formula.",
+    "lines": [
+      {
+        "id": "screed-23-mat",
+        "label": "1:4 screed materials + acrylic admixture (23mm)",
+        "category": "material",
+        "quantity": 23,
+        "unit": "mm·m²",
+        "unitRate": 85,
+        "note": "Source formula input; update after current cement/sand/admixture audit."
+      },
+      {
+        "id": "screed-23-lab",
+        "label": "Placing, levelling and steel trowelling",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 1400
+      }
+    ],
+    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "status": "review",
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    },
+    "slug": "32mm-levelling-screed-1-4-admix",
+    "code": "RB-FN-010",
+    "title": "32 mm 1:4 levelling screed with acrylic admixture",
+    "shortTitle": "32mm levelling screed",
+    "section": "Finishes",
+    "unit": "m²",
+    "specification": "32 mm average cement:sand (1:4) levelling screed with acrylic admixture, placed, ruled level and steel-trowelled.",
+    "methodologyNote": "Uses the Sora project calculation basis: ₦85/mm/m² materials + ₦1,400/m² placing/levelling/trowelling before Rate Bank allowances. Both inputs remain editable.",
+    "sourceNote": "Sora Restaurant corrected-rate workbook, Abuja: explicit screed formula.",
+    "lines": [
+      {
+        "id": "screed-32-mat",
+        "label": "1:4 screed materials + acrylic admixture (32mm)",
+        "category": "material",
+        "quantity": 32,
+        "unit": "mm·m²",
+        "unitRate": 85,
+        "note": "Source formula input; update after current cement/sand/admixture audit."
+      },
+      {
+        "id": "screed-32-lab",
+        "label": "Placing, levelling and steel trowelling",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 1400
+      }
+    ],
+    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "status": "review",
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    },
+    "slug": "marble-field-laying-20mm",
+    "code": "RB-FN-011",
+    "title": "20 mm marble field laying — employer-supplied stone",
+    "shortTitle": "Marble field laying",
+    "section": "Finishes",
+    "unit": "m²",
+    "specification": "Lay employer-supplied 20 mm marble on 10 mm cement/sand/admix bed including setting out, grouting, protection and cleaning.",
+    "methodologyNote": "Sora guide rate had commercial content. This working no-profit build-up strips a provisional 15% source O/P and separates bedding/consumables from specialist laying labour.",
+    "sourceNote": "Sora Restaurant laid-down field marble rate ₦8,000/m² used as a guide only.",
+    "lines": [
+      {
+        "id": "marble-field-mat",
+        "label": "10mm bedding, grout, protection consumables",
+        "category": "material",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 1200
+      },
+      {
+        "id": "marble-field-lab",
+        "label": "Specialist marble laying labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 5757
+      }
+    ],
+    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "status": "review",
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    },
+    "slug": "marble-narrow-border-laying",
+    "code": "RB-FN-012",
+    "title": "Narrow marble border-strip laying — 60/100 mm",
+    "shortTitle": "Marble narrow-border laying",
+    "section": "Finishes",
+    "unit": "m²",
+    "specification": "Lay employer-supplied narrow marble border strips to string lines with multiple cuts, 10 mm bedding, grouting, protection and cleaning.",
+    "methodologyNote": "Derived from Sora premium narrow-strip guide after provisional 15% O/P removal; narrow work has materially lower productivity.",
+    "sourceNote": "Sora Restaurant premium narrow border guide ₦15,500/m².",
+    "lines": [
+      {
+        "id": "marble-border-mat",
+        "label": "Bedding, grout, cutting/protection consumables",
+        "category": "material",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 2700
+      },
+      {
+        "id": "marble-border-lab",
+        "label": "Precision narrow-strip laying labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 10778
+      }
+    ],
+    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "status": "review",
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    },
+    "slug": "marble-mitred-flowerbed-top-laying",
+    "code": "RB-FN-013",
+    "title": "Shaped marble top with mitred exposed edges — laying only",
+    "shortTitle": "Mitred marble shaped top",
+    "section": "Finishes",
+    "unit": "m²",
+    "specification": "Template, cut and lay employer-supplied marble to shaped tops with mitred exposed edges, bedding, grout, protection and cleaning.",
+    "methodologyNote": "Derived from Sora shaped/mitred marble guide after provisional 15% O/P removal.",
+    "sourceNote": "Sora Restaurant flower-bed top guide ₦20,000/m².",
+    "lines": [
+      {
+        "id": "marble-mitre-mat",
+        "label": "Bedding, grout, blades/protection consumables",
+        "category": "material",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 4350
+      },
+      {
+        "id": "marble-mitre-lab",
+        "label": "Templating, precision cutting and laying labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 13041
+      }
+    ],
+    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "status": "review",
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    },
+    "slug": "patterned-stone-band-laying",
+    "code": "RB-FN-014",
+    "title": "Patterned stone floor-band laying — employer-supplied stone",
+    "shortTitle": "Patterned stone laying",
+    "section": "Finishes",
+    "unit": "m²",
+    "specification": "Set out and lay employer-supplied patterned stone modules to design, including grouting and normal protection. Specialist adhesive measured separately.",
+    "methodologyNote": "Derived from Sora patterned-stone guide after provisional 15% O/P removal.",
+    "sourceNote": "Sora Restaurant patterned stone laying guide ₦10,000/m².",
+    "lines": [
+      {
+        "id": "stone-pattern-cons",
+        "label": "Grout, spacers, protection and cutting consumables",
+        "category": "material",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 1750
+      },
+      {
+        "id": "stone-pattern-lab",
+        "label": "Pattern setting-out and laying labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 6946
+      }
+    ],
+    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "status": "review",
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    },
+    "slug": "stone-adhesive-14kg-per-m2",
+    "code": "RB-FN-015",
+    "title": "Premium stone adhesive at 14 kg/m² consumption",
+    "shortTitle": "Stone adhesive — 14kg/m²",
+    "section": "Finishes",
+    "unit": "m²",
+    "specification": "High-performance cement-based stone adhesive at approximately 14 kg/m² consumption, based on 25 kg bags.",
+    "methodologyNote": "Material-only helper rate for stone installations. Product price and consumption are editable.",
+    "sourceNote": "Sora Restaurant SikaCeram-255 StarFix or equal guide, ₦22,000/25kg bag.",
+    "lines": [
+      {
+        "id": "stone-adh",
+        "label": "25kg stone adhesive",
+        "category": "material",
+        "quantity": 0.56,
+        "unit": "bag",
+        "unitRate": 22000
+      }
+    ],
+    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "status": "review",
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    },
+    "slug": "engineered-oak-straight-laying",
+    "code": "RB-FN-016",
+    "title": "Engineered oak strip flooring — laying only",
+    "shortTitle": "Oak straight-layout laying",
+    "section": "Finishes",
+    "unit": "m²",
+    "specification": "Lay employer-supplied engineered oak boards in straight strip layout including adhesive where required, cutting, edge trims and protection. Underlay separate.",
+    "methodologyNote": "Guide rate normalized by provisionally stripping 15% source O/P. Consumables and labour remain editable.",
+    "sourceNote": "Sora Restaurant straight-layout engineered oak guide ₦8,500/m².",
+    "lines": [
+      {
+        "id": "oak-straight-cons",
+        "label": "Adhesive, trims, cutting and protection consumables",
+        "category": "material",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 2600
+      },
+      {
+        "id": "oak-straight-lab",
+        "label": "Flooring installation labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 4791
+      }
+    ],
+    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "status": "review",
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    },
+    "slug": "engineered-oak-chevron-laying",
+    "code": "RB-FN-017",
+    "title": "Engineered oak chevron flooring — laying only",
+    "shortTitle": "Oak chevron laying",
+    "section": "Finishes",
+    "unit": "m²",
+    "specification": "Lay employer-supplied engineered oak boards in chevron pattern including detailed setting out, angled cutting, adhesive, edge trims and protection.",
+    "methodologyNote": "Chevron productivity is lower than straight layout. Guide rate normalized by stripping a provisional 15% source O/P.",
+    "sourceNote": "Sora Restaurant chevron guide ₦13,500/m².",
+    "lines": [
+      {
+        "id": "oak-chev-cons",
+        "label": "Adhesive, trims, cutting and protection consumables",
+        "category": "material",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 3000
+      },
+      {
+        "id": "oak-chev-lab",
+        "label": "Chevron setting-out and installation labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 8739
+      }
+    ],
+    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "status": "review",
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    },
+    "slug": "decorative-wood-tile-laying",
+    "code": "RB-FN-018",
+    "title": "Decorative patterned wood-tile flooring — laying only",
+    "shortTitle": "Decorative wood-tile laying",
+    "section": "Finishes",
+    "unit": "m²",
+    "specification": "Lay employer-supplied decorative wood tiles including pattern alignment, adhesive, cutting, trims and protection.",
+    "methodologyNote": "Guide rate normalized by stripping provisional 15% source O/P.",
+    "sourceNote": "Sora Restaurant decorative wood-tile guide ₦11,000/m².",
+    "lines": [
+      {
+        "id": "woodtile-cons",
+        "label": "Adhesive, trims, cutting and protection consumables",
+        "category": "material",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 2700
+      },
+      {
+        "id": "woodtile-lab",
+        "label": "Patterned wood-tile installation labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 6865
+      }
+    ],
+    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "status": "review",
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    },
+    "slug": "3mm-hd-foam-underlay",
+    "code": "RB-FN-019",
+    "title": "3 mm high-density foam underlay — supply and lay",
+    "shortTitle": "3mm foam underlay",
+    "section": "Finishes",
+    "unit": "m²",
+    "specification": "Supply and lay 3 mm high-density foam underlay beneath engineered wood flooring, including laps, cutting and normal waste.",
+    "methodologyNote": "Source all-in guide normalized to a no-profit working split; update with supplier roll coverage and laying productivity.",
+    "sourceNote": "Sora Restaurant corrected-rate guide ₦2,000/m².",
+    "lines": [
+      {
+        "id": "foam-underlay-mat",
+        "label": "3mm HD foam underlay incl. waste",
+        "category": "material",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 1400
+      },
+      {
+        "id": "foam-underlay-lab",
+        "label": "Laying/cutting labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 339
+      }
+    ],
+    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "status": "review",
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    },
+    "slug": "flat-gypsum-board-ceiling",
+    "code": "RB-CL-001",
+    "title": "Flat gypsum-board suspended ceiling",
+    "shortTitle": "Flat gypsum ceiling",
+    "section": "Ceilings",
+    "unit": "m²",
+    "specification": "Flat gypsum-board suspended ceiling including framing/supports, boards or forming material, fixings/joint treatment, installation labour and normal transport unless stated otherwise.",
+    "methodologyNote": "Sora source was an all-in commercial guide of ₦18,500/m². V1 Rate Bank strips a provisional 15% source O/P and uses an explicit temporary material/labour/logistics split; this remains Under validation until a subcontractor resource breakdown is obtained.",
+    "sourceNote": "Sora Restaurant corrected-rates ceiling schedule, Abuja.",
+    "lines": [
+      {
+        "id": "flat-gypsum-board-ceiling-mat",
+        "label": "Boards/profiles/fixings/joint-treatment materials",
+        "category": "material",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 10000
+      },
+      {
+        "id": "flat-gypsum-board-ceiling-lab",
+        "label": "Specialist ceiling installation labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 5086.956521739132
+      },
+      {
+        "id": "flat-gypsum-board-ceiling-log",
+        "label": "Handling / local transport allocation",
+        "category": "logistics",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 1000
+      }
+    ],
+    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "status": "review",
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    },
+    "slug": "straight-gypsum-ceiling-drop",
+    "code": "RB-CL-002",
+    "title": "Straight stepped gypsum ceiling drop",
+    "shortTitle": "Straight gypsum drop",
+    "section": "Ceilings",
+    "unit": "m²",
+    "specification": "Straight stepped gypsum ceiling drop including framing/supports, boards or forming material, fixings/joint treatment, installation labour and normal transport unless stated otherwise.",
+    "methodologyNote": "Sora source was an all-in commercial guide of ₦24,000/m². V1 Rate Bank strips a provisional 15% source O/P and uses an explicit temporary material/labour/logistics split; this remains Under validation until a subcontractor resource breakdown is obtained.",
+    "sourceNote": "Sora Restaurant corrected-rates ceiling schedule, Abuja.",
+    "lines": [
+      {
+        "id": "straight-gypsum-ceiling-drop-mat",
+        "label": "Boards/profiles/fixings/joint-treatment materials",
+        "category": "material",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 12500
+      },
+      {
+        "id": "straight-gypsum-ceiling-drop-lab",
+        "label": "Specialist ceiling installation labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 7369.565217391308
+      },
+      {
+        "id": "straight-gypsum-ceiling-drop-log",
+        "label": "Handling / local transport allocation",
+        "category": "logistics",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 1000
+      }
+    ],
+    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "status": "review",
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    },
+    "slug": "curved-gypsum-ceiling-drop",
+    "code": "RB-CL-003",
+    "title": "Curved gypsum ceiling drop",
+    "shortTitle": "Curved gypsum drop",
+    "section": "Ceilings",
+    "unit": "m²",
+    "specification": "Curved gypsum ceiling drop including framing/supports, boards or forming material, fixings/joint treatment, installation labour and normal transport unless stated otherwise.",
+    "methodologyNote": "Sora source was an all-in commercial guide of ₦32,000/m². V1 Rate Bank strips a provisional 15% source O/P and uses an explicit temporary material/labour/logistics split; this remains Under validation until a subcontractor resource breakdown is obtained.",
+    "sourceNote": "Sora Restaurant corrected-rates ceiling schedule, Abuja.",
+    "lines": [
+      {
+        "id": "curved-gypsum-ceiling-drop-mat",
+        "label": "Boards/profiles/fixings/joint-treatment materials",
+        "category": "material",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 15000
+      },
+      {
+        "id": "curved-gypsum-ceiling-drop-lab",
+        "label": "Specialist ceiling installation labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 11826.08695652174
+      },
+      {
+        "id": "curved-gypsum-ceiling-drop-log",
+        "label": "Handling / local transport allocation",
+        "category": "logistics",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 1000
+      }
+    ],
+    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "status": "review",
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    },
+    "slug": "recessed-curved-gypsum-ceiling",
+    "code": "RB-CL-004",
+    "title": "Recessed / inverted gypsum ceiling with curved edges",
+    "shortTitle": "Recessed curved gypsum",
+    "section": "Ceilings",
+    "unit": "m²",
+    "specification": "Recessed / inverted gypsum ceiling with curved edges including framing/supports, boards or forming material, fixings/joint treatment, installation labour and normal transport unless stated otherwise.",
+    "methodologyNote": "Sora source was an all-in commercial guide of ₦34,000/m². V1 Rate Bank strips a provisional 15% source O/P and uses an explicit temporary material/labour/logistics split; this remains Under validation until a subcontractor resource breakdown is obtained.",
+    "sourceNote": "Sora Restaurant corrected-rates ceiling schedule, Abuja.",
+    "lines": [
+      {
+        "id": "recessed-curved-gypsum-ceiling-mat",
+        "label": "Boards/profiles/fixings/joint-treatment materials",
+        "category": "material",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 16000
+      },
+      {
+        "id": "recessed-curved-gypsum-ceiling-lab",
+        "label": "Specialist ceiling installation labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 12565.217391304352
+      },
+      {
+        "id": "recessed-curved-gypsum-ceiling-log",
+        "label": "Handling / local transport allocation",
+        "category": "logistics",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 1000
+      }
+    ],
+    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "status": "review",
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    },
+    "slug": "grooved-pop-edge-detail",
+    "code": "RB-CL-005",
+    "title": "150 mm grooved POP ceiling-edge detail",
+    "shortTitle": "Grooved POP edge",
+    "section": "Ceilings",
+    "unit": "m",
+    "specification": "30 mm thick × 150 mm wide POP edge detail with repeated longitudinal grooves, including forming/carving, sanding and finishing.",
+    "methodologyNote": "Sora guide normalized by provisional 15% O/P removal; material/labour split remains under validation.",
+    "sourceNote": "Sora Restaurant grooved POP guide ₦6,500/lm.",
+    "lines": [
+      {
+        "id": "popgroove-mat",
+        "label": "POP/reinforcement/sundry materials",
+        "category": "material",
+        "quantity": 1,
+        "unit": "m",
+        "unitRate": 1800
+      },
+      {
+        "id": "popgroove-lab",
+        "label": "Forming, carving, sanding and finishing labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m",
+        "unitRate": 3852
+      }
+    ],
+    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "status": "review",
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    },
+    "slug": "bespoke-pop-column-crown",
+    "code": "RB-CL-006",
+    "title": "Bespoke POP column crown",
+    "shortTitle": "POP column crown",
+    "section": "Ceilings",
+    "unit": "m²",
+    "specification": "Bespoke moulded POP crown around top of column including forming, reinforcement/support, sanding and installation.",
+    "methodologyNote": "Design-sensitive provisional rate. Source guide normalized by provisional 15% O/P removal.",
+    "sourceNote": "Sora Restaurant column-crown guide ₦25,000/m² pending final architect design.",
+    "lines": [
+      {
+        "id": "popcrown-mat",
+        "label": "POP, reinforcement and moulding materials",
+        "category": "material",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 7000
+      },
+      {
+        "id": "popcrown-lab",
+        "label": "Moulding/forming/installation labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 13739
+      },
+      {
+        "id": "popcrown-log",
+        "label": "Handling/transport",
+        "category": "logistics",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 1000
+      }
+    ],
+    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "status": "review",
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    },
+    "slug": "standard-pop-ceiling",
+    "code": "RB-CL-007",
+    "title": "Standard POP ceiling work",
+    "shortTitle": "Standard POP ceiling",
+    "section": "Ceilings",
+    "unit": "m²",
+    "specification": "Conventional POP ceiling to general internal areas including support, POP material, forming, finishing and labour.",
+    "methodologyNote": "2-bedroom BOQ guide normalized by provisional 15% O/P removal. Detailed material take-off still required before verification.",
+    "sourceNote": "2-bedroom Abuja BOQ guide ₦13,500/m².",
+    "lines": [
+      {
+        "id": "popstd-mat",
+        "label": "POP/support materials allowance",
+        "category": "material",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 7000
+      },
+      {
+        "id": "popstd-lab",
+        "label": "POP installer labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 4739
+      }
+    ],
+    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "status": "review",
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    },
+    "slug": "pop-skim-coat-soffit",
+    "code": "RB-CL-008",
+    "title": "POP skim coat to prepared concrete/plastered soffit",
+    "shortTitle": "POP skimming",
+    "section": "Ceilings",
+    "unit": "m²",
+    "specification": "Prepare and apply POP skim coat to soffit, floated smooth ready for painting.",
+    "methodologyNote": "2-bedroom guide normalized by provisional 15% O/P removal.",
+    "sourceNote": "2-bedroom Abuja BOQ guide ₦2,000/m².",
+    "lines": [
+      {
+        "id": "popskim-mat",
+        "label": "POP skim material / sandpaper",
+        "category": "material",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 500
+      },
+      {
+        "id": "popskim-lab",
+        "label": "Skimming labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 1239
+      }
+    ],
+    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "status": "review",
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    },
+    "slug": "055mm-aluminium-roof-covering",
+    "code": "RB-RO-001",
+    "title": "0.55 mm oven-baked aluminium roof covering — supply and fix",
+    "shortTitle": "0.55mm aluminium roofing",
+    "section": "Roofing",
+    "unit": "m²",
+    "specification": "Supply and fix 0.55 mm oven-baked aluminium roof covering to prepared timber support, including screws and normal laps/accessories.",
+    "methodologyNote": "2-bedroom source guide normalized by provisional 15% O/P removal. Current sheet-gauge and manufacturer price require fresh validation.",
+    "sourceNote": "2-bedroom Abuja BOQ guide ₦13,800/m².",
+    "lines": [
+      {
+        "id": "roof055-mat",
+        "label": "Aluminium sheets + screws/accessories",
+        "category": "material",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 10000
+      },
+      {
+        "id": "roof055-lab",
+        "label": "Roofing installation labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 1500
+      },
+      {
+        "id": "roof055-log",
+        "label": "Handling/transport allocation",
+        "category": "logistics",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 500
+      }
+    ],
+    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "status": "review",
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    },
+    "slug": "600mm-ridge-capping",
+    "code": "RB-RO-002",
+    "title": "600 mm wide aluminium ridge capping — supply and fix",
+    "shortTitle": "600mm ridge capping",
+    "section": "Roofing",
+    "unit": "m",
+    "specification": "Supply and fix 600 mm wide aluminium ridge capping including laps, screws and dressing.",
+    "methodologyNote": "Source guide normalized by provisional 15% O/P removal; gauge/colour/profile to match roof.",
+    "sourceNote": "2-bedroom Abuja BOQ guide ₦8,280/m.",
+    "lines": [
+      {
+        "id": "ridge-mat",
+        "label": "Aluminium ridge material + screws",
+        "category": "material",
+        "quantity": 1,
+        "unit": "m",
+        "unitRate": 6000
+      },
+      {
+        "id": "ridge-lab",
+        "label": "Fixing/dressing labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m",
+        "unitRate": 1000
+      },
+      {
+        "id": "ridge-log",
+        "label": "Handling",
+        "category": "logistics",
+        "quantity": 1,
+        "unit": "m",
+        "unitRate": 200
+      }
+    ],
+    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "status": "review",
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    },
+    "slug": "300mm-aluminium-fascia",
+    "code": "RB-RO-003",
+    "title": "300 mm aluminium fascia — supply and fix",
+    "shortTitle": "300mm aluminium fascia",
+    "section": "Roofing",
+    "unit": "m",
+    "specification": "Supply and fix 300 mm aluminium fascia to prepared support including screws, joints and dressing.",
+    "methodologyNote": "Source guide normalized by provisional 15% O/P removal.",
+    "sourceNote": "2-bedroom Abuja BOQ guide ₦4,140/m.",
+    "lines": [
+      {
+        "id": "fascia-mat",
+        "label": "Aluminium fascia material + fixings",
+        "category": "material",
+        "quantity": 1,
+        "unit": "m",
+        "unitRate": 3000
+      },
+      {
+        "id": "fascia-lab",
+        "label": "Fixing labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m",
+        "unitRate": 500
+      },
+      {
+        "id": "fascia-log",
+        "label": "Handling",
+        "category": "logistics",
+        "quantity": 1,
+        "unit": "m",
+        "unitRate": 100
+      }
+    ],
+    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "status": "review",
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    },
+    "slug": "50x150-wall-plate-tie-beam",
+    "code": "RB-RO-004",
+    "title": "50×150 mm wall plate / tie beam",
+    "shortTitle": "50×150 wall plate",
+    "section": "Roofing",
+    "unit": "m",
+    "specification": "50×150 mm wall plate / tie beam in tanalised sawn hardwood/timber, supplied, cut and fixed to roof framing.",
+    "methodologyNote": "Historical residential guide normalized by provisional 15% O/P removal; timber species, section accuracy, treatment and current length price need validation.",
+    "sourceNote": "2-bedroom Abuja BOQ guide ₦1,500/m.",
+    "lines": [
+      {
+        "id": "50x150-wall-plate-tie-beam-mat",
+        "label": "Treated timber material",
+        "category": "material",
+        "quantity": 1,
+        "unit": "m",
+        "unitRate": 1000
+      },
+      {
+        "id": "50x150-wall-plate-tie-beam-lab",
+        "label": "Cutting/fixing labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m",
+        "unitRate": 304.34782608695673
+      }
+    ],
+    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "status": "review",
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    },
+    "slug": "50x100-rafter",
+    "code": "RB-RO-005",
+    "title": "50×100 mm timber rafter",
+    "shortTitle": "50×100 rafter",
+    "section": "Roofing",
+    "unit": "m",
+    "specification": "50×100 mm timber rafter in tanalised sawn hardwood/timber, supplied, cut and fixed to roof framing.",
+    "methodologyNote": "Historical residential guide normalized by provisional 15% O/P removal; timber species, section accuracy, treatment and current length price need validation.",
+    "sourceNote": "2-bedroom Abuja BOQ guide ₦1,200/m.",
+    "lines": [
+      {
+        "id": "50x100-rafter-mat",
+        "label": "Treated timber material",
+        "category": "material",
+        "quantity": 1,
+        "unit": "m",
+        "unitRate": 800
+      },
+      {
+        "id": "50x100-rafter-lab",
+        "label": "Cutting/fixing labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m",
+        "unitRate": 243.47826086956525
+      }
+    ],
+    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "status": "review",
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    },
+    "slug": "50x100-strut-tie",
+    "code": "RB-RO-006",
+    "title": "50×100 mm roof strut / tie",
+    "shortTitle": "50×100 strut/tie",
+    "section": "Roofing",
+    "unit": "m",
+    "specification": "50×100 mm roof strut / tie in tanalised sawn hardwood/timber, supplied, cut and fixed to roof framing.",
+    "methodologyNote": "Historical residential guide normalized by provisional 15% O/P removal; timber species, section accuracy, treatment and current length price need validation.",
+    "sourceNote": "2-bedroom Abuja BOQ guide ₦1,200/m.",
+    "lines": [
+      {
+        "id": "50x100-strut-tie-mat",
+        "label": "Treated timber material",
+        "category": "material",
+        "quantity": 1,
+        "unit": "m",
+        "unitRate": 800
+      },
+      {
+        "id": "50x100-strut-tie-lab",
+        "label": "Cutting/fixing labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m",
+        "unitRate": 243.47826086956525
+      }
+    ],
+    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "status": "review",
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    },
+    "slug": "50x75-purlin",
+    "code": "RB-RO-007",
+    "title": "50×75 mm timber purlin",
+    "shortTitle": "50×75 purlin",
+    "section": "Roofing",
+    "unit": "m",
+    "specification": "50×75 mm timber purlin in tanalised sawn hardwood/timber, supplied, cut and fixed to roof framing.",
+    "methodologyNote": "Historical residential guide normalized by provisional 15% O/P removal; timber species, section accuracy, treatment and current length price need validation.",
+    "sourceNote": "2-bedroom Abuja BOQ guide ₦800/m.",
+    "lines": [
+      {
+        "id": "50x75-purlin-mat",
+        "label": "Treated timber material",
+        "category": "material",
+        "quantity": 1,
+        "unit": "m",
+        "unitRate": 550
+      },
+      {
+        "id": "50x75-purlin-lab",
+        "label": "Cutting/fixing labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m",
+        "unitRate": 145.6521739130435
+      }
+    ],
+    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "status": "review",
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    },
+    "slug": "50x75-noggin",
+    "code": "RB-RO-008",
+    "title": "50×75 mm roof noggin",
+    "shortTitle": "50×75 noggin",
+    "section": "Roofing",
+    "unit": "m",
+    "specification": "50×75 mm roof noggin in tanalised sawn hardwood/timber, supplied, cut and fixed to roof framing.",
+    "methodologyNote": "Historical residential guide normalized by provisional 15% O/P removal; timber species, section accuracy, treatment and current length price need validation.",
+    "sourceNote": "2-bedroom Abuja BOQ guide ₦800/m.",
+    "lines": [
+      {
+        "id": "50x75-noggin-mat",
+        "label": "Treated timber material",
+        "category": "material",
+        "quantity": 1,
+        "unit": "m",
+        "unitRate": 550
+      },
+      {
+        "id": "50x75-noggin-lab",
+        "label": "Cutting/fixing labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m",
+        "unitRate": 145.6521739130435
+      }
+    ],
+    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "status": "review",
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    },
+    "slug": "fibre-cement-external-ceiling",
+    "code": "RB-CL-009",
+    "title": "Fibre-cement / asbestos-type external ceiling — supply and fix",
+    "shortTitle": "External fibre-cement ceiling",
+    "section": "Ceilings",
+    "unit": "m²",
+    "specification": "Supply and fix external ceiling boards to prepared framing including normal cutting, fixings and installation.",
+    "methodologyNote": "2-bedroom guide normalized by provisional 15% O/P removal; board type/specification must be updated before verification.",
+    "sourceNote": "2-bedroom Abuja BOQ guide ₦7,500/m².",
+    "lines": [
+      {
+        "id": "fceiling-mat",
+        "label": "External ceiling board + fixings",
+        "category": "material",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 5000
+      },
+      {
+        "id": "fceiling-lab",
+        "label": "Installation labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 1522
+      }
+    ],
+    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
   }
 ];
 
