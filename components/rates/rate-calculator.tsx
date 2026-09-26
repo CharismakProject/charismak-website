@@ -69,6 +69,18 @@ export default function RateCalculator({ item }: { item: RateBankItem }) {
   const safeWorkQuantity =
     Number.isFinite(workQuantity) && workQuantity > 0 ? workQuantity : 1;
 
+  const hasBundledResource = useMemo(
+    () =>
+      lines.some(
+        (line) =>
+          (line.category === "material" || line.category === "consumable") &&
+          /(allowance|materials allowance|materials$|material allowance|sundries$|accessories$)/i.test(
+            line.label,
+          ),
+      ),
+    [lines],
+  );
+
   const groups: Group[] = useMemo(
     () => [
       {
@@ -237,6 +249,15 @@ export default function RateCalculator({ item }: { item: RateBankItem }) {
           </span>
         </div>
       </section>
+
+      {hasBundledResource ? (
+        <section className="rounded-2xl border border-[#E7C75D] bg-[#FFF9E7] p-5 text-sm leading-6 text-[#6B5310]">
+          <strong className="block text-[#5D4600]">Some resources are still bundled</strong>
+          <span className="mt-1 block">
+            This rate is still Under validation because at least one material line is a provisional bundled allowance. It will not be marked Verified until that allowance is decomposed into measurable resources such as bags, pieces, metres, litres or kilograms.
+          </span>
+        </section>
+      ) : null}
 
       {groups.map((group) =>
         group.lines.length ? (
