@@ -3,17 +3,20 @@ import Link from "next/link";
 import { ArrowRight, BadgeCheck, Building2, ShieldCheck, Target } from "lucide-react";
 
 import { company } from "../site-data";
+import { createSeoMetadata } from "@/lib/seo";
 import {
   loadPublishedProjects,
   loadPublishedServices,
   loadWebsiteContent,
 } from "@/lib/content/website-cms";
 
-export const metadata = {
-  title: "About Us",
+export const metadata = createSeoMetadata({
+  title: "About Charismak – Abuja Construction Company",
   description:
-    "Charismak Project Nigeria Limited is an Abuja-based construction company delivering building construction, renovation, project management, engineering and specialist works.",
-};
+    "Learn about Charismak Project Nigeria Limited, an Abuja-based construction company delivering building construction, civil engineering, renovation, project management, cost control and specialist works.",
+  path: "/about",
+  keywords: ["Abuja construction company", "construction company Nigeria", "quantity surveying Abuja"],
+});
 
 export const revalidate = 300;
 

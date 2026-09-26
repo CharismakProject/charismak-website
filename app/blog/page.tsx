@@ -4,11 +4,15 @@ import { ArrowRight, BookOpen, CalendarDays, ChevronRight, ImageIcon, Newspaper,
 import BlogAdminLink from "@/components/blog/blog-admin-link";
 import { blogArticles, type BlogArticle } from "@/lib/content/blog";
 import { loadPublishedBlogArticles } from "@/lib/content/blog-data";
+import { createSeoMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Construction News, Cost Guides & Learning | Charismak",
-  description: "Nigeria-focused construction news, cost planning, materials, BOQ, procurement and practical learning for homeowners and industry professionals.",
-};
+export const metadata = createSeoMetadata({
+  title: "Nigeria Construction News, Prices & Cost Guides",
+  description:
+    "Nigeria-focused construction news, building material price updates, cost planning, BOQ guidance, procurement and practical construction learning.",
+  path: "/blog",
+  keywords: ["Nigeria construction news", "building cost Nigeria", "construction cost guide Nigeria", "BOQ Nigeria", "building material prices Nigeria"],
+});
 export const revalidate = 300;
 
 const isNewsArticle = (article: BlogArticle) => {

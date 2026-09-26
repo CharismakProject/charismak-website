@@ -6,12 +6,15 @@ import {
   HardHat,
   ShieldCheck,
 } from "lucide-react";
+import { createSeoMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "HSE & Quality",
+export const metadata = createSeoMetadata({
+  title: "Construction HSE & Quality Management",
   description:
-    "Charismak Project Nigeria Limited's approach to health, safety, environmental responsibility, and quality assurance on construction sites.",
-};
+    "Charismak Project Nigeria Limited's approach to construction health and safety, environmental responsibility, quality assurance, supervision and controlled project delivery.",
+  path: "/hse",
+  keywords: ["construction HSE Nigeria", "construction quality assurance Abuja", "site safety Nigeria"],
+});
 
 const hseItems = [
   {

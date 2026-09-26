@@ -1,11 +1,14 @@
 import { loadPublishedProjects } from "@/lib/content/website-cms";
 import ProjectsClient from "./ProjectsClient";
+import { createSeoMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Our Projects",
+export const metadata = createSeoMetadata({
+  title: "Construction Projects in Abuja & Nigeria",
   description:
-    "Explore Charismak Project Nigeria Limited's construction, renovation, and consultancy project portfolio across Nigeria and East Africa.",
-};
+    "Explore Charismak construction, renovation, steelwork, quantity surveying and project-management experience across Abuja, Nigeria and East Africa.",
+  path: "/projects",
+  keywords: ["construction projects Abuja", "building projects Nigeria", "renovation projects Abuja", "construction portfolio Nigeria"],
+});
 
 export const revalidate = 300;
 

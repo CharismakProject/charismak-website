@@ -1,10 +1,14 @@
 import MarketplaceDirectory from "@/components/marketplace/marketplace-directory";
 import { MarketplaceSafetyNotice, MarketplaceTransactionGuard } from "@/components/marketplace/transaction-safety";
+import { createSeoMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Construction Suppliers & Artisans",
-  description: "Find Nigerian building-material suppliers and skilled artisans by category and service area.",
-};
+export const metadata = createSeoMetadata({
+  title: "Construction Suppliers & Artisans in Nigeria",
+  description:
+    "Find building-material suppliers, construction vendors and skilled artisans in Nigeria by trade, product category and service area.",
+  path: "/marketplace",
+  keywords: ["building material suppliers Nigeria", "construction suppliers Abuja", "artisans Abuja", "construction marketplace Nigeria"],
+});
 
 export default function MarketplacePage() {
   return (

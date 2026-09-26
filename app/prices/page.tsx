@@ -2,12 +2,15 @@ import Link from "next/link";
 import { ArrowRight, Store } from "lucide-react";
 import MarketPriceBrowser from "@/components/pricing/market-price-browser";
 import { MarketplaceSafetyNotice } from "@/components/marketplace/transaction-safety";
+import { createSeoMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Nigeria Construction Material & Equipment Prices",
+export const metadata = createSeoMetadata({
+  title: "Building Material Prices in Nigeria",
   description:
-    "Current Nigerian construction material, equipment and labour market references using practical buying units such as bags, tonnes, tippers, lengths, cartons and sheets.",
-};
+    "Check Nigerian building material prices, construction labour rates, equipment references and supplier market guides in practical buying units for estimating and procurement.",
+  path: "/prices",
+  keywords: ["building material prices Nigeria", "construction material prices Abuja", "cement price Nigeria", "construction labour rates Nigeria"],
+});
 
 export default function PricesPage() {
   return (

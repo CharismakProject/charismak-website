@@ -1,10 +1,13 @@
 import Link from "next/link";
 import { AlertTriangle, ArrowLeft, BadgeCheck, Flag, LockKeyhole, ShieldCheck } from "lucide-react";
+import { createSeoMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Marketplace Safety & Disclaimer | Charismak Project",
-  description: "Safety guidance for buyers and suppliers using Charismak construction prices and supplier marketplace listings.",
-};
+export const metadata = createSeoMetadata({
+  title: "Construction Marketplace Safety & Buyer Guidance",
+  description:
+    "Safety guidance for buyers, suppliers and artisans using Charismak construction price references and marketplace listings in Nigeria.",
+  path: "/marketplace-safety",
+});
 
 export default function MarketplaceSafetyPage() {
   return (

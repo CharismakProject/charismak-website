@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
+import { createSeoMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { ArrowRight, Building2, Calculator, CheckCircle2, ClipboardList, ContactRound, HardHat, Layers3 } from "lucide-react";
 import PublicFeasibilityEstimatorV3 from "@/components/public/public-feasibility-estimator-v3";
 
-export const metadata: Metadata = {
-  title: "Detailed Construction Cost Estimator",
-  description: "Build a detailed preliminary construction cost range for buildings, renovations, steel fabrication, finishes, MEP, external works and furniture with Charismak Project Nigeria Limited.",
-};
+export const metadata: Metadata = createSeoMetadata({
+  title: "Detailed Construction Cost Estimator Nigeria",
+  description: "Build a detailed preliminary construction cost estimate in Nigeria for new buildings, renovation, steel fabrication, finishes, MEP, external works and furniture.",
+  path: "/estimator/detailed",
+  keywords: ["detailed building cost estimator Nigeria","construction budget Nigeria","building estimate Nigeria"],
+});
 
 const modules = [
   "New building cost planning",

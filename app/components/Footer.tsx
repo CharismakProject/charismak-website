@@ -76,6 +76,7 @@ export default async function Footer() {
             <div className="mt-6 flex flex-col gap-3 text-sm text-white/58">
               <Link className="hover:text-white" href="/estimator">Estimator</Link>
               <Link className="hover:text-white" href="/prices">Prices & Suppliers</Link>
+              <Link className="hover:text-white" href="/rates">Construction Rate Bank</Link>
               <Link className="hover:text-white" href="/blog">Blog</Link>
             </div>
           </div>

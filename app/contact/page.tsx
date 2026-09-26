@@ -2,11 +2,14 @@ import { Mail, MapPin, Phone } from "lucide-react";
 import ContactEstimateFromQuery from "@/components/public/contact-estimate-from-query";
 import { company } from "../site-data";
 import { loadWebsiteContent } from "@/lib/content/website-cms";
+import { createSeoMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Contact Us",
-  description: "Contact Charismak Project Nigeria Limited in Abuja for construction, renovation, steel fabrication, and project management enquiries.",
-};
+export const metadata = createSeoMetadata({
+  title: "Contact a Construction Company in Abuja",
+  description:
+    "Contact Charismak Project Nigeria Limited in Maitama, Abuja for building construction, renovation, steel fabrication, project management, estimating and construction enquiries.",
+  path: "/contact",
+});
 
 export const revalidate = 300;
 

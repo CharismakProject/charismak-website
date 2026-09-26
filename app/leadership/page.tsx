@@ -4,11 +4,14 @@ import { ArrowRight, BriefcaseBusiness, Users } from "lucide-react";
 
 import { loadPublishedPeople } from "@/lib/content/website-cms";
 import type { Person } from "../site-data";
+import { createSeoMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Leadership Team",
-  description: "Meet the leadership and project delivery team behind Charismak Project Nigeria Limited.",
-};
+export const metadata = createSeoMetadata({
+  title: "Construction Leadership & Project Team",
+  description:
+    "Meet the leadership, construction management and project-delivery professionals behind Charismak Project Nigeria Limited in Abuja, Nigeria.",
+  path: "/leadership",
+});
 
 export const revalidate = 300;
 

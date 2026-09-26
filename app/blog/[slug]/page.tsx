@@ -2,8 +2,10 @@ import Link from "next/link";
 import { ArrowLeft, ArrowRight, BookOpen, CalendarDays, ImageIcon, Newspaper } from "lucide-react";
 import { notFound } from "next/navigation";
 
+import JsonLd from "@/components/seo/json-ld";
 import { blogArticles, type BlogArticle } from "@/lib/content/blog";
 import { loadPublishedBlogArticle, loadPublishedBlogArticles } from "@/lib/content/blog-data";
+import { DEFAULT_OG_IMAGE, SITE_URL, absoluteUrl, breadcrumbJsonLd, createSeoMetadata } from "@/lib/seo";
 
 type Props = { params: Promise<{ slug: string }> };
 export const revalidate = 300;
@@ -37,11 +39,30 @@ async function relatedArticles(article: BlogArticle) {
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   const article = await findArticle(slug);
-  return article ? {
+  if (!article) return { title: "Article Not Found", robots: { index: false } };
+
+  const author = article.author || "Charismak Editorial Desk";
+  const metadata = createSeoMetadata({
     title: article.title,
     description: article.excerpt,
-    openGraph: article.imageUrl ? { images: [{ url: article.imageUrl, alt: article.imageAlt || article.title }] } : undefined,
-  } : { title: "Article Not Found" };
+    path: "/blog/" + article.slug,
+    image: article.imageUrl || DEFAULT_OG_IMAGE,
+    imageAlt: article.imageAlt || article.title,
+    type: "article",
+    keywords: [article.category, "Nigeria construction", "construction cost Nigeria"],
+  });
+
+  return {
+    ...metadata,
+    authors: [{ name: author }],
+    openGraph: {
+      ...metadata.openGraph,
+      type: "article",
+      publishedTime: article.publishedAt,
+      authors: [author],
+      section: article.category,
+    },
+  };
 }
 
 export default async function BlogArticlePage({ params }: Props) {
@@ -51,9 +72,42 @@ export default async function BlogArticlePage({ params }: Props) {
   const related = await relatedArticles(article);
   const news = isNewsArticle(article);
   const author = article.author || "Charismak Editorial Desk";
+  const dateModified =
+    "updatedAt" in article && typeof article.updatedAt === "string"
+      ? article.updatedAt
+      : article.publishedAt;
+  const articleUrl = absoluteUrl("/blog/" + article.slug);
+  const articleImage = absoluteUrl(article.imageUrl || DEFAULT_OG_IMAGE);
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": news ? "NewsArticle" : "Article",
+    headline: article.title,
+    description: article.excerpt,
+    image: [articleImage],
+    datePublished: article.publishedAt,
+    dateModified,
+    articleSection: article.category,
+    inLanguage: "en-NG",
+    mainEntityOfPage: articleUrl,
+    author: {
+      "@type": author.toLowerCase().includes("charismak") ? "Organization" : "Person",
+      name: author,
+    },
+    publisher: { "@id": SITE_URL + "/#organization" },
+  };
 
   return (
     <main className="min-h-screen bg-[#F7F8FA] pt-20">
+      <JsonLd
+        data={[
+          articleJsonLd,
+          breadcrumbJsonLd([
+            { name: "Home", path: "/" },
+            { name: "News & Learning", path: "/blog" },
+            { name: article.title, path: "/blog/" + article.slug },
+          ]),
+        ]}
+      />
       <article>
         <header className="relative overflow-hidden bg-[#071E33] text-white">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_82%_18%,rgba(200,164,93,0.15),transparent_28rem)]" />

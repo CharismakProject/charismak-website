@@ -17,12 +17,28 @@ import {
 } from "lucide-react";
 
 import { company } from "./site-data";
+import { createSeoMetadata } from "@/lib/seo";
 import {
   loadPublishedProjectUpdates,
   loadPublishedProjects,
   loadPublishedServices,
   loadWebsiteContent,
 } from "@/lib/content/website-cms";
+
+export const metadata = createSeoMetadata({
+  title: "Construction Company in Abuja, Nigeria",
+  description:
+    "Charismak Project Nigeria Limited is an Abuja construction company providing building construction, civil engineering, renovation, steel fabrication, project management, cost planning and finishing services across Nigeria.",
+  path: "/",
+  keywords: [
+    "construction company Abuja",
+    "building contractor Abuja",
+    "construction company Nigeria",
+    "civil engineering Abuja",
+    "project management Abuja",
+    "quantity surveying Nigeria",
+  ],
+});
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return <p className="mb-4 text-xs font-bold uppercase tracking-[0.28em] text-[#C8A45D]">{children}</p>;
@@ -146,7 +162,7 @@ export default async function HomePage() {
               <span className="mt-2 block text-[#E8C77F]">Delivering lasting value.</span>
             </h1>
             <p className="mt-7 max-w-2xl text-base leading-8 text-white/76 md:text-lg">
-              Charismak Project Nigeria Limited handles construction, renovation, engineering and project management from planning through completion.
+              Charismak Project Nigeria Limited is an Abuja-based construction company handling building construction, renovation, engineering, cost planning and project management from planning through completion.
             </p>
             <div className="mt-9 flex flex-wrap gap-4">
               <Link

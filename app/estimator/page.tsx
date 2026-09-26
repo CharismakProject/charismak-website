@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { createSeoMetadata } from "@/lib/seo";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -11,11 +12,12 @@ import {
 } from "lucide-react";
 import QuickEstimateHome from "@/components/public/quick-estimate-home";
 
-export const metadata: Metadata = {
-  title: "Construction Cost & Material Estimator",
-  description:
-    "Choose a quick construction cost estimate, detailed estimate or material quantity estimate for buildings, renovation, steel, finishes, MEP, external works and furniture.",
-};
+export const metadata: Metadata = createSeoMetadata({
+  title: "Nigeria Construction Cost Estimator",
+  description: "Estimate building and construction costs in Nigeria with quick budgets, detailed cost planning and material quantity calculators for structural work, finishes, MEP, steel and external works.",
+  path: "/estimator",
+  keywords: ["construction cost estimator Nigeria","building cost calculator Nigeria","construction calculator Nigeria"],
+});
 
 export default function EstimatorPage() {
   return (

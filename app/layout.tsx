@@ -3,6 +3,15 @@ import { Geist, Geist_Mono } from "next/font/google";
 
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/react";
+import JsonLd from "@/components/seo/json-ld";
+import {
+  DEFAULT_OG_IMAGE,
+  SITE_NAME,
+  SITE_URL,
+  absoluteUrl,
+  organizationJsonLd,
+  websiteJsonLd,
+} from "@/lib/seo";
 import SiteChrome from "./components/SiteChrome";
 import Footer from "./components/Footer";
 
@@ -15,36 +24,79 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 export const revalidate = 300;
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  applicationName: SITE_NAME,
   title: {
-    default: "Charismak Project Nigeria Limited | Construction & Cost Consultancy",
+    default: "Construction Company in Abuja, Nigeria | Charismak Project",
     template: "%s | Charismak Project Nigeria Limited",
   },
   description:
-    "Construction, engineering, renovation, steel fabrication, project management, consultancy and finishing services in Abuja, Nigeria.",
+    "Abuja construction company for building construction, civil engineering, renovation, steel fabrication, project management, cost planning and architectural finishing across Nigeria.",
   keywords: [
     "construction company Abuja",
-    "quantity surveying Nigeria",
+    "construction company Nigeria",
+    "building contractor Abuja",
     "building construction Abuja",
-    "steel fabrication Nigeria",
+    "civil engineering Abuja",
+    "quantity surveying Nigeria",
+    "construction cost estimator Nigeria",
+    "building material prices Nigeria",
+    "construction rates Nigeria",
+    "steel fabrication Abuja",
     "renovation contractor Abuja",
     "project management construction Nigeria",
   ],
-  icons: { icon: "/icon.png" },
+  authors: [{ name: SITE_NAME, url: SITE_URL }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  category: "Construction",
+  referrer: "origin-when-cross-origin",
+  icons: {
+    icon: "/icon.png",
+    apple: "/icon.png",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
   openGraph: {
-    title: "Charismak Project Nigeria Limited",
+    title: "Construction Company in Abuja, Nigeria | Charismak Project",
     description:
-      "Construction, engineering, renovation, steel fabrication, project management, consultancy and finishing services in Abuja, Nigeria.",
-    url: "https://www.charismakproject.com",
-    siteName: "Charismak Project Nigeria Limited",
+      "Construction, engineering, renovation, cost planning, steel fabrication and project management services in Abuja and across Nigeria.",
+    url: SITE_URL,
+    siteName: SITE_NAME,
     locale: "en_NG",
     type: "website",
+    images: [
+      {
+        url: absoluteUrl(DEFAULT_OG_IMAGE),
+        width: 1200,
+        height: 630,
+        alt: "Charismak construction project in Nigeria",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Construction Company in Abuja, Nigeria | Charismak Project",
+    description:
+      "Construction, engineering, renovation, cost planning and project delivery services in Abuja and across Nigeria.",
+    images: [absoluteUrl(DEFAULT_OG_IMAGE)],
   },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html lang="en-NG" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body className="bg-white text-[#151B22] antialiased">
+        <JsonLd data={[organizationJsonLd, websiteJsonLd]} />
         <SiteChrome footer={<Footer />}>{children}</SiteChrome>
         <Analytics />
       </body>

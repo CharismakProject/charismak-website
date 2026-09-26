@@ -10,11 +10,14 @@ import {
 
 import { company } from "../site-data";
 import { loadWebsiteContent } from "@/lib/content/website-cms";
+import { createSeoMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Vision & Mission",
-  description: "The vision, mission, and core values guiding Charismak Project Nigeria Limited's construction delivery across Nigeria.",
-};
+export const metadata = createSeoMetadata({
+  title: "Vision, Mission & Construction Values",
+  description:
+    "Read the vision, mission and core values guiding Charismak Project Nigeria Limited's construction delivery, project management and professional standards across Nigeria.",
+  path: "/vision",
+});
 
 const textValue = (value: unknown, fallback: string) => {
   if (typeof value === "string") return value || fallback;
