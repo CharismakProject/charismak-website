@@ -43,6 +43,15 @@ export default async function RateDetailPage({
 
   if (!item) notFound();
 
+  const statusLabel =
+    item.status === "verified" ? "Verified rate" : item.status === "review" ? "Under review" : "Pilot rate";
+  const statusClass =
+    item.status === "verified"
+      ? "bg-[#EAF7EF] text-[#197447]"
+      : item.status === "review"
+        ? "bg-[#FFF9E7] text-[#8A6200]"
+        : "bg-[#FFF1EA] text-[#8B1E00]";
+
   return (
     <main className="min-h-screen bg-[#F5F7FA] pt-20">
       <div className="mx-auto max-w-7xl px-4 py-10 md:px-8 md:py-14">
@@ -59,8 +68,8 @@ export default async function RateDetailPage({
             <span className="rounded-full bg-[#EAF0F6] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-[#0D3B66]">
               {item.code}
             </span>
-            <span className="rounded-full bg-[#FFF1EA] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-[#8B1E00]">
-              Pilot rate
+            <span className={"rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] " + statusClass}>
+              {statusLabel}
             </span>
           </div>
 
