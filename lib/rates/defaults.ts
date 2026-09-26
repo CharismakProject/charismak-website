@@ -1955,5 +1955,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
 ];
 
 export function getRateBankItem(slug: string) {
+  if (slug === "reusable-plywood-formwork") {
+    return RATE_BANK_ITEMS.find((item) => item.slug === "plywood-formwork-slab-soffit");
+  }
   return RATE_BANK_ITEMS.find((item) => item.slug === slug);
 }
