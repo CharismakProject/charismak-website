@@ -13,12 +13,15 @@ import {
   Wrench,
 } from "lucide-react";
 import { loadPublishedServices } from "@/lib/content/website-cms";
+import { createSeoMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Our Services",
+export const metadata = createSeoMetadata({
+  title: "Construction Services in Abuja, Nigeria",
   description:
-    "Building construction, civil engineering, renovation, steel fabrication, project management, and architectural finishing services in Abuja, Nigeria.",
-};
+    "Building construction, civil engineering, renovation, steel fabrication, project management, facility maintenance and architectural finishing services in Abuja and across Nigeria.",
+  path: "/services",
+  keywords: ["construction services Abuja", "building contractor Abuja", "renovation contractor Abuja", "steel fabrication Abuja"],
+});
 
 const deliveryProcess = [
   {
