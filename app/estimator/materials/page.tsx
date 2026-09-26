@@ -1,15 +1,17 @@
 import type { Metadata } from "next";
+import { createSeoMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { ArrowLeft, ClipboardList } from "lucide-react";
 import MaterialEstimator from "@/components/public/material-estimator";
 import SpecialistMaterialEstimator from "@/components/public/specialist-material-estimator";
 import styles from "./materials-mobile.module.css";
 
-export const metadata: Metadata = {
-  title: "Construction Material Estimate",
-  description:
-    "Estimate practical construction material quantities for concrete, reinforcement, masonry, partitions, curtain wall, facade, finishes, roofing, formwork, electrical, plumbing, ceilings, paving, waterproofing, structural steel, doors, windows and glass partitions.",
-};
+export const metadata: Metadata = createSeoMetadata({
+  title: "Construction Material Calculator Nigeria",
+  description: "Calculate construction material quantities for concrete, reinforcement, blockwork, plaster, screed, roofing, formwork, ceilings, electrical, plumbing, paving, waterproofing and structural steel.",
+  path: "/estimator/materials",
+  keywords: ["construction material calculator Nigeria","cement sand granite calculator","building material estimate Nigeria"],
+});
 
 export default function MaterialEstimatePage() {
   return (
