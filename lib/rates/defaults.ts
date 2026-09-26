@@ -101,7 +101,7 @@ export function calculateRate(
   };
 }
 
-export const RATE_BA[
+export const RATE_BANK_ITEMS: RateBankItem[] = [
   {
     "countryCode": "NG",
     "country": "Nigeria",
@@ -2005,10 +2005,6 @@ export const RATE_BA[
       "op": 0
     },
     "validationNote": "Under validation. The calculation remains usable and editable, but current material/labour inputs are still being checked against fresh market observations and project evidence before verification."
-  }
-],
-      "op": 0
-    }
   }
 ];
 
