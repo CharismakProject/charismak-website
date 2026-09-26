@@ -1,10 +1,13 @@
 import RateBankBrowser from "@/components/rates/rate-bank-browser";
+import { createSeoMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Construction Rate Bank Nigeria",
+export const metadata = createSeoMetadata({
+  title: "Construction Rates Nigeria – Rate Bank",
   description:
-    "Transparent construction work rates with full material, labour, plant, logistics, fluctuation and risk build-ups. Edit a private copy with your own prices and O/P.",
-};
+    "Nigeria construction rates with transparent material quantities, labour, plant, logistics, fluctuation and risk build-ups. Review each rate and calculate with your own prices.",
+  path: "/rates",
+  keywords: ["construction rates Nigeria", "building rates Nigeria", "rate analysis Nigeria", "construction rate build up", "BOQ rates Nigeria"],
+});
 
 export default function RatesPage() {
   return (
