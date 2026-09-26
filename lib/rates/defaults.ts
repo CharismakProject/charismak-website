@@ -30,6 +30,7 @@ export type RateBankItem = {
   specification: string;
   methodologyNote: string;
   sourceNote: string;
+  validationNote?: string;
   lastReviewed: string;
   status: "pilot" | "verified" | "review";
   allowances: {
@@ -114,7 +115,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "shortTitle": "Wall trench excavation",
     "section": "Earthworks",
     "unit": "m³",
-    "status": "pilot",
+    "status": "review",
     "specification": "Bulk excavation by backhoe/excavator with manual dressing. Disposal is excluded and priced separately.",
     "methodologyNote": "Plant basis uses 180 m³/day output with excavator hire, fuel and shared mobilisation. Manual dressing stays separate.",
     "sourceNote": "Reconstructed from the final FMC Keffi execution-cost model.",
@@ -162,7 +163,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
       "plantFluctuation": 0,
       "risk": 0.05,
       "op": 0
-    }
+    },
+    "validationNote": "Under validation. The calculation remains usable and editable, but current material/labour inputs are still being checked against fresh market observations and project evidence before verification."
   },
   {
     "countryCode": "NG",
@@ -198,7 +200,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
       "plantFluctuation": 0,
       "risk": 0.05,
       "op": 0
-    }
+    },
+    "validationNote": "Under validation. The calculation remains usable and editable, but current material/labour inputs are still being checked against fresh market observations and project evidence before verification."
   },
   {
     "countryCode": "NG",
@@ -243,7 +246,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
       "plantFluctuation": 0,
       "risk": 0.05,
       "op": 0
-    }
+    },
+    "validationNote": "Under validation. The calculation remains usable and editable, but current material/labour inputs are still being checked against fresh market observations and project evidence before verification."
   },
   {
     "countryCode": "NG",
@@ -295,7 +299,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
       "plantFluctuation": 0,
       "risk": 0.05,
       "op": 0
-    }
+    },
+    "validationNote": "Under validation. The calculation remains usable and editable, but current material/labour inputs are still being checked against fresh market observations and project evidence before verification."
   },
   {
     "countryCode": "NG",
@@ -310,7 +315,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "shortTitle": "Hardcore filling",
     "section": "Earthworks",
     "unit": "m³",
-    "status": "pilot",
+    "status": "review",
     "specification": "Hardcore obtained off site, spread to make up levels and compacted in layers.",
     "methodologyNote": "Uses 10% quantity allowance over compacted volume. Material and placing/compaction remain editable separately.",
     "sourceNote": "FMC final execution model + Central Park material benchmark.",
@@ -347,7 +352,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
       "plantFluctuation": 0,
       "risk": 0.05,
       "op": 0
-    }
+    },
+    "validationNote": "Under validation. The calculation remains usable and editable, but current material/labour inputs are still being checked against fresh market observations and project evidence before verification."
   },
   {
     "countryCode": "NG",
@@ -390,7 +396,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
       "plantFluctuation": 0,
       "risk": 0.05,
       "op": 0
-    }
+    },
+    "validationNote": "Under validation. The calculation remains usable and editable, but current material/labour inputs are still being checked against fresh market observations and project evidence before verification."
   },
   {
     "countryCode": "NG",
@@ -434,7 +441,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
       "plantFluctuation": 0,
       "risk": 0.05,
       "op": 0
-    }
+    },
+    "validationNote": "Under validation. The calculation remains usable and editable, but current material/labour inputs are still being checked against fresh market observations and project evidence before verification."
   },
   {
     "countryCode": "NG",
@@ -449,7 +457,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "shortTitle": "A142 mesh supply & lay",
     "section": "Reinforcement",
     "unit": "m²",
-    "status": "pilot",
+    "status": "review",
     "specification": "A142 welded mesh, 2.4 x 4.8 m sheet, including 5% lap/cutting allowance and laying labour.",
     "methodologyNote": "Sheet coverage and overlap are explicit so users can edit lap conditions and supplier sheet price.",
     "sourceNote": "Central Park BRC rate + residential sheet coverage methodology.",
@@ -478,7 +486,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
       "plantFluctuation": 0,
       "risk": 0.05,
       "op": 0
-    }
+    },
+    "validationNote": "Under validation. The calculation remains usable and editable, but current material/labour inputs are still being checked against fresh market observations and project evidence before verification."
   },
   {
     "countryCode": "NG",
@@ -493,10 +502,10 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "shortTitle": "C15 concrete blinding",
     "section": "Concrete",
     "unit": "m³",
-    "status": "pilot",
+    "status": "review",
     "specification": "Nominal 1:3:6 site-mixed plain concrete using 20 mm aggregate; reinforcement and formwork excluded.",
     "methodologyNote": "Uses a 1.54 dry-volume factor and 3% cement batching allowance rather than a fixed historic bags-per-m³ shortcut.",
-    "sourceNote": "Standard nominal-mix build-up aligned to FMC concrete inputs.",
+    "sourceNote": "Standard nominal-mix build-up aligned to FMC concrete inputs. Sep 2026 audit: cement benchmark updated to Abuja bulk working reference; concrete gang arithmetic corrected.",
     "lines": [
       {
         "id": "c15-cem",
@@ -504,8 +513,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 4.568,
         "unit": "bag",
-        "unitRate": 12000,
-        "note": "1.54 dry factor for 1:3:6 mix."
+        "unitRate": 12500,
+        "note": "1.54 dry factor for 1:3:6 mix. Sep 2026 Abuja working bulk reference: ₦12,500/50kg bag; editable."
       },
       {
         "id": "c15-sand",
@@ -529,7 +538,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "labour",
         "quantity": 0.125,
         "unit": "gang-day",
-        "unitRate": 89000
+        "unitRate": 63000,
+        "note": "1 concrete mason @ ₦15,000/day + 6 labourers @ ₦8,000/day = ₦63,000/gang-day; output basis remains editable."
       },
       {
         "id": "c15-plant",
@@ -546,7 +556,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
       "plantFluctuation": 0,
       "risk": 0.05,
       "op": 0
-    }
+    },
+    "validationNote": "Arithmetic and cement input updated. Sand/granite landed prices and achieved gang output still require current supplier/site confirmation before this rate is marked verified."
   },
   {
     "countryCode": "NG",
@@ -564,7 +575,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "status": "review",
     "specification": "Nominal 1:2:4 site-mixed concrete for non-designed applications where permitted by the specification.",
     "methodologyNote": "Uses a 1.54 dry-volume factor and 3% batching allowance. Do not substitute for a designed mix where design concrete is required.",
-    "sourceNote": "Residential 1:2:4 methodology normalized to standard volumetric build-up.",
+    "sourceNote": "Residential 1:2:4 methodology normalized to standard volumetric build-up. Sep 2026 audit: cement benchmark updated to Abuja bulk working reference; concrete gang arithmetic corrected.",
     "lines": [
       {
         "id": "c20-cem",
@@ -572,7 +583,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 6.525,
         "unit": "bag",
-        "unitRate": 12000
+        "unitRate": 12500,
+        "note": "Sep 2026 Abuja working bulk reference: ₦12,500/50kg bag; editable."
       },
       {
         "id": "c20-sand",
@@ -596,7 +608,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "labour",
         "quantity": 0.125,
         "unit": "gang-day",
-        "unitRate": 89000
+        "unitRate": 63000,
+        "note": "1 concrete mason @ ₦15,000/day + 6 labourers @ ₦8,000/day = ₦63,000/gang-day; output basis remains editable."
       },
       {
         "id": "c20-plant",
@@ -613,7 +626,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
       "plantFluctuation": 0,
       "risk": 0.05,
       "op": 0
-    }
+    },
+    "validationNote": "Arithmetic and cement input updated. Sand/granite landed prices and achieved gang output still require current supplier/site confirmation before this rate is marked verified."
   },
   {
     "countryCode": "NG",
@@ -628,10 +642,10 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "shortTitle": "C25 structural concrete",
     "section": "Concrete",
     "unit": "m³",
-    "status": "pilot",
+    "status": "review",
     "specification": "C25 structural concrete with minimum cement content 310 kg/m³. Reinforcement and formwork excluded.",
     "methodologyNote": "Uses 310 kg/m³ minimum cement plus 3% batching allowance. Sand/granite factors remain editable pending approved mix design.",
-    "sourceNote": "Final FMC Keffi execution BOQ + reviewed execution model.",
+    "sourceNote": "Final FMC Keffi execution BOQ + reviewed execution model. Sep 2026 audit: cement benchmark updated to Abuja bulk working reference; concrete gang arithmetic corrected.",
     "lines": [
       {
         "id": "c25-cement",
@@ -639,8 +653,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 6.386,
         "unit": "bag",
-        "unitRate": 12000,
-        "note": "6.2 bags theoretical minimum × 1.03."
+        "unitRate": 12500,
+        "note": "6.2 bags theoretical minimum × 1.03. Sep 2026 Abuja working bulk reference: ₦12,500/50kg bag; editable."
       },
       {
         "id": "c25-sand",
@@ -664,8 +678,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "labour",
         "quantity": 0.125,
         "unit": "gang-day",
-        "unitRate": 89000,
-        "note": "1 mason + 6 labourers at 8 m³/day."
+        "unitRate": 63000,
+        "note": "1 concrete mason @ ₦15,000/day + 6 labourers @ ₦8,000/day = ₦63,000/gang-day; output basis remains editable."
       },
       {
         "id": "c25-plant",
@@ -682,7 +696,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
       "plantFluctuation": 0,
       "risk": 0.05,
       "op": 0
-    }
+    },
+    "validationNote": "Arithmetic and cement input updated. Sand/granite landed prices and achieved gang output still require current supplier/site confirmation before this rate is marked verified."
   },
   {
     "countryCode": "NG",
@@ -697,7 +712,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "shortTitle": "Reinforcement supply & fix",
     "section": "Reinforcement",
     "unit": "t",
-    "status": "pilot",
+    "status": "review",
     "specification": "High-yield reinforcement by theoretical tonne, including 3% cutting/waste, binding/cutting consumables and fixing labour.",
     "methodologyNote": "Lap allowance is not hidden. Add lap separately where measured steel excludes it.",
     "sourceNote": "Final FMC Keffi reinforcement procurement and fixing basis.",
@@ -708,7 +723,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 1.03,
         "unit": "t",
-        "unitRate": 1100000
+        "unitRate": 1100000,
+        "note": "Current Abuja observations conflict: bulk tonne checks are lower than some 12m TMT bar quotations when converted using theoretical mass. ₦1.10m/t is retained temporarily until supplier weight/grade is reconciled."
       },
       {
         "id": "rebar-consumables",
@@ -733,7 +749,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
       "plantFluctuation": 0,
       "risk": 0.05,
       "op": 0
-    }
+    },
+    "validationNote": "Do not mark verified yet. A September Abuja check shows about ₦920k/t TMT, while 12mm bars around ₦12,000–₦12,300 imply a higher tonne-equivalent at theoretical weight. We need an actual weighed/grade-confirmed supplier basis."
   },
   {
     "countryCode": "NG",
@@ -748,10 +765,10 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "shortTitle": "230 mm hollow blockwork",
     "section": "Masonry",
     "unit": "m²",
-    "status": "pilot",
+    "status": "review",
     "specification": "230 mm hollow sandcrete block wall, 10 blocks/m² working basis, 5% block breakage and 1:6 mortar.",
     "methodologyNote": "Block count, breakage, mortar and labour are all exposed.",
-    "sourceNote": "Residential/FMC blockwork methodology.",
+    "sourceNote": "Residential/FMC blockwork methodology. Sep 2026 Abuja checks show 225mm block quotations around ₦700–₦950+, with a current supplier reference at ₦750.",
     "lines": [
       {
         "id": "block225",
@@ -759,7 +776,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 10.5,
         "unit": "No.",
-        "unitRate": 850
+        "unitRate": 750,
+        "note": "Working Abuja supplier reference. Current market observations vary materially with strength, curing and delivery."
       },
       {
         "id": "block225-cem",
@@ -767,7 +785,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.08205,
         "unit": "bag",
-        "unitRate": 12000
+        "unitRate": 12500,
+        "note": "Sep 2026 Abuja working bulk reference: ₦12,500/50kg bag; editable."
       },
       {
         "id": "block225-sand",
@@ -792,7 +811,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
       "plantFluctuation": 0,
       "risk": 0.05,
       "op": 0
-    }
+    },
+    "validationNote": "Block count/mortar logic is sound, but the public material price must be tied to a stated compressive-strength grade and delivery basis before verification."
   },
   {
     "countryCode": "NG",
@@ -810,7 +830,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "status": "review",
     "specification": "150 mm hollow sandcrete wall, 10 blocks/m² working basis, 5% breakage and cement:sand mortar.",
     "methodologyNote": "150 mm block price remains a provisional editable input pending the wider supplier-price audit.",
-    "sourceNote": "Residential BOQ geometry; price input deliberately flagged for review.",
+    "sourceNote": "Residential BOQ geometry; price input deliberately flagged for review. Sep 2026 Abuja supplier reference: about ₦650/piece, within broader market range.",
     "lines": [
       {
         "id": "block150",
@@ -818,8 +838,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 10.5,
         "unit": "No.",
-        "unitRate": 750,
-        "note": "Provisional editable block price."
+        "unitRate": 650,
+        "note": "Working Abuja supplier reference; strength/delivery basis pending validation."
       },
       {
         "id": "block150-cem",
@@ -827,7 +847,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.0656,
         "unit": "bag",
-        "unitRate": 12000
+        "unitRate": 12500,
+        "note": "Sep 2026 Abuja working bulk reference: ₦12,500/50kg bag; editable."
       },
       {
         "id": "block150-sand",
@@ -852,7 +873,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
       "plantFluctuation": 0,
       "risk": 0.05,
       "op": 0
-    }
+    },
+    "validationNote": "150mm block price remains under validation because strength class, curing quality and delivery distance materially change the rate."
   },
   {
     "countryCode": "NG",
@@ -867,7 +889,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "shortTitle": "15 mm wall plaster",
     "section": "Finishes",
     "unit": "m²",
-    "status": "pilot",
+    "status": "review",
     "specification": "15 mm average cement-sand plaster/render, floated finish, including material wastage and application labour.",
     "methodologyNote": "Resource quantities are normalized from the uploaded residential BOQ and current cement/sand inputs.",
     "sourceNote": "2-bedroom BOQ material consumption + FMC plaster labour benchmark.",
@@ -878,7 +900,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.15,
         "unit": "bag",
-        "unitRate": 12000
+        "unitRate": 12500,
+        "note": "Sep 2026 Abuja working bulk reference: ₦12,500/50kg bag; editable."
       },
       {
         "id": "plaster-sand",
@@ -903,7 +926,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
       "plantFluctuation": 0,
       "risk": 0.05,
       "op": 0
-    }
+    },
+    "validationNote": "Under validation. The calculation remains usable and editable, but current material/labour inputs are still being checked against fresh market observations and project evidence before verification."
   },
   {
     "countryCode": "NG",
@@ -929,7 +953,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.185,
         "unit": "bag",
-        "unitRate": 12000
+        "unitRate": 12500,
+        "note": "Sep 2026 Abuja working bulk reference: ₦12,500/50kg bag; editable."
       },
       {
         "id": "wallback-sand",
@@ -954,7 +979,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
       "plantFluctuation": 0,
       "risk": 0.05,
       "op": 0
-    }
+    },
+    "validationNote": "Under validation. The calculation remains usable and editable, but current material/labour inputs are still being checked against fresh market observations and project evidence before verification."
   },
   {
     "countryCode": "NG",
@@ -980,7 +1006,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.37,
         "unit": "bag",
-        "unitRate": 12000
+        "unitRate": 12500,
+        "note": "Sep 2026 Abuja working bulk reference: ₦12,500/50kg bag; editable."
       },
       {
         "id": "floorscreed-sand",
@@ -1005,7 +1032,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
       "plantFluctuation": 0,
       "risk": 0.05,
       "op": 0
-    }
+    },
+    "validationNote": "Under validation. The calculation remains usable and editable, but current material/labour inputs are still being checked against fresh market observations and project evidence before verification."
   },
   {
     "countryCode": "NG",
@@ -1064,7 +1092,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
       "plantFluctuation": 0,
       "risk": 0.05,
       "op": 0
-    }
+    },
+    "validationNote": "Under validation. The calculation remains usable and editable, but current material/labour inputs are still being checked against fresh market observations and project evidence before verification."
   },
   {
     "countryCode": "NG",
@@ -1123,7 +1152,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
       "plantFluctuation": 0,
       "risk": 0.05,
       "op": 0
-    }
+    },
+    "validationNote": "Under validation. The calculation remains usable and editable, but current material/labour inputs are still being checked against fresh market observations and project evidence before verification."
   },
   {
     "countryCode": "NG",
@@ -1175,7 +1205,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
       "plantFluctuation": 0,
       "risk": 0.05,
       "op": 0
-    }
+    },
+    "validationNote": "Under validation. The calculation remains usable and editable, but current material/labour inputs are still being checked against fresh market observations and project evidence before verification."
   },
   {
     "countryCode": "NG",
@@ -1190,10 +1221,10 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "shortTitle": "Foundation edge formwork",
     "section": "Formwork",
     "unit": "m²",
-    "status": "pilot",
+    "status": "review",
     "specification": "Traditional timber formwork to low foundation and slab-edge faces using reusable sawn plank, 2x2 and 2x3 timber, nails, release agent and carpentry labour.",
     "methodologyNote": "This low-height formwork intentionally uses plank/timber rather than pretending every formwork application is the same plywood system.",
-    "sourceNote": "2-bedroom/KMSTEEL timber take-offs + Central Park timber/nail rates.",
+    "sourceNote": "2-bedroom/KMSTEEL timber take-offs + Central Park timber/nail rates. Sep 2026 Abuja audit checked plywood, timber, H20/Peri and labour market references; structural/shuttering quantities remain to be validated against a formwork layout.",
     "lines": [
       {
         "id": "fwf-plank",
@@ -1210,7 +1241,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.25,
         "unit": "length",
-        "unitRate": 1800
+        "unitRate": 1300
       },
       {
         "id": "fwf-2x2",
@@ -1259,7 +1290,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
       "plantFluctuation": 0,
       "risk": 0.05,
       "op": 0
-    }
+    },
+    "validationNote": "Under validation. Formwork cannot be verified from material prices alone: member spacing, shutter geometry, reuse cycles, prop/H20 arrangement, rental duration and stripping cycle must be checked for the specific formwork type."
   },
   {
     "countryCode": "NG",
@@ -1274,10 +1306,10 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "shortTitle": "Column formwork",
     "section": "Formwork",
     "unit": "m²",
-    "status": "pilot",
+    "status": "review",
     "specification": "18 mm reusable plywood column formwork with 2x2/2x3 framing, 2x6 walers, nails, release agent and fixing/striking labour.",
     "methodologyNote": "Each timber component is separated. Plywood is allocated over five reuse cycles; user can edit quantities to match column size and reuse plan.",
-    "sourceNote": "FMC plywood/reuse basis + 2-bedroom/KMSTEEL timber methodology; timber market inputs refreshed from recent Abuja references.",
+    "sourceNote": "FMC plywood/reuse basis + 2-bedroom/KMSTEEL timber methodology; timber market inputs refreshed from recent Abuja references. Sep 2026 Abuja audit checked plywood, timber, H20/Peri and labour market references; structural/shuttering quantities remain to be validated against a formwork layout.",
     "lines": [
       {
         "id": "fwc-ply",
@@ -1285,7 +1317,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.06718624025799516,
         "unit": "sheet",
-        "unitRate": 39000
+        "unitRate": 40000
       },
       {
         "id": "fwc-2x3",
@@ -1293,7 +1325,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.3,
         "unit": "length",
-        "unitRate": 1800
+        "unitRate": 1300
       },
       {
         "id": "fwc-2x2",
@@ -1351,7 +1383,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
       "plantFluctuation": 0,
       "risk": 0.05,
       "op": 0
-    }
+    },
+    "validationNote": "Under validation. Formwork cannot be verified from material prices alone: member spacing, shutter geometry, reuse cycles, prop/H20 arrangement, rental duration and stripping cycle must be checked for the specific formwork type."
   },
   {
     "countryCode": "NG",
@@ -1366,10 +1399,10 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "shortTitle": "Beam / lintel formwork",
     "section": "Formwork",
     "unit": "m²",
-    "status": "pilot",
+    "status": "review",
     "specification": "Beam/lintel formwork with reusable plywood, 2x2 and 2x3 timber, 2x6 bearers, Peri/H20 beam support allowance, nails, release agent and labour.",
     "methodologyNote": "Beam sides and soffits need a stronger support system than simple wall/edge shuttering, so 2x6 and Peri/H20 support are visible inputs.",
-    "sourceNote": "2-bedroom/KMSTEEL formwork logic + FMC plywood basis + current Abuja timber/Peri working observations.",
+    "sourceNote": "2-bedroom/KMSTEEL formwork logic + FMC plywood basis + current Abuja timber/Peri working observations. Sep 2026 Abuja audit checked plywood, timber, H20/Peri and labour market references; structural/shuttering quantities remain to be validated against a formwork layout.",
     "lines": [
       {
         "id": "fwb-ply",
@@ -1377,7 +1410,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.06718624025799516,
         "unit": "sheet",
-        "unitRate": 39000
+        "unitRate": 40000
       },
       {
         "id": "fwb-2x3",
@@ -1385,7 +1418,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.35,
         "unit": "length",
-        "unitRate": 1800
+        "unitRate": 1300
       },
       {
         "id": "fwb-2x2",
@@ -1409,8 +1442,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.05,
         "unit": "No.",
-        "unitRate": 15000,
-        "note": "Working purchase-equivalent allocation; edit for rental or reuse."
+        "unitRate": 16900,
+        "note": "Working purchase-equivalent allocation; edit for rental or reuse. Sep 2026 Abuja H20 working purchase reference: ₦16,900; allocation/reuse remains under validation."
       },
       {
         "id": "fwb-nail",
@@ -1451,7 +1484,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
       "plantFluctuation": 0,
       "risk": 0.05,
       "op": 0
-    }
+    },
+    "validationNote": "Under validation. Formwork cannot be verified from material prices alone: member spacing, shutter geometry, reuse cycles, prop/H20 arrangement, rental duration and stripping cycle must be checked for the specific formwork type."
   },
   {
     "countryCode": "NG",
@@ -1466,10 +1500,10 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "shortTitle": "Slab soffit formwork",
     "section": "Formwork",
     "unit": "m²",
-    "status": "pilot",
+    "status": "review",
     "specification": "Suspended slab formwork with reusable 18 mm plywood, 2x2/2x3 framing, 2x6 secondary bearers, Peri/H20 primary beams, nails, release agent and erection/striking labour.",
-    "methodologyNote": "This is deliberately more detailed than the former generic formwork rate. Prop/rental strategy can be represented by changing Peri/H20 quantity/rate or adding it within the support allowance.",
-    "sourceNote": "FMC reuse methodology + residential/KMSTEEL timber take-offs + current Abuja Peri/timber working observations.",
+    "methodologyNote": "Suspended slab formwork with reusable 18 mm plywood, timber framing, H20/Peri support and explicit Acrow-prop rental. The prop quantity currently uses a published 175mm slab / 3.0m-height schedule as a working benchmark and must be redesigned for the actual slab.",
+    "sourceNote": "FMC reuse methodology + residential/KMSTEEL timber take-offs + current Abuja Peri/timber working observations. Sep 2026 Abuja audit checked plywood, timber, H20/Peri and labour market references; structural/shuttering quantities remain to be validated against a formwork layout.",
     "lines": [
       {
         "id": "fws-ply",
@@ -1477,7 +1511,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.06718624025799516,
         "unit": "sheet",
-        "unitRate": 39000
+        "unitRate": 40000
       },
       {
         "id": "fws-2x3",
@@ -1485,7 +1519,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.3,
         "unit": "length",
-        "unitRate": 1800
+        "unitRate": 1300
       },
       {
         "id": "fws-2x2",
@@ -1509,7 +1543,17 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.08,
         "unit": "No.",
-        "unitRate": 15000
+        "unitRate": 16900,
+        "note": "Sep 2026 Abuja H20 working purchase reference: ₦16,900; allocation/reuse remains under validation."
+      },
+      {
+        "id": "fws-prop-rental",
+        "label": "Acrow prop rental allocation — 21-day working cycle",
+        "category": "plant",
+        "quantity": 29.22,
+        "unit": "prop-day",
+        "unitRate": 200,
+        "note": "Working basis: 487 props / 350m² = 1.391 props/m²; × 21 days. Current Abuja rental reference ₦200/prop/day, excluding delivery/VAT. Edit to suit slab design and cycle."
       },
       {
         "id": "fws-nail",
@@ -1550,7 +1594,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
       "plantFluctuation": 0,
       "risk": 0.05,
       "op": 0
-    }
+    },
+    "validationNote": "Under validation. Formwork cannot be verified from material prices alone: member spacing, shutter geometry, reuse cycles, prop/H20 arrangement, rental duration and stripping cycle must be checked for the specific formwork type."
   },
   {
     "countryCode": "NG",
@@ -1565,10 +1610,10 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "shortTitle": "Staircase formwork",
     "section": "Formwork",
     "unit": "m²",
-    "status": "pilot",
+    "status": "review",
     "specification": "Stair/landing formwork with plywood facing, timber stringers/joists/bracing, 2x6/Peri support allowance, nails, release agent and higher-detail carpentry labour.",
     "methodologyNote": "Stairs attract more cutting, setting-out and striking labour than flat soffits; the labour factor is therefore separately visible and editable.",
-    "sourceNote": "Residential staircase/formwork methodology normalized with current formwork inputs.",
+    "sourceNote": "Residential staircase/formwork methodology normalized with current formwork inputs. Sep 2026 Abuja audit checked plywood, timber, H20/Peri and labour market references; structural/shuttering quantities remain to be validated against a formwork layout.",
     "lines": [
       {
         "id": "fwst-ply",
@@ -1576,7 +1621,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.06718624025799516,
         "unit": "sheet",
-        "unitRate": 39000
+        "unitRate": 40000
       },
       {
         "id": "fwst-2x3",
@@ -1584,7 +1629,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.35,
         "unit": "length",
-        "unitRate": 1800
+        "unitRate": 1300
       },
       {
         "id": "fwst-2x2",
@@ -1608,7 +1653,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.04,
         "unit": "No.",
-        "unitRate": 15000
+        "unitRate": 16900,
+        "note": "Sep 2026 Abuja H20 working purchase reference: ₦16,900; allocation/reuse remains under validation."
       },
       {
         "id": "fwst-nail",
@@ -1649,7 +1695,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
       "plantFluctuation": 0,
       "risk": 0.05,
       "op": 0
-    }
+    },
+    "validationNote": "Under validation. Formwork cannot be verified from material prices alone: member spacing, shutter geometry, reuse cycles, prop/H20 arrangement, rental duration and stripping cycle must be checked for the specific formwork type."
   },
   {
     "countryCode": "NG",
@@ -1692,7 +1739,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
       "plantFluctuation": 0,
       "risk": 0.05,
       "op": 0
-    }
+    },
+    "validationNote": "Under validation. The calculation remains usable and editable, but current material/labour inputs are still being checked against fresh market observations and project evidence before verification."
   },
   {
     "countryCode": "NG",
@@ -1735,7 +1783,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
       "plantFluctuation": 0,
       "risk": 0.05,
       "op": 0
-    }
+    },
+    "validationNote": "Under validation. The calculation remains usable and editable, but current material/labour inputs are still being checked against fresh market observations and project evidence before verification."
   },
   {
     "countryCode": "NG",
@@ -1778,7 +1827,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
       "plantFluctuation": 0,
       "risk": 0.05,
       "op": 0
-    }
+    },
+    "validationNote": "Under validation. The calculation remains usable and editable, but current material/labour inputs are still being checked against fresh market observations and project evidence before verification."
   },
   {
     "countryCode": "NG",
@@ -1821,7 +1871,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
       "plantFluctuation": 0,
       "risk": 0.05,
       "op": 0
-    }
+    },
+    "validationNote": "Under validation. The calculation remains usable and editable, but current material/labour inputs are still being checked against fresh market observations and project evidence before verification."
   },
   {
     "countryCode": "NG",
@@ -1864,7 +1915,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
       "plantFluctuation": 0,
       "risk": 0.05,
       "op": 0
-    }
+    },
+    "validationNote": "Under validation. The calculation remains usable and editable, but current material/labour inputs are still being checked against fresh market observations and project evidence before verification."
   },
   {
     "countryCode": "NG",
@@ -1907,7 +1959,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
       "plantFluctuation": 0,
       "risk": 0.05,
       "op": 0
-    }
+    },
+    "validationNote": "Under validation. The calculation remains usable and editable, but current material/labour inputs are still being checked against fresh market observations and project evidence before verification."
   },
   {
     "countryCode": "NG",
@@ -1950,7 +2003,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
       "plantFluctuation": 0,
       "risk": 0.05,
       "op": 0
-    }
+    },
+    "validationNote": "Under validation. The calculation remains usable and editable, but current material/labour inputs are still being checked against fresh market observations and project evidence before verification."
   }
 ];
 

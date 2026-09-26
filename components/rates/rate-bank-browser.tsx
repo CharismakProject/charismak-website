@@ -22,8 +22,8 @@ const money = (value: number) =>
 
 const statusMeta = {
   verified: { label: "Verified", className: "bg-[#EAF7EF] text-[#197447]" },
-  pilot: { label: "Pilot", className: "bg-[#FFF1EA] text-[#8B1E00]" },
-  review: { label: "Under review", className: "bg-[#FFF9E7] text-[#8A6200]" },
+  pilot: { label: "Under validation", className: "bg-[#FFF9E7] text-[#8A6200]" },
+  review: { label: "Under validation", className: "bg-[#FFF9E7] text-[#8A6200]" },
 } as const;
 
 export default function RateBankBrowser() {
@@ -125,7 +125,7 @@ export default function RateBankBrowser() {
               Transparent execution cost — not a copied tender rate
             </h2>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-[#617286]">
-              Rates are reconstructed from reviewed Charismak project calculations and resource build-ups. Physical wastage remains inside the resource calculation, while price fluctuation and risk are shown separately. Items still awaiting a fresh supplier/trade audit are visibly marked Under review.
+              Rates are reconstructed from Charismak project calculations and current market checks. Until a rate passes quantity, material, labour and market-validation checks, it is clearly marked Under validation rather than presented as a verified market rate.
             </p>
           </div>
           <Link
@@ -176,7 +176,7 @@ export default function RateBankBrowser() {
 
                 <div className="mt-5 rounded-2xl bg-[#F6F8FA] p-4">
                   <span className="text-[10px] font-black uppercase tracking-[0.12em] text-[#617286]">
-                    Charismak reference / {item.unit}
+                    {item.status === "verified" ? "Charismak verified reference" : "Working reference"} / {item.unit}
                   </span>
                   <strong className="mt-1 block text-2xl text-[#071E33]">{money(calc.total)}</strong>
                   <span className="mt-2 block text-xs font-bold text-[#617286]">
