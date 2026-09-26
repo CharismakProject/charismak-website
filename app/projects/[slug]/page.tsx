@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, Building2, CheckCircle2, MapPin } from "lucide-react";
 
 import ProjectMediaGallery from "../../components/ProjectMediaGallery";
+import JsonLd from "@/components/seo/json-ld";
+import { breadcrumbJsonLd, createSeoMetadata } from "@/lib/seo";
 import { loadPublishedProject, loadPublishedProjects } from "@/lib/content/website-cms";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -13,8 +15,20 @@ export const revalidate = 300;
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   const project = await loadPublishedProject(slug);
-  if (!project) return { title: "Project Not Found" };
-  return { title: project.title, description: project.summary };
+  if (!project) return { title: "Project Not Found", robots: { index: false } };
+  const image = project.heroImages[0] || project.cover || project.images[0] || null;
+  return createSeoMetadata({
+    title: project.title + " – " + project.location,
+    description: project.summary,
+    path: "/projects/" + project.slug,
+    image,
+    imageAlt: project.title + " construction project",
+    keywords: [
+      project.title,
+      "construction project " + project.location,
+      project.role + " Nigeria",
+    ],
+  });
 }
 
 export default async function ProjectDetailsPage({ params }: Props) {
@@ -32,6 +46,13 @@ export default async function ProjectDetailsPage({ params }: Props) {
 
   return (
     <main className="overflow-hidden bg-white pt-20">
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: "Projects", path: "/projects" },
+          { name: project.title, path: "/projects/" + project.slug },
+        ])}
+      />
       <section className="relative min-h-[78vh] overflow-hidden bg-[#071E33] text-white">
         <Image src={heroImage} alt={project.title} fill priority sizes="100vw" className="object-cover" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#071E33]/97 via-[#071E33]/76 to-[#071E33]/22" />
