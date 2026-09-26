@@ -2494,28 +2494,46 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "section": "Finishes",
     "unit": "m²",
     "specification": "10 mm average cement:sand (1:4) levelling screed with acrylic admixture, placed, ruled level and steel-trowelled.",
-    "methodologyNote": "Uses the Sora project calculation basis: ₦85/mm/m² materials + ₦1,400/m² placing/levelling/trowelling before Rate Bank allowances. Both inputs remain editable.",
+    "methodologyNote": "Physical build-up per 1m²: 10mm wet screed × 1.33 dry-volume factor at 1:4 cement:sand, with 5% physical material waste. Acrylic/SBR admixture remains an explicit editable line pending product dosage.",
     "sourceNote": "Sora Restaurant corrected-rate workbook, Abuja: explicit screed formula.",
     "lines": [
       {
-        "id": "screed-10-mat",
-        "label": "1:4 screed materials + acrylic admixture (10mm)",
+        "id": "screed-10-cement",
+        "label": "Cement for 1:4 screed",
         "category": "material",
-        "quantity": 10,
-        "unit": "mm·m²",
-        "unitRate": 85,
-        "note": "Source formula input; update after current cement/sand/admixture audit."
+        "quantity": 0.08043840000000001,
+        "unit": "50kg bag",
+        "unitRate": 12500,
+        "note": "Per 1m² at 10mm: wet volume 0.010m³ × 1.33 dry factor × 1/5 cement share × 5% physical waste."
+      },
+      {
+        "id": "screed-10-sand",
+        "label": "Sharp sand for 1:4 screed",
+        "category": "material",
+        "quantity": 0.011172000000000003,
+        "unit": "m³",
+        "unitRate": 14400,
+        "note": "Per 1m² at 10mm: 1.33 dry factor × 4/5 sand share × 5% physical waste."
+      },
+      {
+        "id": "screed-10-admix",
+        "label": "Acrylic/SBR admixture",
+        "category": "consumable",
+        "quantity": 1,
+        "unit": "provisional allowance/m²",
+        "unitRate": 0,
+        "note": "Dosage depends on the approved product/manufacturer. Kept visible at zero until the product dosage and price are confirmed instead of hiding it in the rate."
       },
       {
         "id": "screed-10-lab",
-        "label": "Placing, levelling and steel trowelling",
+        "label": "Placing, levelling and steel-trowelling labour",
         "category": "labour",
         "quantity": 1,
         "unit": "m²",
         "unitRate": 1400
       }
     ],
-    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+    "validationNote": "Under validation. Cement and sand quantities are now physically calculated and visible. Admixture dosage, current sand landed price and screeding labour productivity still require final validation."
   },
   {
     "countryCode": "NG",
@@ -2539,28 +2557,46 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "section": "Finishes",
     "unit": "m²",
     "specification": "20 mm average cement:sand (1:4) levelling screed with acrylic admixture, placed, ruled level and steel-trowelled.",
-    "methodologyNote": "Uses the Sora project calculation basis: ₦85/mm/m² materials + ₦1,400/m² placing/levelling/trowelling before Rate Bank allowances. Both inputs remain editable.",
+    "methodologyNote": "Physical build-up per 1m²: 20mm wet screed × 1.33 dry-volume factor at 1:4 cement:sand, with 5% physical material waste. Acrylic/SBR admixture remains an explicit editable line pending product dosage.",
     "sourceNote": "Sora Restaurant corrected-rate workbook, Abuja: explicit screed formula.",
     "lines": [
       {
-        "id": "screed-20-mat",
-        "label": "1:4 screed materials + acrylic admixture (20mm)",
+        "id": "screed-20-cement",
+        "label": "Cement for 1:4 screed",
         "category": "material",
-        "quantity": 20,
-        "unit": "mm·m²",
-        "unitRate": 85,
-        "note": "Source formula input; update after current cement/sand/admixture audit."
+        "quantity": 0.16087680000000001,
+        "unit": "50kg bag",
+        "unitRate": 12500,
+        "note": "Per 1m² at 20mm: wet volume 0.020m³ × 1.33 dry factor × 1/5 cement share × 5% physical waste."
+      },
+      {
+        "id": "screed-20-sand",
+        "label": "Sharp sand for 1:4 screed",
+        "category": "material",
+        "quantity": 0.022344000000000006,
+        "unit": "m³",
+        "unitRate": 14400,
+        "note": "Per 1m² at 20mm: 1.33 dry factor × 4/5 sand share × 5% physical waste."
+      },
+      {
+        "id": "screed-20-admix",
+        "label": "Acrylic/SBR admixture",
+        "category": "consumable",
+        "quantity": 1,
+        "unit": "provisional allowance/m²",
+        "unitRate": 0,
+        "note": "Dosage depends on the approved product/manufacturer. Kept visible at zero until the product dosage and price are confirmed instead of hiding it in the rate."
       },
       {
         "id": "screed-20-lab",
-        "label": "Placing, levelling and steel trowelling",
+        "label": "Placing, levelling and steel-trowelling labour",
         "category": "labour",
         "quantity": 1,
         "unit": "m²",
         "unitRate": 1400
       }
     ],
-    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+    "validationNote": "Under validation. Cement and sand quantities are now physically calculated and visible. Admixture dosage, current sand landed price and screeding labour productivity still require final validation."
   },
   {
     "countryCode": "NG",
@@ -2584,28 +2620,46 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "section": "Finishes",
     "unit": "m²",
     "specification": "23 mm average cement:sand (1:4) levelling screed with acrylic admixture, placed, ruled level and steel-trowelled.",
-    "methodologyNote": "Uses the Sora project calculation basis: ₦85/mm/m² materials + ₦1,400/m² placing/levelling/trowelling before Rate Bank allowances. Both inputs remain editable.",
+    "methodologyNote": "Physical build-up per 1m²: 23mm wet screed × 1.33 dry-volume factor at 1:4 cement:sand, with 5% physical material waste. Acrylic/SBR admixture remains an explicit editable line pending product dosage.",
     "sourceNote": "Sora Restaurant corrected-rate workbook, Abuja: explicit screed formula.",
     "lines": [
       {
-        "id": "screed-23-mat",
-        "label": "1:4 screed materials + acrylic admixture (23mm)",
+        "id": "screed-23-cement",
+        "label": "Cement for 1:4 screed",
         "category": "material",
-        "quantity": 23,
-        "unit": "mm·m²",
-        "unitRate": 85,
-        "note": "Source formula input; update after current cement/sand/admixture audit."
+        "quantity": 0.18500832000000003,
+        "unit": "50kg bag",
+        "unitRate": 12500,
+        "note": "Per 1m² at 23mm: wet volume 0.023m³ × 1.33 dry factor × 1/5 cement share × 5% physical waste."
+      },
+      {
+        "id": "screed-23-sand",
+        "label": "Sharp sand for 1:4 screed",
+        "category": "material",
+        "quantity": 0.025695600000000006,
+        "unit": "m³",
+        "unitRate": 14400,
+        "note": "Per 1m² at 23mm: 1.33 dry factor × 4/5 sand share × 5% physical waste."
+      },
+      {
+        "id": "screed-23-admix",
+        "label": "Acrylic/SBR admixture",
+        "category": "consumable",
+        "quantity": 1,
+        "unit": "provisional allowance/m²",
+        "unitRate": 0,
+        "note": "Dosage depends on the approved product/manufacturer. Kept visible at zero until the product dosage and price are confirmed instead of hiding it in the rate."
       },
       {
         "id": "screed-23-lab",
-        "label": "Placing, levelling and steel trowelling",
+        "label": "Placing, levelling and steel-trowelling labour",
         "category": "labour",
         "quantity": 1,
         "unit": "m²",
         "unitRate": 1400
       }
     ],
-    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+    "validationNote": "Under validation. Cement and sand quantities are now physically calculated and visible. Admixture dosage, current sand landed price and screeding labour productivity still require final validation."
   },
   {
     "countryCode": "NG",
@@ -2629,28 +2683,46 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "section": "Finishes",
     "unit": "m²",
     "specification": "32 mm average cement:sand (1:4) levelling screed with acrylic admixture, placed, ruled level and steel-trowelled.",
-    "methodologyNote": "Uses the Sora project calculation basis: ₦85/mm/m² materials + ₦1,400/m² placing/levelling/trowelling before Rate Bank allowances. Both inputs remain editable.",
+    "methodologyNote": "Physical build-up per 1m²: 32mm wet screed × 1.33 dry-volume factor at 1:4 cement:sand, with 5% physical material waste. Acrylic/SBR admixture remains an explicit editable line pending product dosage.",
     "sourceNote": "Sora Restaurant corrected-rate workbook, Abuja: explicit screed formula.",
     "lines": [
       {
-        "id": "screed-32-mat",
-        "label": "1:4 screed materials + acrylic admixture (32mm)",
+        "id": "screed-32-cement",
+        "label": "Cement for 1:4 screed",
         "category": "material",
-        "quantity": 32,
-        "unit": "mm·m²",
-        "unitRate": 85,
-        "note": "Source formula input; update after current cement/sand/admixture audit."
+        "quantity": 0.25740288000000006,
+        "unit": "50kg bag",
+        "unitRate": 12500,
+        "note": "Per 1m² at 32mm: wet volume 0.032m³ × 1.33 dry factor × 1/5 cement share × 5% physical waste."
+      },
+      {
+        "id": "screed-32-sand",
+        "label": "Sharp sand for 1:4 screed",
+        "category": "material",
+        "quantity": 0.0357504,
+        "unit": "m³",
+        "unitRate": 14400,
+        "note": "Per 1m² at 32mm: 1.33 dry factor × 4/5 sand share × 5% physical waste."
+      },
+      {
+        "id": "screed-32-admix",
+        "label": "Acrylic/SBR admixture",
+        "category": "consumable",
+        "quantity": 1,
+        "unit": "provisional allowance/m²",
+        "unitRate": 0,
+        "note": "Dosage depends on the approved product/manufacturer. Kept visible at zero until the product dosage and price are confirmed instead of hiding it in the rate."
       },
       {
         "id": "screed-32-lab",
-        "label": "Placing, levelling and steel trowelling",
+        "label": "Placing, levelling and steel-trowelling labour",
         "category": "labour",
         "quantity": 1,
         "unit": "m²",
         "unitRate": 1400
       }
     ],
-    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+    "validationNote": "Under validation. Cement and sand quantities are now physically calculated and visible. Admixture dosage, current sand landed price and screeding labour productivity still require final validation."
   },
   {
     "countryCode": "NG",
@@ -3062,27 +3134,79 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "section": "Ceilings",
     "unit": "m²",
     "specification": "Flat gypsum-board suspended ceiling including framing/supports, boards or forming material, fixings/joint treatment, installation labour and normal transport unless stated otherwise.",
-    "methodologyNote": "Sora source was an all-in commercial guide of ₦18,500/m². V1 Rate Bank strips a provisional 15% source O/P and uses an explicit temporary material/labour/logistics split; this remains Under validation until a subcontractor resource breakdown is obtained.",
+    "methodologyNote": "Resource build-up now shows board sheets, main/secondary profiles, hangers, screws, compound, joint tape, labour and handling per 1m². Geometry factor 1 is a working allowance for this ceiling type and remains editable.",
     "sourceNote": "Sora Restaurant corrected-rates ceiling schedule, Abuja.",
     "lines": [
       {
-        "id": "flat-gypsum-board-ceiling-mat",
-        "label": "Boards/profiles/fixings/joint-treatment materials",
+        "id": "gflat-board",
+        "label": "12.5 mm gypsum ceiling board",
         "category": "material",
-        "quantity": 1,
-        "unit": "m²",
-        "unitRate": 10000
+        "quantity": 0.375,
+        "unit": "1.2×2.4m sheet",
+        "unitRate": 16500,
+        "note": "Board quantity derived from face area with 8% cutting/waste."
       },
       {
-        "id": "flat-gypsum-board-ceiling-lab",
-        "label": "Specialist ceiling installation labour",
+        "id": "gflat-main",
+        "label": "Main ceiling channel/profile",
+        "category": "material",
+        "quantity": 1.1340000000000001,
+        "unit": "linear m",
+        "unitRate": 667,
+        "note": "Working profile price equivalent to about ₦2,000 per 3m length."
+      },
+      {
+        "id": "gflat-furring",
+        "label": "Furring / secondary channel",
+        "category": "material",
+        "quantity": 2.3760000000000003,
+        "unit": "linear m",
+        "unitRate": 667,
+        "note": "Working secondary-profile density from the Material Estimator."
+      },
+      {
+        "id": "gflat-hanger",
+        "label": "Hanger rods/wires and fixing points",
+        "category": "material",
+        "quantity": 1.2000000000000002,
+        "unit": "set",
+        "unitRate": 250,
+        "note": "Working hanger density; actual suspension design governs."
+      },
+      {
+        "id": "gflat-screws",
+        "label": "Drywall screws",
+        "category": "consumable",
+        "quantity": 27,
+        "unit": "pcs",
+        "unitRate": 20
+      },
+      {
+        "id": "gflat-compound",
+        "label": "Jointing compound / joint screed",
+        "category": "consumable",
+        "quantity": 0.48600000000000004,
+        "unit": "kg",
+        "unitRate": 1200
+      },
+      {
+        "id": "gflat-tape",
+        "label": "Fibreglass / joint tape",
+        "category": "consumable",
+        "quantity": 1.512,
+        "unit": "linear m",
+        "unitRate": 150
+      },
+      {
+        "id": "gflat-lab",
+        "label": "Gypsum ceiling specialist labour",
         "category": "labour",
         "quantity": 1,
         "unit": "m²",
-        "unitRate": 5086.956521739132
+        "unitRate": 6500
       },
       {
-        "id": "flat-gypsum-board-ceiling-log",
+        "id": "gflat-log",
         "label": "Handling / local transport allocation",
         "category": "logistics",
         "quantity": 1,
@@ -3090,7 +3214,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "unitRate": 1000
       }
     ],
-    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+    "validationNote": "Under validation. The quantity schedule is now transparent, but final profile centres, hanger density, curved framing method, board brand and specialist labour productivity must be confirmed before verification."
   },
   {
     "countryCode": "NG",
@@ -3114,27 +3238,79 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "section": "Ceilings",
     "unit": "m²",
     "specification": "Straight stepped gypsum ceiling drop including framing/supports, boards or forming material, fixings/joint treatment, installation labour and normal transport unless stated otherwise.",
-    "methodologyNote": "Sora source was an all-in commercial guide of ₦24,000/m². V1 Rate Bank strips a provisional 15% source O/P and uses an explicit temporary material/labour/logistics split; this remains Under validation until a subcontractor resource breakdown is obtained.",
+    "methodologyNote": "Resource build-up now shows board sheets, main/secondary profiles, hangers, screws, compound, joint tape, labour and handling per 1m². Geometry factor 1.18 is a working allowance for this ceiling type and remains editable.",
     "sourceNote": "Sora Restaurant corrected-rates ceiling schedule, Abuja.",
     "lines": [
       {
-        "id": "straight-gypsum-ceiling-drop-mat",
-        "label": "Boards/profiles/fixings/joint-treatment materials",
+        "id": "gdrop-board",
+        "label": "12.5 mm gypsum ceiling board",
         "category": "material",
-        "quantity": 1,
-        "unit": "m²",
-        "unitRate": 12500
+        "quantity": 0.4425,
+        "unit": "1.2×2.4m sheet",
+        "unitRate": 16500,
+        "note": "Board quantity derived from face area with 8% cutting/waste."
       },
       {
-        "id": "straight-gypsum-ceiling-drop-lab",
-        "label": "Specialist ceiling installation labour",
+        "id": "gdrop-main",
+        "label": "Main ceiling channel/profile",
+        "category": "material",
+        "quantity": 1.33812,
+        "unit": "linear m",
+        "unitRate": 667,
+        "note": "Working profile price equivalent to about ₦2,000 per 3m length."
+      },
+      {
+        "id": "gdrop-furring",
+        "label": "Furring / secondary channel",
+        "category": "material",
+        "quantity": 2.8036800000000004,
+        "unit": "linear m",
+        "unitRate": 667,
+        "note": "Working secondary-profile density from the Material Estimator."
+      },
+      {
+        "id": "gdrop-hanger",
+        "label": "Hanger rods/wires and fixing points",
+        "category": "material",
+        "quantity": 1.4160000000000001,
+        "unit": "set",
+        "unitRate": 250,
+        "note": "Working hanger density; actual suspension design governs."
+      },
+      {
+        "id": "gdrop-screws",
+        "label": "Drywall screws",
+        "category": "consumable",
+        "quantity": 31.86,
+        "unit": "pcs",
+        "unitRate": 20
+      },
+      {
+        "id": "gdrop-compound",
+        "label": "Jointing compound / joint screed",
+        "category": "consumable",
+        "quantity": 0.57348,
+        "unit": "kg",
+        "unitRate": 1200
+      },
+      {
+        "id": "gdrop-tape",
+        "label": "Fibreglass / joint tape",
+        "category": "consumable",
+        "quantity": 1.78416,
+        "unit": "linear m",
+        "unitRate": 150
+      },
+      {
+        "id": "gdrop-lab",
+        "label": "Gypsum ceiling specialist labour",
         "category": "labour",
         "quantity": 1,
         "unit": "m²",
-        "unitRate": 7369.565217391308
+        "unitRate": 9000
       },
       {
-        "id": "straight-gypsum-ceiling-drop-log",
+        "id": "gdrop-log",
         "label": "Handling / local transport allocation",
         "category": "logistics",
         "quantity": 1,
@@ -3142,7 +3318,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "unitRate": 1000
       }
     ],
-    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+    "validationNote": "Under validation. The quantity schedule is now transparent, but final profile centres, hanger density, curved framing method, board brand and specialist labour productivity must be confirmed before verification."
   },
   {
     "countryCode": "NG",
@@ -3166,27 +3342,79 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "section": "Ceilings",
     "unit": "m²",
     "specification": "Curved gypsum ceiling drop including framing/supports, boards or forming material, fixings/joint treatment, installation labour and normal transport unless stated otherwise.",
-    "methodologyNote": "Sora source was an all-in commercial guide of ₦32,000/m². V1 Rate Bank strips a provisional 15% source O/P and uses an explicit temporary material/labour/logistics split; this remains Under validation until a subcontractor resource breakdown is obtained.",
+    "methodologyNote": "Resource build-up now shows board sheets, main/secondary profiles, hangers, screws, compound, joint tape, labour and handling per 1m². Geometry factor 1.35 is a working allowance for this ceiling type and remains editable.",
     "sourceNote": "Sora Restaurant corrected-rates ceiling schedule, Abuja.",
     "lines": [
       {
-        "id": "curved-gypsum-ceiling-drop-mat",
-        "label": "Boards/profiles/fixings/joint-treatment materials",
+        "id": "gcurve-board",
+        "label": "12.5 mm gypsum ceiling board",
         "category": "material",
-        "quantity": 1,
-        "unit": "m²",
-        "unitRate": 15000
+        "quantity": 0.5062500000000001,
+        "unit": "1.2×2.4m sheet",
+        "unitRate": 16500,
+        "note": "Board quantity derived from face area with 8% cutting/waste."
       },
       {
-        "id": "curved-gypsum-ceiling-drop-lab",
-        "label": "Specialist ceiling installation labour",
+        "id": "gcurve-main",
+        "label": "Main ceiling channel/profile",
+        "category": "material",
+        "quantity": 1.5309000000000004,
+        "unit": "linear m",
+        "unitRate": 667,
+        "note": "Working profile price equivalent to about ₦2,000 per 3m length."
+      },
+      {
+        "id": "gcurve-furring",
+        "label": "Furring / secondary channel",
+        "category": "material",
+        "quantity": 3.2076000000000007,
+        "unit": "linear m",
+        "unitRate": 667,
+        "note": "Working secondary-profile density from the Material Estimator."
+      },
+      {
+        "id": "gcurve-hanger",
+        "label": "Hanger rods/wires and fixing points",
+        "category": "material",
+        "quantity": 1.6200000000000003,
+        "unit": "set",
+        "unitRate": 250,
+        "note": "Working hanger density; actual suspension design governs."
+      },
+      {
+        "id": "gcurve-screws",
+        "label": "Drywall screws",
+        "category": "consumable",
+        "quantity": 36.45,
+        "unit": "pcs",
+        "unitRate": 20
+      },
+      {
+        "id": "gcurve-compound",
+        "label": "Jointing compound / joint screed",
+        "category": "consumable",
+        "quantity": 0.6561000000000001,
+        "unit": "kg",
+        "unitRate": 1200
+      },
+      {
+        "id": "gcurve-tape",
+        "label": "Fibreglass / joint tape",
+        "category": "consumable",
+        "quantity": 2.0412000000000003,
+        "unit": "linear m",
+        "unitRate": 150
+      },
+      {
+        "id": "gcurve-lab",
+        "label": "Gypsum ceiling specialist labour",
         "category": "labour",
         "quantity": 1,
         "unit": "m²",
-        "unitRate": 11826.08695652174
+        "unitRate": 12000
       },
       {
-        "id": "curved-gypsum-ceiling-drop-log",
+        "id": "gcurve-log",
         "label": "Handling / local transport allocation",
         "category": "logistics",
         "quantity": 1,
@@ -3194,7 +3422,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "unitRate": 1000
       }
     ],
-    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+    "validationNote": "Under validation. The quantity schedule is now transparent, but final profile centres, hanger density, curved framing method, board brand and specialist labour productivity must be confirmed before verification."
   },
   {
     "countryCode": "NG",
@@ -3218,27 +3446,79 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "section": "Ceilings",
     "unit": "m²",
     "specification": "Recessed / inverted gypsum ceiling with curved edges including framing/supports, boards or forming material, fixings/joint treatment, installation labour and normal transport unless stated otherwise.",
-    "methodologyNote": "Sora source was an all-in commercial guide of ₦34,000/m². V1 Rate Bank strips a provisional 15% source O/P and uses an explicit temporary material/labour/logistics split; this remains Under validation until a subcontractor resource breakdown is obtained.",
+    "methodologyNote": "Resource build-up now shows board sheets, main/secondary profiles, hangers, screws, compound, joint tape, labour and handling per 1m². Geometry factor 1.45 is a working allowance for this ceiling type and remains editable.",
     "sourceNote": "Sora Restaurant corrected-rates ceiling schedule, Abuja.",
     "lines": [
       {
-        "id": "recessed-curved-gypsum-ceiling-mat",
-        "label": "Boards/profiles/fixings/joint-treatment materials",
+        "id": "grecess-board",
+        "label": "12.5 mm gypsum ceiling board",
         "category": "material",
-        "quantity": 1,
-        "unit": "m²",
-        "unitRate": 16000
+        "quantity": 0.54375,
+        "unit": "1.2×2.4m sheet",
+        "unitRate": 16500,
+        "note": "Board quantity derived from face area with 8% cutting/waste."
       },
       {
-        "id": "recessed-curved-gypsum-ceiling-lab",
-        "label": "Specialist ceiling installation labour",
+        "id": "grecess-main",
+        "label": "Main ceiling channel/profile",
+        "category": "material",
+        "quantity": 1.6443,
+        "unit": "linear m",
+        "unitRate": 667,
+        "note": "Working profile price equivalent to about ₦2,000 per 3m length."
+      },
+      {
+        "id": "grecess-furring",
+        "label": "Furring / secondary channel",
+        "category": "material",
+        "quantity": 3.4452000000000003,
+        "unit": "linear m",
+        "unitRate": 667,
+        "note": "Working secondary-profile density from the Material Estimator."
+      },
+      {
+        "id": "grecess-hanger",
+        "label": "Hanger rods/wires and fixing points",
+        "category": "material",
+        "quantity": 1.7400000000000002,
+        "unit": "set",
+        "unitRate": 250,
+        "note": "Working hanger density; actual suspension design governs."
+      },
+      {
+        "id": "grecess-screws",
+        "label": "Drywall screws",
+        "category": "consumable",
+        "quantity": 39.15,
+        "unit": "pcs",
+        "unitRate": 20
+      },
+      {
+        "id": "grecess-compound",
+        "label": "Jointing compound / joint screed",
+        "category": "consumable",
+        "quantity": 0.7047,
+        "unit": "kg",
+        "unitRate": 1200
+      },
+      {
+        "id": "grecess-tape",
+        "label": "Fibreglass / joint tape",
+        "category": "consumable",
+        "quantity": 2.1924,
+        "unit": "linear m",
+        "unitRate": 150
+      },
+      {
+        "id": "grecess-lab",
+        "label": "Gypsum ceiling specialist labour",
         "category": "labour",
         "quantity": 1,
         "unit": "m²",
-        "unitRate": 12565.217391304352
+        "unitRate": 12500
       },
       {
-        "id": "recessed-curved-gypsum-ceiling-log",
+        "id": "grecess-log",
         "label": "Handling / local transport allocation",
         "category": "logistics",
         "quantity": 1,
@@ -3246,7 +3526,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "unitRate": 1000
       }
     ],
-    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+    "validationNote": "Under validation. The quantity schedule is now transparent, but final profile centres, hanger density, curved framing method, board brand and specialist labour productivity must be confirmed before verification."
   },
   {
     "countryCode": "NG",
@@ -3458,12 +3738,22 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "sourceNote": "2-bedroom Abuja BOQ guide ₦13,800/m².",
     "lines": [
       {
-        "id": "roof055-mat",
-        "label": "Aluminium sheets + screws/accessories",
+        "id": "roof055-sheet",
+        "label": "0.55 mm oven-baked aluminium roofing sheet",
         "category": "material",
-        "quantity": 1,
+        "quantity": 1.08,
         "unit": "m²",
-        "unitRate": 10000
+        "unitRate": 8500,
+        "note": "Includes 8% working lap/cutting allowance per 1m² measured roof."
+      },
+      {
+        "id": "roof055-screws",
+        "label": "Roofing screws with washers/accessories",
+        "category": "consumable",
+        "quantity": 8,
+        "unit": "pcs",
+        "unitRate": 100,
+        "note": "Working 8 fasteners/m²; profile and support spacing govern final count."
       },
       {
         "id": "roof055-lab",
@@ -3482,7 +3772,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "unitRate": 500
       }
     ],
-    "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
+    "validationNote": "Under validation. Sheet quantity and fasteners are now visible. Gauge verification, manufacturer/profile effective cover width, current sheet price and installer productivity still require final validation."
   },
   {
     "countryCode": "NG",
@@ -3510,19 +3800,28 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "sourceNote": "2-bedroom Abuja BOQ guide ₦8,280/m.",
     "lines": [
       {
-        "id": "ridge-mat",
-        "label": "Aluminium ridge material + screws",
+        "id": "ridge-sheet",
+        "label": "600 mm wide aluminium ridge capping",
         "category": "material",
-        "quantity": 1,
-        "unit": "m",
-        "unitRate": 6000
+        "quantity": 1.05,
+        "unit": "linear m",
+        "unitRate": 5400,
+        "note": "5% working lap/cutting allowance."
+      },
+      {
+        "id": "ridge-screws",
+        "label": "Roofing screws / rivets",
+        "category": "consumable",
+        "quantity": 4,
+        "unit": "pcs",
+        "unitRate": 75
       },
       {
         "id": "ridge-lab",
-        "label": "Fixing/dressing labour",
+        "label": "Fixing and dressing labour",
         "category": "labour",
         "quantity": 1,
-        "unit": "m",
+        "unit": "linear m",
         "unitRate": 1000
       },
       {
@@ -3530,7 +3829,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "label": "Handling",
         "category": "logistics",
         "quantity": 1,
-        "unit": "m",
+        "unit": "linear m",
         "unitRate": 200
       }
     ],
@@ -3562,19 +3861,28 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "sourceNote": "2-bedroom Abuja BOQ guide ₦4,140/m.",
     "lines": [
       {
-        "id": "fascia-mat",
-        "label": "Aluminium fascia material + fixings",
+        "id": "fascia-sheet",
+        "label": "300 mm aluminium fascia",
         "category": "material",
-        "quantity": 1,
-        "unit": "m",
-        "unitRate": 3000
+        "quantity": 1.05,
+        "unit": "linear m",
+        "unitRate": 2700,
+        "note": "5% working cutting/lap allowance."
+      },
+      {
+        "id": "fascia-fix",
+        "label": "Screws/rivets/fixings",
+        "category": "consumable",
+        "quantity": 4,
+        "unit": "pcs",
+        "unitRate": 40
       },
       {
         "id": "fascia-lab",
         "label": "Fixing labour",
         "category": "labour",
         "quantity": 1,
-        "unit": "m",
+        "unit": "linear m",
         "unitRate": 500
       },
       {
@@ -3582,7 +3890,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "label": "Handling",
         "category": "logistics",
         "quantity": 1,
-        "unit": "m",
+        "unit": "linear m",
         "unitRate": 100
       }
     ],
