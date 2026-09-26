@@ -44,7 +44,7 @@ export default async function RateDetailPage({
   if (!item) notFound();
 
   const statusLabel =
-    item.status === "verified" ? "Verified rate" : item.status === "review" ? "Under review" : "Pilot rate";
+    item.status === "verified" ? "Verified rate" : "Under validation";
   const statusClass =
     item.status === "verified"
       ? "bg-[#EAF7EF] text-[#197447]"
@@ -110,6 +110,13 @@ export default async function RateDetailPage({
             </div>
           </div>
         </section>
+
+        {item.status !== "verified" && item.validationNote ? (
+          <section className="mt-6 rounded-2xl border border-[#E7C75D] bg-[#FFF9E7] p-5 text-sm leading-6 text-[#6B5310]">
+            <strong className="block text-[#5D4600]">Under validation</strong>
+            <span className="mt-1 block">{item.validationNote}</span>
+          </section>
+        ) : null}
 
         <div className="mt-6">
           <RateCalculator item={item} />
