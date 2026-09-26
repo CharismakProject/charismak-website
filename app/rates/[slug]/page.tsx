@@ -3,6 +3,8 @@ import { ArrowLeft, CalendarDays, MapPin } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import RateCalculator from "@/components/rates/rate-calculator";
+import JsonLd from "@/components/seo/json-ld";
+import { breadcrumbJsonLd, createSeoMetadata } from "@/lib/seo";
 import {
   RATE_BANK_ITEMS,
   getRateBankItem,
@@ -24,13 +26,21 @@ export async function generateMetadata({
     return { title: "Construction Rate" };
   }
 
-  return {
-    title: item.shortTitle + " Rate Build-up",
+  return createSeoMetadata({
+    title: item.shortTitle + " Construction Rate Nigeria",
     description:
-      "Review the Charismak construction rate build-up for " +
+      "See the full " +
       item.shortTitle +
-      " and edit a private copy with your own prices, allowances and O/P.",
-  };
+      " rate build-up for " +
+      item.city +
+      ", including material quantities, labour, plant, logistics, fluctuation and risk. Edit a private copy with your own prices.",
+    path: "/rates/" + item.slug,
+    keywords: [
+      item.shortTitle + " rate Nigeria",
+      item.shortTitle + " rate analysis",
+      "construction rates Nigeria",
+    ],
+  });
 }
 
 export default async function RateDetailPage({
@@ -54,6 +64,13 @@ export default async function RateDetailPage({
 
   return (
     <main className="min-h-screen bg-[#F5F7FA] pt-20">
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: "Construction Rate Bank", path: "/rates" },
+          { name: item.shortTitle, path: "/rates/" + item.slug },
+        ])}
+      />
       <div className="mx-auto max-w-7xl px-4 py-10 md:px-8 md:py-14">
         <Link
           href="/rates"
