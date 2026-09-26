@@ -102,328 +102,1861 @@ export function calculateRate(
 
 export const RATE_BANK_ITEMS: RateBankItem[] = [
   {
-    slug: "mechanical-excavation-wall-trenches",
-    code: "RB-EW-001",
-    title: "Mechanical excavation to wall trenches",
-    shortTitle: "Wall trench excavation",
-    section: "Earthworks",
-    unit: "m³",
-    countryCode: "NG",
-    country: "Nigeria",
-    region: "Abuja / Nasarawa",
-    city: "Abuja–Keffi market",
-    currency: "NGN",
-    specification:
-      "Bulk excavation by backhoe/excavator with manual dressing. Disposal is excluded and priced separately.",
-    methodologyNote:
-      "The plant basis uses 180 m³/day output, excavator hire, fuel and a transparent mobilisation allocation. Manual dressing remains a separate labour component.",
-    sourceNote:
-      "Pilot build-up reconstructed from the final FMC Keffi execution-cost model and its adopted plant/productivity assumptions.",
-    lastReviewed: "2026-09-26",
-    status: "pilot",
-    allowances: {
-      materialFluctuation: 0.05,
-      labourFluctuation: 0.015,
-      plantFluctuation: 0,
-      risk: 0.05,
-      op: 0,
-    },
-    lines: [
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "slug": "mechanical-excavation-wall-trenches",
+    "code": "RB-EW-001",
+    "title": "Mechanical excavation to wall trenches",
+    "shortTitle": "Wall trench excavation",
+    "section": "Earthworks",
+    "unit": "m³",
+    "status": "pilot",
+    "specification": "Bulk excavation by backhoe/excavator with manual dressing. Disposal is excluded and priced separately.",
+    "methodologyNote": "Plant basis uses 180 m³/day output with excavator hire, fuel and shared mobilisation. Manual dressing stays separate.",
+    "sourceNote": "Reconstructed from the final FMC Keffi execution-cost model.",
+    "lines": [
       {
-        id: "exc-hire",
-        label: "Excavator hire allocation",
-        category: "plant",
-        quantity: 1 / 180,
-        unit: "day",
-        unitRate: 250000,
-        note: "₦250,000/day ÷ 180 m³/day.",
+        "id": "exc-hire",
+        "label": "Excavator hire allocation",
+        "category": "plant",
+        "quantity": 0.005555555555555556,
+        "unit": "day",
+        "unitRate": 250000,
+        "note": "₦250,000/day ÷ 180 m³/day."
       },
       {
-        id: "exc-diesel",
-        label: "Excavator diesel",
-        category: "plant",
-        quantity: 80 / 180,
-        unit: "L",
-        unitRate: 2000,
-        note: "80 L/day ÷ 180 m³/day.",
+        "id": "exc-diesel",
+        "label": "Excavator diesel",
+        "category": "plant",
+        "quantity": 0.4444444444444444,
+        "unit": "L",
+        "unitRate": 2000,
+        "note": "80 L/day ÷ 180 m³/day."
       },
       {
-        id: "exc-mob",
-        label: "Mobilisation / demobilisation allocation",
-        category: "logistics",
-        quantity: 1,
-        unit: "m³",
-        unitRate: 408.3561020036425,
-        note: "Shared plant logistics allocated across productive excavation volume.",
+        "id": "exc-mob",
+        "label": "Mobilisation / demobilisation allocation",
+        "category": "logistics",
+        "quantity": 1,
+        "unit": "m³",
+        "unitRate": 408.356102,
+        "note": "Shared plant logistics allocation."
       },
       {
-        id: "exc-dress",
-        label: "Manual trimming and dressing",
-        category: "labour",
-        quantity: 1,
-        unit: "m³",
-        unitRate: 133.33333333333331,
-        note: "Manual support retained separately from bulk machine excavation.",
-      },
+        "id": "exc-dress",
+        "label": "Manual trimming and dressing",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m³",
+        "unitRate": 133.333333,
+        "note": "Manual support to bulk excavation."
+      }
     ],
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    }
   },
   {
-    slug: "c25-structural-concrete-310kg",
-    code: "RB-CO-001",
-    title: "C25 structural concrete — site mixed",
-    shortTitle: "C25 structural concrete",
-    section: "Concrete",
-    unit: "m³",
-    countryCode: "NG",
-    country: "Nigeria",
-    region: "Abuja / Nasarawa",
-    city: "Abuja–Keffi market",
-    currency: "NGN",
-    specification:
-      "C25 structural concrete with minimum cement content 310 kg/m³. Reinforcement and formwork are excluded.",
-    methodologyNote:
-      "The public pilot uses 310 kg/m³ minimum cement, plus a 3% cement/batching allowance. Sand and granite quantities are working factors and must be replaced by an approved mix design where one is available.",
-    sourceNote:
-      "Specification basis from the final FMC Keffi execution BOQ; material, labour and plant inputs reconstructed from the reviewed execution model.",
-    lastReviewed: "2026-09-26",
-    status: "pilot",
-    allowances: {
-      materialFluctuation: 0.05,
-      labourFluctuation: 0.015,
-      plantFluctuation: 0,
-      risk: 0.05,
-      op: 0,
-    },
-    lines: [
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "slug": "manual-trench-excavation",
+    "code": "RB-EW-002",
+    "title": "Manual excavation to foundation trenches",
+    "shortTitle": "Manual trench excavation",
+    "section": "Earthworks",
+    "unit": "m³",
+    "status": "review",
+    "specification": "Excavate normal soil by hand to foundation trenches not exceeding about 1.0 m depth; trim sides and bottoms. Disposal excluded.",
+    "methodologyNote": "Labour-only rate carried from the uploaded residential calculation workbook and intentionally marked for current trade-rate review.",
+    "sourceNote": "2-bedroom material & labour BOQ guide.",
+    "lines": [
       {
-        id: "c25-cement",
-        label: "50 kg cement — 310 kg/m³ + 3% batching allowance",
-        category: "material",
-        quantity: 6.386,
-        unit: "bag",
-        unitRate: 12000,
-        note: "6.2 bags theoretical minimum × 1.03 batching allowance.",
-      },
-      {
-        id: "c25-sand",
-        label: "Sharp sand",
-        category: "material",
-        quantity: 0.43028,
-        unit: "m³",
-        unitRate: 14400,
-        note: "Working factor; editable where approved mix design gives a different quantity.",
-      },
-      {
-        id: "c25-granite",
-        label: "Granite / coarse aggregate",
-        category: "material",
-        quantity: 0.86056,
-        unit: "m³",
-        unitRate: 27000,
-        note: "Working factor; editable where approved mix design gives a different quantity.",
-      },
-      {
-        id: "c25-labour",
-        label: "Concrete gang labour",
-        category: "labour",
-        quantity: 1 / 8,
-        unit: "gang-day",
-        unitRate: 89000,
-        note: "1 concrete mason + 6 labourers; working output 8 m³/day.",
-      },
-      {
-        id: "c25-plant",
-        label: "Mixer, vibrator and small-plant allocation",
-        category: "plant",
-        quantity: 1,
-        unit: "m³",
-        unitRate: 2769,
-        note: "Working plant allocation from reviewed execution model.",
-      },
+        "id": "manual-exc",
+        "label": "Excavation labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m³",
+        "unitRate": 4500,
+        "note": "Editable guide rate per cubic metre."
+      }
     ],
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    }
   },
   {
-    slug: "high-yield-reinforcement-supply-fix",
-    code: "RB-RF-001",
-    title: "High-yield reinforcement — supply, cut, bend and fix",
-    shortTitle: "Reinforcement supply & fix",
-    section: "Reinforcement",
-    unit: "t",
-    countryCode: "NG",
-    country: "Nigeria",
-    region: "Abuja / Nasarawa",
-    city: "Abuja–Keffi market",
-    currency: "NGN",
-    specification:
-      "High-yield reinforcement measured by theoretical tonne, including 3% cutting/waste, binding/cutting consumables and fixing labour.",
-    methodologyNote:
-      "Lap allowance is not hidden in this pilot rate. Where the measured steel quantity excludes laps, the visitor can add a separate lap percentage in their own calculation.",
-    sourceNote:
-      "Reconstructed from the final FMC Keffi reinforcement procurement, waste, consumables and fixing-labour basis.",
-    lastReviewed: "2026-09-26",
-    status: "pilot",
-    allowances: {
-      materialFluctuation: 0.05,
-      labourFluctuation: 0.015,
-      plantFluctuation: 0,
-      risk: 0.05,
-      op: 0,
-    },
-    lines: [
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "slug": "backfill-excavated-material",
+    "code": "RB-EW-003",
+    "title": "Backfill with suitable excavated material and compact",
+    "shortTitle": "Backfill & compact",
+    "section": "Earthworks",
+    "unit": "m³",
+    "status": "review",
+    "specification": "Return suitable excavated material to foundations in layers, spread, water as required and compact.",
+    "methodologyNote": "Separates labour spreading from light compaction instead of hiding both in one lump rate.",
+    "sourceNote": "Residential BOQ + FMC earthworks methodology.",
+    "lines": [
       {
-        id: "rebar-steel",
-        label: "High-yield TMT reinforcement incl. 3% cutting waste",
-        category: "material",
-        quantity: 1.03,
-        unit: "t",
-        unitRate: 1100000,
-        note: "1.00 t theoretical steel × 1.03 cutting/waste factor.",
+        "id": "backfill-lab",
+        "label": "Spreading / backfilling labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m³",
+        "unitRate": 1200,
+        "note": "Residential piecework guide."
       },
       {
-        id: "rebar-consumables",
-        label: "Binding wire / cutting consumables",
-        category: "consumable",
-        quantity: 1,
-        unit: "t",
-        unitRate: 23175,
-        note: "Working consumables allowance per theoretical tonne.",
-      },
-      {
-        id: "rebar-fix",
-        label: "Cutting, bending and fixing labour",
-        category: "labour",
-        quantity: 1,
-        unit: "t",
-        unitRate: 85000,
-        note: "Adopted tonne-based steel-fixing labour basis.",
-      },
+        "id": "backfill-comp",
+        "label": "Light compaction allocation",
+        "category": "plant",
+        "quantity": 1,
+        "unit": "m³",
+        "unitRate": 500,
+        "note": "Editable plate compactor / rammer allowance."
+      }
     ],
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    }
   },
   {
-    slug: "230mm-hollow-sandcrete-blockwork",
-    code: "RB-MA-001",
-    title: "230 mm hollow sandcrete blockwork in 1:6 mortar",
-    shortTitle: "230 mm hollow blockwork",
-    section: "Masonry",
-    unit: "m²",
-    countryCode: "NG",
-    country: "Nigeria",
-    region: "Abuja / Nasarawa",
-    city: "Abuja–Keffi market",
-    currency: "NGN",
-    specification:
-      "230 mm hollow sandcrete block wall, 10 blocks/m² working basis, 5% block breakage and 1:6 cement:sand mortar.",
-    methodologyNote:
-      "The block count, breakage, mortar consumption and labour are all exposed so visitors can replace them with their own block size, workmanship and site productivity.",
-    sourceNote:
-      "Reconstructed from the reviewed residential/FMC blockwork methodology and the final FMC execution-cost inputs.",
-    lastReviewed: "2026-09-26",
-    status: "pilot",
-    allowances: {
-      materialFluctuation: 0.05,
-      labourFluctuation: 0.015,
-      plantFluctuation: 0,
-      risk: 0.05,
-      op: 0,
-    },
-    lines: [
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "slug": "imported-laterite-fill",
+    "code": "RB-EW-004",
+    "title": "Imported laterite filling, spread and compact",
+    "shortTitle": "Imported laterite fill",
+    "section": "Earthworks",
+    "unit": "m³",
+    "status": "review",
+    "specification": "Approved laterite obtained off site, delivered, placed in layers and compacted.",
+    "methodologyNote": "Material quantity includes 10% handling/compaction allowance. Haul distance can materially change the rate.",
+    "sourceNote": "FMC/Central Park bulk-material benchmarks; supplier audit still required.",
+    "lines": [
       {
-        id: "block-units",
-        label: "230 mm hollow blocks incl. 5% breakage",
-        category: "material",
-        quantity: 10.5,
-        unit: "No.",
-        unitRate: 850,
-        note: "10 blocks/m² × 1.05 breakage factor.",
+        "id": "lat-mat",
+        "label": "Imported laterite incl. 10% allowance",
+        "category": "material",
+        "quantity": 1.1,
+        "unit": "m³",
+        "unitRate": 8000,
+        "note": "Working conversion from bulk tipper benchmark."
       },
       {
-        id: "block-cement",
-        label: "Cement for 1:6 mortar",
-        category: "material",
-        quantity: 0.08205,
-        unit: "bag",
-        unitRate: 12000,
-        note: "0.015 m³ wet mortar × 5.47 bags/m³.",
+        "id": "lat-lab",
+        "label": "Spreading labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m³",
+        "unitRate": 1200
       },
       {
-        id: "block-sand",
-        label: "Sharp sand for mortar",
-        category: "material",
-        quantity: 0.0171,
-        unit: "m³",
-        unitRate: 14400,
-        note: "0.015 m³ wet mortar × 1.14 m³ sand factor.",
-      },
-      {
-        id: "block-labour",
-        label: "Block laying labour",
-        category: "labour",
-        quantity: 1,
-        unit: "m²",
-        unitRate: 1000,
-        note: "Piecework basis; editable by user.",
-      },
+        "id": "lat-plant",
+        "label": "Light compaction",
+        "category": "plant",
+        "quantity": 1,
+        "unit": "m³",
+        "unitRate": 500
+      }
     ],
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    }
   },
   {
-    slug: "reusable-plywood-formwork",
-    code: "RB-FW-001",
-    title: "Reusable plywood formwork to vertical/horizontal surfaces",
-    shortTitle: "Reusable plywood formwork",
-    section: "Formwork",
-    unit: "m²",
-    countryCode: "NG",
-    country: "Nigeria",
-    region: "Abuja / Nasarawa",
-    city: "Abuja–Keffi market",
-    currency: "NGN",
-    specification:
-      "18 mm reusable plywood formwork, working basis of five reuse cycles, including timber/nails/release sundries and carpentry labour.",
-    methodologyNote:
-      "The plywood reuse factor is explicit. Users can change plywood price, reuse cycles indirectly through the allocated sheet quantity, sundries and labour.",
-    sourceNote:
-      "Reconstructed from the final FMC Keffi formwork master-rate methodology.",
-    lastReviewed: "2026-09-26",
-    status: "pilot",
-    allowances: {
-      materialFluctuation: 0.05,
-      labourFluctuation: 0.015,
-      plantFluctuation: 0,
-      risk: 0.05,
-      op: 0,
-    },
-    lines: [
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "slug": "hardcore-fill-compacted",
+    "code": "RB-EW-005",
+    "title": "Hardcore filling, spread and compact",
+    "shortTitle": "Hardcore filling",
+    "section": "Earthworks",
+    "unit": "m³",
+    "status": "pilot",
+    "specification": "Hardcore obtained off site, spread to make up levels and compacted in layers.",
+    "methodologyNote": "Uses 10% quantity allowance over compacted volume. Material and placing/compaction remain editable separately.",
+    "sourceNote": "FMC final execution model + Central Park material benchmark.",
+    "lines": [
       {
-        id: "form-ply",
-        label: "18 mm plywood allocation — 5 reuse cycles",
-        category: "material",
-        quantity: 1 / (2.9768 * 5),
-        unit: "sheet",
-        unitRate: 39000,
-        note: "1.22 × 2.44 m sheet = 2.9768 m²; allocated over five uses.",
+        "id": "hc-mat",
+        "label": "Hardcore incl. 10% quantity allowance",
+        "category": "material",
+        "quantity": 1.1,
+        "unit": "m³",
+        "unitRate": 22500,
+        "note": "Working conversion from 30t bulk supply."
       },
       {
-        id: "form-sundries",
-        label: "Timber, nails, release agent and sundries",
-        category: "consumable",
-        quantity: 1,
-        unit: "m²",
-        unitRate: 2500,
-        note: "Editable working allowance.",
+        "id": "hc-lab",
+        "label": "Spreading labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m³",
+        "unitRate": 1200
       },
       {
-        id: "form-labour",
-        label: "Formwork carpentry labour",
-        category: "labour",
-        quantity: 1,
-        unit: "m²",
-        unitRate: 2000,
-        note: "Editable working allowance.",
-      },
+        "id": "hc-plant",
+        "label": "Compaction allocation",
+        "category": "plant",
+        "quantity": 1,
+        "unit": "m³",
+        "unitRate": 500
+      }
     ],
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    }
   },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "slug": "sharp-sand-blinding",
+    "code": "RB-EW-006",
+    "title": "Sharp sand filling / blinding",
+    "shortTitle": "Sharp sand blinding",
+    "section": "Earthworks",
+    "unit": "m³",
+    "status": "review",
+    "specification": "Sharp sand supplied, spread to required level and lightly compacted.",
+    "methodologyNote": "Allows 10% for loose-to-placed quantity. Delivery basis should be changed to the actual site market.",
+    "sourceNote": "Residential BOQ and FMC aggregate benchmark.",
+    "lines": [
+      {
+        "id": "sandfill-mat",
+        "label": "Sharp sand incl. 10% allowance",
+        "category": "material",
+        "quantity": 1.1,
+        "unit": "m³",
+        "unitRate": 14400
+      },
+      {
+        "id": "sandfill-lab",
+        "label": "Spreading labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m³",
+        "unitRate": 1200
+      }
+    ],
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    }
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "slug": "dpm-1000-gauge",
+    "code": "RB-EW-007",
+    "title": "1000 gauge damp-proof membrane laid to floor",
+    "shortTitle": "DPM membrane",
+    "section": "Earthworks",
+    "unit": "m²",
+    "status": "review",
+    "specification": "1000 gauge polythene DPM laid over prepared floor filling with laps and local cutting allowance.",
+    "methodologyNote": "Material is expressed by weight using the recent project procurement basis. Replace with roll coverage where supplier packaging is known.",
+    "sourceNote": "Central Park material schedule + residential DPM take-off.",
+    "lines": [
+      {
+        "id": "dpm-mat",
+        "label": "DPM material allowance",
+        "category": "material",
+        "quantity": 0.2,
+        "unit": "kg",
+        "unitRate": 2000,
+        "note": "Approx. 0.20 kg/m² working allowance."
+      },
+      {
+        "id": "dpm-lab",
+        "label": "Laying / laps labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 100
+      }
+    ],
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    }
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "slug": "brc-mesh-a142-laid",
+    "code": "RB-RF-002",
+    "title": "A142 BRC mesh reinforcement supplied and laid",
+    "shortTitle": "A142 mesh supply & lay",
+    "section": "Reinforcement",
+    "unit": "m²",
+    "status": "pilot",
+    "specification": "A142 welded mesh, 2.4 x 4.8 m sheet, including 5% lap/cutting allowance and laying labour.",
+    "methodologyNote": "Sheet coverage and overlap are explicit so users can edit lap conditions and supplier sheet price.",
+    "sourceNote": "Central Park BRC rate + residential sheet coverage methodology.",
+    "lines": [
+      {
+        "id": "brc-sheet",
+        "label": "A142 mesh incl. 5% lap/cutting",
+        "category": "material",
+        "quantity": 0.09114583333333333,
+        "unit": "sheet",
+        "unitRate": 44000,
+        "note": "2.4 × 4.8 m sheet."
+      },
+      {
+        "id": "brc-lab",
+        "label": "Laying / tying labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 150
+      }
+    ],
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    }
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "slug": "c15-blinding-1-3-6",
+    "code": "RB-CO-002",
+    "title": "C15 / nominal 1:3:6 concrete blinding",
+    "shortTitle": "C15 concrete blinding",
+    "section": "Concrete",
+    "unit": "m³",
+    "status": "pilot",
+    "specification": "Nominal 1:3:6 site-mixed plain concrete using 20 mm aggregate; reinforcement and formwork excluded.",
+    "methodologyNote": "Uses a 1.54 dry-volume factor and 3% cement batching allowance rather than a fixed historic bags-per-m³ shortcut.",
+    "sourceNote": "Standard nominal-mix build-up aligned to FMC concrete inputs.",
+    "lines": [
+      {
+        "id": "c15-cem",
+        "label": "50 kg cement incl. 3% batching allowance",
+        "category": "material",
+        "quantity": 4.568,
+        "unit": "bag",
+        "unitRate": 12000,
+        "note": "1.54 dry factor for 1:3:6 mix."
+      },
+      {
+        "id": "c15-sand",
+        "label": "Sharp sand",
+        "category": "material",
+        "quantity": 0.462,
+        "unit": "m³",
+        "unitRate": 14400
+      },
+      {
+        "id": "c15-gran",
+        "label": "Granite / coarse aggregate",
+        "category": "material",
+        "quantity": 0.924,
+        "unit": "m³",
+        "unitRate": 27000
+      },
+      {
+        "id": "c15-lab",
+        "label": "Concrete gang labour",
+        "category": "labour",
+        "quantity": 0.125,
+        "unit": "gang-day",
+        "unitRate": 89000
+      },
+      {
+        "id": "c15-plant",
+        "label": "Mixer / small plant",
+        "category": "plant",
+        "quantity": 1,
+        "unit": "m³",
+        "unitRate": 2769
+      }
+    ],
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    }
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "slug": "c20-nominal-concrete-1-2-4",
+    "code": "RB-CO-003",
+    "title": "C20 nominal 1:2:4 site-mixed concrete",
+    "shortTitle": "C20 site-mixed concrete",
+    "section": "Concrete",
+    "unit": "m³",
+    "status": "review",
+    "specification": "Nominal 1:2:4 site-mixed concrete for non-designed applications where permitted by the specification.",
+    "methodologyNote": "Uses a 1.54 dry-volume factor and 3% batching allowance. Do not substitute for a designed mix where design concrete is required.",
+    "sourceNote": "Residential 1:2:4 methodology normalized to standard volumetric build-up.",
+    "lines": [
+      {
+        "id": "c20-cem",
+        "label": "50 kg cement incl. 3% batching allowance",
+        "category": "material",
+        "quantity": 6.525,
+        "unit": "bag",
+        "unitRate": 12000
+      },
+      {
+        "id": "c20-sand",
+        "label": "Sharp sand",
+        "category": "material",
+        "quantity": 0.44,
+        "unit": "m³",
+        "unitRate": 14400
+      },
+      {
+        "id": "c20-gran",
+        "label": "Granite / coarse aggregate",
+        "category": "material",
+        "quantity": 0.88,
+        "unit": "m³",
+        "unitRate": 27000
+      },
+      {
+        "id": "c20-lab",
+        "label": "Concrete gang labour",
+        "category": "labour",
+        "quantity": 0.125,
+        "unit": "gang-day",
+        "unitRate": 89000
+      },
+      {
+        "id": "c20-plant",
+        "label": "Mixer / vibrator / small plant",
+        "category": "plant",
+        "quantity": 1,
+        "unit": "m³",
+        "unitRate": 2769
+      }
+    ],
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    }
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "slug": "c25-structural-concrete-310kg",
+    "code": "RB-CO-001",
+    "title": "C25 structural concrete — site mixed",
+    "shortTitle": "C25 structural concrete",
+    "section": "Concrete",
+    "unit": "m³",
+    "status": "pilot",
+    "specification": "C25 structural concrete with minimum cement content 310 kg/m³. Reinforcement and formwork excluded.",
+    "methodologyNote": "Uses 310 kg/m³ minimum cement plus 3% batching allowance. Sand/granite factors remain editable pending approved mix design.",
+    "sourceNote": "Final FMC Keffi execution BOQ + reviewed execution model.",
+    "lines": [
+      {
+        "id": "c25-cement",
+        "label": "50 kg cement — 310 kg/m³ + 3% batching allowance",
+        "category": "material",
+        "quantity": 6.386,
+        "unit": "bag",
+        "unitRate": 12000,
+        "note": "6.2 bags theoretical minimum × 1.03."
+      },
+      {
+        "id": "c25-sand",
+        "label": "Sharp sand",
+        "category": "material",
+        "quantity": 0.43028,
+        "unit": "m³",
+        "unitRate": 14400
+      },
+      {
+        "id": "c25-granite",
+        "label": "Granite / coarse aggregate",
+        "category": "material",
+        "quantity": 0.86056,
+        "unit": "m³",
+        "unitRate": 27000
+      },
+      {
+        "id": "c25-labour",
+        "label": "Concrete gang labour",
+        "category": "labour",
+        "quantity": 0.125,
+        "unit": "gang-day",
+        "unitRate": 89000,
+        "note": "1 mason + 6 labourers at 8 m³/day."
+      },
+      {
+        "id": "c25-plant",
+        "label": "Mixer, vibrator and small-plant allocation",
+        "category": "plant",
+        "quantity": 1,
+        "unit": "m³",
+        "unitRate": 2769
+      }
+    ],
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    }
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "slug": "high-yield-reinforcement-supply-fix",
+    "code": "RB-RF-001",
+    "title": "High-yield reinforcement — supply, cut, bend and fix",
+    "shortTitle": "Reinforcement supply & fix",
+    "section": "Reinforcement",
+    "unit": "t",
+    "status": "pilot",
+    "specification": "High-yield reinforcement by theoretical tonne, including 3% cutting/waste, binding/cutting consumables and fixing labour.",
+    "methodologyNote": "Lap allowance is not hidden. Add lap separately where measured steel excludes it.",
+    "sourceNote": "Final FMC Keffi reinforcement procurement and fixing basis.",
+    "lines": [
+      {
+        "id": "rebar-steel",
+        "label": "High-yield TMT reinforcement incl. 3% cutting waste",
+        "category": "material",
+        "quantity": 1.03,
+        "unit": "t",
+        "unitRate": 1100000
+      },
+      {
+        "id": "rebar-consumables",
+        "label": "Binding wire / cutting consumables",
+        "category": "consumable",
+        "quantity": 1,
+        "unit": "t",
+        "unitRate": 23175
+      },
+      {
+        "id": "rebar-fix",
+        "label": "Cutting, bending and fixing labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "t",
+        "unitRate": 85000
+      }
+    ],
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    }
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "slug": "230mm-hollow-sandcrete-blockwork",
+    "code": "RB-MA-001",
+    "title": "230 mm hollow sandcrete blockwork in 1:6 mortar",
+    "shortTitle": "230 mm hollow blockwork",
+    "section": "Masonry",
+    "unit": "m²",
+    "status": "pilot",
+    "specification": "230 mm hollow sandcrete block wall, 10 blocks/m² working basis, 5% block breakage and 1:6 mortar.",
+    "methodologyNote": "Block count, breakage, mortar and labour are all exposed.",
+    "sourceNote": "Residential/FMC blockwork methodology.",
+    "lines": [
+      {
+        "id": "block225",
+        "label": "230 mm hollow blocks incl. 5% breakage",
+        "category": "material",
+        "quantity": 10.5,
+        "unit": "No.",
+        "unitRate": 850
+      },
+      {
+        "id": "block225-cem",
+        "label": "Cement for 1:6 mortar",
+        "category": "material",
+        "quantity": 0.08205,
+        "unit": "bag",
+        "unitRate": 12000
+      },
+      {
+        "id": "block225-sand",
+        "label": "Sharp sand for mortar",
+        "category": "material",
+        "quantity": 0.0171,
+        "unit": "m³",
+        "unitRate": 14400
+      },
+      {
+        "id": "block225-lab",
+        "label": "Block laying labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 1000
+      }
+    ],
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    }
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "slug": "150mm-hollow-sandcrete-blockwork",
+    "code": "RB-MA-002",
+    "title": "150 mm hollow sandcrete blockwork in mortar",
+    "shortTitle": "150 mm hollow blockwork",
+    "section": "Masonry",
+    "unit": "m²",
+    "status": "review",
+    "specification": "150 mm hollow sandcrete wall, 10 blocks/m² working basis, 5% breakage and cement:sand mortar.",
+    "methodologyNote": "150 mm block price remains a provisional editable input pending the wider supplier-price audit.",
+    "sourceNote": "Residential BOQ geometry; price input deliberately flagged for review.",
+    "lines": [
+      {
+        "id": "block150",
+        "label": "150 mm hollow blocks incl. 5% breakage",
+        "category": "material",
+        "quantity": 10.5,
+        "unit": "No.",
+        "unitRate": 750,
+        "note": "Provisional editable block price."
+      },
+      {
+        "id": "block150-cem",
+        "label": "Cement for mortar",
+        "category": "material",
+        "quantity": 0.0656,
+        "unit": "bag",
+        "unitRate": 12000
+      },
+      {
+        "id": "block150-sand",
+        "label": "Sharp sand for mortar",
+        "category": "material",
+        "quantity": 0.0137,
+        "unit": "m³",
+        "unitRate": 14400
+      },
+      {
+        "id": "block150-lab",
+        "label": "Block laying labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 1000
+      }
+    ],
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    }
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "slug": "15mm-cement-sand-plaster",
+    "code": "RB-FN-001",
+    "title": "15 mm cement-sand plaster/render to blockwork",
+    "shortTitle": "15 mm wall plaster",
+    "section": "Finishes",
+    "unit": "m²",
+    "status": "pilot",
+    "specification": "15 mm average cement-sand plaster/render, floated finish, including material wastage and application labour.",
+    "methodologyNote": "Resource quantities are normalized from the uploaded residential BOQ and current cement/sand inputs.",
+    "sourceNote": "2-bedroom BOQ material consumption + FMC plaster labour benchmark.",
+    "lines": [
+      {
+        "id": "plaster-cem",
+        "label": "Cement",
+        "category": "material",
+        "quantity": 0.15,
+        "unit": "bag",
+        "unitRate": 12000
+      },
+      {
+        "id": "plaster-sand",
+        "label": "Plaster/sharp sand",
+        "category": "material",
+        "quantity": 0.035,
+        "unit": "m³",
+        "unitRate": 14400
+      },
+      {
+        "id": "plaster-lab",
+        "label": "Plaster/render labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 900
+      }
+    ],
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    }
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "slug": "20mm-wall-tile-backing",
+    "code": "RB-FN-002",
+    "title": "20 mm cement-sand backing to receive wall tiles",
+    "shortTitle": "Wall tile backing",
+    "section": "Finishes",
+    "unit": "m²",
+    "status": "review",
+    "specification": "20 mm cement-sand backing/screed to wall surfaces ready to receive tiles.",
+    "methodologyNote": "Cement and sand quantities follow the residential BOQ formula and remain editable.",
+    "sourceNote": "2-bedroom material & labour BOQ guide.",
+    "lines": [
+      {
+        "id": "wallback-cem",
+        "label": "Cement",
+        "category": "material",
+        "quantity": 0.185,
+        "unit": "bag",
+        "unitRate": 12000
+      },
+      {
+        "id": "wallback-sand",
+        "label": "Sharp sand",
+        "category": "material",
+        "quantity": 0.0395,
+        "unit": "m³",
+        "unitRate": 14400
+      },
+      {
+        "id": "wallback-lab",
+        "label": "Backing/screed labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 900
+      }
+    ],
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    }
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "slug": "30mm-floor-screed",
+    "code": "RB-FN-003",
+    "title": "30 mm cement-sand floor screed",
+    "shortTitle": "30 mm floor screed",
+    "section": "Finishes",
+    "unit": "m²",
+    "status": "review",
+    "specification": "30 mm average cement-sand floor screed to receive tiles or other finishes.",
+    "methodologyNote": "Material quantities are doubled from the 15–20 mm residential backing basis and exposed for editing.",
+    "sourceNote": "2-bedroom material & labour BOQ guide.",
+    "lines": [
+      {
+        "id": "floorscreed-cem",
+        "label": "Cement",
+        "category": "material",
+        "quantity": 0.37,
+        "unit": "bag",
+        "unitRate": 12000
+      },
+      {
+        "id": "floorscreed-sand",
+        "label": "Sharp sand",
+        "category": "material",
+        "quantity": 0.079,
+        "unit": "m³",
+        "unitRate": 14400
+      },
+      {
+        "id": "floorscreed-lab",
+        "label": "Screeding labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 900
+      }
+    ],
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    }
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "slug": "600x600-floor-tiling",
+    "code": "RB-FN-004",
+    "title": "600 x 600 porcelain floor tiling",
+    "shortTitle": "600×600 floor tiling",
+    "section": "Finishes",
+    "unit": "m²",
+    "status": "review",
+    "specification": "Supply and lay 600 x 600 porcelain floor tiles on prepared screed, including 15% cutting/waste, adhesive, spacers/grout allowance and laying labour.",
+    "methodologyNote": "Tile and adhesive inputs are separated so product choice can be changed without rewriting the rate.",
+    "sourceNote": "FMC tile benchmark + residential material consumption; adhesive input from recent Abuja project pricing.",
+    "lines": [
+      {
+        "id": "floortile-tile",
+        "label": "600×600 floor tile incl. 15% waste",
+        "category": "material",
+        "quantity": 1.15,
+        "unit": "m²",
+        "unitRate": 10500
+      },
+      {
+        "id": "floortile-adh",
+        "label": "20 kg tile adhesive",
+        "category": "material",
+        "quantity": 0.2222222222222222,
+        "unit": "bag",
+        "unitRate": 22500
+      },
+      {
+        "id": "floortile-acc",
+        "label": "Spacers / grout / minor accessories",
+        "category": "consumable",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 350
+      },
+      {
+        "id": "floortile-lab",
+        "label": "Tile laying labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 3000
+      }
+    ],
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    }
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "slug": "600x300-wall-tiling",
+    "code": "RB-FN-005",
+    "title": "600 x 300 porcelain wall tiling",
+    "shortTitle": "600×300 wall tiling",
+    "section": "Finishes",
+    "unit": "m²",
+    "status": "review",
+    "specification": "Supply and fix 600 x 300 wall tiles on prepared backing, including 15% cutting/waste, adhesive, spacers/trims allowance and labour.",
+    "methodologyNote": "Backing/screed is measured separately; this rate covers the tile finish itself.",
+    "sourceNote": "FMC wall-tile benchmark + residential consumption guide.",
+    "lines": [
+      {
+        "id": "walltile-tile",
+        "label": "600×300 wall tile incl. 15% waste",
+        "category": "material",
+        "quantity": 1.15,
+        "unit": "m²",
+        "unitRate": 7500
+      },
+      {
+        "id": "walltile-adh",
+        "label": "20 kg tile adhesive",
+        "category": "material",
+        "quantity": 0.25,
+        "unit": "bag",
+        "unitRate": 22500
+      },
+      {
+        "id": "walltile-acc",
+        "label": "Spacers / trim / grout allowance",
+        "category": "consumable",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 500
+      },
+      {
+        "id": "walltile-lab",
+        "label": "Wall tile laying labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 3000
+      }
+    ],
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    }
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "slug": "three-coat-emulsion-paint",
+    "code": "RB-FN-006",
+    "title": "Three-coat emulsion paint to prepared wall",
+    "shortTitle": "3-coat emulsion painting",
+    "section": "Finishes",
+    "unit": "m²",
+    "status": "review",
+    "specification": "Prepare and apply three coats of approved emulsion paint to prepared plastered/screeded wall.",
+    "methodologyNote": "Paint consumption follows the residential workbook coverage logic; preparation level and product coverage remain editable.",
+    "sourceNote": "FMC paint pail benchmark + residential 3-coat consumption.",
+    "lines": [
+      {
+        "id": "paint-emul",
+        "label": "20 L emulsion paint",
+        "category": "material",
+        "quantity": 0.01875,
+        "unit": "pail",
+        "unitRate": 99437.5,
+        "note": "3 coats at 8 m²/L working coverage."
+      },
+      {
+        "id": "paint-sund",
+        "label": "Rollers, masking, fillers and sundries",
+        "category": "consumable",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 150
+      },
+      {
+        "id": "paint-lab",
+        "label": "Painting labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 650
+      }
+    ],
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    }
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "slug": "timber-formwork-foundation-sides",
+    "code": "RB-FW-001",
+    "title": "Traditional timber formwork to foundation / slab edges",
+    "shortTitle": "Foundation edge formwork",
+    "section": "Formwork",
+    "unit": "m²",
+    "status": "pilot",
+    "specification": "Traditional timber formwork to low foundation and slab-edge faces using reusable sawn plank, 2x2 and 2x3 timber, nails, release agent and carpentry labour.",
+    "methodologyNote": "This low-height formwork intentionally uses plank/timber rather than pretending every formwork application is the same plywood system.",
+    "sourceNote": "2-bedroom/KMSTEEL timber take-offs + Central Park timber/nail rates.",
+    "lines": [
+      {
+        "id": "fwf-plank",
+        "label": "1x12 sawn plank allocation",
+        "category": "material",
+        "quantity": 0.18,
+        "unit": "length",
+        "unitRate": 3000,
+        "note": "Reusable traditional facing board."
+      },
+      {
+        "id": "fwf-2x3",
+        "label": "2x3 timber framing",
+        "category": "material",
+        "quantity": 0.25,
+        "unit": "length",
+        "unitRate": 1800
+      },
+      {
+        "id": "fwf-2x2",
+        "label": "2x2 timber bracing",
+        "category": "material",
+        "quantity": 0.2,
+        "unit": "length",
+        "unitRate": 1000
+      },
+      {
+        "id": "fwf-nail",
+        "label": "2–3 inch nails",
+        "category": "consumable",
+        "quantity": 0.008,
+        "unit": "bag",
+        "unitRate": 27000
+      },
+      {
+        "id": "fwf-release",
+        "label": "Release agent / small sundries",
+        "category": "consumable",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 250
+      },
+      {
+        "id": "fwf-carp",
+        "label": "Formwork carpenter",
+        "category": "labour",
+        "quantity": 0.12,
+        "unit": "day",
+        "unitRate": 15000
+      },
+      {
+        "id": "fwf-help",
+        "label": "Carpenter helper / labourer",
+        "category": "labour",
+        "quantity": 0.12,
+        "unit": "day",
+        "unitRate": 8000
+      }
+    ],
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    }
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "slug": "plywood-formwork-columns",
+    "code": "RB-FW-002",
+    "title": "Plywood formwork to reinforced concrete columns",
+    "shortTitle": "Column formwork",
+    "section": "Formwork",
+    "unit": "m²",
+    "status": "pilot",
+    "specification": "18 mm reusable plywood column formwork with 2x2/2x3 framing, 2x6 walers, nails, release agent and fixing/striking labour.",
+    "methodologyNote": "Each timber component is separated. Plywood is allocated over five reuse cycles; user can edit quantities to match column size and reuse plan.",
+    "sourceNote": "FMC plywood/reuse basis + 2-bedroom/KMSTEEL timber methodology; timber market inputs refreshed from recent Abuja references.",
+    "lines": [
+      {
+        "id": "fwc-ply",
+        "label": "18 mm plywood allocation — 5 reuse cycles",
+        "category": "material",
+        "quantity": 0.06718624025799516,
+        "unit": "sheet",
+        "unitRate": 39000
+      },
+      {
+        "id": "fwc-2x3",
+        "label": "2x3 vertical studs",
+        "category": "material",
+        "quantity": 0.3,
+        "unit": "length",
+        "unitRate": 1800
+      },
+      {
+        "id": "fwc-2x2",
+        "label": "2x2 braces / cleats",
+        "category": "material",
+        "quantity": 0.3,
+        "unit": "length",
+        "unitRate": 1000
+      },
+      {
+        "id": "fwc-2x6",
+        "label": "2x6 walers / strongbacks",
+        "category": "material",
+        "quantity": 0.15,
+        "unit": "length",
+        "unitRate": 2500,
+        "note": "Editable Abuja working input."
+      },
+      {
+        "id": "fwc-nail",
+        "label": "2–3 inch nails",
+        "category": "consumable",
+        "quantity": 0.008,
+        "unit": "bag",
+        "unitRate": 27000
+      },
+      {
+        "id": "fwc-release",
+        "label": "Release agent / tie sundries",
+        "category": "consumable",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 250
+      },
+      {
+        "id": "fwc-carp",
+        "label": "Formwork carpenter",
+        "category": "labour",
+        "quantity": 0.18,
+        "unit": "day",
+        "unitRate": 15000
+      },
+      {
+        "id": "fwc-help",
+        "label": "Carpenter helper / labourer",
+        "category": "labour",
+        "quantity": 0.18,
+        "unit": "day",
+        "unitRate": 8000
+      }
+    ],
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    }
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "slug": "plywood-formwork-beams-lintels",
+    "code": "RB-FW-003",
+    "title": "Plywood formwork to beams and lintels",
+    "shortTitle": "Beam / lintel formwork",
+    "section": "Formwork",
+    "unit": "m²",
+    "status": "pilot",
+    "specification": "Beam/lintel formwork with reusable plywood, 2x2 and 2x3 timber, 2x6 bearers, Peri/H20 beam support allowance, nails, release agent and labour.",
+    "methodologyNote": "Beam sides and soffits need a stronger support system than simple wall/edge shuttering, so 2x6 and Peri/H20 support are visible inputs.",
+    "sourceNote": "2-bedroom/KMSTEEL formwork logic + FMC plywood basis + current Abuja timber/Peri working observations.",
+    "lines": [
+      {
+        "id": "fwb-ply",
+        "label": "18 mm plywood allocation — 5 reuse cycles",
+        "category": "material",
+        "quantity": 0.06718624025799516,
+        "unit": "sheet",
+        "unitRate": 39000
+      },
+      {
+        "id": "fwb-2x3",
+        "label": "2x3 studs / runners",
+        "category": "material",
+        "quantity": 0.35,
+        "unit": "length",
+        "unitRate": 1800
+      },
+      {
+        "id": "fwb-2x2",
+        "label": "2x2 cleats / bracing",
+        "category": "material",
+        "quantity": 0.25,
+        "unit": "length",
+        "unitRate": 1000
+      },
+      {
+        "id": "fwb-2x6",
+        "label": "2x6 bearers",
+        "category": "material",
+        "quantity": 0.2,
+        "unit": "length",
+        "unitRate": 2500
+      },
+      {
+        "id": "fwb-peri",
+        "label": "Peri / Doka H20 beam allocation",
+        "category": "material",
+        "quantity": 0.05,
+        "unit": "No.",
+        "unitRate": 15000,
+        "note": "Working purchase-equivalent allocation; edit for rental or reuse."
+      },
+      {
+        "id": "fwb-nail",
+        "label": "2–3 inch nails",
+        "category": "consumable",
+        "quantity": 0.008,
+        "unit": "bag",
+        "unitRate": 27000
+      },
+      {
+        "id": "fwb-release",
+        "label": "Release agent / tie sundries",
+        "category": "consumable",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 250
+      },
+      {
+        "id": "fwb-carp",
+        "label": "Formwork carpenter",
+        "category": "labour",
+        "quantity": 0.2,
+        "unit": "day",
+        "unitRate": 15000
+      },
+      {
+        "id": "fwb-help",
+        "label": "Carpenter helper / labourer",
+        "category": "labour",
+        "quantity": 0.2,
+        "unit": "day",
+        "unitRate": 8000
+      }
+    ],
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    }
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "slug": "plywood-formwork-slab-soffit",
+    "code": "RB-FW-004",
+    "title": "Plywood formwork to suspended slab soffit",
+    "shortTitle": "Slab soffit formwork",
+    "section": "Formwork",
+    "unit": "m²",
+    "status": "pilot",
+    "specification": "Suspended slab formwork with reusable 18 mm plywood, 2x2/2x3 framing, 2x6 secondary bearers, Peri/H20 primary beams, nails, release agent and erection/striking labour.",
+    "methodologyNote": "This is deliberately more detailed than the former generic formwork rate. Prop/rental strategy can be represented by changing Peri/H20 quantity/rate or adding it within the support allowance.",
+    "sourceNote": "FMC reuse methodology + residential/KMSTEEL timber take-offs + current Abuja Peri/timber working observations.",
+    "lines": [
+      {
+        "id": "fws-ply",
+        "label": "18 mm plywood allocation — 5 reuse cycles",
+        "category": "material",
+        "quantity": 0.06718624025799516,
+        "unit": "sheet",
+        "unitRate": 39000
+      },
+      {
+        "id": "fws-2x3",
+        "label": "2x3 joists / runners",
+        "category": "material",
+        "quantity": 0.3,
+        "unit": "length",
+        "unitRate": 1800
+      },
+      {
+        "id": "fws-2x2",
+        "label": "2x2 noggins / bracing",
+        "category": "material",
+        "quantity": 0.25,
+        "unit": "length",
+        "unitRate": 1000
+      },
+      {
+        "id": "fws-2x6",
+        "label": "2x6 secondary bearers",
+        "category": "material",
+        "quantity": 0.25,
+        "unit": "length",
+        "unitRate": 2500
+      },
+      {
+        "id": "fws-peri",
+        "label": "Peri / Doka H20 primary beam allocation",
+        "category": "material",
+        "quantity": 0.08,
+        "unit": "No.",
+        "unitRate": 15000
+      },
+      {
+        "id": "fws-nail",
+        "label": "2–3 inch nails",
+        "category": "consumable",
+        "quantity": 0.01,
+        "unit": "bag",
+        "unitRate": 27000
+      },
+      {
+        "id": "fws-release",
+        "label": "Release agent / tie sundries",
+        "category": "consumable",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 250
+      },
+      {
+        "id": "fws-carp",
+        "label": "Formwork carpenter",
+        "category": "labour",
+        "quantity": 0.22,
+        "unit": "day",
+        "unitRate": 15000
+      },
+      {
+        "id": "fws-help",
+        "label": "Carpenter helper / labourer",
+        "category": "labour",
+        "quantity": 0.22,
+        "unit": "day",
+        "unitRate": 8000
+      }
+    ],
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    }
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "slug": "plywood-formwork-staircase",
+    "code": "RB-FW-005",
+    "title": "Plywood formwork to reinforced concrete staircase",
+    "shortTitle": "Staircase formwork",
+    "section": "Formwork",
+    "unit": "m²",
+    "status": "pilot",
+    "specification": "Stair/landing formwork with plywood facing, timber stringers/joists/bracing, 2x6/Peri support allowance, nails, release agent and higher-detail carpentry labour.",
+    "methodologyNote": "Stairs attract more cutting, setting-out and striking labour than flat soffits; the labour factor is therefore separately visible and editable.",
+    "sourceNote": "Residential staircase/formwork methodology normalized with current formwork inputs.",
+    "lines": [
+      {
+        "id": "fwst-ply",
+        "label": "18 mm plywood allocation — 5 reuse cycles",
+        "category": "material",
+        "quantity": 0.06718624025799516,
+        "unit": "sheet",
+        "unitRate": 39000
+      },
+      {
+        "id": "fwst-2x3",
+        "label": "2x3 framing / riser supports",
+        "category": "material",
+        "quantity": 0.35,
+        "unit": "length",
+        "unitRate": 1800
+      },
+      {
+        "id": "fwst-2x2",
+        "label": "2x2 cleats / bracing",
+        "category": "material",
+        "quantity": 0.3,
+        "unit": "length",
+        "unitRate": 1000
+      },
+      {
+        "id": "fwst-2x6",
+        "label": "2x6 stringer / bearer allowance",
+        "category": "material",
+        "quantity": 0.25,
+        "unit": "length",
+        "unitRate": 2500
+      },
+      {
+        "id": "fwst-peri",
+        "label": "Peri / H20 support allocation",
+        "category": "material",
+        "quantity": 0.04,
+        "unit": "No.",
+        "unitRate": 15000
+      },
+      {
+        "id": "fwst-nail",
+        "label": "2–3 inch nails",
+        "category": "consumable",
+        "quantity": 0.012,
+        "unit": "bag",
+        "unitRate": 27000
+      },
+      {
+        "id": "fwst-release",
+        "label": "Release agent / small sundries",
+        "category": "consumable",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 300
+      },
+      {
+        "id": "fwst-carp",
+        "label": "Formwork carpenter",
+        "category": "labour",
+        "quantity": 0.3,
+        "unit": "day",
+        "unitRate": 15000
+      },
+      {
+        "id": "fwst-help",
+        "label": "Carpenter helper / labourer",
+        "category": "labour",
+        "quantity": 0.3,
+        "unit": "day",
+        "unitRate": 8000
+      }
+    ],
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    }
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "slug": "aluminium-window-installation",
+    "code": "RB-JN-001",
+    "title": "Aluminium window installation and dressing",
+    "shortTitle": "Window installation",
+    "section": "Doors & Windows",
+    "unit": "No.",
+    "status": "review",
+    "specification": "Install and dress client-supplied aluminium window unit, including normal fixing labour and minor consumables; major making-good excluded.",
+    "methodologyNote": "Workmanship benchmark from the uploaded residential BOQ; window size and opening condition should be edited.",
+    "sourceNote": "2-bedroom labour BOQ guide.",
+    "lines": [
+      {
+        "id": "win-cons",
+        "label": "Fixings / silicone / minor consumables",
+        "category": "consumable",
+        "quantity": 1,
+        "unit": "No.",
+        "unitRate": 1500
+      },
+      {
+        "id": "win-lab",
+        "label": "Installation & dressing labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "No.",
+        "unitRate": 20000
+      }
+    ],
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    }
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "slug": "door-installation-dressing",
+    "code": "RB-JN-002",
+    "title": "Door installation and dressing",
+    "shortTitle": "Door installation",
+    "section": "Doors & Windows",
+    "unit": "No.",
+    "status": "review",
+    "specification": "Install and dress client-supplied door and frame, including normal fixing consumables and labour.",
+    "methodologyNote": "Door type, frame material, hardware and making-good can materially change the rate.",
+    "sourceNote": "2-bedroom labour BOQ guide.",
+    "lines": [
+      {
+        "id": "door-cons",
+        "label": "Fixings / foam / sealant / minor consumables",
+        "category": "consumable",
+        "quantity": 1,
+        "unit": "No.",
+        "unitRate": 2000
+      },
+      {
+        "id": "door-lab",
+        "label": "Door installation labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "No.",
+        "unitRate": 35000
+      }
+    ],
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    }
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "slug": "wc-wash-basin-fixing",
+    "code": "RB-ME-001",
+    "title": "Fix complete WC and wash-hand basin set",
+    "shortTitle": "WC + wash basin fixing",
+    "section": "Plumbing",
+    "unit": "set",
+    "status": "review",
+    "specification": "Fix client-supplied WC and wash-hand basin set to prepared points, including normal connection and testing labour. Major pipe rerouting excluded.",
+    "methodologyNote": "Workmanship benchmark only; pan connectors, traps, flexible connectors and specialist accessories should be added where not client supplied.",
+    "sourceNote": "2-bedroom M&E labour BOQ guide.",
+    "lines": [
+      {
+        "id": "wc-cons",
+        "label": "Minor fixing / sealant consumables",
+        "category": "consumable",
+        "quantity": 1,
+        "unit": "set",
+        "unitRate": 1500
+      },
+      {
+        "id": "wc-lab",
+        "label": "Plumber fixing labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "set",
+        "unitRate": 15000
+      }
+    ],
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    }
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "slug": "kitchen-sink-fixing",
+    "code": "RB-ME-002",
+    "title": "Fix kitchen sink and mixer to prepared points",
+    "shortTitle": "Kitchen sink fixing",
+    "section": "Plumbing",
+    "unit": "No.",
+    "status": "review",
+    "specification": "Fix client-supplied sink and mixer to prepared supply/waste points; normal connection and testing included.",
+    "methodologyNote": "Cabinet cutting, new pipe routes and specialist traps are excluded unless added by the user.",
+    "sourceNote": "2-bedroom M&E labour BOQ guide.",
+    "lines": [
+      {
+        "id": "sink-cons",
+        "label": "Minor connectors / sealant consumables",
+        "category": "consumable",
+        "quantity": 1,
+        "unit": "No.",
+        "unitRate": 1200
+      },
+      {
+        "id": "sink-lab",
+        "label": "Plumber fixing labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "No.",
+        "unitRate": 8000
+      }
+    ],
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    }
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "slug": "shower-control-fixing",
+    "code": "RB-ME-003",
+    "title": "Fix shower set and control",
+    "shortTitle": "Shower fitting",
+    "section": "Plumbing",
+    "unit": "No.",
+    "status": "review",
+    "specification": "Fix client-supplied shower head/rail and control to prepared plumbing points.",
+    "methodologyNote": "Concealed-body installation before tiling is a different activity and should be priced separately.",
+    "sourceNote": "2-bedroom M&E labour BOQ guide.",
+    "lines": [
+      {
+        "id": "shower-cons",
+        "label": "Minor connectors / sealant",
+        "category": "consumable",
+        "quantity": 1,
+        "unit": "No.",
+        "unitRate": 750
+      },
+      {
+        "id": "shower-lab",
+        "label": "Plumber fixing labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "No.",
+        "unitRate": 5000
+      }
+    ],
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    }
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "slug": "bathroom-mirror-fixing",
+    "code": "RB-ME-004",
+    "title": "Fix bathroom mirror",
+    "shortTitle": "Mirror fixing",
+    "section": "Finishes",
+    "unit": "No.",
+    "status": "review",
+    "specification": "Fix client-supplied bathroom mirror with normal mechanical/adhesive fixings to prepared wall.",
+    "methodologyNote": "Large frameless mirrors, cut-outs, concealed lighting and specialist brackets require separate adjustment.",
+    "sourceNote": "2-bedroom finishing labour BOQ guide.",
+    "lines": [
+      {
+        "id": "mirror-cons",
+        "label": "Fixings / adhesive / buffers",
+        "category": "consumable",
+        "quantity": 1,
+        "unit": "No.",
+        "unitRate": 1000
+      },
+      {
+        "id": "mirror-lab",
+        "label": "Fixing labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "No.",
+        "unitRate": 5000
+      }
+    ],
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    }
+  },
+  {
+    "countryCode": "NG",
+    "country": "Nigeria",
+    "region": "Abuja / Nasarawa",
+    "city": "Abuja–Keffi market",
+    "currency": "NGN",
+    "lastReviewed": "2026-09-26",
+    "slug": "floor-drain-fixing",
+    "code": "RB-ME-005",
+    "title": "Fix stainless-steel floor drain",
+    "shortTitle": "Floor drain fixing",
+    "section": "Plumbing",
+    "unit": "No.",
+    "status": "review",
+    "specification": "Fix client-supplied stainless-steel floor drain to prepared waste point and dress flush with finish.",
+    "methodologyNote": "Core drilling, new waste line and waterproofing repair are excluded.",
+    "sourceNote": "2-bedroom M&E labour BOQ guide.",
+    "lines": [
+      {
+        "id": "fd-cons",
+        "label": "Sealant / minor connection consumables",
+        "category": "consumable",
+        "quantity": 1,
+        "unit": "No.",
+        "unitRate": 500
+      },
+      {
+        "id": "fd-lab",
+        "label": "Plumber fixing labour",
+        "category": "labour",
+        "quantity": 1,
+        "unit": "No.",
+        "unitRate": 1500
+      }
+    ],
+    "allowances": {
+      "materialFluctuation": 0.05,
+      "labourFluctuation": 0.015,
+      "plantFluctuation": 0,
+      "risk": 0.05,
+      "op": 0
+    }
+  }
 ];
 
 export function getRateBankItem(slug: string) {
+  if (slug === "reusable-plywood-formwork") {
+    return RATE_BANK_ITEMS.find((item) => item.slug === "plywood-formwork-slab-soffit");
+  }
   return RATE_BANK_ITEMS.find((item) => item.slug === slug);
 }

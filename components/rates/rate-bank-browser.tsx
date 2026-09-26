@@ -20,6 +20,12 @@ const money = (value: number) =>
     maximumFractionDigits: 0,
   }).format(value);
 
+const statusMeta = {
+  verified: { label: "Verified", className: "bg-[#EAF7EF] text-[#197447]" },
+  pilot: { label: "Pilot", className: "bg-[#FFF1EA] text-[#8B1E00]" },
+  review: { label: "Under review", className: "bg-[#FFF9E7] text-[#8A6200]" },
+} as const;
+
 export default function RateBankBrowser() {
   const [query, setQuery] = useState("");
   const [section, setSection] = useState("all");
@@ -119,7 +125,7 @@ export default function RateBankBrowser() {
               Transparent execution cost — not a copied tender rate
             </h2>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-[#617286]">
-              These first rates are reconstructed from reviewed Charismak execution models. Physical wastage remains inside the resource build-up, while price fluctuation and risk are shown separately. Profit is left for the user to add.
+              Rates are reconstructed from reviewed Charismak project calculations and resource build-ups. Physical wastage remains inside the resource calculation, while price fluctuation and risk are shown separately. Items still awaiting a fresh supplier/trade audit are visibly marked Under review.
             </p>
           </div>
           <Link
@@ -147,6 +153,7 @@ export default function RateBankBrowser() {
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {results.map((item) => {
             const calc = calculateRate(item.lines, item.allowances);
+            const status = statusMeta[item.status];
             return (
               <article
                 key={item.slug}
@@ -156,8 +163,8 @@ export default function RateBankBrowser() {
                   <span className="text-[10px] font-black uppercase tracking-[0.14em] text-[#7A8B9E]">
                     {item.code}
                   </span>
-                  <span className="rounded-full bg-[#FFF1EA] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.1em] text-[#8B1E00]">
-                    Pilot
+                  <span className={"rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.1em] " + status.className}>
+                    {status.label}
                   </span>
                 </div>
 
