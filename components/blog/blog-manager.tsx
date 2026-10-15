@@ -20,6 +20,7 @@ import {
   X,
 } from "lucide-react";
 
+import AiDraftPanel from "@/components/blog/ai-draft-panel";
 import { isAdminEmail } from "@/lib/auth/admin";
 import { blogRowToArticle, type BlogPostStatus, type ManagedBlogArticle } from "@/lib/content/blog-data";
 import type { BlogArticle } from "@/lib/content/blog";
@@ -207,6 +208,10 @@ export default function BlogManager() {
     if (!client || !admin) return;
     const slug = slugify(editor.slug || editor.title);
     const sections = parseBody(editor.body);
+    if (status === "published" && /\[CHECK/i.test(`${editor.title}\n${editor.excerpt}\n${editor.body}`)) {
+      setMessage("Resolve every [CHECK: …] marker before publishing. You can still save it as a draft.");
+      return;
+    }
     if (!editor.title.trim() || !slug || !editor.excerpt.trim() || !sections.length) {
       setMessage("Add a title, excerpt and article body before saving.");
       return;
@@ -264,6 +269,10 @@ export default function BlogManager() {
 
   const setStatus = async (post: ManagedBlogArticle, status: BlogPostStatus) => {
     if (!client || !admin) return;
+    if (status === "published" && /\[CHECK/i.test(JSON.stringify([post.title, post.excerpt, post.sections]))) {
+      setMessage("This draft still has [CHECK: …] markers. Open it, resolve them, then publish.");
+      return;
+    }
     const { error } = await client.from("blog_posts").update({ status, updated_at: new Date().toISOString() }).eq("id", post.id);
     setMessage(error ? error.message : status === "published" ? "Article published." : "Article moved back to Drafts.");
     if (!error) await loadPosts();
@@ -344,6 +353,25 @@ export default function BlogManager() {
                 </div>
               </div>
 
+              <div className="md:col-span-2">
+                <AiDraftPanel
+                  getToken={() => session?.access_token}
+                  onDraft={(draft) => {
+                    setEditor((current) => ({
+                      ...current,
+                      title: draft.title,
+                      slug: current.id ? current.slug : slugify(draft.title),
+                      excerpt: draft.excerpt,
+                      category: draft.category,
+                      readTime: draft.readTime,
+                      contentType: draft.contentType,
+                      body: draft.body,
+                      imageAlt: current.imageAlt || draft.title,
+                    }));
+                    setMessage("AI draft loaded. Check every fact and resolve all [CHECK] markers, then save or publish.");
+                  }}
+                />
+              </div>
               <label className="text-sm font-bold text-[#081B36] md:col-span-2">Title<input value={editor.title} onChange={(event) => setEditor((current) => ({ ...current, title: event.target.value, slug: current.id ? current.slug : slugify(event.target.value), imageAlt: current.imageAlt || event.target.value }))} className="mt-2 min-h-12 w-full rounded-xl border border-[#C9D5E1] px-4 font-normal" /></label>
               <label className="text-sm font-bold text-[#081B36]">URL slug<input value={editor.slug} onChange={(event) => setEditor((current) => ({ ...current, slug: slugify(event.target.value) }))} className="mt-2 min-h-12 w-full rounded-xl border border-[#C9D5E1] px-4 font-normal" /></label>
               <label className="text-sm font-bold text-[#081B36]">Category<input value={editor.category} onChange={(event) => setEditor((current) => ({ ...current, category: event.target.value }))} placeholder="Construction news, Materials, BOQ..." className="mt-2 min-h-12 w-full rounded-xl border border-[#C9D5E1] px-4 font-normal" /></label>

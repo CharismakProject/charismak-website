@@ -37,6 +37,8 @@ const categories: Array<{ id: CategoryFilter; label: string; icon: typeof Boxes 
   { id: "subcontract", label: "Specialists", icon: Store },
 ];
 
+const PAGE_SIZE = 30;
+
 const initialItems = DEFAULT_PRICE_ITEMS.filter((item) => item.countryCode === "NG" && item.active);
 
 const money = (value: number | null, currency = "NGN") =>
@@ -79,6 +81,7 @@ export default function MarketPriceBrowser() {
   const [category, setCategory] = useState<CategoryFilter>("all");
   const [query, setQuery] = useState("");
   const [location, setLocation] = useState("all");
+  const [visible, setVisible] = useState(PAGE_SIZE);
 
   useEffect(() => {
     const refresh = () =>
@@ -111,15 +114,15 @@ export default function MarketPriceBrowser() {
   const liveCount = items.filter((item) => JIJI_MARKET_SNAPSHOT[item.id]).length;
 
   return (
-    <div className="space-y-8">
-      <section className="relative overflow-hidden rounded-[2rem] bg-[#071E33] px-5 py-9 text-white shadow-[0_25px_70px_rgba(7,30,51,0.18)] md:px-9 md:py-12">
+    <div className="space-y-6">
+      <section className="relative overflow-hidden rounded-[2rem] bg-[#071E33] px-5 py-8 text-white md:px-9 md:py-10">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_10%,rgba(200,164,93,0.22),transparent_28rem)]" />
         <div className="relative">
           <div className="flex flex-wrap items-center gap-2 text-[11px] font-black uppercase tracking-[0.16em] text-[#F2B544]">
             <BadgeCheck className="h-4 w-4" />
             Nigeria construction prices
           </div>
-          <h1 className="mt-4 max-w-4xl text-4xl font-black leading-tight md:text-6xl">
+          <h1 className="mt-3 max-w-3xl text-3xl font-black leading-tight md:text-5xl">
             Check prices in the units people actually buy.
           </h1>
           <p className="mt-5 max-w-3xl text-sm leading-7 text-white/70 md:text-base">
@@ -131,7 +134,7 @@ export default function MarketPriceBrowser() {
               <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#708093]" />
               <input
                 value={query}
-                onChange={(event) => setQuery(event.target.value)}
+                onChange={(event) => { setQuery(event.target.value); setVisible(PAGE_SIZE); }}
                 placeholder="Search cement, Y12, granite, mixer, PPR..."
                 className="min-h-14 w-full border-0 bg-white pl-12 pr-4 text-sm text-[#071E33] outline-none"
               />
@@ -140,7 +143,7 @@ export default function MarketPriceBrowser() {
               <MapPin className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#708093]" />
               <select
                 value={location}
-                onChange={(event) => setLocation(event.target.value)}
+                onChange={(event) => { setLocation(event.target.value); setVisible(PAGE_SIZE); }}
                 className="min-h-14 w-full border-0 bg-white pl-12 pr-4 text-sm font-bold text-[#071E33] outline-none"
               >
                 <option value="all">All locations</option>
@@ -157,7 +160,7 @@ export default function MarketPriceBrowser() {
                 <button
                   key={value}
                   type="button"
-                  onClick={() => setQuery(value)}
+                  onClick={() => { setQuery(value); setVisible(PAGE_SIZE); }}
                   className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/80 transition hover:border-[#C8A45D] hover:text-[#F2B544]"
                 >
                   {value}
@@ -168,205 +171,160 @@ export default function MarketPriceBrowser() {
         </div>
       </section>
 
-      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        {categories.map(({ id, label, icon: Icon }) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => setCategory(id)}
-            className={`flex items-center gap-3 rounded-2xl border px-4 py-4 text-left font-bold transition ${
-              category === id
-                ? "border-[#0D3B66] bg-[#0D3B66] text-white"
-                : "border-[#DCE4EC] bg-white text-[#071E33] hover:border-[#C8A45D]"
-            }`}
-          >
-            <Icon className={`h-5 w-5 ${category === id ? "text-[#F2B544]" : "text-[#A82B05]"}`} />
-            {label}
-          </button>
-        ))}
+      <section className="-mx-4 overflow-x-auto px-4 md:mx-0 md:px-0">
+        <div className="flex w-max gap-2">
+          {categories.map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => { setCategory(id); setVisible(PAGE_SIZE); }}
+              aria-pressed={category === id}
+              className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-bold transition ${
+                category === id
+                  ? "border-[#071E33] bg-[#071E33] text-white"
+                  : "border-[#DCE4EC] bg-white text-[#071E33] hover:border-[#C8A45D]"
+              }`}
+            >
+              <Icon className={`h-4 w-4 ${category === id ? "text-[#F2B544]" : "text-[#7A8B9E]"}`} />
+              {label}
+            </button>
+          ))}
+        </div>
       </section>
 
       <section>
-        <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-[#A82B05]">Price catalogue</p>
-            <h2 className="mt-2 text-2xl font-black text-[#071E33] md:text-3xl">{results.length} current items</h2>
-          </div>
-          <p className="text-xs text-[#617286]">{liveCount} items include current market observations</p>
+        <div className="mb-3 flex items-end justify-between gap-3">
+          <h2 className="text-lg font-black text-[#071E33] md:text-xl">{results.length} items</h2>
+          <p className="text-xs text-[#617286]">{liveCount} with current market checks</p>
         </div>
 
-        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-          {results.map((item) => {
+        <ul className="divide-y divide-[#E4EAF0] overflow-hidden rounded-2xl border border-[#DCE4EC] bg-white">
+          {results.slice(0, visible).map((item) => {
             const market = JIJI_MARKET_SNAPSHOT[item.id];
             const localImage = item.imageUrl?.startsWith("/") ? item.imageUrl : null;
             const displayName = market?.marketName || item.description;
             const displayLocation = market?.location || item.location;
             const supplierSummary = supplierSummaries[item.id];
             const detailHref = `/prices/${encodeURIComponent(item.id)}`;
+            const unit = market?.unit || item.marketUnit || item.unit;
+            const spec = market?.specification || item.specification;
+            const hasDetails = Boolean(market?.note || market?.alternatives?.length || market?.primarySourceUrl);
 
             return (
-              <article
-                key={item.id}
-                className="group overflow-hidden rounded-2xl border border-[#DCE4EC] bg-white shadow-[0_8px_26px_rgba(7,30,51,0.045)] transition hover:-translate-y-1 hover:shadow-[0_22px_50px_rgba(7,30,51,0.11)]"
-              >
-                <Link
-                  href={detailHref}
-                  className="relative block h-44 overflow-hidden bg-[#EEF2F6]"
-                  aria-label={`View suppliers and prices for ${displayName}`}
-                >
-                  {localImage ? (
-                    <img
-                      src={localImage}
-                      alt={item.imageAlt || displayName}
-                      loading="lazy"
-                      className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
-                    />
-                  ) : (
-                    <div className="grid h-full place-items-center bg-[linear-gradient(135deg,#EAF0F6,#F8FAFC)] text-center">
-                      <div className="px-5">
-                        <ImageIcon className="mx-auto h-8 w-8 text-[#74879A]" />
-                        <strong className="mt-3 block text-sm text-[#071E33]">{displayName}</strong>
-                        <span className="mt-1 block text-[10px] font-black uppercase tracking-[0.14em] text-[#7A8B9E]">
-                          {categoryLabel(item.category)}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                  <span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-[#0D3B66] shadow-sm">
-                    {categoryLabel(item.category)}
-                  </span>
-                  <span className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-[#071E33]/85 px-2.5 py-1.5 text-[10px] font-bold text-white backdrop-blur">
-                    <MapPin className="h-3.5 w-3.5 text-[#F2B544]" />
-                    {displayLocation}
-                  </span>
-                </Link>
-
-                <div className="p-5">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#7A8B9E]">{item.code}</span>
-                    <span
-                      className={`rounded-full px-2.5 py-1 text-[9px] font-black ${
-                        market ? "bg-[#EAF7EF] text-[#197447]" : "bg-[#FFF1EA] text-[#8B1E00]"
-                      }`}
-                    >
-                      {market ? "Market checked" : "Charismak reference"}
-                    </span>
-                  </div>
-
-                  <Link href={detailHref} className="block">
-                    <h3 className="mt-3 text-lg font-black leading-6 text-[#071E33] transition group-hover:text-[#0D3B66]">
-                      {displayName}
-                    </h3>
-                    {market?.specification || item.specification ? (
-                      <p className="mt-2 text-xs leading-5 text-[#617286]">
-                        {market?.specification || item.specification}
-                      </p>
-                    ) : null}
+              <li key={item.id} className="px-4 py-4 md:px-5">
+                <div className="flex items-start gap-3 md:items-center md:gap-4">
+                  <Link
+                    href={detailHref}
+                    className="hidden h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-[#EEF2F6] sm:block"
+                    aria-hidden="true"
+                    tabIndex={-1}
+                  >
+                    {localImage ? (
+                      <img src={localImage} alt="" loading="lazy" className="h-full w-full object-cover" />
+                    ) : (
+                      <span className="grid h-full place-items-center">
+                        <ImageIcon className="h-5 w-5 text-[#9AA9B8]" />
+                      </span>
+                    )}
                   </Link>
 
-                  <div className="mt-4 rounded-2xl bg-[#F6F8FA] p-4">
-                    {market ? (
-                      <>
-                        <span className="text-[10px] font-black uppercase tracking-[0.12em] text-[#617286]">
-                          Market range / {market.unit}
-                        </span>
-                        <strong className="mt-1 block text-xl text-[#071E33]">
-                          {money(market.priceLow)} – {money(market.priceHigh)}
-                        </strong>
-                        <span className="mt-2 block text-sm font-black text-[#A82B05]">
-                          Typical reference: {money(market.reference)}
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="text-[10px] font-black uppercase tracking-[0.12em] text-[#617286]">
-                          Reference / {item.marketUnit || item.unit}
-                        </span>
-                        <strong className="mt-1 block text-xl text-[#071E33]">{money(item.rate, item.currency)}</strong>
-                      </>
-                    )}
-                  </div>
-
-                  {supplierSummary ? (
-                    <Link
-                      href={detailHref}
-                      className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-[#C9D8E7] bg-[#F7FBFF] px-3 py-3 transition hover:border-[#0D3B66]"
-                    >
-                      <span className="inline-flex items-center gap-2 text-xs font-bold text-[#0D3B66]">
-                        <Truck className="h-4 w-4" />
-                        {supplierSummary.count} supplier offer{supplierSummary.count === 1 ? "" : "s"}
+                  <div className="min-w-0 flex-1">
+                    <Link href={detailHref} className="block font-black leading-6 text-[#071E33] hover:text-[#0D3B66]">
+                      {displayName}
+                    </Link>
+                    <p className="mt-0.5 truncate text-xs text-[#617286]">
+                      {[spec, categoryLabel(item.category)].filter(Boolean).join(" · ")}
+                    </p>
+                    <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[#7A8B9E]">
+                      <span className="inline-flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        {displayLocation}
                       </span>
-                      <strong className="text-right text-xs text-[#A82B05]">
-                        from {money(supplierSummary.lowestPrice)} / {supplierSummary.quotedUnit}
-                      </strong>
-                    </Link>
-                  ) : (
-                    <Link
-                      href={detailHref}
-                      className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-dashed border-[#CBD6E1] px-3 py-3 text-xs font-semibold text-[#617286] transition hover:border-[#0D3B66] hover:text-[#0D3B66]"
-                    >
-                      <span>Supplier prices</span>
-                      <span>View item →</span>
-                    </Link>
-                  )}
-
-                  {market?.alternatives?.length ? (
-                    <div className="mt-3 grid gap-2">
-                      {market.alternatives.map((alt) => (
-                        <div
-                          key={`${alt.label}-${alt.unit}`}
-                          className="flex items-center justify-between gap-3 rounded-xl border border-[#E4EAF0] px-3 py-2.5 text-xs"
-                        >
-                          <div>
-                            <strong className="block text-[#071E33]">{alt.label}</strong>
-                            <span className="text-[#758396]">{alt.unit}</span>
-                          </div>
-                          <strong className="text-right text-[#0D3B66]">{money(alt.reference)}</strong>
-                        </div>
-                      ))}
-                    </div>
-                  ) : null}
-
-                  {market?.note ? <p className="mt-4 text-[11px] leading-5 text-[#617286]">{market.note}</p> : null}
-
-                  <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-[10px] text-[#7A8B9E]">
-                    <span className="inline-flex items-center gap-1.5">
-                      <CalendarDays className="h-3.5 w-3.5" />
-                      Checked {new Date(market?.checkedAt || item.updatedAt).toLocaleDateString("en-NG")}
-                    </span>
-                    {market ? <span>{market.sourceCount} market sources</span> : null}
+                      <span className="inline-flex items-center gap-1">
+                        <CalendarDays className="h-3 w-3" />
+                        {new Date(market?.checkedAt || item.updatedAt).toLocaleDateString("en-NG")}
+                      </span>
+                      <span className={market ? "font-bold text-[#197447]" : "font-bold text-[#8B1E00]"}>
+                        {market ? (market.sourceLabel.startsWith("Charismak") ? "Charismak purchase record" : `Market checked · ${market.sourceCount} sources`) : "Charismak reference"}
+                      </span>
+                    </p>
                   </div>
 
-                  <div className="mt-5 grid grid-cols-2 gap-2">
-                    <Link
-                      href={detailHref}
-                      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#0D3B66] px-3 text-xs font-black text-white transition hover:bg-[#071E33]"
-                    >
-                      Suppliers & prices <Truck className="h-4 w-4" />
-                    </Link>
-                    {market?.primarySourceUrl ? (
-                      <a
-                        href={market.primarySourceUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#DCE4EC] px-3 text-xs font-black text-[#0D3B66] transition hover:border-[#C8A45D] hover:bg-[#FFF9ED]"
-                      >
-                        Market source <ExternalLink className="h-4 w-4" />
-                      </a>
-                    ) : (
-                      <Link
-                        href="/estimator"
-                        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#DCE4EC] px-3 text-xs font-black text-[#A82B05] transition hover:border-[#C8A45D] hover:bg-[#FFF9ED]"
-                      >
-                        Estimator <ArrowRight className="h-4 w-4" />
-                      </Link>
-                    )}
+                  <div className="shrink-0 text-right">
+                    <strong className="block text-base text-[#071E33] md:text-lg">
+                      {market ? money(market.reference) : money(item.rate, item.currency)}
+                    </strong>
+                    <span className="block text-[11px] font-bold text-[#617286]">per {unit}</span>
+                    {market ? (
+                      <span className="block text-[11px] text-[#7A8B9E]">
+                        {money(market.priceLow)} – {money(market.priceHigh)}
+                      </span>
+                    ) : null}
                   </div>
+
+                  <Link
+                    href={detailHref}
+                    aria-label={`Suppliers and prices for ${displayName}`}
+                    className="hidden h-10 w-10 shrink-0 place-items-center rounded-full border border-[#DCE4EC] text-[#0D3B66] transition hover:border-[#0D3B66] md:grid"
+                  >
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
                 </div>
-              </article>
+
+                {supplierSummary || hasDetails ? (
+                  <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs sm:pl-[4.5rem]">
+                    {supplierSummary ? (
+                      <Link href={detailHref} className="inline-flex items-center gap-1.5 font-bold text-[#0D3B66]">
+                        <Truck className="h-3.5 w-3.5" />
+                        {supplierSummary.count} supplier offer{supplierSummary.count === 1 ? "" : "s"} from{" "}
+                        {money(supplierSummary.lowestPrice)} / {supplierSummary.quotedUnit}
+                      </Link>
+                    ) : null}
+                    {hasDetails ? (
+                      <details className="group w-full">
+                        <summary className="cursor-pointer list-none font-bold text-[#617286] hover:text-[#0D3B66]">
+                          <span className="group-open:hidden">Other loads, notes & source +</span>
+                          <span className="hidden group-open:inline">Hide details −</span>
+                        </summary>
+                        <div className="mt-2 space-y-2 rounded-xl bg-[#F6F8FA] p-3">
+                          {market?.alternatives?.map((alt) => (
+                            <div key={`${alt.label}-${alt.unit}`} className="flex justify-between gap-3">
+                              <span className="text-[#3A4653]">
+                                {alt.label} <span className="text-[#7A8B9E]">· {alt.unit}</span>
+                              </span>
+                              <strong className="text-[#0D3B66]">{money(alt.reference)}</strong>
+                            </div>
+                          ))}
+                          {market?.note ? <p className="leading-5 text-[#617286]">{market.note}</p> : null}
+                          {market?.primarySourceUrl ? (
+                            <a
+                              href={market.primarySourceUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1.5 font-bold text-[#0D3B66]"
+                            >
+                              Market source <ExternalLink className="h-3.5 w-3.5" />
+                            </a>
+                          ) : null}
+                        </div>
+                      </details>
+                    ) : null}
+                  </div>
+                ) : null}
+              </li>
             );
           })}
-        </div>
+        </ul>
+
+        {results.length > visible ? (
+          <button
+            type="button"
+            onClick={() => setVisible((count) => count + PAGE_SIZE)}
+            className="mx-auto mt-4 flex min-h-11 items-center gap-2 rounded-full border border-[#DCE4EC] bg-white px-5 text-sm font-bold text-[#0D3B66] transition hover:border-[#0D3B66]"
+          >
+            Show more ({results.length - visible} remaining)
+          </button>
+        ) : null}
 
         {!results.length ? (
           <div className="rounded-2xl border border-dashed border-[#B8C7D6] bg-white p-10 text-center">

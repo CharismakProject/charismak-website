@@ -10,12 +10,15 @@ const createdAt = "2026-08-09T00:00:00.000Z";
 // Starter references make the workflow testable immediately. They are deliberately
 // labelled as references, not verified live market quotations.
 const starterRates: Record<string, number | null> = {
-  "cement-50kg": 11500,
-  "sharp-sand": 32000,
-  "granite-aggregate": 65000,
+  // Sand, granite, rebar and cement re-based on Charismak Abuja purchase records
+  // (Oct 2026): sand ₦70,000 per 10 t trip at 1.6 t/m³; granite ₦15,000/t + ₦3,000/t
+  // haulage at 1.5 t/m³; rebar from Y10/Y20 length prices ≈ ₦1.12m/t.
+  "cement-50kg": 12000,
+  "sharp-sand": 11200,
+  "granite-aggregate": 27000,
   water: 15,
   "block-225": 900,
-  "reinforcement-steel": 1550,
+  "reinforcement-steel": 1120,
   "binding-wire": 2200,
   "formwork-sheet": 40000,
   "formwork-timber": 2200,

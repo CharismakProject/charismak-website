@@ -51,7 +51,7 @@ export default function MarketplaceSafetyPage() {
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#EEF4FA] text-[#0D3B66]"><BadgeCheck className="h-5 w-5" /></span>
             <div>
               <h2 className="text-xl font-black text-[#071E33]">What a Charismak price review means</h2>
-              <p className="mt-2 text-sm leading-6 text-[#526579]">An approved or reviewed supplier price means the price entry has passed through Charismak's price-review workflow for publication. It does <strong>not</strong> mean Charismak guarantees the supplier's identity, ownership of goods, stock availability, product authenticity or quality, delivery performance, buyer creditworthiness, payment safety or the outcome of a transaction.</p>
+              <p className="mt-2 text-sm leading-6 text-[#526579]">An approved or reviewed supplier price means the price entry has passed through Charismak’s price-review workflow for publication. It does <strong>not</strong> mean Charismak guarantees the supplier’s identity, ownership of goods, stock availability, product authenticity or quality, delivery performance, buyer creditworthiness, payment safety or the outcome of a transaction.</p>
             </div>
           </div>
         </section>

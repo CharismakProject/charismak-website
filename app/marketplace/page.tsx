@@ -29,7 +29,7 @@ export default function MarketplacePage() {
       </section>
 
       <div className="mx-auto max-w-7xl space-y-6 px-4 py-10 md:px-8 md:py-14">
-        <MarketplaceSafetyNotice />
+        <MarketplaceSafetyNotice slim />
         <MarketplaceDirectory embedded />
       </div>
     </main>

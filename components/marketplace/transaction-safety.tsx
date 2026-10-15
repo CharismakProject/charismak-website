@@ -146,7 +146,34 @@ function SafetyCheck({ checked, onChange, children }: { checked: boolean; onChan
   );
 }
 
-export function MarketplaceSafetyNotice({ compact = false }: { compact?: boolean }) {
+export function MarketplaceSafetyNotice({ compact = false, slim = false }: { compact?: boolean; slim?: boolean }) {
+  if (slim) {
+    return (
+      <details className="group rounded-2xl border border-[#F1D49A] bg-[#FFF9ED] px-4 py-3 text-xs text-[#6A5A38]">
+        <summary className="flex cursor-pointer list-none flex-wrap items-center gap-x-3 gap-y-1">
+          <AlertTriangle className="h-4 w-4 shrink-0 text-[#B07A00]" />
+          <span className="font-bold text-[#071E33]">Prices are for reference. Confirm product, supplier and account name before you pay.</span>
+          <span className="font-black text-[#0D3B66] group-open:hidden">Read more +</span>
+        </summary>
+        <div className="mt-3 space-y-2 pl-7 leading-5">
+          <p>
+            Prices and listings are for reference and discovery. Confirm the exact product/specification, quantity, stock, final price, delivery terms and the beneficiary/account name directly before you pay or release goods. A reviewed price does not guarantee supplier identity, product quality, stock or delivery.
+          </p>
+          <p className="text-[11px] text-[#786947]">
+            Charismak Project does not hold transaction funds or act as escrow and is not a party to buyer-seller transactions. Buyers and sellers remain responsible for their own checks and agreements. To the extent permitted by law, Charismak is not liable for losses arising from transactions between users.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <Link href="/marketplace-safety" className="inline-flex items-center gap-1.5 font-black text-[#0D3B66]">
+              <ShieldCheck className="h-4 w-4" /> Safety guide & disclaimer
+            </Link>
+            <a href="mailto:info@charismakproject.com?subject=Marketplace%20safety%20report" data-charismak-safety-skip="true" className="inline-flex items-center gap-1.5 font-black text-[#A82B05]">
+              <Flag className="h-4 w-4" /> Report suspicious activity
+            </a>
+          </div>
+        </div>
+      </details>
+    );
+  }
   return (
     <section className={`rounded-2xl border border-[#F1D49A] bg-[#FFF9ED] ${compact ? "p-4" : "p-5 md:p-6"}`}>
       <div className="flex items-start gap-3">
@@ -189,7 +216,7 @@ export function SellerSafetyNotice() {
           <div className="mt-3 grid gap-2 text-xs leading-5 text-[#526579] md:grid-cols-2">
             <p className="flex gap-2"><BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#197447]" /> Never share your supplier PIN, OTP, password or account-access link. Charismak will not ask you for them.</p>
             <p className="flex gap-2"><BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#197447]" /> Do not release goods because of a payment screenshot or alert. Confirm the money has cleared in your own bank account.</p>
-            <p className="flex gap-2"><BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#197447]" /> Keep an invoice/order record and confirm the buyer's phone, delivery address, quantity and receiving contact.</p>
+            <p className="flex gap-2"><BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#197447]" /> Keep an invoice/order record and confirm the buyer’s phone, delivery address, quantity and receiving contact.</p>
             <p className="flex gap-2"><BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#197447]" /> Report impersonation, suspicious buyers or unusual payment requests to Charismak before proceeding.</p>
           </div>
         </div>
