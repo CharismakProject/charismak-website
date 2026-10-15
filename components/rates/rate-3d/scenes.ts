@@ -14,6 +14,8 @@ export type ScenePart = {
   dir: THREE.Vector3;
   /** Only shown when exploded (e.g. the cement and sand inside the mortar). */
   appearOnExplode?: boolean;
+  /** Fades out when exploded (e.g. finished concrete turning into its ingredients). */
+  hideOnExplode?: boolean;
 };
 
 export type CameraView = { target: THREE.Vector3; position: THREE.Vector3 };
@@ -145,6 +147,10 @@ type ContextOptions = {
   sideWalls?: number;
   /** Corner left without a cast column (it is being formed). */
   skipColumn?: number;
+  /** Full-height front wall with a door opening. */
+  closedFront?: number;
+  /** Mono-pitch timber rafters and purlins; front edge raised by `rise`. */
+  roof?: { rise: number };
 };
 
 function buildContext(options: ContextOptions): THREE.Object3D[] {
@@ -193,6 +199,38 @@ function buildContext(options: ContextOptions): THREE.Object3D[] {
     const glass = at(box(backLen - 1.6, 1.2, 0.02, { color: "#9EC3D8", roughness: 0.1, metalness: 0.2, transparent: true, opacity: 0.45 }), 0, SLAB + 1.5, -BAY_D / 2);
     items.push(glass);
     items.push(modelBox(t, h, BAY_D - COL, -BAY_W / 2, SLAB + h / 2, 0, wallMat()));
+  }
+
+  if (options.closedFront) {
+    const t = options.closedFront;
+    const z = BAY_D / 2;
+    const span = BAY_W - COL;
+    const doorX = -1.0;
+    const doorW = 0.9;
+    const leftW = doorX - doorW / 2 + span / 2;
+    const rightW = span / 2 - (doorX + doorW / 2);
+    items.push(modelBox(leftW, STOREY, t, -span / 2 + leftW / 2, SLAB + STOREY / 2, z, wallMat()));
+    items.push(modelBox(rightW, STOREY, t, span / 2 - rightW / 2, SLAB + STOREY / 2, z, wallMat()));
+    items.push(modelBox(doorW, STOREY - 2.1, t, doorX, SLAB + 2.1 + (STOREY - 2.1) / 2, z, wallMat()));
+  }
+
+  if (options.roof) {
+    const { rise } = options.roof;
+    const beamTop = SLAB + STOREY + 0.3;
+    const run = BAY_D + 0.8;
+    const slopeLen = Math.hypot(run, rise);
+    const angle = Math.atan2(rise, run);
+    for (let x = -BAY_W / 2; x <= BAY_W / 2 + 0.01; x += BAY_W / 4) {
+      const rafter = modelBox(0.05, 0.15, slopeLen, x, beamTop + rise / 2 + 0.075, 0, { color: "#E7E1D6" });
+      rafter.rotation.x = -angle;
+      items.push(rafter);
+    }
+    for (let i = 0; i <= 4; i += 1) {
+      const f = i / 4;
+      const purlin = modelBox(BAY_W + 0.6, 0.05, 0.075, 0, beamTop + 0.15 + 0.025 + rise * f, -run / 2 + run * f, { color: "#E7E1D6" });
+      purlin.rotation.x = -angle;
+      items.push(purlin);
+    }
   }
 
   const front = options.frontWall;
@@ -362,10 +400,235 @@ function columnFormwork(prefix: string): RateScene {
   };
 }
 
+function slabFormwork(prefix: string): RateScene {
+  const colors = {
+    [`${prefix}-ply`]: "#C98B4B",
+    [`${prefix}-2x3`]: "#E2C08D",
+    [`${prefix}-2x6`]: "#B5793C",
+    [`${prefix}-peri`]: "#E3B23C",
+    [`${prefix}-prop-rental`]: "#D9622B",
+    [`${prefix}-2x2`]: "#D8B077",
+    [`${prefix}-nail`]: "#7D8790",
+    [`${prefix}-release`]: "#3E7CB1",
+  };
+  const parts: ScenePart[] = [];
+  const soffit = SLAB + STOREY + 0.15;
+  const spanX = BAY_W - COL;
+  const spanZ = BAY_D - COL;
+  const ply = 0.018;
+  const plyTex = woodGrain("#C98B4B", 71);
+  const joistTex = woodGrain("#E2C08D", 72);
+  const bearerTex = woodGrain("#B5793C", 73);
+
+  // Plywood deck: 3 x 2 sheets.
+  for (let i = 0; i < 3; i += 1) {
+    for (let j = 0; j < 2; j += 1) {
+      const w = spanX / 3;
+      const d = spanZ / 2;
+      const sheet = at(box(w - 0.004, ply, d - 0.004, { map: plyTex, color: "#FFFFFF" }), -spanX / 2 + w * (i + 0.5), soffit - ply / 2, -spanZ / 2 + d * (j + 0.5));
+      parts.push({ lineId: `${prefix}-ply`, object: sheet, dir: new THREE.Vector3(0, 1.9, 0) });
+    }
+  }
+  // 2x3 joists along Z at 400 mm.
+  const joistY = soffit - ply - 0.0375;
+  for (let x = -spanX / 2 + 0.1; x <= spanX / 2 - 0.05; x += 0.4) {
+    parts.push({ lineId: `${prefix}-2x3`, object: at(box(0.05, 0.075, spanZ, { map: joistTex, color: "#FFFFFF" }), x, joistY, 0), dir: new THREE.Vector3(0, 1.35, 0) });
+  }
+  // 2x2 noggins at the deck edges.
+  [-spanZ / 2 + 0.05, spanZ / 2 - 0.05].forEach((z) =>
+    parts.push({ lineId: `${prefix}-2x2`, object: at(box(spanX, 0.05, 0.05, { map: joistTex, color: "#FFFFFF" }), 0, joistY, z), dir: new THREE.Vector3(0, 1.35, z * 0.4) }),
+  );
+  // 2x6 secondary bearers along X.
+  const bearerY = joistY - 0.0375 - 0.075;
+  [-0.9, 0, 0.9].forEach((z) =>
+    parts.push({ lineId: `${prefix}-2x6`, object: at(box(spanX, 0.15, 0.05, { map: bearerTex, color: "#FFFFFF" }), 0, bearerY, z), dir: new THREE.Vector3(0, 0.85, 0) }),
+  );
+  // H20 primary beams along Z.
+  const h20Y = bearerY - 0.075 - 0.1;
+  const propXs = [-1.2, 0, 1.2];
+  propXs.forEach((x) => {
+    const beam = new THREE.Group();
+    beam.add(at(box(0.08, 0.04, spanZ, { color: "#E3B23C" }), 0, 0.08, 0));
+    beam.add(at(box(0.08, 0.04, spanZ, { color: "#E3B23C" }), 0, -0.08, 0));
+    beam.add(at(box(0.03, 0.12, spanZ, { color: "#F1E2B8" }), 0, 0, 0));
+    parts.push({ lineId: `${prefix}-peri`, object: at(beam, x, h20Y, 0), dir: new THREE.Vector3(0, 0.4, 0) });
+  });
+  // Acrow props under each H20 beam.
+  const propTop = h20Y - 0.1;
+  const propH = propTop - SLAB;
+  propXs.forEach((x) =>
+    [-0.9, 0, 0.9].forEach((z) => {
+      const prop = new THREE.Group();
+      prop.add(at(mesh(new THREE.CylinderGeometry(0.03, 0.03, propH * 0.55, 12), { color: "#D9622B", metalness: 0.4, roughness: 0.5 }), 0, propH * 0.275, 0));
+      prop.add(at(mesh(new THREE.CylinderGeometry(0.022, 0.022, propH * 0.5, 12), { color: "#B8BEC4", metalness: 0.6, roughness: 0.4 }), 0, propH * 0.75, 0));
+      prop.add(at(box(0.15, 0.01, 0.15, { color: "#5B6168", metalness: 0.5 }), 0, 0.005, 0));
+      prop.add(at(box(0.15, 0.01, 0.15, { color: "#5B6168", metalness: 0.5 }), 0, propH - 0.005, 0));
+      parts.push({ lineId: `${prefix}-prop-rental`, object: at(prop, x, SLAB, z), dir: new THREE.Vector3(x * 0.35, 0, z * 0.45) });
+    }),
+  );
+  const nailBag = at(box(0.25, 0.12, 0.35, { color: "#7D8790", map: speckle("#7D8790", 30, 74) }), -1.0, SLAB + 0.06, 2.2);
+  parts.push({ lineId: `${prefix}-nail`, object: nailBag, dir: new THREE.Vector3(-0.2, 0, 0.2), appearOnExplode: true });
+  const can = at(mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.28, 24), { color: "#3E7CB1", roughness: 0.4, metalness: 0.3 }), 1.0, SLAB + 0.14, 2.2);
+  parts.push({ lineId: `${prefix}-release`, object: can, dir: new THREE.Vector3(0.2, 0, 0.2), appearOnExplode: true });
+
+  return {
+    parts,
+    context: buildContext({ beams: true }),
+    colors,
+    overview: { target: new THREE.Vector3(0, 1.6, 0), position: new THREE.Vector3(6.8, 5.6, 7.6) },
+    focus: { target: new THREE.Vector3(0, 2.6, 0), position: new THREE.Vector3(6.2, 4.4, 7.4) },
+  };
+}
+
+/** Cone of a given volume, so material piles are true to the quantities. */
+function pile(volume: number, height: number, color: string, seed: number) {
+  const radius = Math.sqrt((3 * volume) / (Math.PI * height));
+  return mesh(new THREE.ConeGeometry(radius, height, 40), { color: "#FFFFFF", map: speckle(color, 60, seed, 6000), roughness: 1 });
+}
+
+function concreteCubicMetre(prefix: string, quantities: { cement: number; sand: number; granite: number }): RateScene {
+  const colors = {
+    [`${prefix}-cement`]: "#9AA0A6",
+    [`${prefix}-sand`]: "#D9B77A",
+    [`${prefix}-granite`]: "#8F8A84",
+    [`${prefix}-plant`]: "#E39B2D",
+  };
+  const parts: ScenePart[] = [];
+  const concreteTex = speckle("#B9B6AF", 30, 81);
+  const materials = [`${prefix}-cement`, `${prefix}-sand`, `${prefix}-granite`];
+  // 1 m³ shown as this bay's ring beam: perimeter ≈ 14.5 m × 0.23 × 0.30 m.
+  const y = SLAB + STOREY + 0.15;
+  const ring: Array<[number, number, number, number]> = [
+    [BAY_W + COL, COL, 0, -BAY_D / 2],
+    [BAY_W + COL, COL, 0, BAY_D / 2],
+    [COL, BAY_D - COL, -BAY_W / 2, 0],
+    [COL, BAY_D - COL, BAY_W / 2, 0],
+  ];
+  ring.forEach(([w, d, x, z]) =>
+    parts.push({ lineId: materials, object: at(box(w, 0.3, d, { map: concreteTex, color: "#FFFFFF" }), x, y, z), dir: new THREE.Vector3(0, 0.6, 0), hideOnExplode: true }),
+  );
+
+  const front = BAY_D / 2 + 1.9;
+  const granite = at(pile(quantities.granite, 0.55, "#8F8A84", 82), -1.6, SLAB / 2 + 0.275, front);
+  parts.push({ lineId: `${prefix}-granite`, object: granite, dir: new THREE.Vector3(0, 0, 0.2), appearOnExplode: true });
+  const sand = at(pile(quantities.sand, 0.45, "#D9B77A", 83), 0.8, SLAB / 2 + 0.225, front);
+  parts.push({ lineId: `${prefix}-sand`, object: sand, dir: new THREE.Vector3(0, 0, 0.2), appearOnExplode: true });
+
+  // Cement bags stacked: whole bags plus one part-used bag.
+  const bags = new THREE.Group();
+  const bagTex = speckle("#9AA0A6", 20, 84);
+  const whole = Math.floor(quantities.cement);
+  for (let i = 0; i <= whole; i += 1) {
+    const partial = i === whole ? quantities.cement - whole : 1;
+    if (partial <= 0.01) continue;
+    const bag = box(0.48, 0.12 * partial, 0.32, { map: bagTex, color: "#FFFFFF" });
+    bag.position.set((i % 2) * 0.5, 0.06 * partial + Math.floor(i / 2) * 0.125, 0);
+    bags.add(bag);
+  }
+  parts.push({ lineId: `${prefix}-cement`, object: at(bags, 2.3, SLAB, front - 0.4), dir: new THREE.Vector3(0.2, 0, 0.2), appearOnExplode: true });
+
+  // Drum mixer for the plant allocation.
+  const mixer = new THREE.Group();
+  const drum = mesh(new THREE.CylinderGeometry(0.28, 0.4, 0.7, 24), { color: "#E39B2D", metalness: 0.3, roughness: 0.5 });
+  drum.rotation.z = Math.PI / 3;
+  drum.position.set(0, 0.85, 0);
+  mixer.add(drum);
+  mixer.add(at(box(0.9, 0.08, 0.5, { color: "#4B5563", metalness: 0.4 }), 0, 0.45, 0));
+  [-0.35, 0.35].forEach((x) => {
+    const wheel = mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.08, 20), { color: "#1F2933" });
+    wheel.rotation.x = Math.PI / 2;
+    wheel.position.set(x, 0.2, 0.3);
+    mixer.add(wheel);
+  });
+  parts.push({ lineId: `${prefix}-plant`, object: at(mixer, -3.7, SLAB, front - 0.2), dir: new THREE.Vector3(-0.2, 0, 0.2), appearOnExplode: true });
+
+  return {
+    parts,
+    context: buildContext({ beams: false }),
+    colors,
+    overview: { target: new THREE.Vector3(0, 1.5, 0.4), position: new THREE.Vector3(6.8, 5.2, 8.0) },
+    focus: { target: new THREE.Vector3(-0.4, 0.4, front - 0.2), position: new THREE.Vector3(2.5, 4.6, front + 7.2) },
+  };
+}
+
+/** Trapezoidal long-span roofing sheet profile, extruded along its length. */
+function roofSheet(width: number, length: number, material: THREE.MeshStandardMaterial) {
+  const shape = new THREE.Shape();
+  const pitch = 0.2;
+  const rib = 0.03;
+  shape.moveTo(-width / 2, 0);
+  for (let x = -width / 2; x < width / 2 - 0.001; x += pitch) {
+    shape.lineTo(x + 0.06, 0);
+    shape.lineTo(x + 0.08, rib);
+    shape.lineTo(x + 0.12, rib);
+    shape.lineTo(x + 0.14, 0);
+    shape.lineTo(Math.min(x + pitch, width / 2), 0);
+  }
+  shape.lineTo(width / 2, -0.004);
+  shape.lineTo(-width / 2, -0.004);
+  const geometry = new THREE.ExtrudeGeometry(shape, { depth: length, bevelEnabled: false });
+  geometry.translate(0, 0, -length / 2);
+  const sheet = new THREE.Mesh(geometry, material);
+  sheet.castShadow = true;
+  sheet.receiveShadow = true;
+  return sheet;
+}
+
+function roofCovering(prefix: string): RateScene {
+  const colors = {
+    [`${prefix}-sheet`]: "#8E2B1F",
+    [`${prefix}-screws`]: "#C9CED3",
+  };
+  const parts: ScenePart[] = [];
+  const rise = 0.6;
+  const run = BAY_D + 0.8;
+  const angle = Math.atan2(rise, run);
+  const beamTop = SLAB + STOREY + 0.3;
+  const deckY = beamTop + 0.15 + 0.05 + rise / 2 + 0.02;
+  const length = Math.hypot(run, rise) + 0.3;
+  const sheetMat = new THREE.MeshStandardMaterial({ color: "#8E2B1F", metalness: 0.55, roughness: 0.4, side: THREE.DoubleSide });
+  const sheets = 5;
+  const sheetW = 1.0;
+  const lap = 0.04;
+  for (let i = 0; i < sheets; i += 1) {
+    const x = (i - (sheets - 1) / 2) * (sheetW - lap);
+    const sheet = roofSheet(sheetW, length, sheetMat.clone());
+    const holder = new THREE.Group();
+    holder.add(sheet);
+    holder.rotation.x = -angle;
+    parts.push({ lineId: `${prefix}-sheet`, object: at(holder, x, deckY, 0), dir: new THREE.Vector3((i - 2) * 0.25, 0.9 + i * 0.12, 0) });
+  }
+  // Screws on every other rib along each purlin line.
+  const screws = new THREE.Group();
+  const screwGeo = new THREE.CylinderGeometry(0.012, 0.012, 0.03, 8);
+  const screwMat = new THREE.MeshStandardMaterial({ color: "#C9CED3", metalness: 0.8, roughness: 0.3 });
+  const span = sheets * (sheetW - lap);
+  for (let p = 0; p <= 4; p += 1) {
+    const z = -run / 2 + (run * p) / 4;
+    for (let x = -span / 2 + 0.1; x <= span / 2; x += 0.4) {
+      const screw = new THREE.Mesh(screwGeo, screwMat);
+      screw.position.set(x, rise * (p / 4) - rise / 2 + 0.04, z);
+      screws.add(screw);
+    }
+  }
+  parts.push({ lineId: `${prefix}-screws`, object: at(screws, 0, deckY, 0), dir: new THREE.Vector3(0, 2.1, 0) });
+
+  return {
+    parts,
+    context: buildContext({ beams: true, sideWalls: 0.225, closedFront: 0.225, roof: { rise } }),
+    colors,
+    overview: { target: new THREE.Vector3(0, 2.2, 0), position: new THREE.Vector3(7.5, 7.0, 8.5) },
+    focus: { target: new THREE.Vector3(0, 4.4, 0), position: new THREE.Vector3(6.5, 7.8, 7.5) },
+  };
+}
+
 const TEMPLATES: Record<(typeof RATE_3D_SLUGS)[number], () => RateScene> = {
   "230mm-hollow-sandcrete-blockwork": () => blockwork(0.225, "block225"),
   "150mm-hollow-sandcrete-blockwork": () => blockwork(0.15, "block150"),
   "plywood-formwork-columns": () => columnFormwork("fwc"),
+  "plywood-formwork-slab-soffit": () => slabFormwork("fws"),
+  "c25-structural-concrete-310kg": () => concreteCubicMetre("c25", { cement: 6.386, sand: 0.43028, granite: 0.86056 }),
+  "055mm-aluminium-roof-covering": () => roofCovering("roof055"),
 };
 
 export const buildRateScene = (slug: string): RateScene | undefined =>

@@ -169,6 +169,16 @@ export default function RateExplodedViewer({ item }: { item: RateBankItem }) {
       const eased = t * t * (3 - 2 * t);
       scene.parts.forEach((part, index) => {
         part.object.position.copy(base[index]).addScaledVector(part.dir, eased);
+        if (part.hideOnExplode) {
+          part.object.visible = eased < 0.98;
+          part.object.traverse((child) => {
+            const material = (child as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined;
+            if (material) {
+              material.transparent = true;
+              material.opacity = 1 - eased;
+            }
+          });
+        }
         if (part.appearOnExplode) {
           part.object.visible = eased > 0.02;
           part.object.scale.setScalar(Math.max(eased, 0.001));
@@ -296,7 +306,7 @@ export default function RateExplodedViewer({ item }: { item: RateBankItem }) {
           })}
         </ul>
         <p className="mt-3 border-t border-[#E6EBEF] pt-3 text-[11px] leading-5 text-[#7A8B9E]">
-          Illustrative model of 1 {item.unit} shown in a typical bay; amounts are direct costs before fluctuation, risk and O/P.
+          Illustrative model shown in a typical bay; amounts are direct costs per {item.unit} before fluctuation, risk and O/P.
         </p>
       </div>
     </div>
