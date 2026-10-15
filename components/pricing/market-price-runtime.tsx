@@ -6,6 +6,7 @@ import { loadSupplierOfferSummaries } from "@/lib/platform/supplier-offers";
 import { syncCatalogueFromCloud } from "@/lib/pricing/catalogue-cloud";
 import { JIJI_MARKET_SNAPSHOT } from "@/lib/pricing/jiji-market-snapshot";
 import { loadMarketPriceOverrides } from "@/lib/pricing/market-overrides";
+import { isNewerObservation } from "@/lib/pricing/freshness";
 import { loadPriceItems, savePriceItems } from "@/lib/pricing/store";
 
 export const MARKET_OVERRIDES_UPDATED_EVENT = "charismak:market-overrides-updated";
@@ -28,6 +29,8 @@ export default function MarketPriceRuntime() {
 
         Object.values(overrides).forEach((override) => {
           const previous = JIJI_MARKET_SNAPSHOT[override.itemId];
+          // Older admin reviews must not replace a newer observation.
+          if (previous && !isNewerObservation(override.checkedAt, previous.checkedAt)) return;
           JIJI_MARKET_SNAPSHOT[override.itemId] = {
             itemId: override.itemId,
             marketName: override.marketName || previous?.marketName || override.itemId,
@@ -43,7 +46,8 @@ export default function MarketPriceRuntime() {
             note: override.note || previous?.note,
             primarySourceUrl: override.sourceUrl || previous?.primarySourceUrl || "",
             sourceUrls: override.sourceUrl ? [override.sourceUrl] : previous?.sourceUrls ?? [],
-            alternatives: previous?.alternatives,
+            // Alternatives are only comparable when the buying unit is unchanged.
+            alternatives: previous && previous.unit === override.unit ? previous.alternatives : undefined,
           };
         });
 
@@ -53,10 +57,13 @@ export default function MarketPriceRuntime() {
           if (!summary) return item;
 
           const previousMarket = JIJI_MARKET_SNAPSHOT[item.id];
+          const summaryCheckedAt = summary.latestPublishedAt || now;
+          if (previousMarket && !isNewerObservation(summaryCheckedAt, previousMarket.checkedAt)) return item;
+          const summaryUnit = summary.quotedUnit || item.marketUnit || previousMarket?.unit || item.unit;
           JIJI_MARKET_SNAPSHOT[item.id] = {
             itemId: item.id,
             marketName: previousMarket?.marketName || item.description,
-            unit: summary.quotedUnit || item.marketUnit || previousMarket?.unit || item.unit,
+            unit: summaryUnit,
             priceLow: summary.lowestPrice,
             priceHigh: summary.highestPrice,
             reference: summary.latestPrice,
@@ -67,11 +74,11 @@ export default function MarketPriceRuntime() {
             specification: item.specification || previousMarket?.specification,
             sourceLabel: "Approved supplier prices",
             sourceCount: summary.count,
-            checkedAt: summary.latestPublishedAt || now,
+            checkedAt: summaryCheckedAt,
             note: `${summary.count} currently valid approved supplier price${summary.count === 1 ? "" : "s"}.`,
             primarySourceUrl: "",
             sourceUrls: [],
-            alternatives: previousMarket?.alternatives,
+            alternatives: previousMarket && previousMarket.unit === summaryUnit ? previousMarket.alternatives : undefined,
           };
 
           return {

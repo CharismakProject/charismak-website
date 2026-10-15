@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 
 import {
-  loadMarketplaceProfiles,
+  loadMarketplaceDirectory,
   MARKETPLACE_UPDATED_EVENT,
   type MarketplaceProfile,
   type MarketplaceProfileType,
@@ -56,9 +56,19 @@ export default function MarketplaceDirectory({ embedded = false }: { embedded?: 
   const [query, setQuery] = useState("");
   const [location, setLocation] = useState("");
   const [selectedProfile, setSelectedProfile] = useState<MarketplaceProfile | null>(null);
+  const [loadState, setLoadState] = useState<"loading" | "ok" | "error">("loading");
+  const [loadMessage, setLoadMessage] = useState("");
+
+  const refresh = () => {
+    setLoadState("loading");
+    void loadMarketplaceDirectory().then((result) => {
+      setProfiles(result.profiles);
+      setLoadState(result.status);
+      setLoadMessage(result.status === "error" ? result.message : "");
+    });
+  };
 
   useEffect(() => {
-    const refresh = () => void loadMarketplaceProfiles().then(setProfiles);
     const params = new URLSearchParams(window.location.search);
     const initialSearch = params.get("search");
     const initialType = params.get("type");
@@ -80,7 +90,7 @@ export default function MarketplaceDirectory({ embedded = false }: { embedded?: 
               `${offer.productName} ${offer.brand || ""} ${offer.specification || ""} ${offer.quotedUnit}`,
           )
           .join(" ");
-        const haystack = `${profile.businessName} ${profile.category} ${profile.categories.join(" ")} ${offerText}`.toLowerCase();
+        const haystack = `${profile.businessName} ${profile.category} ${profile.categories.join(" ")} ${(profile.searchTerms ?? []).join(" ")} ${offerText}`.toLowerCase();
         return (
           (type === "all" || profile.type === type) &&
           (!query.trim() || haystack.includes(query.trim().toLowerCase())) &&
@@ -193,10 +203,10 @@ export default function MarketplaceDirectory({ embedded = false }: { embedded?: 
                 </span>
                 <span
                   className={`rounded-full px-2.5 py-1 text-[9px] font-bold uppercase ${
-                    profile.isDemo ? "bg-[#EEF2F6] text-[#617286]" : "bg-[#EAF8F0] text-[#197447]"
+                    "bg-[#EAF8F0] text-[#197447]"
                   }`}
                 >
-                  {profile.isDemo ? "Sample" : "Active"}
+                  Active
                 </span>
               </div>
 
@@ -235,8 +245,8 @@ export default function MarketplaceDirectory({ embedded = false }: { embedded?: 
               </div>
 
               <div className="mt-3 flex items-center justify-between rounded-xl border border-[#E1E8EF] px-3 py-2.5 text-xs">
-                <span className="text-[#617286]">Approved price listings</span>
-                <strong className="text-[#081B36]">{profile.offers.length}</strong>
+                <span className="text-[#617286]">Current approved prices</span>
+                <strong className="text-[#081B36]">{profile.offers.length || "None — ask for a quote"}</strong>
               </div>
 
               <div className="mt-auto pt-4">
@@ -258,11 +268,35 @@ export default function MarketplaceDirectory({ embedded = false }: { embedded?: 
         })}
       </section>
 
-      {!results.length ? (
+      {loadState === "loading" ? (
+        <section className="rounded-2xl border border-[#DCE4EC] bg-white p-8 text-center text-sm text-[#617286]" role="status">
+          Loading suppliers and artisans…
+        </section>
+      ) : loadState === "error" ? (
+        <section className="rounded-2xl border border-[#F1C9BE] bg-[#FFF6F3] p-8 text-center" role="alert">
+          <h2 className="font-bold text-[#081B36]">Directory unavailable</h2>
+          <p className="mx-auto mt-1 max-w-md text-xs leading-5 text-[#617286]">{loadMessage} No listings are shown rather than showing out-of-date or sample businesses.</p>
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
+            <button type="button" onClick={refresh} className="min-h-11 rounded-xl bg-[#081B36] px-5 text-xs font-bold text-white">Try again</button>
+            <Link href="/contact?subject=Help%20finding%20a%20supplier" className="inline-flex min-h-11 items-center rounded-xl border border-[#DCE4EC] bg-white px-5 text-xs font-bold text-[#081B36]">Ask Charismak to help</Link>
+          </div>
+        </section>
+      ) : !results.length ? (
         <section className="rounded-2xl border border-dashed border-[#B8C7D6] bg-white p-8 text-center">
           <PackageSearch className="mx-auto h-7 w-7 text-[#617286]" />
-          <h2 className="mt-3 font-bold text-[#081B36]">No matches found</h2>
-          <p className="mt-1 text-xs text-[#617286]">Try another product, service or location.</p>
+          <h2 className="mt-3 font-bold text-[#081B36]">{profiles.length ? "No matches found" : "No approved listings yet"}</h2>
+          <p className="mx-auto mt-1 max-w-md text-xs leading-5 text-[#617286]">
+            {profiles.length
+              ? `None of the ${profiles.length} listed businesses match this search. Try a broader material, trade or location.`
+              : "No supplier or artisan profiles have been approved yet."}
+          </p>
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
+            {query || location || type !== "all" ? (
+              <button type="button" onClick={() => { setQuery(""); setLocation(""); setType("all"); }} className="min-h-11 rounded-xl border border-[#DCE4EC] px-5 text-xs font-bold text-[#081B36]">Clear filters</button>
+            ) : null}
+            <Link href="/contact?subject=Help%20finding%20a%20supplier" className="inline-flex min-h-11 items-center rounded-xl bg-[#081B36] px-5 text-xs font-bold text-white">Ask Charismak to find one</Link>
+            <Link href="/supplier-prices" className="inline-flex min-h-11 items-center rounded-xl border border-[#DCE4EC] px-5 text-xs font-bold text-[#081B36]">Register as a supplier</Link>
+          </div>
         </section>
       ) : null}
 
