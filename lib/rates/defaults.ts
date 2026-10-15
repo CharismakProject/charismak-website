@@ -379,7 +379,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 1.1,
         "unit": "m³",
-        "unitRate": 14400
+        "unitRate": 11200
       },
       {
         "id": "sandfill-lab",
@@ -522,7 +522,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.462,
         "unit": "m³",
-        "unitRate": 14400
+        "unitRate": 11200
       },
       {
         "id": "c15-gran",
@@ -592,7 +592,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.44,
         "unit": "m³",
-        "unitRate": 14400
+        "unitRate": 11200
       },
       {
         "id": "c20-gran",
@@ -662,7 +662,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.43028,
         "unit": "m³",
-        "unitRate": 14400
+        "unitRate": 11200
       },
       {
         "id": "c25-granite",
@@ -776,7 +776,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 10.5,
         "unit": "No.",
-        "unitRate": 750,
+        "unitRate": 900,
         "note": "Working Abuja supplier reference. Current market observations vary materially with strength, curing and delivery."
       },
       {
@@ -794,7 +794,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.0171,
         "unit": "m³",
-        "unitRate": 14400
+        "unitRate": 11200
       },
       {
         "id": "block225-lab",
@@ -838,7 +838,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 10.5,
         "unit": "No.",
-        "unitRate": 650,
+        "unitRate": 800,
         "note": "Working Abuja supplier reference; strength/delivery basis pending validation."
       },
       {
@@ -856,7 +856,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.0137,
         "unit": "m³",
-        "unitRate": 14400
+        "unitRate": 11200
       },
       {
         "id": "block150-lab",
@@ -909,7 +909,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.035,
         "unit": "m³",
-        "unitRate": 14400
+        "unitRate": 11200
       },
       {
         "id": "plaster-lab",
@@ -962,7 +962,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.0395,
         "unit": "m³",
-        "unitRate": 14400
+        "unitRate": 11200
       },
       {
         "id": "wallback-lab",
@@ -1015,7 +1015,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.079,
         "unit": "m³",
-        "unitRate": 14400
+        "unitRate": 11200
       },
       {
         "id": "floorscreed-lab",
@@ -2512,7 +2512,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.011172000000000003,
         "unit": "m³",
-        "unitRate": 14400,
+        "unitRate": 11200,
         "note": "Per 1m² at 10mm: 1.33 dry factor × 4/5 sand share × 5% physical waste."
       },
       {
@@ -2575,7 +2575,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.022344000000000006,
         "unit": "m³",
-        "unitRate": 14400,
+        "unitRate": 11200,
         "note": "Per 1m² at 20mm: 1.33 dry factor × 4/5 sand share × 5% physical waste."
       },
       {
@@ -2638,7 +2638,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.025695600000000006,
         "unit": "m³",
-        "unitRate": 14400,
+        "unitRate": 11200,
         "note": "Per 1m² at 23mm: 1.33 dry factor × 4/5 sand share × 5% physical waste."
       },
       {
@@ -2701,7 +2701,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.0357504,
         "unit": "m³",
-        "unitRate": 14400,
+        "unitRate": 11200,
         "note": "Per 1m² at 32mm: 1.33 dry factor × 4/5 sand share × 5% physical waste."
       },
       {

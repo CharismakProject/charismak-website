@@ -245,7 +245,7 @@ export default function MarketPriceBrowser() {
                         {new Date(market?.checkedAt || item.updatedAt).toLocaleDateString("en-NG")}
                       </span>
                       <span className={market ? "font-bold text-[#197447]" : "font-bold text-[#8B1E00]"}>
-                        {market ? `Market checked · ${market.sourceCount} sources` : "Charismak reference"}
+                        {market ? (market.sourceLabel.startsWith("Charismak") ? "Charismak purchase record" : `Market checked · ${market.sourceCount} sources`) : "Charismak reference"}
                       </span>
                     </p>
                   </div>
