@@ -23,20 +23,43 @@ const BUCKET = "content-media";
 const today = () => new Date().toISOString().slice(0, 10);
 const isCompany = (project?: ProjectOption) => project?.category === "Charismak Project";
 
-/** Resize to at most 2000 px and re-encode as WebP (JPEG fallback) to keep uploads light. */
+/** Keep source images untouched up to 4K; larger images are resized proportionally without cropping. */
 async function optimiseImage(file: File): Promise<Blob> {
   const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, 2000 / Math.max(bitmap.width, bitmap.height));
+  const longestEdge = Math.max(bitmap.width, bitmap.height);
+  const maxEdge = 4096;
+
+  // Preserve the exact original bytes and quality when the image is already 4K or smaller.
+  if (longestEdge <= maxEdge) {
+    bitmap.close();
+    return file;
+  }
+
+  const scale = maxEdge / longestEdge;
+  const width = Math.max(1, Math.round(bitmap.width * scale));
+  const height = Math.max(1, Math.round(bitmap.height * scale));
   const canvas = document.createElement("canvas");
-  canvas.width = Math.round(bitmap.width * scale);
-  canvas.height = Math.round(bitmap.height * scale);
-  canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d");
+  if (!context) {
+    bitmap.close();
+    throw new Error("The image could not be processed by this browser.");
+  }
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = "high";
+  context.drawImage(bitmap, 0, 0, width, height);
   bitmap.close();
-  const encode = (type: string) => new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, 0.85));
+
+  const encode = (type: string) =>
+    new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, 0.96));
   const blob = (await encode("image/webp")) ?? (await encode("image/jpeg"));
   if (!blob) throw new Error("The image could not be processed.");
   return blob;
 }
+
+const extensionForImageType = (mimeType: string) =>
+  mimeType === "image/webp" ? "webp" : mimeType === "image/png" ? "png" : "jpg";
 
 /** Camera/WhatsApp file names are not real captions. */
 const needsCaption = (title: string) => !title.trim() || /^(whatsapp image|img|pxl|dsc|photo|image|screenshot)[\s_-]?\d/i.test(title.trim());
@@ -170,7 +193,7 @@ export default function SitePicturesManager() {
       setState("uploading");
       try {
         const blob = await optimiseImage(file);
-        const ext = blob.type === "image/webp" ? "webp" : "jpg";
+        const ext = extensionForImageType(blob.type);
         const path = `site-pictures/${project.slug}/${uploadDate.slice(0, 7)}/${crypto.randomUUID()}.${ext}`;
         const { error: storageError } = await client.storage.from(BUCKET).upload(path, blob, { contentType: blob.type, upsert: false });
         if (storageError) throw storageError;
@@ -265,7 +288,7 @@ export default function SitePicturesManager() {
     setBusyId(picture.id);
     try {
       const blob = await optimiseImage(file);
-      const ext = blob.type === "image/webp" ? "webp" : "jpg";
+      const ext = extensionForImageType(blob.type);
       const path = `site-pictures/${picture.projectSlug}/${picture.updateDate.slice(0, 7)}/${crypto.randomUUID()}.${ext}`;
       const { error: storageError } = await client.storage.from(BUCKET).upload(path, blob, { contentType: blob.type, upsert: false });
       if (storageError) throw storageError;
@@ -374,7 +397,7 @@ export default function SitePicturesManager() {
         <label className={`mt-4 flex min-h-24 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed p-4 text-center text-sm ${uploadProject && !migrationMissing ? "border-[#9DB3C8] text-[#0D3B66] hover:bg-[#F5F8FB]" : "cursor-not-allowed border-[#DCE4EC] text-[#9AA9B8]"}`}>
           <ImagePlus className="h-6 w-6" />
           <span className="font-bold">Choose photos from this device</span>
-          <span className="text-xs text-[#617286]">JPEG, PNG or WebP · up to 10 MB each · resized to 2000 px before upload · saved as drafts</span>
+          <span className="text-xs text-[#617286]">JPEG, PNG or WebP · up to 10 MB each · original quality up to 4K (4096 px long edge), proportionally resized only above 4K · no cropping · saved as drafts</span>
           <input type="file" multiple accept="image/jpeg,image/png,image/webp" disabled={!uploadProject || migrationMissing} className="hidden" onChange={(event) => { void uploadFiles(event.target.files); event.target.value = ""; }} />
         </label>
         {uploads.length ? (
@@ -444,7 +467,7 @@ export default function SitePicturesManager() {
               return (
                 <li key={picture.id} className="overflow-hidden rounded-2xl border border-[#DCE4EC] bg-white">
                   <div className="relative aspect-[4/3] bg-[#EEF2F6]">
-                    <img src={picture.imageUrl} alt={picture.altText || picture.title} loading="lazy" className="h-full w-full object-cover" />
+                    <img src={picture.imageUrl} alt={picture.altText || picture.title} loading="lazy" className="h-full w-full object-contain" />
                     <span className={`absolute left-2 top-2 rounded-full px-2.5 py-1 text-[10px] font-black uppercase ${statusPill[status]}`}>{status}</span>
                     {picture.featured ? <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-[#FFF8DD] px-2.5 py-1 text-[10px] font-black text-[#7C5C08]"><Star className="h-3 w-3" /> Pinned #{picture.displayOrder}</span> : null}
                   </div>
