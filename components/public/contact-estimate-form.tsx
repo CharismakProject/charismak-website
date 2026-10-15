@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+
+import { checkAttachments } from "@/lib/enquiry/validation";
 import { ArrowRight, CheckCircle2, FileUp, Loader2 } from "lucide-react";
 
 export default function ContactEstimateForm({
@@ -25,6 +27,13 @@ export default function ContactEstimateForm({
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (status === "sending") return;
+    const attachmentError = checkAttachments(files.map((file) => ({ name: file.name, size: file.size, type: file.type })));
+    if (attachmentError) {
+      setStatus("error");
+      setMessage(attachmentError);
+      return;
+    }
     setStatus("sending");
     setMessage("");
     try {
@@ -67,7 +76,7 @@ export default function ContactEstimateForm({
       <label className="text-xs font-semibold text-[#3A4653]">Project details / estimator summary<textarea required value={details} onChange={(event) => setDetails(event.target.value)} placeholder="Tell us about the project" className="mt-2 min-h-[210px] w-full border border-[#0D3B66]/15 bg-white p-4 text-sm leading-6 outline-none focus:border-[#0D3B66]" /></label>
       <label className="border border-dashed border-[#0D3B66]/20 bg-[#F7F8FA] p-5 text-xs font-semibold text-[#3A4653]">
         <span className="flex items-center gap-2 text-[#071E33]"><FileUp className="h-4 w-4 text-[#C8A45D]" />Attach drawings / BOQ / project images</span>
-        <span className="mt-2 block font-normal leading-5 text-[#3A4653]/65">Up to 3 PDF, image, Excel or Word files; maximum 6 MB each.</span>
+        <span className="mt-2 block font-normal leading-5 text-[#3A4653]/65">Up to 3 PDF, image, Excel (.xlsx) or Word (.docx) files, 4 MB in total. For larger drawings, paste a Google Drive or Dropbox link in the details.</span>
         <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,.xlsx,.docx" onChange={(event) => setFiles(Array.from(event.target.files ?? []).slice(0, 3))} className="mt-3 block w-full text-xs" />
         {files.length ? <span className="mt-2 block font-normal text-[#0D3B66]">Selected: {files.map((file) => file.name).join(", ")}</span> : null}
       </label>

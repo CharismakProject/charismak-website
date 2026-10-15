@@ -1,16 +1,7 @@
 import nodemailer from "nodemailer";
 import { NextResponse } from "next/server";
 
-const MAX_FILES = 3;
-const MAX_FILE_BYTES = 6 * 1024 * 1024;
-const allowedTypes = new Set([
-  "application/pdf",
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-]);
+import { checkAttachments, isValidEmail } from "@/lib/enquiry/validation";
 
 export async function POST(request: Request) {
   try {
@@ -26,13 +17,14 @@ export async function POST(request: Request) {
     if (!name || !email || !phone || !details) {
       return NextResponse.json({ error: "Name, email, phone and project details are required." }, { status: 400 });
     }
+    if (!isValidEmail(email)) return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
+    if (details.length > 10000) return NextResponse.json({ error: "Project details are too long (10,000 characters maximum)." }, { status: 400 });
 
     const files = form.getAll("attachments").filter((value): value is File => value instanceof File && value.size > 0);
-    if (files.length > MAX_FILES) return NextResponse.json({ error: `Attach a maximum of ${MAX_FILES} files.` }, { status: 400 });
-
-    for (const file of files) {
-      if (file.size > MAX_FILE_BYTES) return NextResponse.json({ error: `${file.name} is larger than 6 MB.` }, { status: 400 });
-      if (file.type && !allowedTypes.has(file.type)) return NextResponse.json({ error: `${file.name} is not a supported PDF, image, Excel or Word file.` }, { status: 400 });
+    const attachmentError = checkAttachments(files.map((file) => ({ name: file.name, size: file.size, type: file.type })));
+    if (attachmentError) return NextResponse.json({ error: attachmentError }, { status: 400 });
+    if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      return NextResponse.json({ error: "Enquiry email is not configured on this deployment. Please call or email Charismak directly." }, { status: 503 });
     }
 
     const port = Number(process.env.SMTP_PORT || 465);

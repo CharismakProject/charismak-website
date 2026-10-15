@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { company } from "./site-data";
+import ProjectStatusBadge from "@/components/projects/project-status-badge";
 import SiteUpdatesSlider, { type SiteUpdateSlide } from "@/components/home/site-updates-slider";
 import { createSeoMetadata } from "@/lib/seo";
 import {
@@ -274,7 +275,7 @@ export default async function HomePage() {
             <div>
               <SectionLabel>Selected Projects</SectionLabel>
               <h2 className="text-3xl font-semibold leading-tight tracking-[-0.03em] text-[#071E33] md:text-5xl">
-                A selection of projects delivered by Charismak.
+                Projects delivered by Charismak.
               </h2>
               <Link href="/projects" className="mt-7 inline-flex items-center gap-2 text-sm font-bold text-[#0D3B66]">
                 View Project Portfolio <ArrowRight className="h-4 w-4" />
@@ -305,6 +306,7 @@ export default async function HomePage() {
                     <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#C8A45D]">{project.role}</p>
                     <h3 className="mt-3 text-lg font-bold leading-snug text-[#071E33]">{project.title}</h3>
                     <p className="mt-2 text-xs text-[#3A4653]">{project.location}</p>
+                    <div className="mt-3"><ProjectStatusBadge status={project.status} /></div>
                     <div className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-[#0D3B66]">
                       View Project <ArrowRight className="h-4 w-4" />
                     </div>

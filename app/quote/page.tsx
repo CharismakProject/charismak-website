@@ -14,10 +14,13 @@ import { projects, services } from "../site-data";
 
 export default function QuotePage() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState("");
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (status === "loading") return;
     setStatus("loading");
+    setErrorMessage("");
 
     const form = event.currentTarget;
     const formData = new FormData(form);
@@ -38,12 +41,16 @@ export default function QuotePage() {
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) throw new Error("Failed to send");
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.error || "Failed to send");
+      }
 
       setStatus("success");
       form.reset();
     } catch (error) {
       console.error(error);
+      setErrorMessage(error instanceof Error && error.message !== "Failed to send" ? error.message : "");
       setStatus("error");
     }
   }
@@ -176,7 +183,7 @@ export default function QuotePage() {
             {status === "error" && (
               <div className="mt-5 flex gap-3 border border-red-500/30 bg-red-50 p-4 text-sm text-red-800">
                 <XCircle className="h-5 w-5 shrink-0 text-red-600" />
-                Something went wrong. Please try again, or reach us directly on WhatsApp.
+                {errorMessage || "Something went wrong. Please try again, or reach us directly on WhatsApp."}
               </div>
             )}
 

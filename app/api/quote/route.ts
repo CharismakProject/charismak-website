@@ -1,6 +1,8 @@
 import nodemailer from "nodemailer";
 import { NextResponse } from "next/server";
 
+import { isValidEmail } from "@/lib/enquiry/validation";
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -11,6 +13,11 @@ export async function POST(request: Request) {
         { error: "Missing required fields." },
         { status: 400 }
       );
+    }
+    if (!isValidEmail(String(email))) return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
+    if (String(details).length > 10000) return NextResponse.json({ error: "Project details are too long." }, { status: 400 });
+    if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      return NextResponse.json({ error: "Enquiry email is not configured on this deployment." }, { status: 503 });
     }
 
     const transporter = nodemailer.createTransport({
