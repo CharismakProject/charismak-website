@@ -38,7 +38,29 @@ const schema = {
   },
 };
 
+// Best-effort abuse guard: each server instance allows a few interpretations per
+// visitor per day. Serverless instances do not share memory, so this limits
+// casual abuse and runaway loops rather than guaranteeing a hard cap.
+const DAILY_LIMIT = 5;
+const usage = new Map<string, { day: string; count: number }>();
+
+function overLimit(request: Request) {
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || "unknown";
+  const day = new Date().toISOString().slice(0, 10);
+  const entry = usage.get(ip);
+  if (!entry || entry.day !== day) {
+    if (usage.size > 5000) usage.clear();
+    usage.set(ip, { day, count: 1 });
+    return false;
+  }
+  entry.count += 1;
+  return entry.count > DAILY_LIMIT;
+}
+
 export async function POST(request: Request) {
+  if (overLimit(request)) {
+    return NextResponse.json({ error: "Daily limit reached for AI plan reading. Please try again tomorrow or contact Charismak." }, { status: 429 });
+  }
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return NextResponse.json({ error: "AI plan interpretation is not configured on this deployment." }, { status: 503 });
 
