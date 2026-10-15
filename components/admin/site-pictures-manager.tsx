@@ -23,19 +23,22 @@ const BUCKET = "content-media";
 const today = () => new Date().toISOString().slice(0, 10);
 const isCompany = (project?: ProjectOption) => project?.category === "Charismak Project";
 
-/** Keep source images untouched up to 4K; larger images are resized proportionally without cropping. */
+const MAX_SITE_PICTURE_STORED_BYTES = 8 * 1024 * 1024;
+const MAX_SITE_PICTURE_EDGE = 4096;
+
+/** Keep 4K pixel dimensions, preserve aspect ratio, and compress only when required by storage limits. */
 async function optimiseImage(file: File): Promise<Blob> {
   const bitmap = await createImageBitmap(file);
   const longestEdge = Math.max(bitmap.width, bitmap.height);
-  const maxEdge = 4096;
 
-  // Preserve the exact original bytes and quality when the image is already 4K or smaller.
-  if (longestEdge <= maxEdge) {
+  // Preserve original bytes and quality whenever the image fits the existing public-storage limit.
+  if (longestEdge <= MAX_SITE_PICTURE_EDGE && file.size <= MAX_SITE_PICTURE_STORED_BYTES) {
     bitmap.close();
     return file;
   }
 
-  const scale = maxEdge / longestEdge;
+  // Do not upscale small originals; scale down only images larger than 4K.
+  const scale = Math.min(1, MAX_SITE_PICTURE_EDGE / longestEdge);
   const width = Math.max(1, Math.round(bitmap.width * scale));
   const height = Math.max(1, Math.round(bitmap.height * scale));
   const canvas = document.createElement("canvas");
@@ -51,11 +54,15 @@ async function optimiseImage(file: File): Promise<Blob> {
   context.drawImage(bitmap, 0, 0, width, height);
   bitmap.close();
 
-  const encode = (type: string) =>
-    new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, 0.96));
-  const blob = (await encode("image/webp")) ?? (await encode("image/jpeg"));
-  if (!blob) throw new Error("The image could not be processed.");
-  return blob;
+  const encode = (type: string, quality: number) =>
+    new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, quality));
+  // Supabase's existing content-media bucket accepts files up to 8 MB.
+  // Try high visual quality first and reduce compression only as much as needed.
+  for (const quality of [0.96, 0.93, 0.9, 0.87]) {
+    const blob = (await encode("image/webp", quality)) ?? (await encode("image/jpeg", quality));
+    if (blob && blob.size <= MAX_SITE_PICTURE_STORED_BYTES) return blob;
+  }
+  throw new Error("This photo is too large to prepare at high quality. Export a smaller 4K JPEG/WebP and try again.");
 }
 
 const extensionForImageType = (mimeType: string) =>
@@ -284,7 +291,7 @@ export default function SitePicturesManager() {
 
   const replaceImage = async (picture: SitePicture, file: File | undefined) => {
     if (!client || !file) return;
-    if (!SITE_PICTURE_TYPES.includes(file.type) || file.size > MAX_SITE_PICTURE_BYTES) return fail("Use a JPEG, PNG or WebP image under 10 MB.");
+    if (!SITE_PICTURE_TYPES.includes(file.type) || file.size > MAX_SITE_PICTURE_BYTES) return fail("Use a JPEG, PNG or WebP image under 25 MB.");
     setBusyId(picture.id);
     try {
       const blob = await optimiseImage(file);
@@ -397,7 +404,7 @@ export default function SitePicturesManager() {
         <label className={`mt-4 flex min-h-24 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed p-4 text-center text-sm ${uploadProject && !migrationMissing ? "border-[#9DB3C8] text-[#0D3B66] hover:bg-[#F5F8FB]" : "cursor-not-allowed border-[#DCE4EC] text-[#9AA9B8]"}`}>
           <ImagePlus className="h-6 w-6" />
           <span className="font-bold">Choose photos from this device</span>
-          <span className="text-xs text-[#617286]">JPEG, PNG or WebP · up to 10 MB each · original quality up to 4K (4096 px long edge), proportionally resized only above 4K · no cropping · saved as drafts</span>
+          <span className="text-xs text-[#617286]">JPEG, PNG or WebP · source up to 25 MB · full 4K pixel dimensions (4096 px long edge) · no cropping · only oversized files are compressed to fit storage</span>
           <input type="file" multiple accept="image/jpeg,image/png,image/webp" disabled={!uploadProject || migrationMissing} className="hidden" onChange={(event) => { void uploadFiles(event.target.files); event.target.value = ""; }} />
         </label>
         {uploads.length ? (
