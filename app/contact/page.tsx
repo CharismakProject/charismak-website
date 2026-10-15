@@ -46,8 +46,8 @@ export default async function ContactPage() {
             <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#F2B544]">Reach Us Directly</p>
             <h2 className="mt-5 text-3xl font-semibold tracking-[-0.03em] md:text-4xl">Let’s start with a conversation.</h2>
             <div className="mt-10 space-y-8">
-              <ContactItem icon={Phone} label="Phone"><p>{phone}</p></ContactItem>
-              <ContactItem icon={Mail} label="Email"><p>{email}</p></ContactItem>
+              <ContactItem icon={Phone} label="Phone"><a href={`tel:${phone.replace(/[^\d+]/g, "")}`} className="underline-offset-4 hover:text-white hover:underline">{phone}</a></ContactItem>
+              <ContactItem icon={Mail} label="Email"><a href={`mailto:${email}`} className="underline-offset-4 hover:text-white hover:underline">{email}</a></ContactItem>
               <ContactItem icon={MapPin} label="Office"><p>{address}</p></ContactItem>
             </div>
           </div>

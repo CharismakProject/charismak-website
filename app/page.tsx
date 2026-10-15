@@ -142,7 +142,7 @@ export default async function HomePage() {
 
   return (
     <main className="overflow-hidden bg-white pt-20">
-      <section className="relative min-h-[690px] overflow-hidden bg-[#071E33] text-white lg:min-h-[760px]">
+      <section className="relative min-h-[600px] overflow-hidden bg-[#071E33] text-white lg:min-h-[680px]">
         <Image
           src={heroImage}
           alt={heroProject?.title || "Charismak construction project"}
@@ -154,12 +154,12 @@ export default async function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-r from-[#071E33]/96 via-[#071E33]/76 to-[#071E33]/18" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#071E33]/65 via-transparent to-transparent" />
 
-        <div className="relative mx-auto grid min-h-[690px] max-w-7xl items-center gap-12 px-5 py-20 md:px-8 lg:min-h-[760px] lg:grid-cols-[1.05fr_0.55fr]">
+        <div className="relative mx-auto grid min-h-[600px] max-w-7xl items-center gap-12 px-5 py-16 md:px-8 lg:min-h-[680px] lg:grid-cols-[1.05fr_0.55fr]">
           <div className="max-w-4xl">
             <p className="mb-5 text-xs font-bold uppercase tracking-[0.32em] text-[#F2B544]">Design · Cost · Build</p>
-            <h1 className="max-w-4xl text-5xl font-semibold leading-[0.98] tracking-[-0.04em] sm:text-6xl lg:text-7xl xl:text-[5.35rem]">
-              Building exceptional spaces.
-              <span className="mt-2 block text-[#E8C77F]">Delivering lasting value.</span>
+            <h1 className="max-w-3xl text-5xl font-semibold leading-[1] tracking-[-0.04em] sm:text-6xl xl:text-7xl">
+              Priced right.
+              <span className="mt-2 block text-[#E8C77F]">Built to last.</span>
             </h1>
             <p className="mt-7 max-w-2xl text-base leading-8 text-white/76 md:text-lg">
               Charismak Project Nigeria Limited is an Abuja-based construction company handling building construction, renovation, engineering, cost planning and project management from planning through completion.
@@ -167,7 +167,7 @@ export default async function HomePage() {
             <div className="mt-9 flex flex-wrap gap-4">
               <Link
                 href="/quote"
-                className="inline-flex items-center gap-3 bg-[#0D3B66] px-7 py-4 text-sm font-bold text-white shadow-xl transition hover:bg-[#C8A45D] hover:text-[#071E33]"
+                className="inline-flex items-center gap-3 bg-[#C8A45D] px-7 py-4 text-sm font-bold text-[#071E33] shadow-xl transition hover:bg-[#F2B544]"
               >
                 Start Your Project <ArrowRight className="h-5 w-5" />
               </Link>

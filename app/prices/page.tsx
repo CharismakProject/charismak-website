@@ -16,7 +16,10 @@ export default function PricesPage() {
   return (
     <main className="min-h-screen bg-[#F5F7FA] pt-20">
       <div className="mx-auto max-w-7xl px-4 py-10 md:px-8 md:py-14">
-        <section className="mb-6 flex flex-col gap-5 rounded-2xl border border-[#DCE4EC] bg-white p-5 shadow-[0_8px_28px_rgba(7,30,51,0.04)] sm:flex-row sm:items-center sm:justify-between md:p-6">
+        <MarketPriceBrowser />
+        <div className="mt-6 space-y-4">
+          <MarketplaceSafetyNotice slim />
+        <section className="flex flex-col gap-5 rounded-2xl border border-[#DCE4EC] bg-white p-5 shadow-[0_8px_28px_rgba(7,30,51,0.04)] sm:flex-row sm:items-center sm:justify-between md:p-6">
           <div className="flex min-w-0 items-start gap-4">
             <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#0D3B66] text-[#F2B544]"><Store className="h-5 w-5" /></span>
             <div className="min-w-0">
@@ -29,10 +32,7 @@ export default function PricesPage() {
             Supplier directory <ArrowRight className="h-4 w-4" />
           </Link>
         </section>
-        <div className="mb-6">
-          <MarketplaceSafetyNotice />
         </div>
-        <MarketPriceBrowser />
       </div>
     </main>
   );
