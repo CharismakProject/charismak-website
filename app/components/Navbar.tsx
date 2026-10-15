@@ -2,22 +2,41 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Menu, Phone, X } from "lucide-react";
-import { useState } from "react";
+import { ChevronDown, Menu, Phone, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { company } from "../site-data";
 
 const navItems = [
   { label: "About", href: "/about" },
   { label: "Services", href: "/services" },
   { label: "Projects", href: "/projects" },
-  { label: "Estimator", href: "/estimator" },
-  { label: "Prices", href: "/prices" },
-  { label: "Rates", href: "/rates" },
-  { label: "Blog", href: "/blog" },
+];
+
+const toolItems = [
+  { label: "Cost Estimator", href: "/estimator", description: "Early budget range for your project" },
+  { label: "Material Prices", href: "/prices", description: "Abuja prices with source and date" },
+  { label: "Rate Bank", href: "/rates", description: "Build-ups for common construction work" },
+  { label: "Supplier Directory", href: "/marketplace", description: "Suppliers and artisans" },
+  { label: "News & Learning", href: "/blog", description: "Guides and company updates" },
 ];
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(false);
+  const toolsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!toolsOpen) return;
+    const close = (event: MouseEvent | KeyboardEvent) => {
+      if (event instanceof KeyboardEvent ? event.key === "Escape" : !toolsRef.current?.contains(event.target as Node)) setToolsOpen(false);
+    };
+    document.addEventListener("mousedown", close);
+    document.addEventListener("keydown", close);
+    return () => {
+      document.removeEventListener("mousedown", close);
+      document.removeEventListener("keydown", close);
+    };
+  }, [toolsOpen]);
 
   const whatsappLink =
     "https://wa.me/2347066619598?text=Hello%20Charismak%20Project%2C%20I%20would%20like%20to%20discuss%20a%20construction%20project.";
@@ -57,6 +76,35 @@ export default function Navbar() {
                 {item.label}
               </Link>
             ))}
+            <div ref={toolsRef} className="relative" onMouseLeave={() => setToolsOpen(false)}>
+              <button
+                type="button"
+                aria-expanded={toolsOpen}
+                aria-haspopup="true"
+                onClick={() => setToolsOpen((open) => !open)}
+                onMouseEnter={() => setToolsOpen(true)}
+                className="inline-flex items-center gap-1 text-[13px] font-semibold text-[#151B22] transition hover:text-[#0D3B66]"
+              >
+                Construction Tools <ChevronDown className={`h-3.5 w-3.5 transition ${toolsOpen ? "rotate-180" : ""}`} />
+              </button>
+              {toolsOpen ? (
+                <div className="absolute left-1/2 top-full w-72 -translate-x-1/2 pt-3">
+                  <ul className="border border-[#0D3B66]/10 bg-white p-2 shadow-[0_18px_40px_rgba(7,30,51,0.14)]">
+                    {toolItems.map((item) => (
+                      <li key={item.href}>
+                        <Link href={item.href} onClick={() => setToolsOpen(false)} className="block px-3 py-2.5 transition hover:bg-[#F5F7FA] focus:bg-[#F5F7FA] focus:outline-none">
+                          <span className="block text-sm font-semibold text-[#071E33]">{item.label}</span>
+                          <span className="block text-xs text-[#617286]">{item.description}</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+            </div>
+            <Link href="/contact" className="text-[13px] font-semibold text-[#151B22] transition hover:text-[#0D3B66]">
+              Contact
+            </Link>
           </nav>
 
           <div className="hidden items-center gap-3 lg:flex">
@@ -129,10 +177,21 @@ export default function Navbar() {
                 {item.label}
               </Link>
             ))}
+            <p className="pb-2 pt-6 text-xs font-bold uppercase tracking-[0.2em] text-[#F2B544]">Construction Tools</p>
+            {toolItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setMobileOpen(false)}
+                className="border-b border-white/10 py-3 text-base text-white/82 transition hover:text-[#F2B544]"
+              >
+                {item.label}
+              </Link>
+            ))}
             <Link
               href="/contact"
               onClick={() => setMobileOpen(false)}
-              className="border-b border-white/10 py-4 text-lg text-white/82"
+              className="mt-4 border-b border-white/10 py-4 text-lg text-white/82"
             >
               Contact
             </Link>

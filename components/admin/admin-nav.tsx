@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, Boxes, Building2, CircleDollarSign, LayoutDashboard, Settings2, Store, UserRoundCog, Users, Wrench } from "lucide-react";
+import { BookOpen, Boxes, Building2, Camera, CircleDollarSign, LayoutDashboard, Settings2, Store, UserRoundCog, Users, Wrench } from "lucide-react";
 
 const links = [
   { href: "/admin", label: "Control Centre", icon: LayoutDashboard },
   { href: "/admin/projects", label: "Projects", icon: Building2 },
+  { href: "/admin/site-pictures", label: "Site Pictures", icon: Camera },
   { href: "/admin/leadership", label: "Leadership", icon: Users },
   { href: "/admin/services", label: "Services", icon: Wrench },
   { href: "/blog/manage", label: "News & Learning", icon: BookOpen },

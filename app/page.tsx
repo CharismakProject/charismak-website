@@ -19,10 +19,11 @@ import {
 import { company } from "./site-data";
 import ProjectStatusBadge from "@/components/projects/project-status-badge";
 import SiteUpdatesSlider, { type SiteUpdateSlide } from "@/components/home/site-updates-slider";
+import { selectSliderPictures } from "@/lib/content/site-pictures";
 import { createSeoMetadata } from "@/lib/seo";
 import {
-  loadPublishedProjectUpdates,
   loadPublishedProjects,
+  loadPublishedSitePictures,
   loadPublishedServices,
   loadWebsiteContent,
 } from "@/lib/content/website-cms";
@@ -117,11 +118,11 @@ const serviceIconMap = {
 };
 
 export default async function HomePage() {
-  const [projects, content, managedServices, projectUpdates] = await Promise.all([
+  const [projects, content, managedServices, sitePictures] = await Promise.all([
     loadPublishedProjects(),
     loadWebsiteContent("company"),
     loadPublishedServices(),
-    loadPublishedProjectUpdates(12),
+    loadPublishedSitePictures(),
   ]);
 
   const byKey = new Map(content.map((record) => [record.contentKey, record.value]));
@@ -135,41 +136,47 @@ export default async function HomePage() {
   ].slice(0, 4);
   const heroProject = featuredProjects[0] || directProjects[0] || projects[0];
   const heroImage = heroProject?.heroImages?.[0] || heroProject?.cover || "/Images/Projects/coco/hero.jpg";
-  const publicProjectSlugs = new Set(projects.filter((project) => project.showOnProjectsPage !== false).map((project) => project.slug));
-  const recentProjectUpdates = projectUpdates.filter((update) => publicProjectSlugs.has(update.projectSlug));
   const formatUpdateDate = (value: string) => {
     const date = new Date(value);
     return Number.isNaN(date.getTime()) ? "" : new Intl.DateTimeFormat("en-NG", { day: "numeric", month: "short", year: "numeric" }).format(date);
   };
-
-  const siteSlides: SiteUpdateSlide[] = recentProjectUpdates.map((update) => ({
-    id: update.id,
-    image: update.imageUrl,
-    projectTitle: update.projectTitle,
-    location: update.projectLocation,
-    title: update.title,
-    summary: update.summary,
-    date: formatUpdateDate(update.updateDate),
-    href: `/projects/${update.projectSlug}`,
-  }));
-  // Top up with gallery photos from ongoing Charismak projects until updates are posted.
-  if (siteSlides.length < 4) {
-    for (const project of directProjects.filter((item) => /ongoing/i.test(item.status))) {
-      for (const image of [...(project.heroImages || []), ...project.images]) {
-        if (siteSlides.length >= 8) break;
-        siteSlides.push({
-          id: `${project.slug}-${image}`,
-          image,
-          projectTitle: project.title,
-          location: project.location,
-          title: "Work in progress on site",
-          summary: "",
-          date: "",
-          href: `/projects/${project.slug}`,
-        });
-      }
-    }
-  }
+  // Slider: admin-published Site Pictures linked to public Charismak company projects.
+  const companySlugs = new Set(directProjects.map((project) => project.slug));
+  const projectBySlug = new Map(directProjects.map((project) => [project.slug, project]));
+  const sliderPictures = selectSliderPictures(sitePictures, companySlugs);
+  const hasSiteUpdates = sliderPictures.length > 0;
+  const siteSlides: SiteUpdateSlide[] = hasSiteUpdates
+    ? sliderPictures.map((picture) => {
+        const project = projectBySlug.get(picture.projectSlug);
+        return {
+          id: picture.id,
+          image: picture.imageUrl,
+          alt: picture.altText || `${picture.title} — ${project?.title ?? picture.projectTitle}`,
+          projectTitle: project?.title ?? picture.projectTitle,
+          location: project?.location ?? picture.projectLocation,
+          title: picture.title,
+          summary: picture.summary,
+          date: formatUpdateDate(picture.updateDate),
+          href: `/projects/${picture.projectSlug}`,
+        };
+      })
+    : // Honest fallback: portfolio photos of Charismak projects, labelled with
+      // their recorded status and no invented dates or activity.
+      directProjects
+        .flatMap((project) =>
+          [project.cover, ...(project.heroImages || [])].filter(Boolean).slice(0, 2).map((image) => ({
+            id: `${project.slug}-${image}`,
+            image,
+            alt: project.title,
+            projectTitle: `Charismak project · ${project.status}`,
+            location: project.location,
+            title: project.title,
+            summary: "",
+            date: "",
+            href: `/projects/${project.slug}`,
+          })),
+        )
+        .slice(0, 6);
 
   return (
     <main className="overflow-hidden bg-white pt-20">
@@ -257,8 +264,10 @@ export default async function HomePage() {
           <div className="mx-auto max-w-7xl">
             <div className="mb-8 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
               <div>
-                <SectionLabel>On Site Now</SectionLabel>
-                <h2 className="text-3xl font-semibold tracking-[-0.03em] text-[#071E33] md:text-4xl">What is happening on our projects.</h2>
+                <SectionLabel>{hasSiteUpdates ? "Site Progress & Project Updates" : "Project Portfolio"}</SectionLabel>
+                <h2 className="text-3xl font-semibold tracking-[-0.03em] text-[#071E33] md:text-4xl">
+                  {hasSiteUpdates ? "Latest photographs from our sites." : "Photos from Charismak projects."}
+                </h2>
               </div>
               <Link href="/projects" className="inline-flex items-center gap-2 text-sm font-bold text-[#0D3B66]">
                 All projects <ArrowRight className="h-4 w-4" />

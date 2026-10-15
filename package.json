@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run test:public-estimator && npm run test:material-estimator && npm run test:estimator-foundation && npm run test:supplier-price-validity && npm run test:release-trust && npm run test:price-freshness && npm run test:rate-bank && npm run test:enquiry && next build",
+    "build": "npm run test:public-estimator && npm run test:material-estimator && npm run test:estimator-foundation && npm run test:supplier-price-validity && npm run test:release-trust && npm run test:price-freshness && npm run test:rate-bank && npm run test:enquiry && npm run test:site-pictures && next build",
     "start": "next start",
     "lint": "eslint",
     "test:fence-boq": "node --import tsx scripts/verify-fence-boq.ts",
@@ -16,7 +16,8 @@
     "test:release-trust": "node --import tsx scripts/verify-release-trust.ts",
     "test:price-freshness": "node --import tsx scripts/verify-price-freshness.ts",
     "test:rate-bank": "node --import tsx scripts/verify-rate-bank.ts",
-    "test:enquiry": "node --import tsx scripts/verify-enquiry-validation.ts"
+    "test:enquiry": "node --import tsx scripts/verify-enquiry-validation.ts",
+    "test:site-pictures": "node --import tsx scripts/verify-site-pictures.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.2",
