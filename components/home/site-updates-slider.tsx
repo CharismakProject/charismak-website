@@ -8,6 +8,7 @@ import { useCallback, useEffect, useState } from "react";
 export type SiteUpdateSlide = {
   id: string;
   image: string;
+  alt?: string;
   projectTitle: string;
   location: string;
   title: string;
@@ -48,7 +49,7 @@ export default function SiteUpdatesSlider({ slides }: { slides: SiteUpdateSlide[
           <Image
             key={item.id}
             src={item.image}
-            alt={`${item.projectTitle}: ${item.title}`}
+            alt={item.alt || `${item.projectTitle}: ${item.title}`}
             fill
             sizes="(max-width: 1280px) 100vw, 1280px"
             priority={index === 0}

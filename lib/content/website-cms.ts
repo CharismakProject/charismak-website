@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 import { people, services, type Person, type Project } from "@/app/site-data";
 import { publicProjects as fallbackProjects } from "@/lib/content/public-projects";
+import { rowToSitePicture, type SitePicture } from "@/lib/content/site-pictures";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || "https://mxjtxcajzopjahzqwwvf.supabase.co";
 const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim()
@@ -133,6 +134,35 @@ export async function loadWebsiteContent(section?: string): Promise<ManagedWebsi
 
 export async function loadPublishedServices(): Promise<ManagedWebsiteService[]> {
   return cachedPublishedServices();
+}
+
+const cachedPublishedSitePictures = unstable_cache(async (): Promise<SitePicture[]> => {
+  try {
+    const extended = await publicClient()
+      .from("website_project_updates")
+      .select("id, project_slug, project_title, project_location, title, summary, image_url, alt_text, update_date, featured, display_order, published, archived")
+      .eq("published", true)
+      .eq("archived", false)
+      .order("update_date", { ascending: false })
+      .limit(60);
+    if (!extended.error && extended.data) return (extended.data as Record<string, unknown>[]).map(rowToSitePicture);
+    // Before the Site Pictures migration is applied, fall back to the original columns.
+    const basic = await publicClient()
+      .from("website_project_updates")
+      .select("id, project_slug, project_title, project_location, title, summary, image_url, update_date, published")
+      .eq("published", true)
+      .order("update_date", { ascending: false })
+      .limit(60);
+    if (basic.error || !basic.data) return [];
+    return (basic.data as Record<string, unknown>[]).map(rowToSitePicture);
+  } catch {
+    return [];
+  }
+}, ["website-site-pictures-v1"], { revalidate: 300, tags: ["website-project-updates"] });
+
+/** Published Site Pictures (unordered); use selectSliderPictures for the homepage order. */
+export async function loadPublishedSitePictures(): Promise<SitePicture[]> {
+  return cachedPublishedSitePictures();
 }
 
 export async function loadPublishedProjectUpdates(limit = 6): Promise<ManagedProjectUpdate[]> {

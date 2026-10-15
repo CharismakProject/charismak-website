@@ -43,6 +43,8 @@ export type MarketplaceProfile = {
   reviewCount: number;
   verified: boolean;
   isDemo?: boolean;
+  /** Extra words used only for search (material keywords from the supplier's forms). */
+  searchTerms?: string[];
   status: "pending" | "approved";
 };
 
@@ -53,85 +55,6 @@ export type NewMarketplaceProfile = Pick<
 
 const LOCAL_KEY = "charismak-marketplace-profiles-v1";
 export const MARKETPLACE_UPDATED_EVENT = "charismak:marketplace-updated";
-
-export const starterMarketplaceProfiles: MarketplaceProfile[] = [
-  {
-    id: "seed-supplier-abuja-1",
-    type: "supplier",
-    businessName: "Example Aggregate Supplier",
-    category: "Cement, blocks & aggregates",
-    categories: ["Cement, blocks & aggregates"],
-    location: "Abuja",
-    serviceArea: "FCT",
-    phone: "",
-    email: "",
-    description: "",
-    products: ["Cement · bag", "Sharp sand · 10 m³ truck", "Granite · 30-tonne truck", "Blocks · 9-inch piece"],
-    offers: [],
-    rating: 0,
-    reviewCount: 0,
-    verified: false,
-    isDemo: true,
-    status: "approved",
-  },
-  {
-    id: "seed-supplier-lagos-1",
-    type: "supplier",
-    businessName: "Example Steel & Mesh Supplier",
-    category: "Reinforcement & BRC mesh",
-    categories: ["Reinforcement & BRC mesh"],
-    location: "Lagos",
-    serviceArea: "Lagos State",
-    phone: "",
-    email: "",
-    description: "",
-    products: ["Y12 rebar · 12 m length", "Y16 rebar · 12 m length", "A142 BRC · 2.4 × 4.8 m sheet", "Binding wire · 25 kg roll"],
-    offers: [],
-    rating: 0,
-    reviewCount: 0,
-    verified: false,
-    isDemo: true,
-    status: "approved",
-  },
-  {
-    id: "seed-artisan-abuja-1",
-    type: "artisan",
-    businessName: "Example Formwork Team",
-    category: "Carpentry & formwork",
-    categories: ["Carpentry & formwork"],
-    location: "Abuja",
-    serviceArea: "FCT",
-    phone: "",
-    email: "",
-    description: "",
-    products: ["Slab formwork · m² labour", "Column formwork · m² labour", "Carpentry crew · day"],
-    offers: [],
-    rating: 0,
-    reviewCount: 0,
-    verified: false,
-    isDemo: true,
-    status: "approved",
-  },
-  {
-    id: "seed-artisan-ph-1",
-    type: "artisan",
-    businessName: "Example Plumbing Team",
-    category: "Plumbing & mechanical",
-    categories: ["Plumbing & mechanical"],
-    location: "Port Harcourt",
-    serviceArea: "Port Harcourt metropolitan area",
-    phone: "",
-    email: "",
-    description: "",
-    products: ["First-fix plumbing · point", "Sanitary fitting · item", "Call-out inspection · visit"],
-    offers: [],
-    rating: 0,
-    reviewCount: 0,
-    verified: false,
-    isDemo: true,
-    status: "approved",
-  },
-];
 
 const readLocal = (): MarketplaceProfile[] => {
   if (typeof localStorage === "undefined") return [];
@@ -216,6 +139,7 @@ const toSupplierDirectoryProfile = (row: Record<string, unknown>): MarketplacePr
         ? "Construction services"
         : "Construction supplier",
     categories: categoryNames,
+    searchTerms: definitions.flatMap((form) => [form.title, ...form.keywords]),
     location,
     serviceArea,
     phone: String(row.phone ?? row.whatsapp ?? ""),
@@ -232,15 +156,31 @@ const toSupplierDirectoryProfile = (row: Record<string, unknown>): MarketplacePr
   };
 };
 
-export async function loadMarketplaceProfiles(): Promise<MarketplaceProfile[]> {
+export type MarketplaceDirectoryResult =
+  | { status: "ok"; profiles: MarketplaceProfile[] }
+  | { status: "error"; profiles: []; message: string };
+
+/**
+ * Loads the live supplier & artisan directory. Never substitutes sample or
+ * example profiles: a failure is reported as an error so the page can say so.
+ */
+export async function loadMarketplaceDirectory(): Promise<MarketplaceDirectoryResult> {
   const client = getSupabaseBrowserClient();
-  if (!client) return starterMarketplaceProfiles;
+  if (!client) return { status: "error", profiles: [], message: "The supplier directory is not configured on this deployment." };
+  try {
+    const { data, error } = await client.functions.invoke("public-supplier-directory", { body: {} });
+    if (error || !Array.isArray(data?.profiles)) {
+      return { status: "error", profiles: [], message: "The supplier directory could not be loaded right now." };
+    }
+    return { status: "ok", profiles: (data.profiles as Record<string, unknown>[]).map(toSupplierDirectoryProfile) };
+  } catch {
+    return { status: "error", profiles: [], message: "The supplier directory could not be loaded right now." };
+  }
+}
 
-  const { data, error } = await client.functions.invoke("public-supplier-directory", { body: {} });
-  if (error || !Array.isArray(data?.profiles)) return starterMarketplaceProfiles;
-
-  const remote = (data.profiles as Record<string, unknown>[]).map(toSupplierDirectoryProfile);
-  return remote.length ? remote : starterMarketplaceProfiles;
+/** Live profiles only (empty when unavailable). */
+export async function loadMarketplaceProfiles(): Promise<MarketplaceProfile[]> {
+  return (await loadMarketplaceDirectory()).profiles;
 }
 
 export async function submitMarketplaceProfile(

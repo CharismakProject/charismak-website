@@ -21,6 +21,7 @@ import {
 import type { PriceCategory, PriceItem } from "@/lib/pricing/models";
 import { DEFAULT_PRICE_ITEMS } from "@/lib/pricing/defaults";
 import { JIJI_MARKET_SNAPSHOT } from "@/lib/pricing/jiji-market-snapshot";
+import { FRESHNESS_LABELS, SOURCE_LABELS, ageInDays, priceFreshness, priceSourceKind } from "@/lib/pricing/freshness";
 import { loadPriceItems, PRICE_LIBRARY_UPDATED_EVENT } from "@/lib/pricing/store";
 import {
   loadSupplierOfferSummaries,
@@ -69,6 +70,13 @@ const searchText = (item: PriceItem) => {
     .toLowerCase();
 };
 
+const FRESHNESS_STYLES = {
+  current: "bg-[#EAF7EF] text-[#197447]",
+  ageing: "bg-[#FFF6DD] text-[#7C5C08]",
+  stale: "bg-[#FDECEA] text-[#8B1E00]",
+  benchmark: "bg-[#EEF2F6] text-[#526579]",
+} as const;
+
 const categoryLabel = (category: PriceCategory) => {
   if (category === "plant") return "Equipment";
   if (category === "subcontract") return "Specialist";
@@ -81,6 +89,7 @@ export default function MarketPriceBrowser() {
   const [category, setCategory] = useState<CategoryFilter>("all");
   const [query, setQuery] = useState("");
   const [location, setLocation] = useState("all");
+  const [freshnessFilter, setFreshnessFilter] = useState<"all" | "current" | "older">("all");
   const [visible, setVisible] = useState(PAGE_SIZE);
 
   useEffect(() => {
@@ -106,10 +115,13 @@ export default function MarketPriceBrowser() {
       return (
         (category === "all" || item.category === category) &&
         (location === "all" || marketLocation === location) &&
+        (freshnessFilter === "all" ||
+          (freshnessFilter === "current") ===
+            (priceFreshness(JIJI_MARKET_SNAPSHOT[item.id] ? priceSourceKind(JIJI_MARKET_SNAPSHOT[item.id].sourceLabel) : "benchmark", JIJI_MARKET_SNAPSHOT[item.id]?.checkedAt) === "current")) &&
         (!q || searchText(item).includes(q))
       );
     });
-  }, [items, category, location, query]);
+  }, [items, category, location, query, freshnessFilter]);
 
   const liveCount = items.filter((item) => JIJI_MARKET_SNAPSHOT[item.id]).length;
 
@@ -126,7 +138,7 @@ export default function MarketPriceBrowser() {
             Check prices in the units people actually buy.
           </h1>
           <p className="mt-5 max-w-3xl text-sm leading-7 text-white/70 md:text-base">
-            Search materials, labour and equipment by location. We show practical buying units alongside the technical units used for estimating.
+            Search materials, labour and equipment in the units people buy. Every price shows its source and when it was last checked — prices still vary by supplier, location, quantity, delivery and date, so confirm before you buy.
           </p>
 
           <div className="mt-7 grid overflow-hidden rounded-2xl bg-white sm:grid-cols-[1fr_220px]">
@@ -172,7 +184,17 @@ export default function MarketPriceBrowser() {
       </section>
 
       <section className="-mx-4 overflow-x-auto px-4 md:mx-0 md:px-0">
-        <div className="flex w-max gap-2">
+        <div className="flex w-max items-center gap-2">
+          <select
+            value={freshnessFilter}
+            onChange={(event) => { setFreshnessFilter(event.target.value as typeof freshnessFilter); setVisible(PAGE_SIZE); }}
+            aria-label="Filter by price freshness"
+            className="min-h-10 rounded-full border border-[#DCE4EC] bg-white px-4 text-sm font-bold text-[#071E33]"
+          >
+            <option value="all">All prices</option>
+            <option value="current">Current only (checked ≤ 45 days)</option>
+            <option value="older">Older &amp; benchmark</option>
+          </select>
           {categories.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
@@ -195,7 +217,7 @@ export default function MarketPriceBrowser() {
       <section>
         <div className="mb-3 flex items-end justify-between gap-3">
           <h2 className="text-lg font-black text-[#071E33] md:text-xl">{results.length} items</h2>
-          <p className="text-xs text-[#617286]">{liveCount} with current market checks</p>
+          <p className="text-xs text-[#617286]">{liveCount} with recorded market observations</p>
         </div>
 
         <ul className="divide-y divide-[#E4EAF0] overflow-hidden rounded-2xl border border-[#DCE4EC] bg-white">
@@ -208,6 +230,9 @@ export default function MarketPriceBrowser() {
             const detailHref = `/prices/${encodeURIComponent(item.id)}`;
             const unit = market?.unit || item.marketUnit || item.unit;
             const spec = market?.specification || item.specification;
+            const kind = market ? priceSourceKind(market.sourceLabel) : "benchmark";
+            const freshness = priceFreshness(kind, market?.checkedAt);
+            const age = ageInDays(market?.checkedAt);
             const hasDetails = Boolean(market?.note || market?.alternatives?.length || market?.primarySourceUrl);
 
             return (
@@ -244,8 +269,13 @@ export default function MarketPriceBrowser() {
                         <CalendarDays className="h-3 w-3" />
                         {new Date(market?.checkedAt || item.updatedAt).toLocaleDateString("en-NG")}
                       </span>
-                      <span className={market ? "font-bold text-[#197447]" : "font-bold text-[#8B1E00]"}>
-                        {market ? (market.sourceLabel.startsWith("Charismak") ? "Charismak purchase record" : `Market checked · ${market.sourceCount} sources`) : "Charismak reference"}
+                      <span className="font-bold text-[#3A4653]">
+                        {SOURCE_LABELS[kind]}
+                        {kind === "listing" ? ` · ${market?.sourceCount} listings` : ""}
+                      </span>
+                      <span className={`rounded-full px-2 py-0.5 font-bold ${FRESHNESS_STYLES[freshness]}`}>
+                        {FRESHNESS_LABELS[freshness]}
+                        {age !== null && freshness !== "benchmark" ? ` · ${age} day${age === 1 ? "" : "s"} old` : ""}
                       </span>
                     </p>
                   </div>

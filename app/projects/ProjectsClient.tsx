@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import ProjectStatusBadge from "@/components/projects/project-status-badge";
 import Link from "next/link";
-import { ArrowRight, BriefcaseBusiness, CheckCircle2, Filter, MapPin } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, Building2, Filter, MapPin } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import type { EngagementTag, Project } from "../site-data";
@@ -32,6 +33,8 @@ export default function ProjectsClient({ initialProjects }: { initialProjects: P
     return visibleProjects.filter((project) => project.engagementTag === activeFilter);
   }, [activeFilter, visibleProjects]);
 
+  const companyFiltered = filteredProjects.filter((project) => project.publicCategory === "Charismak Project");
+  const professionalFiltered = filteredProjects.filter((project) => project.publicCategory !== "Charismak Project");
   const companyProjectCount = visibleProjects.filter(
     (project) => project.publicCategory === "Charismak Project",
   ).length;
@@ -68,10 +71,10 @@ export default function ProjectsClient({ initialProjects }: { initialProjects: P
           <div className="grid gap-8 lg:grid-cols-[0.7fr_1.3fr] lg:items-end">
             <div>
               <p className="mb-4 text-xs font-bold uppercase tracking-[0.28em] text-[#C8A45D]">Portfolio</p>
-              <h2 className="text-3xl font-semibold leading-tight tracking-[-0.03em] text-[#071E33] md:text-5xl">Selected work and project experience.</h2>
+              <h2 className="text-3xl font-semibold leading-tight tracking-[-0.03em] text-[#071E33] md:text-5xl">Selected Projects &amp; Professional Experience</h2>
             </div>
             <p className="max-w-2xl text-base leading-8 text-[#3A4653] lg:justify-self-end">
-              From direct construction and specialist delivery to quantity surveying and construction management assignments, each reference reflects a defined role on a real project.
+              Projects delivered by Charismak Project Nigeria Limited are listed first. Separately, we show assignments our Managing Director carried out while working with other organisations — these are professional experience, not Charismak company projects.
             </p>
           </div>
 
@@ -96,28 +99,43 @@ export default function ProjectsClient({ initialProjects }: { initialProjects: P
             </div>
           </div>
 
-          {filteredProjects.length > 0 ? (
-            <div className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-              {filteredProjects.map((project) => <ProjectCard key={project.slug} project={project} />)}
-            </div>
-          ) : (
+          {filteredProjects.length === 0 ? (
             <div className="mt-10 bg-white p-10 text-center shadow-[0_10px_35px_rgba(7,30,51,0.05)]">
               <h3 className="text-xl font-semibold text-[#071E33]">No project currently matches this selection.</h3>
               <button type="button" onClick={() => setActiveFilter("All Projects")} className="mt-5 bg-[#0D3B66] px-6 py-3 text-sm font-bold text-white">View All Projects</button>
             </div>
-          )}
+          ) : null}
 
-          <div className="mt-12 border-t border-[#0D3B66]/12 pt-8">
-            <div className="flex gap-4">
-              <BriefcaseBusiness className="mt-1 h-6 w-6 shrink-0 text-[#C8A45D]" />
-              <div>
-                <h3 className="font-semibold text-[#071E33]">Professional project experience</h3>
-                <p className="mt-2 max-w-4xl text-sm leading-7 text-[#3A4653]">
-                  The portfolio also includes selected assignments delivered by the Managing Director while working with established construction organisations in Nigeria and internationally.
-                </p>
+          {companyFiltered.length > 0 ? (
+            <div className="mt-10">
+              <h3 className="flex items-center gap-2 text-lg font-semibold text-[#071E33]">
+                <Building2 className="h-5 w-5 text-[#C8A45D]" /> Charismak Project Nigeria Limited projects
+                <span className="text-sm font-normal text-[#3A4653]/70">({companyFiltered.length})</span>
+              </h3>
+              <div className="mt-5 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                {companyFiltered.map((project) => <ProjectCard key={project.slug} project={project} />)}
               </div>
             </div>
-          </div>
+          ) : null}
+
+          {professionalFiltered.length > 0 ? (
+            <div className="mt-14 border-t border-[#0D3B66]/12 pt-10">
+              <div className="flex gap-4">
+                <BriefcaseBusiness className="mt-1 h-6 w-6 shrink-0 text-[#C8A45D]" />
+                <div>
+                  <h3 className="text-lg font-semibold text-[#071E33]">
+                    Managing Director&apos;s professional experience <span className="text-sm font-normal text-[#3A4653]/70">({professionalFiltered.length})</span>
+                  </h3>
+                  <p className="mt-2 max-w-4xl text-sm leading-7 text-[#3A4653]">
+                    Assignments delivered by the Managing Director while working with other construction organisations in Nigeria and internationally. Each card names the organisation and the role held. These were not contracts of Charismak Project Nigeria Limited.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                {professionalFiltered.map((project) => <ProjectCard key={project.slug} project={project} />)}
+              </div>
+            </div>
+          ) : null}
         </div>
       </section>
     </main>
@@ -143,7 +161,7 @@ function ProjectCard({ project }: { project: Project }) {
         <Image src={image} alt={project.title} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover transition duration-700 group-hover:scale-105" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#071E33]/88 via-[#071E33]/5 to-transparent" />
         <div className="absolute left-5 top-5 border border-white/15 bg-[#071E33]/65 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.14em] text-white backdrop-blur">{project.engagementTag}</div>
-        {isProfessionalReference && <div className="absolute right-5 top-5 bg-[#C8A45D] px-3 py-2 text-[9px] font-bold uppercase tracking-[0.12em] text-[#071E33]">Professional Experience</div>}
+        <div className={`absolute right-5 top-5 px-3 py-2 text-[9px] font-bold uppercase tracking-[0.12em] ${isProfessionalReference ? "bg-[#C8A45D] text-[#071E33]" : "bg-white text-[#0D3B66]"}`}>{isProfessionalReference ? "MD Professional Experience" : "Charismak Project"}</div>
         <div className="absolute bottom-5 left-5 flex items-center gap-2 text-sm font-medium text-white"><MapPin className="h-4 w-4 text-[#F2B544]" />{project.location}</div>
       </div>
 
@@ -152,7 +170,7 @@ function ProjectCard({ project }: { project: Project }) {
         <h3 className="mt-3 text-2xl font-semibold leading-tight tracking-[-0.02em] text-[#071E33]">{project.title}</h3>
         <p className="mt-2 text-sm font-semibold text-[#0D3B66]">{project.role}</p>
         <p className="mt-4 line-clamp-3 text-sm leading-7 text-[#3A4653]">{project.summary}</p>
-        <div className="mt-5 flex items-center gap-2 text-xs text-[#3A4653]/70"><CheckCircle2 className="h-4 w-4 text-[#C8A45D]" />{project.status}</div>
+        <div className="mt-5"><ProjectStatusBadge status={project.status} /></div>
         <div className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-[#0D3B66] transition group-hover:text-[#C8A45D]">View Project <ArrowRight className="h-4 w-4" /></div>
       </div>
     </Link>
