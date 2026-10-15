@@ -38,6 +38,9 @@ async function optimiseImage(file: File): Promise<Blob> {
   return blob;
 }
 
+/** Camera/WhatsApp file names are not real captions. */
+const needsCaption = (title: string) => !title.trim() || /^(whatsapp image|img|pxl|dsc|photo|image|screenshot)[\s_-]?\d/i.test(title.trim());
+
 const titleFromFile = (name: string) =>
   name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 120) || "Site photo";
 
@@ -122,6 +125,16 @@ export default function SitePicturesManager() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- load once after sign-in
   }, []);
 
+  const filtersActive = Boolean(query || projectFilter !== "all" || statusFilter !== "all" || featuredOnly || dateFrom || dateTo);
+  const clearFilters = () => {
+    setQuery("");
+    setProjectFilter("all");
+    setStatusFilter("all");
+    setFeaturedOnly(false);
+    setDateFrom("");
+    setDateTo("");
+  };
+
   const refreshPublicPages = async () => {
     await fetch("/api/admin/revalidate", { method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, body: "{}" }).catch(() => undefined);
   };
@@ -190,6 +203,7 @@ export default function SitePicturesManager() {
         setState("error", caught instanceof Error ? caught.message : "Upload failed.");
       }
     }
+    clearFilters();
     await load();
     if (done) notify(`${done} picture${done === 1 ? "" : "s"} uploaded as drafts. Add a caption and alt text, then publish.`);
   };
@@ -210,7 +224,7 @@ export default function SitePicturesManager() {
 
   const setStatus = async (picture: SitePicture, status: SitePictureStatus) => {
     if (status === "published") {
-      if (!picture.title.trim() || !picture.altText.trim()) return fail("Add a caption and alt text before publishing.");
+      if (needsCaption(picture.title) || !picture.altText.trim()) return fail("Add a real caption and alt text before publishing (use 'Add caption & publish').");
       if (!isCompany(projectBySlug.get(picture.projectSlug))) {
         if (!window.confirm("This project is professional experience, not a Charismak company project. It will not appear in the homepage slider. Publish anyway?")) return;
       }
@@ -218,8 +232,10 @@ export default function SitePicturesManager() {
     await update(picture, statusFlags(status), status === "published" ? "Published. The homepage refreshes within a few minutes." : status === "archived" ? "Archived and removed from public pages." : "Unpublished and moved back to drafts.");
   };
 
-  const saveEdit = async () => {
+  const saveEdit = async (publish = false) => {
     if (!editing) return;
+    if (publish && !editing.altText.trim()) return fail("Add alt text (what the photo shows) before publishing.");
+    if (publish && needsCaption(editing.title)) return fail("Replace the file name with a real caption before publishing.");
     const project = projectBySlug.get(editing.projectSlug);
     if (!project) return fail("Choose a valid project.");
     if (!editing.title.trim()) return fail("A caption is required.");
@@ -236,8 +252,9 @@ export default function SitePicturesManager() {
         project_location: project.location,
         featured: editing.featured,
         display_order: Math.max(0, Math.min(999, Math.round(editing.displayOrder) || 100)),
+        ...(publish ? statusFlags("published") : {}),
       },
-      "Picture details saved.",
+      publish ? "Saved and published. The homepage refreshes within a few minutes." : "Picture details saved.",
     );
     setEditing(null);
   };
@@ -376,31 +393,48 @@ export default function SitePicturesManager() {
       </section>
 
       <section className="rounded-2xl border border-[#DCE4EC] bg-white p-5">
-        <div className="grid gap-3 md:grid-cols-6">
-          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search captions…" aria-label="Search pictures" className="min-h-10 rounded-xl border border-[#C9D5E1] px-3 text-sm md:col-span-2" />
-          <select value={projectFilter} onChange={(event) => setProjectFilter(event.target.value)} aria-label="Filter by project" className="min-h-10 rounded-xl border border-[#C9D5E1] bg-white px-3 text-sm">
-            <option value="all">All projects</option>
-            {projects.map((project) => <option key={project.slug} value={project.slug}>{project.title}</option>)}
-          </select>
-          <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)} aria-label="Filter by status" className="min-h-10 rounded-xl border border-[#C9D5E1] bg-white px-3 text-sm">
-            <option value="all">All statuses</option>
-            <option value="draft">Draft</option>
-            <option value="published">Published</option>
-            <option value="archived">Archived</option>
-          </select>
-          <div className="flex gap-2 md:col-span-2">
-            <input type="date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} aria-label="Taken from" className="min-h-10 w-full rounded-xl border border-[#C9D5E1] px-2 text-sm" />
-            <input type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} aria-label="Taken to" className="min-h-10 w-full rounded-xl border border-[#C9D5E1] px-2 text-sm" />
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-black text-[#071E33]">Your pictures</h2>
+            <p className="text-xs text-[#617286]">
+              Showing {filtered.length} of {pictures.length}. Drafts are only visible here until you publish them.
+            </p>
           </div>
-          <label className="flex items-center gap-2 text-sm font-bold text-[#071E33]"><input type="checkbox" checked={featuredOnly} onChange={(event) => setFeaturedOnly(event.target.checked)} /> Pinned only</label>
+          {filtersActive ? (
+            <button type="button" onClick={clearFilters} className="min-h-9 rounded-lg border border-[#DCE4EC] px-3 text-xs font-bold text-[#0D3B66]">Clear filters</button>
+          ) : null}
         </div>
+        <details className="mt-3 rounded-xl bg-[#F5F7FA] p-3" open={filtersActive}>
+          <summary className="cursor-pointer text-xs font-bold text-[#526579]">Filter the list (this only changes what is shown — it does not edit pictures)</summary>
+          <div className="mt-3 grid gap-3 md:grid-cols-6">
+            <label className="text-xs font-bold text-[#526579] md:col-span-2">Search captions<input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Type to search…" className="mt-1 min-h-10 w-full rounded-xl border border-[#C9D5E1] bg-white px-3 text-sm font-normal" /></label>
+            <label className="text-xs font-bold text-[#526579]">Project<select value={projectFilter} onChange={(event) => setProjectFilter(event.target.value)} className="mt-1 min-h-10 w-full rounded-xl border border-[#C9D5E1] bg-white px-3 text-sm font-normal">
+              <option value="all">All projects</option>
+              {projects.map((project) => <option key={project.slug} value={project.slug}>{project.title}</option>)}
+            </select></label>
+            <label className="text-xs font-bold text-[#526579]">Show status<select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)} className="mt-1 min-h-10 w-full rounded-xl border border-[#C9D5E1] bg-white px-3 text-sm font-normal">
+              <option value="all">All statuses</option>
+              <option value="draft">Drafts only</option>
+              <option value="published">Published only</option>
+              <option value="archived">Archived only</option>
+            </select></label>
+            <label className="text-xs font-bold text-[#526579]">Taken from<input type="date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} className="mt-1 min-h-10 w-full rounded-xl border border-[#C9D5E1] bg-white px-2 text-sm font-normal" /></label>
+            <label className="text-xs font-bold text-[#526579]">Taken to<input type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} className="mt-1 min-h-10 w-full rounded-xl border border-[#C9D5E1] bg-white px-2 text-sm font-normal" /></label>
+            <label className="flex items-center gap-2 text-sm font-bold text-[#071E33]"><input type="checkbox" checked={featuredOnly} onChange={(event) => setFeaturedOnly(event.target.checked)} /> Pinned only</label>
+          </div>
+        </details>
 
         {loading ? (
           <p className="mt-6 flex items-center gap-2 text-sm text-[#617286]"><Loader2 className="h-4 w-4 animate-spin" /> Loading pictures…</p>
         ) : filtered.length === 0 ? (
-          <p className="mt-6 rounded-xl border border-dashed border-[#B8C7D6] p-6 text-center text-sm text-[#617286]">
-            {pictures.length ? "No pictures match these filters." : "No site pictures yet. Upload your first photographs above."}
-          </p>
+          <div className="mt-6 rounded-xl border border-dashed border-[#B8C7D6] p-6 text-center text-sm text-[#617286]">
+            {pictures.length ? (
+              <>
+                {pictures.length} picture{pictures.length === 1 ? " is" : "s are"} hidden by the filters.{" "}
+                <button type="button" onClick={clearFilters} className="font-bold text-[#0D3B66] underline">Clear filters</button>
+              </>
+            ) : "No site pictures yet. Upload your first photographs above."}
+          </div>
         ) : (
           <ul className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {filtered.map((picture) => {
@@ -417,9 +451,12 @@ export default function SitePicturesManager() {
                   <div className="space-y-1 p-4">
                     <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[#A82B05]">{project?.title ?? picture.projectTitle}{isCompany(project) ? "" : " · professional experience"}</p>
                     <h3 className="font-black leading-5 text-[#071E33]">{picture.title || "Untitled"}</h3>
-                    <p className="text-xs text-[#617286]">Taken {picture.updateDate.slice(0, 10)}{picture.altText ? "" : " · alt text missing"}</p>
+                    <p className="text-xs text-[#617286]">Taken {picture.updateDate.slice(0, 10)}</p>
+                    {status === "draft" && (needsCaption(picture.title) || !picture.altText) ? (
+                      <p className="text-xs font-bold text-[#8A6508]">Needs {needsCaption(picture.title) ? "a caption" : ""}{needsCaption(picture.title) && !picture.altText ? " and " : ""}{!picture.altText ? "alt text" : ""} before publishing</p>
+                    ) : null}
                     <div className="flex flex-wrap gap-1.5 pt-3">
-                      <button type="button" onClick={() => setEditing({ ...picture })} className="min-h-9 rounded-lg bg-[#0D3B66] px-3 text-xs font-bold text-white">Edit</button>
+                      <button type="button" onClick={() => setEditing({ ...picture })} className="min-h-9 rounded-lg bg-[#0D3B66] px-3 text-xs font-bold text-white">{status === "draft" ? "Add caption & publish" : "Edit"}</button>
                       <button type="button" onClick={() => setPreview(picture)} className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-[#DCE4EC] px-3 text-xs font-bold text-[#0D3B66]"><Eye className="h-3.5 w-3.5" /> Preview</button>
                       {status === "published" ? (
                         <button type="button" disabled={busy} onClick={() => void setStatus(picture, "draft")} className="min-h-9 rounded-lg border border-[#E2CF9E] px-3 text-xs font-bold text-[#795E16]">Unpublish</button>
@@ -433,7 +470,8 @@ export default function SitePicturesManager() {
                         <ImagePlus className="h-3.5 w-3.5" />
                         <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(event) => { void replaceImage(picture, event.target.files?.[0]); event.target.value = ""; }} />
                       </label>
-                      <button type="button" disabled={busy} onClick={() => void remove(picture)} aria-label="Delete permanently" className="grid min-h-9 w-9 place-items-center rounded-lg bg-[#FFF1EE] text-[#A82B05]"><Trash2 className="h-3.5 w-3.5" /></button>
+                      <button type="button" disabled={busy} onClick={() => void remove(picture)} className="inline-flex min-h-9 items-center gap-1 rounded-lg bg-[#FFF1EE] px-3 text-xs font-bold text-[#A82B05]"><Trash2 className="h-3.5 w-3.5" /> Delete</button>
+                      <button type="button" disabled={busy} onClick={() => void update(picture, { featured: !picture.featured }, picture.featured ? "Unpinned from the homepage." : "Pinned to the homepage slider.")} className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-[#E2CF9E] px-3 text-xs font-bold text-[#795E16]"><Star className="h-3.5 w-3.5" /> {picture.featured ? "Unpin" : "Pin"}</button>
                       {busy ? <Loader2 className="h-4 w-4 animate-spin self-center text-[#0D3B66]" /> : null}
                     </div>
                   </div>
@@ -459,7 +497,8 @@ export default function SitePicturesManager() {
             </div>
             <div className="mt-6 flex justify-end gap-2">
               <button type="button" onClick={() => setPreview(editing)} className="min-h-11 rounded-xl border border-[#DCE4EC] px-4 text-sm font-bold text-[#0D3B66]">Preview</button>
-              <button type="button" onClick={() => void saveEdit()} className="min-h-11 rounded-xl bg-[#071E33] px-5 text-sm font-bold text-white">Save</button>
+              <button type="button" onClick={() => void saveEdit(false)} className="min-h-11 rounded-xl border border-[#071E33] px-5 text-sm font-bold text-[#071E33]">{editing.published ? "Save" : "Save draft"}</button>
+              {!editing.published ? <button type="button" onClick={() => void saveEdit(true)} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#197447] px-5 text-sm font-bold text-white"><Send className="h-4 w-4" /> Save &amp; publish</button> : null}
             </div>
           </div>
         </div>
