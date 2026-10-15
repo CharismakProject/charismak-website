@@ -284,7 +284,7 @@ export default async function HomePage() {
             <div>
               <SectionLabel>Selected Projects</SectionLabel>
               <h2 className="text-3xl font-semibold leading-tight tracking-[-0.03em] text-[#071E33] md:text-5xl">
-                Projects delivered by Charismak.
+                A selection of projects from our portfolio.
               </h2>
               <Link href="/projects" className="mt-7 inline-flex items-center gap-2 text-sm font-bold text-[#0D3B66]">
                 View Project Portfolio <ArrowRight className="h-4 w-4" />
