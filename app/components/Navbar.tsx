@@ -81,7 +81,7 @@ export default function Navbar() {
                 type="button"
                 aria-expanded={toolsOpen}
                 aria-haspopup="true"
-                onClick={() => setToolsOpen((open) => !open)}
+                onClick={(event) => setToolsOpen((open) => (event.detail === 0 ? !open : true))}
                 onMouseEnter={() => setToolsOpen(true)}
                 className="inline-flex items-center gap-1 text-[13px] font-semibold text-[#151B22] transition hover:text-[#0D3B66]"
               >
