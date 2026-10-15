@@ -54,7 +54,8 @@ export default function SiteUpdatesSlider({ slides }: { slides: SiteUpdateSlide[
             sizes="(max-width: 1280px) 100vw, 1280px"
             priority={index === 0}
             loading={index === 0 ? undefined : "lazy"}
-            className={`object-cover transition-opacity duration-700 ${index === active ? "opacity-100" : "opacity-0"}`}
+            quality={95}
+            className={`object-contain transition-opacity duration-700 ${index === active ? "opacity-100" : "opacity-0"}`}
           />
         ))}
         <div className="absolute inset-0 bg-gradient-to-t from-[#071E33]/90 via-[#071E33]/20 to-transparent" />
