@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { company } from "./site-data";
+import SiteUpdatesSlider, { type SiteUpdateSlide } from "@/components/home/site-updates-slider";
 import { createSeoMetadata } from "@/lib/seo";
 import {
   loadPublishedProjectUpdates,
@@ -119,7 +120,7 @@ export default async function HomePage() {
     loadPublishedProjects(),
     loadWebsiteContent("company"),
     loadPublishedServices(),
-    loadPublishedProjectUpdates(6),
+    loadPublishedProjectUpdates(12),
   ]);
 
   const byKey = new Map(content.map((record) => [record.contentKey, record.value]));
@@ -134,11 +135,40 @@ export default async function HomePage() {
   const heroProject = featuredProjects[0] || directProjects[0] || projects[0];
   const heroImage = heroProject?.heroImages?.[0] || heroProject?.cover || "/Images/Projects/coco/hero.jpg";
   const publicProjectSlugs = new Set(projects.filter((project) => project.showOnProjectsPage !== false).map((project) => project.slug));
-  const recentProjectUpdates = projectUpdates.filter((update) => publicProjectSlugs.has(update.projectSlug)).slice(0, 3);
+  const recentProjectUpdates = projectUpdates.filter((update) => publicProjectSlugs.has(update.projectSlug));
   const formatUpdateDate = (value: string) => {
     const date = new Date(value);
     return Number.isNaN(date.getTime()) ? "" : new Intl.DateTimeFormat("en-NG", { day: "numeric", month: "short", year: "numeric" }).format(date);
   };
+
+  const siteSlides: SiteUpdateSlide[] = recentProjectUpdates.map((update) => ({
+    id: update.id,
+    image: update.imageUrl,
+    projectTitle: update.projectTitle,
+    location: update.projectLocation,
+    title: update.title,
+    summary: update.summary,
+    date: formatUpdateDate(update.updateDate),
+    href: `/projects/${update.projectSlug}`,
+  }));
+  // Top up with gallery photos from ongoing Charismak projects until updates are posted.
+  if (siteSlides.length < 4) {
+    for (const project of directProjects.filter((item) => /ongoing/i.test(item.status))) {
+      for (const image of [...(project.heroImages || []), ...project.images]) {
+        if (siteSlides.length >= 8) break;
+        siteSlides.push({
+          id: `${project.slug}-${image}`,
+          image,
+          projectTitle: project.title,
+          location: project.location,
+          title: "Work in progress on site",
+          summary: "",
+          date: "",
+          href: `/projects/${project.slug}`,
+        });
+      }
+    }
+  }
 
   return (
     <main className="overflow-hidden bg-white pt-20">
@@ -221,6 +251,23 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {siteSlides.length > 0 ? (
+        <section className="bg-white px-5 py-16 md:px-8 md:py-20">
+          <div className="mx-auto max-w-7xl">
+            <div className="mb-8 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+              <div>
+                <SectionLabel>On Site Now</SectionLabel>
+                <h2 className="text-3xl font-semibold tracking-[-0.03em] text-[#071E33] md:text-4xl">What is happening on our projects.</h2>
+              </div>
+              <Link href="/projects" className="inline-flex items-center gap-2 text-sm font-bold text-[#0D3B66]">
+                All projects <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <SiteUpdatesSlider slides={siteSlides} />
+          </div>
+        </section>
+      ) : null}
+
       <section className="bg-[#F7F8FA] px-5 py-20 md:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-8 lg:grid-cols-[0.55fr_1.45fr] lg:items-end">
@@ -269,37 +316,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {recentProjectUpdates.length > 0 ? (
-        <section className="border-b border-[#0D3B66]/10 bg-white px-5 py-10 md:px-8 md:py-12">
-          <div className="mx-auto max-w-7xl">
-            <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
-              <div>
-                <SectionLabel>Recent Project Updates</SectionLabel>
-                <h2 className="text-2xl font-semibold tracking-[-0.03em] text-[#071E33] md:text-3xl">What is happening on our active projects.</h2>
-              </div>
-              <p className="max-w-md text-sm leading-6 text-[#617286]">Short progress notes from recently updated project galleries.</p>
-            </div>
-            <div className="mt-7 grid gap-4 lg:grid-cols-3">
-              {recentProjectUpdates.map((update) => (
-                <Link key={update.id} href={`/projects/${update.projectSlug}`} className="group grid grid-cols-[112px_1fr] overflow-hidden border border-[#0D3B66]/10 bg-[#F7F8FA] transition hover:border-[#C8A45D] hover:bg-white">
-                  <div className="relative min-h-[118px] overflow-hidden bg-[#071E33]">
-                    <Image src={update.imageUrl} alt={update.title} fill sizes="112px" className="object-cover transition duration-500 group-hover:scale-105" />
-                  </div>
-                  <div className="p-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#C8A45D]">{update.projectTitle}</p>
-                      <span className="shrink-0 text-[10px] font-semibold text-[#7A8B9E]">{formatUpdateDate(update.updateDate)}</span>
-                    </div>
-                    <h3 className="mt-2 text-sm font-bold leading-5 text-[#071E33]">{update.title}</h3>
-                    {update.summary ? <p className="mt-2 line-clamp-2 text-xs leading-5 text-[#526579]">{update.summary}</p> : null}
-                    <span className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-[#0D3B66]">View project <ArrowRight className="h-3.5 w-3.5" /></span>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-      ) : null}
 
       <section className="bg-white px-5 py-20 md:px-8">
         <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.72fr_1.28fr] lg:items-start">
