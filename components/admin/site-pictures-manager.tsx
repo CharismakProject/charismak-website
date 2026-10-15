@@ -194,7 +194,7 @@ export default function SitePicturesManager() {
         continue;
       }
       if (file.size > MAX_SITE_PICTURE_BYTES) {
-        setState("error", "Larger than 10 MB.");
+        setState("error", "Larger than 25 MB.");
         continue;
       }
       setState("uploading");
