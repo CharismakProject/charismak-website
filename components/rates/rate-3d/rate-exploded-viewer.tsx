@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { Layers, RotateCcw } from "lucide-react";
 
 import type { RateBankItem } from "@/lib/rates/defaults";
@@ -11,6 +12,13 @@ import { buildRateScene } from "./scenes";
 const money = (value: number, currency: string) =>
   new Intl.NumberFormat("en-NG", { style: "currency", currency, maximumFractionDigits: 0 }).format(value);
 
+type CameraFlight = {
+  fromPos: THREE.Vector3;
+  fromTarget: THREE.Vector3;
+  to: { target: THREE.Vector3; position: THREE.Vector3 };
+  t: number;
+};
+
 const ids = (lineId: string | string[]) => (Array.isArray(lineId) ? lineId : [lineId]);
 
 export default function RateExplodedViewer({ item }: { item: RateBankItem }) {
@@ -18,6 +26,7 @@ export default function RateExplodedViewer({ item }: { item: RateBankItem }) {
   const targetRef = useRef(0);
   const selectRef = useRef<(lineIds: string[] | null) => void>(() => {});
   const resetRef = useRef<() => void>(() => {});
+  const flyRef = useRef<(explode: boolean) => void>(() => {});
   const [exploded, setExploded] = useState(false);
   const [selected, setSelected] = useState<string[] | null>(null);
   const scene = useMemo(() => buildRateScene(item.slug), [item.slug]);
@@ -34,26 +43,67 @@ export default function RateExplodedViewer({ item }: { item: RateBankItem }) {
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 0.92;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     mount.appendChild(renderer.domElement);
 
     const world = new THREE.Scene();
-    world.add(new THREE.HemisphereLight("#ffffff", "#8a8f96", 1.6));
-    const sun = new THREE.DirectionalLight("#ffffff", 1.6);
-    sun.position.set(3, 5, 4);
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    const environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    world.environment = environment;
+    world.environmentIntensity = 0.55;
+    world.fog = new THREE.Fog("#E4EAF0", 12, 34);
+    world.add(new THREE.HemisphereLight("#FFF6E8", "#B9A88A", 0.7));
+    // Late-afternoon sun for long, soft shadows.
+    const sun = new THREE.DirectionalLight("#FFE7C2", 2.6);
+    sun.position.set(6, 9, 5);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -6;
+    sun.shadow.camera.right = 6;
+    sun.shadow.camera.top = 6;
+    sun.shadow.camera.bottom = -6;
+    sun.shadow.bias = -0.0004;
+    sun.shadow.normalBias = 0.02;
     world.add(sun);
-    const grid = new THREE.GridHelper(4, 16, "#c9d3dd", "#e3e9ef");
-    world.add(grid);
 
-    const camera = new THREE.PerspectiveCamera(40, 1, 0.05, 50);
-    const home = scene.target.clone().add(new THREE.Vector3(0.75, 0.45, 1).normalize().multiplyScalar(scene.cameraDistance));
-    camera.position.copy(home);
+    const camera = new THREE.PerspectiveCamera(38, 1, 0.05, 80);
+    camera.position.copy(scene.overview.position);
     const controls = new OrbitControls(camera, renderer.domElement);
-    controls.target.copy(scene.target);
+    controls.target.copy(scene.overview.target);
     controls.enableDamping = true;
     controls.autoRotate = true;
-    controls.autoRotateSpeed = 0.8;
-    controls.maxPolarAngle = Math.PI * 0.49;
-    controls.addEventListener("start", () => (controls.autoRotate = false));
+    controls.autoRotateSpeed = 0.5;
+    controls.minDistance = 1.2;
+    controls.maxDistance = 16;
+    controls.maxPolarAngle = Math.PI * 0.48;
+    let flight: CameraFlight | null = null;
+    controls.addEventListener("start", () => {
+      controls.autoRotate = false;
+      flight = null;
+    });
+    const flyTo = (view: { target: THREE.Vector3; position: THREE.Vector3 }) => {
+      flight = { fromPos: camera.position.clone(), fromTarget: controls.target.clone(), to: view, t: 0 };
+    };
+    flyRef.current = (explode) => flyTo(explode ? scene.focus : scene.overview);
+
+    // Surrounding structure fades back when the item is taken apart.
+    const contextMaterials: Array<THREE.Material & { opacity: number }> = [];
+    scene.context.forEach((object) => {
+      world.add(object);
+      if (object.userData.keepVisible) return;
+      object.traverse((child) => {
+        const material = (child as THREE.Mesh).material as THREE.Material | undefined;
+        if (material && !Array.isArray(material)) {
+          material.transparent = true;
+          material.userData.baseOpacity = material.opacity;
+          contextMaterials.push(material as THREE.Material & { opacity: number });
+        }
+      });
+    });
 
     const base = scene.parts.map((part) => part.object.position.clone());
     const meshes: THREE.Mesh[] = [];
@@ -80,9 +130,8 @@ export default function RateExplodedViewer({ item }: { item: RateBankItem }) {
       setSelected(lineIds);
     };
     resetRef.current = () => {
-      camera.position.copy(home);
-      controls.target.copy(scene.target);
-      controls.autoRotate = true;
+      flyTo(targetRef.current ? scene.focus : scene.overview);
+      controls.autoRotate = !targetRef.current;
     };
 
     // Click (not drag) selects the part under the pointer.
@@ -125,6 +174,17 @@ export default function RateExplodedViewer({ item }: { item: RateBankItem }) {
           part.object.scale.setScalar(Math.max(eased, 0.001));
         }
       });
+      contextMaterials.forEach((material) => {
+        material.opacity = material.userData.baseOpacity * (1 - 0.75 * eased);
+        material.depthWrite = eased < 0.5;
+      });
+      if (flight) {
+        flight.t = Math.min(1, flight.t + 0.018);
+        const k = flight.t * flight.t * (3 - 2 * flight.t);
+        camera.position.lerpVectors(flight.fromPos, flight.to.position, k);
+        controls.target.lerpVectors(flight.fromTarget, flight.to.target, k);
+        if (flight.t >= 1) flight = null;
+      }
       controls.update();
       renderer.render(world, camera);
       frame = requestAnimationFrame(tick);
@@ -138,9 +198,13 @@ export default function RateExplodedViewer({ item }: { item: RateBankItem }) {
       world.traverse((object) => {
         if (object instanceof THREE.Mesh) {
           object.geometry.dispose();
-          (object.material as THREE.Material).dispose();
+          const material = object.material as THREE.MeshStandardMaterial;
+          material.map?.dispose();
+          material.dispose();
         }
       });
+      environment.dispose();
+      pmrem.dispose();
       renderer.dispose();
       renderer.domElement.remove();
     };
@@ -150,6 +214,7 @@ export default function RateExplodedViewer({ item }: { item: RateBankItem }) {
 
   const toggle = () => {
     targetRef.current = exploded ? 0 : 1;
+    flyRef.current(!exploded);
     setExploded(!exploded);
   };
 
@@ -157,7 +222,7 @@ export default function RateExplodedViewer({ item }: { item: RateBankItem }) {
 
   return (
     <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
-      <div className="relative overflow-hidden rounded-2xl border border-[#DCE4EC] bg-[linear-gradient(180deg,#F8FAFC,#EEF2F6)]">
+      <div className="relative overflow-hidden rounded-2xl border border-[#DCE4EC] bg-[linear-gradient(180deg,#DCE7F1_0%,#F3F1EC_70%)]">
         <div ref={mountRef} className="h-[360px] w-full touch-none md:h-[460px]" />
         <div className="absolute left-3 top-3 flex gap-2">
           <button
@@ -231,7 +296,7 @@ export default function RateExplodedViewer({ item }: { item: RateBankItem }) {
           })}
         </ul>
         <p className="mt-3 border-t border-[#E6EBEF] pt-3 text-[11px] leading-5 text-[#7A8B9E]">
-          Illustrative model of 1 {item.unit}; amounts are direct costs before fluctuation, risk and O/P.
+          Illustrative model of 1 {item.unit} shown in a typical bay; amounts are direct costs before fluctuation, risk and O/P.
         </p>
       </div>
     </div>
