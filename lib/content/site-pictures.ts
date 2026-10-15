@@ -21,7 +21,7 @@ export type SitePicture = {
 };
 
 export const SLIDER_LIMIT = 12;
-export const MAX_SITE_PICTURE_BYTES = 10 * 1024 * 1024;
+export const MAX_SITE_PICTURE_BYTES = 25 * 1024 * 1024;
 export const SITE_PICTURE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 export const pictureStatus = (picture: Pick<SitePicture, "published" | "archived">): SitePictureStatus =>
