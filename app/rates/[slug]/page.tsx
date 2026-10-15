@@ -3,6 +3,8 @@ import { ArrowLeft, CalendarDays, MapPin } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import RateCalculator from "@/components/rates/rate-calculator";
+import Rate3DLauncher from "@/components/rates/rate-3d/rate-3d-launcher";
+import { hasRate3D } from "@/components/rates/rate-3d/slugs";
 import JsonLd from "@/components/seo/json-ld";
 import { breadcrumbJsonLd, createSeoMetadata } from "@/lib/seo";
 import {
@@ -133,6 +135,12 @@ export default async function RateDetailPage({
             <strong className="block text-[#5D4600]">Under validation</strong>
             <span className="mt-1 block">{item.validationNote}</span>
           </section>
+        ) : null}
+
+        {hasRate3D(item.slug) ? (
+          <div className="mt-6">
+            <Rate3DLauncher item={item} />
+          </div>
         ) : null}
 
         <div className="mt-6">
