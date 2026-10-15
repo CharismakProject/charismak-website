@@ -238,23 +238,51 @@ export default function SitePicturesManager() {
     if (done) notify(`${done} picture${done === 1 ? "" : "s"} uploaded as drafts. Add a caption and alt text, then publish.`);
   };
 
-  const update = async (picture: SitePicture, changes: Record<string, unknown>, success: string) => {
-    if (!client) return;
+  const update = async (picture: SitePicture, changes: Record<string, unknown>, success: string): Promise<boolean> => {
+    if (!client) {
+      fail("The database connection is unavailable. Refresh the page and sign in again.");
+      return false;
+    }
     setBusyId(picture.id);
-    const { error: updateError } = await client
-      .from("website_project_updates")
-      .update({ ...changes, updated_at: new Date().toISOString(), updated_by: email })
-      .eq("id", picture.id);
-    setBusyId(null);
-    if (updateError) return fail(updateError.message);
-    await refreshPublicPages();
-    await load();
-    notify(success);
+    try {
+      const { data: updatedRow, error: updateError } = await client
+        .from("website_project_updates")
+        .update({ ...changes, updated_at: new Date().toISOString(), updated_by: email })
+        .eq("id", picture.id)
+        .select("id")
+        .maybeSingle();
+
+      if (updateError) {
+        fail("The picture was not saved: " + updateError.message);
+        return false;
+      }
+      if (!updatedRow) {
+        fail("No picture was updated. Your sign-in may have expired; refresh the page, sign in again, and retry.");
+        return false;
+      }
+
+      // Confirm the database write first. Cache refresh and list reload must not hold the button hostage.
+      notify(success);
+      void refreshPublicPages();
+      void load().catch((caught) => {
+        fail("The picture was saved, but the list could not refresh. Use Refresh to check the saved status.");
+        console.error("Site Pictures refresh failed", caught);
+      });
+      return true;
+    } catch (caught) {
+      fail("The picture could not be saved: " + (caught instanceof Error ? caught.message : "unexpected error"));
+      return false;
+    } finally {
+      setBusyId(null);
+    }
   };
 
   const setStatus = async (picture: SitePicture, status: SitePictureStatus) => {
     if (status === "published") {
-      if (needsCaption(picture.title) || !picture.altText.trim()) return fail("Add a real caption and alt text before publishing (use 'Add caption & publish').");
+      if (needsCaption(picture.title) || !picture.altText.trim()) {
+        setEditing({ ...picture });
+        return fail("This picture needs a real caption and alt text. The edit form is open; complete both fields, then select Save & publish.");
+      }
       if (!isCompany(projectBySlug.get(picture.projectSlug))) {
         if (!window.confirm("This project is professional experience, not a Charismak company project. It will not appear in the homepage slider. Publish anyway?")) return;
       }
@@ -270,7 +298,7 @@ export default function SitePicturesManager() {
     if (!project) return fail("Choose a valid project.");
     if (!editing.title.trim()) return fail("A caption is required.");
     if (editing.published && !editing.altText.trim()) return fail("Published pictures need alt text.");
-    await update(
+    const saved = await update(
       editing,
       {
         title: editing.title.trim().slice(0, 160),
@@ -286,7 +314,7 @@ export default function SitePicturesManager() {
       },
       publish ? "Saved and published. The homepage refreshes within a few minutes." : "Picture details saved.",
     );
-    setEditing(null);
+    if (saved) setEditing(null);
   };
 
   const replaceImage = async (picture: SitePicture, file: File | undefined) => {
@@ -516,6 +544,8 @@ export default function SitePicturesManager() {
         <div className="fixed inset-0 z-[110] overflow-y-auto bg-[#020B16]/60 p-4" role="dialog" aria-modal="true" aria-label="Edit picture">
           <div className="mx-auto my-8 max-w-2xl rounded-2xl bg-white p-6">
             <div className="flex items-center justify-between"><h2 className="text-lg font-black text-[#071E33]">Edit picture</h2><button type="button" onClick={() => setEditing(null)} aria-label="Close"><X className="h-5 w-5" /></button></div>
+            {error ? <p className="mt-4 rounded-xl border border-[#F1C9BE] bg-[#FFF1EE] px-4 py-3 text-sm font-medium text-[#8B1E00]" role="alert">{error}</p> : null}
+            {message ? <p className="mt-4 rounded-xl border border-[#B9DEC9] bg-[#EAF7EF] px-4 py-3 text-sm font-medium text-[#197447]" role="status">{message}</p> : null}
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <label className="text-sm font-bold text-[#071E33] sm:col-span-2">Caption / title<input value={editing.title} maxLength={160} onChange={(event) => setEditing({ ...editing, title: event.target.value })} className="mt-2 min-h-11 w-full rounded-xl border border-[#C9D5E1] px-3 font-normal" /></label>
               <label className="text-sm font-bold text-[#071E33] sm:col-span-2">Description of the work shown <span className="font-normal text-[#617286]">(optional)</span><textarea rows={3} maxLength={600} value={editing.summary} onChange={(event) => setEditing({ ...editing, summary: event.target.value })} className="mt-2 w-full rounded-xl border border-[#C9D5E1] px-3 py-2 font-normal" /></label>
@@ -525,10 +555,10 @@ export default function SitePicturesManager() {
               <label className="flex items-center gap-2 text-sm font-bold text-[#071E33]"><input type="checkbox" checked={editing.featured} onChange={(event) => setEditing({ ...editing, featured: event.target.checked })} /> Pin to homepage slider</label>
               <label className="text-sm font-bold text-[#071E33]">Pinned display order<input type="number" min={0} max={999} value={editing.displayOrder} onChange={(event) => setEditing({ ...editing, displayOrder: Number(event.target.value) })} className="mt-2 min-h-11 w-full rounded-xl border border-[#C9D5E1] px-3 font-normal" /></label>
             </div>
-            <div className="mt-6 flex justify-end gap-2">
-              <button type="button" onClick={() => setPreview(editing)} className="min-h-11 rounded-xl border border-[#DCE4EC] px-4 text-sm font-bold text-[#0D3B66]">Preview</button>
-              <button type="button" onClick={() => void saveEdit(false)} className="min-h-11 rounded-xl border border-[#071E33] px-5 text-sm font-bold text-[#071E33]">{editing.published ? "Save" : "Save draft"}</button>
-              {!editing.published ? <button type="button" onClick={() => void saveEdit(true)} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#197447] px-5 text-sm font-bold text-white"><Send className="h-4 w-4" /> Save &amp; publish</button> : null}
+            <div className="mt-6 flex flex-wrap justify-end gap-2">
+              <button type="button" disabled={busyId === editing.id} onClick={() => setPreview(editing)} className="min-h-11 rounded-xl border border-[#DCE4EC] px-4 text-sm font-bold text-[#0D3B66]">Preview</button>
+              <button type="button" disabled={busyId === editing.id} onClick={() => void saveEdit(false)} className="min-h-11 rounded-xl border border-[#071E33] px-5 text-sm font-bold text-[#071E33]">{busyId === editing.id ? "Saving…" : editing.published ? "Save" : "Save draft"}</button>
+              {!editing.published ? <button type="button" disabled={busyId === editing.id} onClick={() => void saveEdit(true)} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#197447] px-5 text-sm font-bold text-white disabled:cursor-wait disabled:opacity-60"><Send className="h-4 w-4" /> {busyId === editing.id ? "Publishing…" : "Save & publish"}</button> : null}
             </div>
           </div>
         </div>
