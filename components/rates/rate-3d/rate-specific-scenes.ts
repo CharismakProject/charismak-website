@@ -392,10 +392,22 @@ class SceneBuilder {
 
   addLabourPeople(tool: string) {
     const labour = this.item.lines.filter((line) => line.category === "labour");
+    const elevatedWork = /ceiling|pop-skim|pop-groove|slab-formwork|beam-formwork|stair-formwork|roof-cover|ridge-cap|fascia|fibre-ceiling/.test(this.preset.kind);
+    if (elevatedWork && labour.length) {
+      // A modest work platform and four legs put the first trade worker at working height.
+      this.context.push(cube(0.98, 0.08, 0.66, [-1.5, 1.16, 0.95], "#89949D", { metalness: 0.48, roughness: 0.54 }));
+      for (const x of [-1.92, -1.08]) {
+        for (const z of [0.68, 1.22]) {
+          this.context.push(rod([x, 0.08, z], [x, 1.13, z], 0.025, "#737E87", 0.58));
+        }
+      }
+      this.context.push(rod([-1.92, 0.55, 0.68], [-1.08, 1.08, 1.22], 0.014, "#737E87", 0.56));
+      this.context.push(rod([-1.92, 1.08, 1.22], [-1.08, 0.55, 0.68], 0.014, "#737E87", 0.56));
+    }
     labour.forEach((line, index) => {
       if (this.represented.has(line.id)) return;
       const positions: Point[] = [
-        [-1.55, 0, 1.05],
+        [-1.5, elevatedWork ? 1.2 : 0, 0.95],
         [1.48, 0, 1.0],
         [-1.5, 0, -0.95],
         [1.45, 0, -0.95],
@@ -448,13 +460,17 @@ class SceneBuilder {
       }
       case "backfill": {
         // A foundation trench being returned in visible compacted lifts.
-        this.context.push(cube(2.25, 0.76, 1.5, [0, 0.38, -0.2], "#95724F", { map: texture("#95724F", "#493425", 39), roughness: 1 }));
-        this.context.push(cube(0.5, 0.82, 1.6, [-0.68, 0.41, -0.2], "#A4A8AA", { roughness: 0.94 }));
-        this.context.push(cube(0.5, 0.82, 1.6, [0.68, 0.41, -0.2], "#A4A8AA", { roughness: 0.94 }));
-        const fill1 = cube(0.75, 0.18, 1.35, [0, 0.14, -0.2], "#A4835E", { map: texture("#A4835E", "#5C442E", 40), roughness: 1 });
-        this.add(/backfill|spreading|excavated material/, fill1, [0, 0.22, 0.15]);
-        const fill2 = cube(0.75, 0.18, 1.35, [0, 0.32, -0.2], "#B39772", { map: texture("#B39772", "#5C442E", 41), roughness: 1 });
-        this.add(/backfill|spreading|excavated material/, fill2, [0, 0.25, -0.15]);
+        this.context.push(cube(0.9, 0.76, 1.5, [-1.05, 0.38, -0.2], "#95724F", { map: texture("#95724F", "#493425", 39), roughness: 1 }));
+        this.context.push(cube(0.9, 0.76, 1.5, [1.05, 0.38, -0.2], "#95724F", { map: texture("#95724F", "#493425", 391), roughness: 1 }));
+        this.context.push(cube(0.5, 0.82, 1.6, [-0.43, 0.41, -0.2], "#A4A8AA", { roughness: 0.94 }));
+        this.context.push(cube(0.5, 0.82, 1.6, [0.43, 0.41, -0.2], "#A4A8AA", { roughness: 0.94 }));
+        // Compacted lift layers sit in the trench beside the foundation, not inside a solid soil block.
+        for (const x of [-0.72, 0.72]) {
+          const fill1 = cube(0.12, 0.18, 1.35, [x, 0.14, -0.2], "#A4835E", { map: texture("#A4835E", "#5C442E", 40), roughness: 1 });
+          this.add(/backfill|spreading|excavated material/, fill1, [0, 0.22, 0.15]);
+          const fill2 = cube(0.12, 0.18, 1.35, [x, 0.32, -0.2], "#B39772", { map: texture("#B39772", "#5C442E", 41), roughness: 1 });
+          this.add(/backfill|spreading|excavated material/, fill2, [0, 0.25, -0.15]);
+        }
         const comp = plateCompactor(); comp.position.set(1.18, 0, 0.9);
         this.add(/compactor|plant|light compaction/, comp, [0.25, 0.08, 0.15], { appearOnExplode: true }, "plant");
         this.addLabourPeople("shovel");
@@ -527,7 +543,7 @@ class SceneBuilder {
       case "concrete-slab": {
         this.floor("#AD9B82");
         const h = kind === "blinding" ? 0.075 : Math.max(0.2, t || 0.28);
-        const y = 0.09 + h / 2;
+        const y = 0.06 + h / 2;
         const colour = kind === "blinding" ? "#BAB6AD" : "#A9AAA7";
         const cast = cube(2.8, h, 1.95, [0, y, -0.15], colour, { map: texture(colour, "#625F58", kind === "blinding" ? 70 : kind === "concrete-slab" ? 72 : 73, 2), roughness: 0.96 });
         this.add(/concrete|blinding|cement/, cast, [0, 0.55, 0], { hideOnExplode: true });
@@ -545,7 +561,7 @@ class SceneBuilder {
         for (let i = 0; i < 3; i += 1) this.add(/cement/, bag([-1.42 + i * 0.36, 0.07, 1.55]), [-0.1, 0.12, 0.1], { appearOnExplode: true });
         if (kind === "blinding") {
           const screedRule = cube(1.35, 0.03, 0.035, [0.55, y + h / 2 + 0.03, 0.9], "#7A858D", { metalness: 0.3 });
-          this.add(/labour|concrete gang/, screedRule, [0.2, 0.25, 0.12], { appearOnExplode: true }, "labour");
+          this.context.push(screedRule);
         } else {
           const mix = mixer(); mix.position.set(1.45, 0, 1.12);
           this.add(/mixer|plant|vibrator/, mix, [0.25, 0.12, 0.12], { appearOnExplode: true }, "plant");
@@ -630,9 +646,9 @@ class SceneBuilder {
         if (wall) {
           this.floor("#C9C5BC");
           this.context.push(cube(2.7, 2.65, 0.24, [0, 1.28, -0.4], "#C6BDB1", { map: this.wallTexture() }));
-          for (let row = 0; row < 5; row += 1) {
+          for (let row = 0; row < 8; row += 1) {
             for (let col = 0; col < 5; col += 1) {
-              const tile = cube(0.48, 0.235, 0.035, [(col - 2) * 0.51, 0.32 + row * 0.48, -0.245], (row + col) % 4 === 0 ? "#DFE6E9" : "#F2F1EC", { roughness: 0.23, metalness: 0.04 });
+              const tile = cube(0.48, 0.235, 0.035, [(col - 2) * 0.49, 0.28 + row * 0.245, -0.245], (row + col) % 4 === 0 ? "#DFE6E9" : "#F2F1EC", { roughness: 0.23, metalness: 0.04 });
               this.add(/tile/, tile, [0.04, 0.15, 0]);
             }
           }
@@ -655,10 +671,10 @@ class SceneBuilder {
       case "paint-wall": {
         this.floor("#C8C2B9");
         this.context.push(cube(2.55, 2.6, 0.25, [0, 1.28, -0.3], "#C8BFB3", { map: this.wallTexture() }));
-        const paintColours = ["#E6E2D8", "#E7E5DE", "#F1EFE8"];
-        paintColours.forEach((color, i) => {
-          this.add(/emulsion|paint/, cube(0.78, 2.35, 0.035, [-0.84 + i * 0.84, 1.25, -0.14], color, { roughness: 0.78 }), [0.08, 0.2, 0.1]);
-        });
+        // The finished wall is uniform; separate coat passes are described in the method steps,
+        // not shown as three misleading coloured stripes on the final wall.
+        this.add(/emulsion|paint/, cube(2.42, 2.35, 0.035, [0, 1.25, -0.14], "#EEECE5", { roughness: 0.78 }), [0, 0.28, 0], { hideOnExplode: true });
+        this.add(/emulsion|paint/, cube(0.13, 2.2, 0.04, [1.16, 1.25, -0.11], "#C8BFB2", { roughness: 0.92 }), [0.1, 0.2, 0]);
         this.context.push(cube(0.16, 0.16, 0.1, [1.3, 0.1, 0.98], "#E6E1D5", { roughness: 0.86 }));
         this.addLabourPeople("roller");
         break;
@@ -980,7 +996,7 @@ class SceneBuilder {
         this.context.push(cube(4.1, 0.09, 3.1, [0, 2.55, -0.1], "#E8E6DF"));
         const strip = cube(3.8, 0.12, t || 0.15, [0, 2.48, 1.35], "#E9E6DE", { roughness: 0.88 });
         this.add(/pop|material/, strip, [0, 0.28, 0]);
-        for (let i = 0; i < 5; i += 1) this.add(/pop|groove|material/, cube(3.78, 0.012, 0.015, [0, 2.55, 1.3 + i * 0.027], "#AAA69D"), [0, 0.24, 0]);
+        for (let i = 0; i < 5; i += 1) this.add(/pop|groove|material/, cube(3.78, 0.012, 0.012, [0, 2.43 + i * 0.025, 1.43], "#AAA69D"), [0, 0.24, 0]);
         this.addLabourPeople("trowel");
         break;
       }
@@ -1008,7 +1024,7 @@ class SceneBuilder {
         this.room();
         const slab = cube(4.05, 0.18, 3.0, [0, 2.65, -0.1], "#A5A6A3", { map: texture("#A5A6A3", "#666660", 250) });
         this.context.push(slab);
-        this.add(/pop|skim|material/, cube(3.95, 0.018, 2.88, [0, 2.54, -0.1], "#E7E5DE", { roughness: 0.88 }), [0, 0.3, 0], { hideOnExplode: true });
+        this.add(/pop|skim|material/, cube(3.95, 0.018, 2.88, [0, 2.55, -0.1], "#E7E5DE", { roughness: 0.88 }), [0, 0.3, 0], { hideOnExplode: true });
         // Work platform shows how an overhead skim coat is accessed.
         this.context.push(cube(0.55, 0.9, 0.55, [1.35, 0.48, 0.82], "#87939C", { metalness: 0.45 }));
         this.addLabourPeople("float");
@@ -1094,7 +1110,7 @@ class SceneBuilder {
         eave.add(cube(2.85, 0.06, 1.05, [0, 2.1, -0.45], "#8E6843", { map: texture("#8E6843", "#51351F", 270) }));
         eave.add(cube(2.9, 0.035, 0.75, [0, 2.2, -0.45], "#8597A2", { metalness: 0.32, roughness: 0.4 }));
         this.context.push(eave);
-        this.add(/fascia|aluminium/, cube(2.8, 0.58, 0.045, [0, 1.82, 0.11], "#AEBFC7", { metalness: 0.48, roughness: 0.33 }), [0, 0.35, 0], { hideOnExplode: true });
+        this.add(/fascia|aluminium/, cube(2.8, 0.3, 0.045, [0, 2.02, 0.11], "#AEBFC7", { metalness: 0.48, roughness: 0.33 }), [0, 0.35, 0], { hideOnExplode: true });
         this.add(/screw|rivet|fixing/, rod([-1.1, 1.82, 0.15], [-1.1, 1.82, 0.09], 0.014, "#69747C", 0.7), [0, 0.18, 0], { appearOnExplode: true }, "consumable");
         this.addLabourPeople("drill");
         break;
@@ -1117,8 +1133,8 @@ class SceneBuilder {
         }
         this.context.push(rafters);
         if (kind === "wall-plate") {
-          this.add(/treated timber|timber material|wall plate/, cube(3.15, 0.18, 0.18, [0, 1.37, -0.92], "#C09056", { map: texture("#C09056", "#613E21", 281) }), [0, 0.25, 0], { hideOnExplode: true });
-          for (const x of [-1.2, -0.4, 0.4, 1.2]) this.add(/wall plate|fixing|timber/, cylinder(0.025, 0.18, [x, 1.48, -0.92], "#7C858C", { metalness: 0.62 }), [0, 0.15, 0], { appearOnExplode: true });
+          this.add(/treated timber|timber material|wall plate/, cube(3.15, 0.15, 0.18, [0, 1.25, -0.92], "#C09056", { map: texture("#C09056", "#613E21", 281) }), [0, 0.25, 0], { hideOnExplode: true });
+          for (const x of [-1.2, -0.4, 0.4, 1.2]) this.add(/wall plate|fixing|timber/, cylinder(0.025, 0.18, [x, 1.34, -0.92], "#7C858C", { metalness: 0.62 }), [0, 0.15, 0], { appearOnExplode: true });
         } else if (kind === "rafter") {
           this.add(/treated timber|timber material|rafter/, rod([0.4, 1.34, -0.9], [0.4, 2.34, 0.05], 0.07, "#C08B4D"), [0.18, 0.28, 0], { hideOnExplode: true });
         } else if (kind === "roof-strut") {
