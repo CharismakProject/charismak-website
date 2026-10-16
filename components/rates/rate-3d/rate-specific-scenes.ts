@@ -793,15 +793,22 @@ class SceneBuilder {
       case "window":
       case "door": {
         this.room();
-        const wall = cube(2.7, 2.7, 0.25, [0, 1.32, -0.45], "#C6BDB1", { map: this.wallTexture(), roughness: 0.97 });
-        this.add(/block|masonry|wall/, wall, [0, 0.1, 0]);
+        const masonry = this.wallTexture();
         if (kind === "window") {
-          // Window opening returns frame and a glass sash; sill and lintel stay visible.
-          this.add(/frame|aluminium|window/, cube(1.72, 1.36, 0.09, [0, 1.52, -0.29], "#667E90", { metalness: 0.58, roughness: 0.34 }), [0.16, 0.08, 0]);
+          // Four surrounding wall returns form a real aperture; glass is not laid over solid masonry.
+          this.context.push(cube(0.48, 2.7, 0.25, [-1.11, 1.35, -0.45], "#C6BDB1", { map: masonry, roughness: 0.97 }));
+          this.context.push(cube(0.48, 2.7, 0.25, [1.11, 1.35, -0.45], "#C6BDB1", { map: masonry, roughness: 0.97 }));
+          this.context.push(cube(2.7, 0.8, 0.25, [0, 0.4, -0.45], "#C6BDB1", { map: masonry, roughness: 0.97 }));
+          this.context.push(cube(2.7, 0.5, 0.25, [0, 2.45, -0.45], "#C6BDB1", { map: masonry, roughness: 0.97 }));
+          this.add(/frame|aluminium|window/, cube(1.72, 1.32, 0.09, [0, 1.52, -0.29], "#667E90", { metalness: 0.58, roughness: 0.34 }), [0.16, 0.08, 0]);
           this.add(/glass|glazing/, cube(1.56, 1.2, 0.018, [0, 1.52, -0.235], "#9DC4D8", { transparent: true, opacity: 0.52, roughness: 0.12, metalness: 0.18 }), [0, 0.12, 0], { hideOnExplode: true });
           this.add(/sash|frame|aluminium/, cube(0.025, 1.22, 0.035, [0, 1.52, -0.2], "#536B7B", { metalness: 0.62, roughness: 0.34 }));
           this.add(/seal|dressing|fixing/, rod([-0.88, 0.82, -0.21], [0.88, 0.82, -0.21], 0.01, "#728B9C"), [0, 0.18, 0]);
         } else {
+          // The door leaf sits within an actual open doorway with masonry jambs and a header.
+          this.context.push(cube(0.82, 2.7, 0.25, [-0.94, 1.35, -0.45], "#C6BDB1", { map: masonry, roughness: 0.97 }));
+          this.context.push(cube(0.82, 2.7, 0.25, [0.94, 1.35, -0.45], "#C6BDB1", { map: masonry, roughness: 0.97 }));
+          this.context.push(cube(1.06, 0.45, 0.25, [0, 2.475, -0.45], "#C6BDB1", { map: masonry, roughness: 0.97 }));
           this.add(/door frame|frame|jamb/, cube(1.05, 2.25, 0.1, [0, 1.2, -0.26], "#94643C", { map: texture("#94643C", "#4D2E1A", 181) }), [0, 0.1, 0]);
           this.add(/door leaf|door/, cube(0.91, 2.08, 0.045, [0, 1.18, -0.18], "#A87548", { map: texture("#A87548", "#5C3922", 182), roughness: 0.72 }), [0.35, 0.08, 0], { hideOnExplode: true });
           [0.45, 1.65].forEach(y => this.add(/hinge|hardware|fixing/, cube(0.045, 0.16, 0.045, [-0.44, y, -0.14], "#C4C9CE", { metalness: 0.78, roughness: 0.32 })));
@@ -885,11 +892,12 @@ class SceneBuilder {
           // 45-degree mitre cues are separate thin light strips along the top perimeter.
           for (const x of [-0.82, 0.82]) this.add(/marble|stone|top/, rod([x, 0.96, -0.64], [x * 0.92, 0.96, 0.34], 0.018, "#9A9489"));
         } else if (kind === "marble-border") {
-          for (let i = 0; i < 10; i += 1) {
-            const strip = cube(0.17, 0.055, 1.45, [-0.82 + i * 0.18, 0.21, -0.08], "#D7D1C5", { map: texture("#D7D1C5", "#958C7F", 193 + i), roughness: 0.25 });
+          // Each narrow 80 mm strip forms a short length along the 80 mm band.
+          for (let i = 0; i < 9; i += 1) {
+            const strip = cube(0.29, 0.055, 0.08, [-1.16 + i * 0.29, 0.21, -0.08], "#D7D1C5", { map: texture("#D7D1C5", "#958C7F", 193 + i), roughness: 0.25 });
             this.add(/marble|border|bedding/, strip, [0, 0.22, 0]);
           }
-          this.context.push(cube(2.8, 0.035, 0.45, [0, 0.19, -0.08], "#969995"));
+          this.context.push(cube(2.8, 0.035, 0.14, [0, 0.19, -0.08], "#969995"));
         } else if (kind === "marble-field") {
           for (let row = 0; row < 3; row += 1) for (let col = 0; col < 3; col += 1) {
             const tile = cube(0.87, 0.065, 0.62, [(col - 1) * 0.91, 0.22, (row - 1) * 0.65 - 0.08], "#D8D3C9", { map: texture("#D8D3C9", "#94897C", 200 + row * 4 + col), roughness: 0.25 });
@@ -908,9 +916,17 @@ class SceneBuilder {
             board.rotation.y = ((row + col) % 2 ? -1 : 1) * Math.PI / 4;
             this.add(/oak|board|flooring|consumable/, board, [0, 0.2, 0]);
           }
+        } else if (kind === "oak-straight") {
+          // Long parallel strips with staggered end joints; boards are not square tiles.
+          for (let col = 0; col < 10; col += 1) for (let row = 0; row < 3; row += 1) {
+            const z = -0.69 + row * 0.53 + (col % 2 ? 0.26 : 0);
+            const board = cube(0.25, 0.045, 0.51, [(col - 4.5) * 0.28, 0.22, z], "#A87548", { map: texture("#A87548", "#56331B", 230 + col * 3 + row), roughness: 0.43 });
+            this.add(/oak|board|flooring|consumable/, board, [0, 0.2, 0]);
+          }
         } else {
+          // Decorative wood tiles are smaller modules, not long strip flooring.
           for (let row = 0; row < 5; row += 1) for (let col = 0; col < 6; col += 1) {
-            const board = cube(0.35, 0.045, 0.32, [(col - 2.5) * 0.37, 0.22, (row - 2) * 0.34 - 0.08], isMarble ? "#D8D3C9" : (row + col) % 2 ? "#B78351" : "#9D6B3E", { map: texture((row + col) % 2 ? "#B78351" : "#9D6B3E", "#59391F", 240 + row * 6 + col), roughness: 0.35 });
+            const board = cube(0.35, 0.045, 0.32, [(col - 2.5) * 0.37, 0.22, (row - 2) * 0.34 - 0.08], (row + col) % 2 ? "#B78351" : "#9D6B3E", { map: texture((row + col) % 2 ? "#B78351" : "#9D6B3E", "#59391F", 240 + row * 6 + col), roughness: 0.35 });
             if (kind === "wood-tile") board.rotation.y = (row % 2) * Math.PI / 2;
             this.add(/wood|tile|pattern|consumable|laying/, board, [0, 0.2, 0]);
           }
