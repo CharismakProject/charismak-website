@@ -166,8 +166,9 @@ export default function RateExplodedViewer({ item }: { item: RateBankItem }) {
         targetMeshes.forEach((mesh) => {
           const previous = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
           const updated = previous.map((original) => {
-            if (original.map) ownedTextures.add(original.map);
-            if (original.normalMap) ownedTextures.add(original.normalMap);
+            const sourceMaterial = original as THREE.MeshStandardMaterial;
+            if (sourceMaterial.map) ownedTextures.add(sourceMaterial.map);
+            if (sourceMaterial.normalMap) ownedTextures.add(sourceMaterial.normalMap);
             const material = original.clone() as THREE.MeshStandardMaterial;
             material.color.set("#FFFFFF");
             material.map = diffuse;
