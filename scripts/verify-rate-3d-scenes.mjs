@@ -49,6 +49,15 @@ for (const item of RATE_BANK_ITEMS) {
   const lineIdsInScene = new Set(scene.parts.flatMap((part) => Array.isArray(part.lineId) ? part.lineId : [part.lineId]));
   const missingLines = item.lines.map((line) => line.id).filter((lineId) => !lineIdsInScene.has(lineId));
   assert.deepEqual(missingLines, [], item.slug + ": cost lines not represented by an interactive model part.");
+  const invalidLineIds = [...lineIdsInScene].filter((lineId) => lineId !== "__context" && !item.lines.some((line) => line.id === lineId));
+  assert.deepEqual(invalidLineIds, [], item.slug + ": scene references cost lines that do not exist on the rate.");
+  for (const labourLine of item.lines.filter((line) => line.category === "labour")) {
+    const hasHumanWorker = scene.parts.some((part) => {
+      const ids = Array.isArray(part.lineId) ? part.lineId : [part.lineId];
+      return ids.includes(labourLine.id) && part.object.userData?.rateSceneRole === "worker";
+    });
+    assert.ok(hasHumanWorker, item.slug + ": labour line '" + labourLine.label + "' is missing a linked human worker.");
+  }
   scene.parts.forEach((part) => {
     part.object.traverse((object) => {
       if (!(object instanceof Object) || !("isMesh" in object) || !(object).isMesh) return;
