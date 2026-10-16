@@ -40,8 +40,10 @@ assert.ok(scenes.includes("this.addLabourPeople(labourTool)"), "Rates with labou
 // safely fall back without a browser canvas). This catches bad geometry/setup, not just names.
 let totalParts = 0;
 let totalMeshes = 0;
+const builtScenes = new Map();
 for (const item of RATE_BANK_ITEMS) {
   const scene = buildAccurateRateScene(item);
+  builtScenes.set(item.slug, scene);
   assert.ok(scene.parts.length > 0, item.slug + ": scene has no interactive parts.");
   assert.ok(scene.context.length > 0, item.slug + ": no construction context/ground.");
   assert.equal(scene.process?.length, 3, item.slug + ": construction method must have three steps.");
@@ -58,9 +60,9 @@ for (const item of RATE_BANK_ITEMS) {
     });
     assert.ok(hasHumanWorker, item.slug + ": labour line '" + labourLine.label + "' is missing a linked human worker.");
   }
-  scene.parts.forEach((part) => {
-    part.object.traverse((object) => {
-      if (!(object instanceof Object) || !("isMesh" in object) || !(object).isMesh) return;
+  [...scene.parts.map((part) => part.object), ...scene.context].forEach((rootObject) => {
+    rootObject.traverse((object) => {
+      if (!("isMesh" in object) || !object.isMesh) return;
       const mesh = object;
       totalMeshes += 1;
       mesh.geometry.computeBoundingBox();
@@ -76,5 +78,20 @@ for (const item of RATE_BANK_ITEMS) {
     });
   });
   totalParts += scene.parts.length;
+}
+
+const criticalGeometryRoles = {
+  "mechanical-excavation-wall-trenches": "mechanical-excavation-trench",
+  "manual-trench-excavation": "manual-excavation-trench",
+  "backfill-excavated-material": "compacted-backfill-lift",
+  "imported-laterite-fill": "laterite-fill-layer",
+  "hardcore-fill-compacted": "hardcore-base-layer",
+  "sharp-sand-blinding": "sand-blinding-bed",
+  "c15-blinding-1-3-6": "thin-ground-blinding",
+};
+for (const [slug, role] of Object.entries(criticalGeometryRoles)) {
+  const scene = builtScenes.get(slug);
+  assert.ok(scene, "Critical 3D scene is missing: " + slug);
+  assert.ok(scene.parts.some((part) => part.object.userData?.rateSceneRole === role), slug + ": wrong/missing key geometry role " + role + ". This likely indicates a construction-method misrepresentation.");
 }
 console.log("Rate-specific Three.js verification passed: " + mapped.size + " rate items, " + handledKinds.size + " handlers, " + totalParts + " interactive parts and " + totalMeshes + " instantiated meshes.");
