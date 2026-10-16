@@ -552,6 +552,7 @@ class SceneBuilder {
     ground.position.y = -0.09;
     ground.receiveShadow = true;
     ground.userData.keepVisible = true;
+    ground.userData.rateSceneRole = "site-ground";
     this.context.push(ground);
   }
 
@@ -844,10 +845,12 @@ class SceneBuilder {
         cast.userData.rateSceneRole = kind === "blinding" ? "thin-ground-blinding" : "cast-concrete-sample";
         this.add(/concrete|blinding|cement|sand|granite|aggregate/, cast, [0, 0.55, 0], { hideOnExplode: true });
         // A very thin surface finish sits on the same concrete layer; this is not a second structural slab.
-        this.add(/concrete|blinding|cement|sand|granite|aggregate/, cube(2.8, 0.007, 1.95, [0, y + h / 2 + 0.001, -0.15], colour, {
+        const finishSurface = cube(2.8, 0.007, 1.95, [0, y + h / 2 + 0.001, -0.15], colour, {
           map: concreteTexture,
           roughness: kind === "blinding" ? 0.5 : 0.82,
-        }), [0, 0.25, 0], { hideOnExplode: true });
+        });
+        finishSurface.userData.rateSceneRole = kind === "blinding" ? "blinding-finish-surface" : "cast-concrete-finish";
+        this.add(/concrete|blinding|cement|sand|granite|aggregate/, finishSurface, [0, 0.25, 0], { hideOnExplode: true });
         const ingredients = [
           { re: /cement/, p: [-1.2, 0.11, 1.1] as Point, c: "#A5ABB0" },
           { re: /sand/, p: [-0.45, 0.1, 1.1] as Point, c: "#D3B784" },
