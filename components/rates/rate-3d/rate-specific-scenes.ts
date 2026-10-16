@@ -338,7 +338,9 @@ class SceneBuilder {
   }
 
   find(pattern: RegExp) {
-    const explicitlyLabour = /labour|mason|carpenter|installer|painting labour|installation labour/i.test(pattern.source);
+    // Trade names like "mason" and "carpenter" can occur in material labels too.
+    // Include costed labour only when the pattern explicitly says labour/labor.
+    const explicitlyLabour = /labou?r/i.test(pattern.source);
     return this.item.lines.filter((line) => pattern.test(line.label) && (explicitlyLabour || line.category !== "labour"));
   }
 
