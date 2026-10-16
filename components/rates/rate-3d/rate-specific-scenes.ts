@@ -607,6 +607,9 @@ class SceneBuilder {
   }
 
   blindingSite() {
+    // In this excavation view the site datum is the top of the undisturbed ground plane.
+    const siteGround = this.context.find((object) => object.userData.keepVisible);
+    if (siteGround) siteGround.position.y = 0;
     // A real foundation work area: prepared formation, sloped soil faces and set-out strings.
     const formation = cube(3.04, 0.055, 2.18, [0, 0.0275, -0.15], "#B7A081", {
       map: texture("#B7A081", "#59432F", 174, 3.2),
@@ -672,7 +675,7 @@ class SceneBuilder {
     granite.position.set(2.12, -0.015, -1.62);
     this.context.push(granite);
     for (let i = 0; i < 3; i += 1) {
-      const sack = bag([-1.82 + i * 0.27, 0.07, 1.9], "#A7ADB2");
+      const sack = bag([-1.82 + i * 0.27, -0.003, 1.9], "#A7ADB2");
       sack.rotation.y = (i - 1) * 0.12;
       this.context.push(sack);
     }
