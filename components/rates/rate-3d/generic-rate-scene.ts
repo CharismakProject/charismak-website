@@ -320,7 +320,6 @@ export function buildGenericRateScene(item: RateBankItem): RateScene {
   context.push(box(0.16, 0.22, 2.9, -2.02, 2.77, 0, frame));
   context.push(box(0.16, 0.22, 2.9, 2.02, 2.77, 0, frame));
 
-  const unit = 0.15;
   const baseY = 0.15;
   const family = familyFor(item);
   const concreteTexture = surfaceTexture("#B8B6AF", "#66645F", 120, 2);
