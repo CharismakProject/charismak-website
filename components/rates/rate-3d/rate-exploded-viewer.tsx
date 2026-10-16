@@ -107,6 +107,7 @@ export default function RateExplodedViewer({ item }: { item: RateBankItem }) {
     });
 
     const base = scene.parts.map((part) => part.object.position.clone());
+    const baseScales = scene.parts.map((part) => part.object.scale.clone());
     const meshes: THREE.Mesh[] = [];
     scene.parts.forEach((part) => {
       world.add(part.object);
@@ -182,7 +183,7 @@ export default function RateExplodedViewer({ item }: { item: RateBankItem }) {
         }
         if (part.appearOnExplode) {
           part.object.visible = eased > 0.02;
-          part.object.scale.setScalar(Math.max(eased, 0.001));
+          part.object.scale.copy(baseScales[index]).multiplyScalar(Math.max(eased, 0.001));
         }
       });
       contextMaterials.forEach((material) => {
