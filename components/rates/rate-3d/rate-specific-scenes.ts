@@ -322,7 +322,8 @@ class SceneBuilder {
   }
 
   find(pattern: RegExp) {
-    return this.item.lines.filter((line) => pattern.test(line.id + " " + line.label));
+    const explicitlyLabour = /labour|mason|carpenter|installer|painting labour|installation labour/i.test(pattern.source);
+    return this.item.lines.filter((line) => pattern.test(line.label) && (explicitlyLabour || line.category !== "labour"));
   }
 
   first(category: RateCostLine["category"]) {
@@ -531,7 +532,7 @@ class SceneBuilder {
         const cast = cube(2.8, h, 1.95, [0, y, -0.15], colour, { map: texture(colour, "#625F58", kind === "blinding" ? 70 : kind === "concrete-slab" ? 72 : 73, 2), roughness: 0.96 });
         this.add(/concrete|blinding|cement/, cast, [0, 0.55, 0], { hideOnExplode: true });
         // Exposed cut-edge aggregate and a top-finished plane.
-        this.context.push(cube(2.8, 0.025, 1.95, [0, y + h / 2 + 0.006, -0.15], kind === "blinding" ? "#C8C4BA" : "#B8B8B2", { roughness: 0.83 }));
+        this.add(/concrete|blinding|cement/, cube(2.8, 0.025, 1.95, [0, y + h / 2 + 0.006, -0.15], kind === "blinding" ? "#C8C4BA" : "#B8B8B2", { roughness: 0.83 }), [0, 0.25, 0], { hideOnExplode: true });
         const ingredients = [
           { re: /cement/, p: [-1.2, 0.11, 1.1] as Point, c: "#A5ABB0" },
           { re: /sand/, p: [-0.45, 0.1, 1.1] as Point, c: "#D3B784" },
@@ -612,7 +613,7 @@ class SceneBuilder {
       case "floor-screed":
       case "thin-screed": {
         this.floor("#B6B0A5");
-        const thickness = kind === "floor-screed" ? 0.065 : Math.max(0.018, t * 1.4);
+        const thickness = kind === "floor-screed" ? 0.05 : Math.max(0.01, t * 1.6);
         this.context.push(cube(2.85, 0.18, 2.05, [0, 0.09, -0.1], "#A9A8A2", { map: texture("#A9A8A2", "#696761", 121), roughness: 0.98 }));
         this.add(/cement|sand|screed/, cube(2.82, thickness, 2.02, [0, 0.18 + thickness / 2, -0.1], "#C7C4BD", { map: texture("#C7C4BD", "#847E75", 122, 2), roughness: 0.96 }), [0, 0.28, 0], { hideOnExplode: true });
         // Raised cutaway edge communicates the actual named thickness.
@@ -658,7 +659,7 @@ class SceneBuilder {
         paintColours.forEach((color, i) => {
           this.add(/emulsion|paint/, cube(0.78, 2.35, 0.035, [-0.84 + i * 0.84, 1.25, -0.14], color, { roughness: 0.78 }), [0.08, 0.2, 0.1]);
         });
-        this.add(/roller|sundries|masking/, worker("roller", "#F08A24", 0.78), [0.12, 0.08, 0.1], { appearOnExplode: true }, "consumable");
+        this.context.push(cube(0.16, 0.16, 0.1, [1.3, 0.1, 0.98], "#E6E1D5", { roughness: 0.86 }));
         this.addLabourPeople("roller");
         break;
       }
@@ -1026,25 +1027,31 @@ class SceneBuilder {
         }
         this.context.push(frame);
         const roof = new THREE.Group();
-        const sheetMat = mat("#6F8797", { color: "#D4D9DC", metalness: 0.42, roughness: 0.36, side: THREE.DoubleSide });
-        for (let i = 0; i < 5; i += 1) {
-          const shape = new THREE.Shape();
-          shape.moveTo(-0.35, 0);
-          for (let x = -0.35; x < 0.35; x += 0.14) {
-            shape.lineTo(x + 0.035, 0);
-            shape.lineTo(x + 0.06, 0.024);
-            shape.lineTo(x + 0.09, 0.024);
-            shape.lineTo(Math.min(x + 0.115, 0.35), 0);
+        const sheetMat = mat("#D4D9DC", { metalness: 0.42, roughness: 0.36, side: THREE.DoubleSide });
+        const pitchAngle = Math.atan2(0.65, 1.4);
+        for (const side of [-1, 1]) {
+          const slopeGroup = new THREE.Group();
+          for (let i = 0; i < 5; i += 1) {
+            const shape = new THREE.Shape();
+            shape.moveTo(-0.35, 0);
+            for (let x = -0.35; x < 0.35; x += 0.14) {
+              shape.lineTo(x + 0.035, 0);
+              shape.lineTo(x + 0.06, 0.024);
+              shape.lineTo(x + 0.09, 0.024);
+              shape.lineTo(Math.min(x + 0.115, 0.35), 0);
+            }
+            shape.lineTo(0.35, -0.008); shape.lineTo(-0.35, -0.008);
+            const geometry = new THREE.ExtrudeGeometry(shape, { depth: 2.02, bevelEnabled: false });
+            geometry.translate(0, 0, -1.01);
+            const panel = new THREE.Mesh(geometry, sheetMat.clone());
+            panel.castShadow = true; panel.receiveShadow = true;
+            panel.position.set((i - 2) * 0.7, 0, 0);
+            slopeGroup.add(panel);
           }
-          shape.lineTo(0.35, -0.008); shape.lineTo(-0.35, -0.008);
-          const geometry = new THREE.ExtrudeGeometry(shape, { depth: 2.02, bevelEnabled: false });
-          geometry.translate(0, 0, -1.01);
-          const panel = new THREE.Mesh(geometry, sheetMat.clone());
-          panel.castShadow = true; panel.receiveShadow = true;
-          panel.position.set((i - 2) * 0.7, 0, 0);
-          roof.add(panel);
+          slopeGroup.rotation.x = side * pitchAngle;
+          slopeGroup.position.set(0, 2.43, side * 0.7);
+          roof.add(slopeGroup);
         }
-        roof.position.set(0, 2.43, 0);
         this.add(/aluminium|roofing sheet|roof cover/, roof, [0, 0.62, 0], { hideOnExplode: true });
         const screws = new THREE.Group();
         for (let i = 0; i < 5; i += 1) for (let j = 0; j < 7; j += 1) screws.add(cylinder(0.012, 0.035, [(i - 2) * 0.7, 0, (j - 3) * 0.29], "#8A929A", { metalness: 0.82, roughness: 0.3 }));
@@ -1063,8 +1070,19 @@ class SceneBuilder {
           slope.position.set(0, 1.88, 0);
           this.context.push(slope);
         }
-        const cap = cube(2.55, 0.045, 0.62, [0, 2.28, 0], "#BCC8CE", { metalness: 0.5, roughness: 0.33 });
-        cap.rotation.x = Math.PI / 4;
+        const capProfile = new THREE.Shape();
+        capProfile.moveTo(-0.3, -0.06);
+        capProfile.lineTo(0, 0.09);
+        capProfile.lineTo(0.3, -0.06);
+        capProfile.lineTo(0.27, -0.1);
+        capProfile.lineTo(0, 0.025);
+        capProfile.lineTo(-0.27, -0.1);
+        capProfile.closePath();
+        const capGeometry = new THREE.ExtrudeGeometry(capProfile, { depth: 2.55, bevelEnabled: false });
+        capGeometry.translate(0, 0, -1.275);
+        const cap = new THREE.Mesh(capGeometry, mat("#BCC8CE", { metalness: 0.5, roughness: 0.33, side: THREE.DoubleSide }));
+        cap.position.set(0, 2.28, 0);
+        cap.castShadow = true; cap.receiveShadow = true;
         this.add(/ridge|aluminium|capping/, cap, [0, 0.34, 0], { hideOnExplode: true });
         this.add(/screws|rivets|fixings/, cube(0.24, 0.035, 0.22, [1.25, 2.24, 0.1], "#858F97", { metalness: 0.7 }), [0.12, 0.2, 0], { appearOnExplode: true }, "consumable");
         this.addLabourPeople("drill");
@@ -1130,13 +1148,13 @@ class SceneBuilder {
         throw new Error("No item-specific 3D scene handler for rate slug: " + this.item.slug);
     }
 
-    this.addResiduals();
     const labourTool = /earth|trench|fill|sand/.test(kind) ? "shovel"
       : /concrete|screed|plaster|blinding|pop/.test(kind) ? "float"
         : /paint/.test(kind) ? "roller"
           : /til|marble|oak|wood|stone|adhesive/.test(kind) ? "tile"
             : /plumb|basin|wc|shower|drain|mirror/.test(kind) ? "wrench" : "drill";
     this.addLabourPeople(labourTool);
+    this.addResiduals();
 
     const target = kind.startsWith("ceiling") || kind.startsWith("pop") || kind === "roof-cover" || kind === "fibre-ceiling"
       ? new THREE.Vector3(0, 1.65, -0.1)
