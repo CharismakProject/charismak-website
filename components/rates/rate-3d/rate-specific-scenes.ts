@@ -834,7 +834,7 @@ class SceneBuilder {
         if (kind === "blinding") this.blindingSite();
         else this.floor("#AD9B82");
         const h = kind === "blinding" ? 0.075 : Math.max(0.2, t || 0.28);
-        const y = 0.06 + h / 2;
+        const y = (kind === "blinding" ? 0.055 : 0.06) + h / 2;
         const colour = kind === "blinding" ? "#BAB6AD" : "#A9AAA7";
         const concreteTexture = texture(colour, "#625F58", kind === "blinding" ? 70 : kind === "concrete-slab" ? 72 : 73, 2);
         const cast = cube(2.8, h, 1.95, [0, y, -0.15], colour, {
