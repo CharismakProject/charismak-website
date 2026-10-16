@@ -18,7 +18,7 @@
     "test:rate-bank": "node --import tsx scripts/verify-rate-bank.ts",
     "test:enquiry": "node --import tsx scripts/verify-enquiry-validation.ts",
     "test:site-pictures": "node --import tsx scripts/verify-site-pictures.ts",
-    "test:rate-3d": "node scripts/verify-rate-3d-scenes.mjs"
+    "test:rate-3d": "node --import tsx scripts/verify-rate-3d-scenes.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.2",
