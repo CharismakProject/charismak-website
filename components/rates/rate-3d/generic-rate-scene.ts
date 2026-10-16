@@ -233,7 +233,8 @@ function familyFor(item: RateBankItem): Family {
   if (/plumb|drain|soil pipe|waste pipe|water supply|sanitary|manhole|gully|sewer|wc suite|water closet|wash hand basin/.test(text)) return "plumbing";
   if (/electri|wiring|cable|conduit|light fitting|switch|socket|distribution board|consumer unit/.test(text)) return "electrical";
   if (/structural steel|steel fabrication|steel frame|metal fabrication|welded frame|steelwork/.test(text)) return "steel";
-  if (/tile|terrazzo|floor finish|screeding|floor screed|interlock|paving|kerb|stone cladding/.test(text)) return "finishes";
+  if (/paving|kerb|roadwork|interlocking/.test(text) && !/tile|screed|floor finish/.test(text)) return "paving";
+  if (/tile|terrazzo|floor finish|screeding|floor screed|interlock|stone cladding/.test(text)) return "finishes";
   if (/plaster|render|painting|paint|skim coat|wall finish|wallpaper|texture coat/.test(text)) return "finishes";
   if (/blockwork|sandcrete block|masonry|brick wall|brickwork|block wall/.test(text)) return "masonry";
   if (/concrete|blinding|cement-sand|cast in situ|lean mix/.test(text) || /concrete/.test(item.section.toLowerCase())) return "concrete";
