@@ -7,8 +7,7 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
 import { Layers, RotateCcw } from "lucide-react";
 
 import type { RateBankItem } from "@/lib/rates/defaults";
-import { buildRateScene } from "./scenes";
-import { buildGenericRateScene } from "./generic-rate-scene";
+import { buildAccurateRateScene } from "./rate-specific-scenes";
 
 const money = (value: number, currency: string) =>
   new Intl.NumberFormat("en-NG", { style: "currency", currency, maximumFractionDigits: 0 }).format(value);
@@ -30,7 +29,7 @@ export default function RateExplodedViewer({ item }: { item: RateBankItem }) {
   const flyRef = useRef<(explode: boolean) => void>(() => {});
   const [exploded, setExploded] = useState(false);
   const [selected, setSelected] = useState<string[] | null>(null);
-  const scene = useMemo(() => buildRateScene(item.slug) ?? buildGenericRateScene(item), [item.slug, item]);
+  const scene = useMemo(() => buildAccurateRateScene(item), [item]);
 
   const directCost = item.lines.reduce((sum, line) => sum + line.quantity * line.unitRate, 0);
   const modelled = useMemo(
@@ -260,6 +259,25 @@ export default function RateExplodedViewer({ item }: { item: RateBankItem }) {
       </div>
 
       <div className="rounded-2xl border border-[#DCE4EC] bg-white p-4">
+        <section className="mb-4 rounded-xl border border-[#DCE4EC] bg-[#F6F8FA] p-3">
+          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#A82B05]">Construction method</p>
+          <ol className="mt-2 space-y-2">
+            {(scene.process ?? [
+              "Review the specification and set out the work.",
+              "Prepare the substrate and install the specified materials using the appropriate trade method.",
+              "Check alignment, level, finish and readiness for the next operation.",
+            ]).map((step, index) => (
+              <li key={step} className="flex gap-2 text-xs leading-5 text-[#425466]">
+                <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#0D3B66] text-[10px] font-bold text-white">{index + 1}</span>
+                <span>{step}</span>
+              </li>
+            ))}
+          </ol>
+          <div className="mt-3 border-t border-[#DCE4EC] pt-3">
+            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#617286]">Intended end result</p>
+            <p className="mt-1 text-xs leading-5 text-[#425466]">{scene.endResult ?? "Illustrative construction element. Confirm exact dimensions and finishing requirements against the drawings and specification."}</p>
+          </div>
+        </section>
         {selectedLines.length ? (
           <div className="mb-4 rounded-xl bg-[#FFF9ED] p-3">
             {selectedLines.map((line) => {
