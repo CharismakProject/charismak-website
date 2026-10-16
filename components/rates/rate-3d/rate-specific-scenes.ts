@@ -476,7 +476,9 @@ class SceneBuilder {
       case "mechanical-trench": {
         this.context.push(cube(2.3, 0.6, 1.7, [-0.75, 0.23, -0.06], "#96724F", { map: texture("#96724F", "#493425", 31), roughness: 1 }));
         this.context.push(cube(2.3, 0.6, 1.7, [0.75, 0.23, -0.06], "#A17C54", { map: texture("#A17C54", "#493425", 32), roughness: 1 }));
-        this.add(/excavat|trench|earth/, cube(0.42, 0.035, 1.56, [0, 0.02, -0.06], "#5D4A38", { roughness: 1 }), [0, -0.1, 0.2]);
+        const trenchFloor = cube(0.42, 0.035, 1.56, [0, 0.02, -0.06], "#5D4A38", { roughness: 1 });
+        trenchFloor.userData.rateSceneRole = "mechanical-excavation-trench";
+        this.add(/excavat|trench|earth/, trenchFloor, [0, -0.1, 0.2]);
         this.context.push(cube(0.16, 0.84, 1.68, [-0.19, 0.39, -0.06], "#C5A47C", { roughness: 1 }));
         this.context.push(cube(0.16, 0.84, 1.68, [0.19, 0.39, -0.06], "#C5A47C", { roughness: 1 }));
         const machine = excavator(); machine.position.set(1.35, 0, 1.0);
@@ -489,7 +491,9 @@ class SceneBuilder {
       case "manual-trench": {
         this.context.push(cube(1.08, 0.74, 1.75, [-0.7, 0.35, -0.05], "#97724E", { map: texture("#97724E", "#4D3726", 36), roughness: 1 }));
         this.context.push(cube(1.08, 0.74, 1.75, [0.7, 0.35, -0.05], "#97724E", { map: texture("#97724E", "#4D3726", 37), roughness: 1 }));
-        this.add(/excavat|trench/, cube(0.3, 0.09, 1.58, [0, 0.04, -0.05], "#6E5740", { roughness: 1 }), [0, -0.15, 0.15]);
+        const trenchFloor = cube(0.3, 0.09, 1.58, [0, 0.04, -0.05], "#6E5740", { roughness: 1 });
+        trenchFloor.userData.rateSceneRole = "manual-excavation-trench";
+        this.add(/excavat|trench/, trenchFloor, [0, -0.15, 0.15]);
         const spoil = pile(0.43, "#A4825B", 38); spoil.position.set(1.27, 0.21, 1.05);
         this.add(/excavat|soil/, spoil, [0.15, 0.16, 0.12], { appearOnExplode: true });
         this.addLabourPeople("shovel");
@@ -504,8 +508,10 @@ class SceneBuilder {
         // Compacted lift layers sit in the trench beside the foundation, not inside a solid soil block.
         for (const x of [-0.72, 0.72]) {
           const fill1 = cube(0.12, 0.18, 1.35, [x, 0.14, -0.2], "#A4835E", { map: texture("#A4835E", "#5C442E", 40), roughness: 1 });
+          fill1.userData.rateSceneRole = "compacted-backfill-lift";
           this.add(/backfill|spreading|excavated material/, fill1, [0, 0.22, 0.15]);
           const fill2 = cube(0.12, 0.18, 1.35, [x, 0.32, -0.2], "#B39772", { map: texture("#B39772", "#5C442E", 41), roughness: 1 });
+          fill2.userData.rateSceneRole = "compacted-backfill-lift";
           this.add(/backfill|spreading|excavated material/, fill2, [0, 0.25, -0.15]);
         }
         const comp = plateCompactor(); comp.position.set(1.18, 0, 0.9);
@@ -517,6 +523,7 @@ class SceneBuilder {
         this.floor("#A98A64");
         for (let row = 0; row < 3; row += 1) {
           const lift = cube(2.8, 0.12, 2.0, [0, 0.07 + row * 0.12, -0.25], row === 2 ? "#AF6E48" : "#B8774E", { map: texture(row === 2 ? "#AF6E48" : "#B8774E", "#573A29", 44 + row, 2), roughness: 1 });
+          lift.userData.rateSceneRole = "laterite-fill-layer";
           this.add(/laterite/, lift, [0, 0.25, 0]);
         }
         const delivery = new THREE.Group();
@@ -533,6 +540,7 @@ class SceneBuilder {
       case "hardcore-fill": {
         this.floor("#AB9A84");
         const subbase = cube(2.8, 0.24, 2.0, [0, 0.12, -0.25], "#807D77", { roughness: 1 });
+        subbase.userData.rateSceneRole = "hardcore-base-layer";
         this.add(/hardcore|stone|aggregate/, subbase, [0, 0.26, 0]);
         for (let i = 0; i < 100; i += 1) {
           const x = -1.32 + (i % 15) * 0.18;
@@ -549,6 +557,7 @@ class SceneBuilder {
       case "sand-bed": {
         this.floor("#BAA384");
         const bed = cube(2.85, 0.12, 2.1, [0, 0.06, -0.2], "#D6BC8A", { map: texture("#D6BC8A", "#8A6D46", 60, 3), roughness: 1 });
+        bed.userData.rateSceneRole = "sand-blinding-bed";
         this.add(/sharp sand|sandfill|sand/, bed, [0, 0.22, 0]);
         const loose = pile(0.3, "#D6BC8A", 61); loose.position.set(-1.05, 0.15, 0.9);
         this.add(/sharp sand|sandfill|sand/, loose, [-0.2, 0.14, 0.12], { appearOnExplode: true });
@@ -583,6 +592,7 @@ class SceneBuilder {
         const y = 0.06 + h / 2;
         const colour = kind === "blinding" ? "#BAB6AD" : "#A9AAA7";
         const cast = cube(2.8, h, 1.95, [0, y, -0.15], colour, { map: texture(colour, "#625F58", kind === "blinding" ? 70 : kind === "concrete-slab" ? 72 : 73, 2), roughness: 0.96 });
+        cast.userData.rateSceneRole = kind === "blinding" ? "thin-ground-blinding" : "cast-concrete-sample";
         this.add(/concrete|blinding|cement|sand|granite|aggregate/, cast, [0, 0.55, 0], { hideOnExplode: true });
         // Exposed cut-edge aggregate and a top-finished plane.
         this.add(/concrete|blinding|cement|sand|granite|aggregate/, cube(2.8, 0.025, 1.95, [0, y + h / 2 + 0.006, -0.15], kind === "blinding" ? "#C8C4BA" : "#B8B8B2", { roughness: 0.83 }), [0, 0.25, 0], { hideOnExplode: true });
