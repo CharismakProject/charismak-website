@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
-import { Layers, RotateCcw } from "lucide-react";
+import { Layers, Maximize2, RotateCcw } from "lucide-react";
 
 import type { RateBankItem } from "@/lib/rates/defaults";
 import { buildAccurateRateScene } from "./rate-specific-scenes";
@@ -232,9 +232,9 @@ export default function RateExplodedViewer({ item }: { item: RateBankItem }) {
   const selectedLines = selected ? item.lines.filter((line) => selected.includes(line.id)) : [];
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
-      <div className="relative overflow-hidden rounded-2xl border border-[#DCE4EC] bg-[linear-gradient(180deg,#DCE7F1_0%,#F3F1EC_70%)]">
-        <div ref={mountRef} className="h-[360px] w-full touch-none md:h-[460px]" />
+    <div className="grid gap-4">
+      <div className="relative overflow-hidden rounded-2xl border border-[#C7D3DE] bg-[linear-gradient(180deg,#8FB5D0_0%,#DCE4E6_44%,#B99B77_100%)] shadow-[0_18px_48px_rgba(7,30,51,0.12)]">
+        <div ref={mountRef} className="h-[470px] w-full touch-none sm:h-[540px] md:h-[620px] xl:h-[700px]" />
         <div className="absolute left-3 top-3 flex gap-2">
           <button
             type="button"
@@ -248,12 +248,26 @@ export default function RateExplodedViewer({ item }: { item: RateBankItem }) {
             type="button"
             onClick={() => resetRef.current()}
             aria-label="Reset view"
-            className="grid h-10 w-10 place-items-center rounded-full border border-[#DCE4EC] bg-white text-[#0D3B66] shadow"
+            className="grid h-10 w-10 place-items-center rounded-full border border-white/25 bg-[#071E33]/90 text-white shadow-lg transition hover:bg-[#0D3B66]"
           >
             <RotateCcw className="h-4 w-4" />
           </button>
+          <button
+            type="button"
+            onClick={() => {
+              const element = mountRef.current?.parentElement;
+              if (element?.requestFullscreen) void element.requestFullscreen().catch(() => {});
+            }}
+            aria-label="Open 3D view fullscreen"
+            className="grid h-10 w-10 place-items-center rounded-full border border-white/25 bg-[#071E33]/90 text-white shadow-lg transition hover:bg-[#0D3B66]"
+          >
+            <Maximize2 className="h-4 w-4" />
+          </button>
         </div>
-        <p className="pointer-events-none absolute bottom-3 left-3 text-[11px] text-[#617286]">
+        <span className="pointer-events-none absolute right-3 top-3 rounded-full border border-white/25 bg-[#071E33]/85 px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-white shadow-lg">
+          Interactive 3D render
+        </span>
+        <p className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-white/85 px-3 py-2 text-[11px] text-[#25394B] shadow-sm">
           Drag to rotate · pinch or scroll to zoom · tap a part to see its cost
         </p>
       </div>
