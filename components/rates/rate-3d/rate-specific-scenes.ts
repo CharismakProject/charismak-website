@@ -118,7 +118,12 @@ function texture(base: string, fleck: string, seed: number, repeat = 1) {
 }
 
 function mat(color: string, extra: Partial<THREE.MeshStandardMaterialParameters> = {}) {
-  return new THREE.MeshStandardMaterial({ color, roughness: 0.84, metalness: 0, ...extra });
+  // The scene smoke test runs without a browser canvas, so texture() can return undefined.
+  // Omit undefined material properties rather than passing them through to Three.js.
+  const definedExtra = Object.fromEntries(
+    Object.entries(extra).filter(([, value]) => value !== undefined),
+  ) as Partial<THREE.MeshStandardMaterialParameters>;
+  return new THREE.MeshStandardMaterial({ color, roughness: 0.84, metalness: 0, ...definedExtra });
 }
 
 function cube(
