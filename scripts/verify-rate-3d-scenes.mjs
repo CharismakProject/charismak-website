@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { RATE_BANK_ITEMS } from "../lib/rates/defaults.ts";
+import { buildAccurateRateScene } from "../components/rates/rate-3d/rate-specific-scenes.ts";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const rates = readFileSync(path.join(root, "lib/rates/defaults.ts"), "utf8");
@@ -33,4 +35,37 @@ for (const [slug, preset] of mapped) {
 
 assert.ok(scenes.includes("this.addResiduals()"), "Unmatched rate lines must be surfaced, never hidden.");
 assert.ok(scenes.includes("this.addLabourPeople(labourTool)"), "Rates with labour lines must show human labour.");
-console.log("Rate-specific 3D verification passed for " + mapped.size + " unique rate scenes across " + handledKinds.size + " construction scene handlers.");
+
+// Also instantiate the real Three.js scene for every rate under Node (procedural textures
+// safely fall back without a browser canvas). This catches bad geometry/setup, not just names.
+let totalParts = 0;
+let totalMeshes = 0;
+for (const item of RATE_BANK_ITEMS) {
+  const scene = buildAccurateRateScene(item);
+  assert.ok(scene.parts.length > 0, item.slug + ": scene has no interactive parts.");
+  assert.ok(scene.context.length > 0, item.slug + ": no construction context/ground.");
+  assert.equal(scene.process?.length, 3, item.slug + ": construction method must have three steps.");
+  assert.ok(scene.endResult && scene.endResult.length > 25, item.slug + ": no end-result explanation.");
+  const lineIdsInScene = new Set(scene.parts.flatMap((part) => Array.isArray(part.lineId) ? part.lineId : [part.lineId]));
+  const missingLines = item.lines.map((line) => line.id).filter((lineId) => !lineIdsInScene.has(lineId));
+  assert.deepEqual(missingLines, [], item.slug + ": cost lines not represented by an interactive model part.");
+  scene.parts.forEach((part) => {
+    part.object.traverse((object) => {
+      if (!(object instanceof Object) || !("isMesh" in object) || !(object).isMesh) return;
+      const mesh = object;
+      totalMeshes += 1;
+      mesh.geometry.computeBoundingBox();
+      const bounds = mesh.geometry.boundingBox;
+      assert.ok(bounds, item.slug + ": mesh has no bounding box.");
+      for (const value of [bounds.min.x, bounds.min.y, bounds.min.z, bounds.max.x, bounds.max.y, bounds.max.z]) {
+        assert.ok(Number.isFinite(value), item.slug + ": mesh contains non-finite geometry bounds.");
+      }
+      const positions = mesh.geometry.attributes.position;
+      for (let index = 0; index < positions.count; index += Math.max(1, Math.floor(positions.count / 40))) {
+        assert.ok(Number.isFinite(positions.getX(index)) && Number.isFinite(positions.getY(index)) && Number.isFinite(positions.getZ(index)), item.slug + ": mesh position has non-finite values.");
+      }
+    });
+  });
+  totalParts += scene.parts.length;
+}
+console.log("Rate-specific Three.js verification passed: " + mapped.size + " rate items, " + handledKinds.size + " handlers, " + totalParts + " interactive parts and " + totalMeshes + " instantiated meshes.");
