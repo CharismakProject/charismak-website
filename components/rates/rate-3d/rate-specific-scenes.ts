@@ -212,6 +212,8 @@ function meshGrid(width: number, depth: number, y: number, spacing: number, colo
 
 function worker(tool: string, uniform = "#F08A24", scale = 1) {
   const g = new THREE.Group();
+  g.userData.rateSceneRole = "worker";
+  g.userData.workTool = tool;
   // A visible human silhouette with hard hat, hi-vis torso, trousers, boots, arms and hands.
   g.add(cube(0.24, 0.4, 0.15, [0, 0.91, 0], uniform, { roughness: 0.74 }));
   g.add(cube(0.085, 0.35, 0.1, [-0.07, 0.47, 0], "#34485A"));
@@ -655,7 +657,7 @@ class SceneBuilder {
         // Raised cutaway edge communicates the actual named thickness.
         this.context.push(cube(0.06, Math.max(thickness, 0.015), 2.02, [-1.4, 0.18 + thickness / 2, -0.1], "#978F84"));
         const rule = cube(1.38, 0.025, 0.035, [0.6, 0.24 + thickness, 0.86], "#7C878E", { metalness: 0.36 });
-        this.add(/labour|screed/, rule, [0.12, 0.2, 0.12], { appearOnExplode: true }, "labour");
+        this.context.push(rule);
         if (kind === "thin-screed") this.add(/admix|acrylic|sbr/, cube(0.23, 0.2, 0.18, [1.3, 0.1, 1.05], "#398A9A"), [0.14, 0.1, 0.12], { appearOnExplode: true });
         this.addLabourPeople("float");
         break;
