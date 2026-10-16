@@ -22,6 +22,10 @@ export type CameraView = { target: THREE.Vector3; position: THREE.Vector3 };
 
 export type RateScene = {
   parts: ScenePart[];
+  /** Step-by-step method shown beside the model. */
+  process?: [string, string, string];
+  /** The intended completed state represented by the rate item. */
+  endResult?: string;
   /** Surrounding structure, faded back when the item is taken apart. */
   context: THREE.Object3D[];
   colors: Record<string, string>;
