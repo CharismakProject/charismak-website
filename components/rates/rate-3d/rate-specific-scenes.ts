@@ -155,6 +155,22 @@ function rod(a: Point, b: Point, radius: number, color: string, metalness = 0.1)
   return mesh;
 }
 
+/** Rectangular sawn timber member between two points, unlike circular steel rods. */
+function timberMember(a: Point, b: Point, width: number, depth: number, color = "#B9824C", seed = 301) {
+  const start = new THREE.Vector3(...a);
+  const end = new THREE.Vector3(...b);
+  const axis = end.clone().sub(start);
+  const member = new THREE.Mesh(
+    new THREE.BoxGeometry(width, axis.length(), depth),
+    mat(color, { map: texture(color, "#54351F", seed, 1.1), roughness: 0.86 }),
+  );
+  member.position.copy(start.clone().add(end).multiplyScalar(0.5));
+  member.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), axis.normalize());
+  member.castShadow = true;
+  member.receiveShadow = true;
+  return member;
+}
+
 function addAt<T extends THREE.Object3D>(object: T, p: Point): T {
   object.position.set(...p);
   return object;
@@ -546,9 +562,9 @@ class SceneBuilder {
         const y = 0.06 + h / 2;
         const colour = kind === "blinding" ? "#BAB6AD" : "#A9AAA7";
         const cast = cube(2.8, h, 1.95, [0, y, -0.15], colour, { map: texture(colour, "#625F58", kind === "blinding" ? 70 : kind === "concrete-slab" ? 72 : 73, 2), roughness: 0.96 });
-        this.add(/concrete|blinding|cement/, cast, [0, 0.55, 0], { hideOnExplode: true });
+        this.add(/concrete|blinding|cement|sand|granite|aggregate/, cast, [0, 0.55, 0], { hideOnExplode: true });
         // Exposed cut-edge aggregate and a top-finished plane.
-        this.add(/concrete|blinding|cement/, cube(2.8, 0.025, 1.95, [0, y + h / 2 + 0.006, -0.15], kind === "blinding" ? "#C8C4BA" : "#B8B8B2", { roughness: 0.83 }), [0, 0.25, 0], { hideOnExplode: true });
+        this.add(/concrete|blinding|cement|sand|granite|aggregate/, cube(2.8, 0.025, 1.95, [0, y + h / 2 + 0.006, -0.15], kind === "blinding" ? "#C8C4BA" : "#B8B8B2", { roughness: 0.83 }), [0, 0.25, 0], { hideOnExplode: true });
         const ingredients = [
           { re: /cement/, p: [-1.2, 0.11, 1.1] as Point, c: "#A5ABB0" },
           { re: /sand/, p: [-0.45, 0.1, 1.1] as Point, c: "#D3B784" },
@@ -704,7 +720,7 @@ class SceneBuilder {
           this.add(/waler|stud|bearer|2x3|2x2|timber/, cube(size + 0.18, 0.075, 0.085, [0, y, z + size / 2 + 0.07], "#906139", { map: texture("#906139", "#59391F", 144) }), [0, (y / h - 0.5) * 0.15, 0.55]);
         }
         const braces = new THREE.Group();
-        braces.add(rod([0, 0.12, 0], [0.1, h - 0.1, size / 2 + 0.58], 0.035, "#B9824C"));
+        braces.add(timberMember([0, 0.12, 0], [0.1, h - 0.1, size / 2 + 0.58], 0.075, 0.075, "#B9824C", 142));
         braces.position.set(0.5, 0, z);
         this.add(/brace|cleat|2x2/, braces, [0.25, 0.2, 0.45]);
         this.add(/nail|release|consumable|tie/, cube(0.2, 0.08, 0.16, [1.25, 0.06, 0.9], "#7B8790", { metalness: 0.32 }), [0.12, 0.1, 0.1], { appearOnExplode: true }, "consumable");
@@ -1051,8 +1067,8 @@ class SceneBuilder {
         const frame = new THREE.Group();
         const half = 1.55, rise = 0.65;
         for (let x = -1.5; x <= 1.51; x += 0.75) {
-          frame.add(rod([x, 2.06, -1.4], [x, 2.06 + rise, 0], 0.055, "#A77A4B"));
-          frame.add(rod([x, 2.06, 1.4], [x, 2.06 + rise, 0], 0.055, "#A77A4B"));
+          frame.add(timberMember([x, 2.06, -1.4], [x, 2.06 + rise, 0], 0.09, 0.14, "#A77A4B", 260 + Math.round((x + 2) * 10)));
+          frame.add(timberMember([x, 2.06, 1.4], [x, 2.06 + rise, 0], 0.09, 0.14, "#A77A4B", 280 + Math.round((x + 2) * 10)));
         }
         for (const z of [-1.2, -0.6, 0, 0.6, 1.2]) {
           frame.add(cube(3.25, 0.06, 0.07, [0, 2.14 + rise * (1 - Math.abs(z) / 1.4), z], "#8D6843", { map: texture("#8D6843", "#53381F", 260 + Math.round(z * 10)) }));
@@ -1144,17 +1160,17 @@ class SceneBuilder {
         this.context.push(plate);
         const rafters = new THREE.Group();
         for (const x of [-1.15, -0.4, 0.4, 1.15]) {
-          rafters.add(rod([x, 1.32, -0.9], [x, 2.32, 0.05], 0.06, "#B0824E"));
-          rafters.add(rod([x, 1.32, -0.9], [x, 2.32, 0.95], 0.06, "#B0824E"));
+          rafters.add(timberMember([x, 1.32, -0.9], [x, 2.32, 0.05], 0.075, 0.13, "#B0824E", 280));
+          rafters.add(timberMember([x, 1.32, -0.9], [x, 2.32, 0.95], 0.075, 0.13, "#B0824E", 281));
         }
         this.context.push(rafters);
         if (kind === "wall-plate") {
           this.add(/treated timber|timber material|wall plate/, cube(3.15, 0.15, 0.18, [0, 1.25, -0.92], "#C09056", { map: texture("#C09056", "#613E21", 281) }), [0, 0.25, 0], { hideOnExplode: true });
           for (const x of [-1.2, -0.4, 0.4, 1.2]) this.add(/wall plate|fixing|timber/, cylinder(0.025, 0.18, [x, 1.34, -0.92], "#7C858C", { metalness: 0.62 }), [0, 0.15, 0], { appearOnExplode: true });
         } else if (kind === "rafter") {
-          this.add(/treated timber|timber material|rafter/, rod([0.4, 1.34, -0.9], [0.4, 2.34, 0.05], 0.07, "#C08B4D"), [0.18, 0.28, 0], { hideOnExplode: true });
+          this.add(/treated timber|timber material|rafter/, timberMember([0.4, 1.34, -0.9], [0.4, 2.34, 0.05], 0.075, 0.13, "#C08B4D", 282), [0.18, 0.28, 0], { hideOnExplode: true });
         } else if (kind === "roof-strut") {
-          this.add(/treated timber|timber material|strut|tie/, rod([-0.3, 1.35, 0.02], [0.75, 2.28, 0.06], 0.07, "#C08B4D"), [0.18, 0.3, 0], { hideOnExplode: true });
+          this.add(/treated timber|timber material|strut|tie/, timberMember([-0.3, 1.35, 0.02], [0.75, 2.28, 0.06], 0.075, 0.13, "#C08B4D", 283), [0.18, 0.3, 0], { hideOnExplode: true });
         } else if (kind === "purlin") {
           this.add(/treated timber|timber material|purlin/, cube(3.15, 0.15, 0.18, [0, 1.85, 0.12], "#C08B4D", { map: texture("#C08B4D", "#613E21", 282) }), [0, 0.3, 0], { hideOnExplode: true });
         } else {
