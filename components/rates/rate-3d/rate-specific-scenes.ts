@@ -214,21 +214,36 @@ function worker(tool: string, uniform = "#F08A24", scale = 1) {
   const g = new THREE.Group();
   g.userData.rateSceneRole = "worker";
   g.userData.workTool = tool;
-  // A visible human silhouette with hard hat, hi-vis torso, trousers, boots, arms and hands.
-  g.add(cube(0.24, 0.4, 0.15, [0, 0.91, 0], uniform, { roughness: 0.74 }));
-  g.add(cube(0.085, 0.35, 0.1, [-0.07, 0.47, 0], "#34485A"));
-  g.add(cube(0.085, 0.35, 0.1, [0.07, 0.47, 0], "#34485A"));
+  // Rounded torso and limbs, two reflective vest bands, safety boots, gloves and hard hat.
+  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.115, 0.17, 4, 12), mat(uniform, { roughness: 0.74 }));
+  torso.position.set(0, 0.91, 0);
+  torso.castShadow = true;
+  torso.receiveShadow = true;
+  g.add(torso);
+  g.add(cube(0.2, 0.026, 0.012, [0, 0.82, 0.111], "#F7D875", { roughness: 0.48, metalness: 0.05 }));
+  g.add(cube(0.2, 0.026, 0.012, [0, 0.99, 0.111], "#F7D875", { roughness: 0.48, metalness: 0.05 }));
+  [-0.07, 0.07].forEach((x) => {
+    const trouserLeg = new THREE.Mesh(new THREE.CapsuleGeometry(0.045, 0.26, 4, 10), mat("#34485A", { roughness: 0.88 }));
+    trouserLeg.position.set(x, 0.47, 0);
+    trouserLeg.castShadow = true;
+    trouserLeg.receiveShadow = true;
+    g.add(trouserLeg);
+  });
   g.add(cube(0.105, 0.07, 0.16, [-0.07, 0.27, 0.025], "#242A30"));
   g.add(cube(0.105, 0.07, 0.16, [0.07, 0.27, 0.025], "#242A30"));
   g.add(rod([-0.15, 1.05, 0], [-0.22, 0.74, 0.11], 0.043, "#B9825B"));
   g.add(rod([0.15, 1.05, 0], [0.25, 0.78, 0.1], 0.043, "#B9825B"));
-  g.add(cylinder(0.087, 0.17, [0, 1.22, 0], "#B9825B", { roughness: 0.74 }));
-  g.add(new THREE.Mesh(new THREE.SphereGeometry(0.125, 16, 10), mat("#B9825B", { roughness: 0.75 })));
-  // head above neck; sphere geometry centred using the head placement below
-  g.children[g.children.length - 1].position.set(0, 1.34, 0);
-  g.add(new THREE.Mesh(new THREE.SphereGeometry(0.135, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), mat("#F2B544", { roughness: 0.64 })));
-  g.children[g.children.length - 1].position.set(0, 1.43, 0);
-  g.add(cube(0.3, 0.035, 0.2, [0, 1.4, 0], "#F2B544"));
+  g.add(sphere(0.038, -0.22, 0.74, 0.11, "#343A40"));
+  g.add(sphere(0.038, 0.25, 0.78, 0.1, "#343A40"));
+  g.add(cylinder(0.045, 0.13, [0, 1.22, 0], "#B9825B", { roughness: 0.74 }));
+  g.add(sphere(0.125, 0, 1.34, 0, "#B9825B"));
+  const hat = new THREE.Mesh(new THREE.SphereGeometry(0.135, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), mat("#F2B544", { roughness: 0.64 }));
+  hat.position.set(0, 1.43, 0);
+  hat.castShadow = true;
+  hat.receiveShadow = true;
+  g.add(hat);
+  const hatBrim = cylinder(0.15, 0.025, [0, 1.405, 0], "#F2B544", { roughness: 0.62 });
+  g.add(hatBrim);
   if (tool === "shovel" || tool === "rake") {
     g.add(rod([0.34, 0.7, 0.08], [0.49, 1.27, 0.12], 0.014, "#826143"));
     g.add(cube(tool === "rake" ? 0.2 : 0.085, 0.025, 0.03, [0.49, 1.27, 0.12], "#747C83", { metalness: 0.6 }));
