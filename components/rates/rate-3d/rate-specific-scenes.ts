@@ -469,7 +469,7 @@ class SceneBuilder {
         const delivery = new THREE.Group();
         delivery.add(cube(0.72, 0.25, 0.38, [0, 0.24, 0], "#D5A02B"));
         delivery.add(cube(0.28, 0.28, 0.36, [-0.2, 0.49, 0], "#E1E7E9"));
-        [-0.24, 0.24].forEach((x) => [-0.16, 0.16].forEach((z) => delivery.add(cylinder(0.09, 0.05, [x, 0.12, z], "#242A30")));
+        [-0.24, 0.24].forEach((x) => [-0.16, 0.16].forEach((z) => delivery.add(cylinder(0.09, 0.05, [x, 0.12, z], "#242A30"))));
         delivery.position.set(1.55, 0, 0.92);
         this.add(/laterite|transport|delivery/, delivery, [0.26, 0.08, 0.18], { appearOnExplode: true });
         const comp = plateCompactor(); comp.position.set(1.08, 0, 1.35);
