@@ -8,6 +8,7 @@ import { Layers, RotateCcw } from "lucide-react";
 
 import type { RateBankItem } from "@/lib/rates/defaults";
 import { buildRateScene } from "./scenes";
+import { buildGenericRateScene } from "./generic-rate-scene";
 
 const money = (value: number, currency: string) =>
   new Intl.NumberFormat("en-NG", { style: "currency", currency, maximumFractionDigits: 0 }).format(value);
@@ -29,7 +30,7 @@ export default function RateExplodedViewer({ item }: { item: RateBankItem }) {
   const flyRef = useRef<(explode: boolean) => void>(() => {});
   const [exploded, setExploded] = useState(false);
   const [selected, setSelected] = useState<string[] | null>(null);
-  const scene = useMemo(() => buildRateScene(item.slug), [item.slug]);
+  const scene = useMemo(() => buildRateScene(item.slug) ?? buildGenericRateScene(item), [item.slug, item]);
 
   const directCost = item.lines.reduce((sum, line) => sum + line.quantity * line.unitRate, 0);
   const modelled = useMemo(
@@ -106,6 +107,7 @@ export default function RateExplodedViewer({ item }: { item: RateBankItem }) {
     });
 
     const base = scene.parts.map((part) => part.object.position.clone());
+    const baseScales = scene.parts.map((part) => part.object.scale.clone());
     const meshes: THREE.Mesh[] = [];
     scene.parts.forEach((part) => {
       world.add(part.object);
@@ -181,7 +183,7 @@ export default function RateExplodedViewer({ item }: { item: RateBankItem }) {
         }
         if (part.appearOnExplode) {
           part.object.visible = eased > 0.02;
-          part.object.scale.setScalar(Math.max(eased, 0.001));
+          part.object.scale.copy(baseScales[index]).multiplyScalar(Math.max(eased, 0.001));
         }
       });
       contextMaterials.forEach((material) => {
@@ -306,7 +308,7 @@ export default function RateExplodedViewer({ item }: { item: RateBankItem }) {
           })}
         </ul>
         <p className="mt-3 border-t border-[#E6EBEF] pt-3 text-[11px] leading-5 text-[#7A8B9E]">
-          Illustrative model shown in a typical bay; amounts are direct costs per {item.unit} before fluctuation, risk and O/P.
+          Representative 3D scope illustration. Confirm dimensions and specifications against project drawings; amounts are direct costs per {item.unit} before fluctuation, risk and O/P.
         </p>
       </div>
     </div>
