@@ -519,7 +519,7 @@ class SceneBuilder {
         const slab = cube(2.8, 0.16, 2.0, [0, 0.08, -0.18], "#B9B8B2", { map: texture("#B9B8B2", "#686761", 62, 2) });
         this.add(/slab|concrete|base/, slab, [0, -0.15, 0]);
         this.add(/brc|mesh|reinforc/, meshGrid(2.45, 1.7, 0.19, 0.24), [0, 0.4, 0]);
-        [-0.85, 0, 0.85].forEach((x) => [-0.55, 0.45].forEach((z) => this.add(/brc|mesh|reinforc/, rod([x, 0.13, z], [x, 0.2, z], 0.018, "#929AA1", 0.5)));
+        [-0.85, 0, 0.85].forEach((x) => [-0.55, 0.45].forEach((z) => this.add(/brc|mesh|reinforc/, rod([x, 0.13, z], [x, 0.2, z], 0.018, "#929AA1", 0.5))));
         this.addLabourPeople("tile");
         break;
       }
