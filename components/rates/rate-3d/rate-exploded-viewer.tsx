@@ -183,11 +183,21 @@ export default function RateExplodedViewer({ item }: { item: RateBankItem }) {
 
       const handleError = () => { failed = true; };
       loader.load(diffuseUrl, (texture) => {
+        if (texturesCancelled) {
+          texture.dispose();
+          return;
+        }
+        ownedTextures.add(texture);
         diffuse = texture;
         setupTexture(texture, false);
         applyIfReady();
       }, undefined, handleError);
       loader.load(normalUrl, (texture) => {
+        if (texturesCancelled) {
+          texture.dispose();
+          return;
+        }
+        ownedTextures.add(texture);
         normal = texture;
         setupTexture(texture, true);
         applyIfReady();
