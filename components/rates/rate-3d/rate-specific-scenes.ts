@@ -285,6 +285,131 @@ function worker(tool: string, uniform = "#F08A24", scale = 1) {
   return g;
 }
 
+function excavationBank(length: number, width: number, height: number, seed: number) {
+  const shape = new THREE.Shape();
+  shape.moveTo(0, -0.075);
+  shape.lineTo(0.035, 0.015);
+  for (let i = 1; i < 12; i += 1) {
+    const u = i / 12;
+    const x = 0.035 + u * (width - 0.07);
+    const irregularity = Math.sin(seed * 0.73 + i * 1.91) * height * 0.045;
+    const crest = Math.pow(Math.sin(Math.PI * u), 0.68) * height;
+    shape.lineTo(x, Math.max(0.025, crest + irregularity));
+  }
+  shape.lineTo(width - 0.035, 0.025);
+  shape.lineTo(width, -0.075);
+  shape.closePath();
+  const geometry = new THREE.ExtrudeGeometry(shape, { depth: length, bevelEnabled: false, curveSegments: 5 });
+  const bank = new THREE.Mesh(
+    geometry,
+    mat("#9A704B", { map: texture("#9A704B", "#4F3827", seed, 3.4), roughness: 1 }),
+  );
+  bank.castShadow = true;
+  bank.receiveShadow = true;
+  bank.userData.rateSceneRole = "excavated-earth-bank";
+  return bank;
+}
+
+function materialMound(color: string, seed: number, size = 0.48, coarse = false) {
+  const group = new THREE.Group();
+  const mound = new THREE.Mesh(
+    new THREE.SphereGeometry(size, 24, 14),
+    mat(color, { map: texture(color, coarse ? "#292C2D" : "#68523B", seed, 2.2), roughness: 1 }),
+  );
+  mound.scale.set(1.15, coarse ? 0.48 : 0.38, 0.82);
+  mound.position.y = size * 0.25;
+  mound.castShadow = true;
+  mound.receiveShadow = true;
+  group.add(mound);
+  if (coarse) {
+    for (let i = 0; i < 34; i += 1) {
+      const r = rng(seed * 31 + i * 7);
+      const stone = rock(seed + i * 3, i % 3 === 0 ? "#777671" : "#9B9891", 0.035 + r() * 0.055);
+      const angle = r() * Math.PI * 2;
+      const radius = size * (0.25 + r() * 0.72);
+      stone.position.set(Math.cos(angle) * radius, size * 0.12 + r() * size * 0.25, Math.sin(angle) * radius * 0.65);
+      group.add(stone);
+    }
+  }
+  return group;
+}
+
+function wheelbarrow() {
+  const group = new THREE.Group();
+  const tray = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.17, 0.24, 0.34, 8, 1, false),
+    mat("#AAB1B7", { metalness: 0.42, roughness: 0.48 }),
+  );
+  tray.rotation.z = Math.PI / 2;
+  tray.scale.set(0.72, 0.72, 1);
+  tray.position.set(0, 0.47, 0.02);
+  group.add(tray);
+  group.add(cube(0.43, 0.045, 0.04, [0, 0.34, 0.02], "#69747C", { metalness: 0.35 }));
+  const wheel = cylinder(0.145, 0.075, [0, 0.16, 0.25], "#272C31", { roughness: 0.88 });
+  wheel.rotation.x = Math.PI / 2;
+  group.add(wheel);
+  group.add(cylinder(0.065, 0.082, [0, 0.16, 0.25], "#717A82", { metalness: 0.62 }));
+  group.add(rod([-0.18, 0.39, -0.08], [-0.31, 0.2, 0.42], 0.022, "#91683F"));
+  group.add(rod([0.18, 0.39, -0.08], [0.31, 0.2, 0.42], 0.022, "#91683F"));
+  group.add(rod([-0.18, 0.39, -0.08], [-0.16, 0.08, 0.04], 0.018, "#717A82", 0.48));
+  group.add(rod([0.18, 0.39, -0.08], [0.16, 0.08, 0.04], 0.018, "#717A82", 0.48));
+  return group;
+}
+
+function bendingWorker(tool: "rake" | "float", uniform = "#EF8129") {
+  const group = new THREE.Group();
+  group.userData.rateSceneRole = "worker";
+  group.userData.workTool = tool;
+  const torso = new THREE.Group();
+  torso.position.set(0, 0.79, 0.02);
+  torso.rotation.x = 0.5;
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.115, 0.24, 4, 12), mat(uniform, { roughness: 0.82 }));
+  body.castShadow = true;
+  body.receiveShadow = true;
+  torso.add(body);
+  torso.add(cube(0.195, 0.026, 0.012, [0, 0.11, 0.105], "#F7D875", { roughness: 0.48 }));
+  torso.add(cube(0.195, 0.026, 0.012, [0, -0.055, 0.105], "#F7D875", { roughness: 0.48 }));
+  group.add(torso);
+  // Knees flexed and feet planted outside the wet concrete, with the torso leaning into the task.
+  group.add(rod([-0.075, 0.59, -0.01], [-0.16, 0.32, 0.1], 0.046, "#33485B"));
+  group.add(rod([-0.16, 0.32, 0.1], [-0.15, 0.1, 0.13], 0.04, "#33485B"));
+  group.add(rod([0.075, 0.59, -0.01], [0.17, 0.33, 0.01], 0.046, "#33485B"));
+  group.add(rod([0.17, 0.33, 0.01], [0.2, 0.1, 0.13], 0.04, "#33485B"));
+  group.add(cube(0.12, 0.07, 0.18, [-0.15, 0.045, 0.18], "#22282D"));
+  group.add(cube(0.12, 0.07, 0.18, [0.2, 0.045, 0.18], "#22282D"));
+  group.add(rod([-0.13, 0.9, 0.09], [-0.16, 0.62, 0.34], 0.04, "#B9825B"));
+  group.add(rod([0.13, 0.9, 0.09], [0.19, 0.61, 0.35], 0.04, "#B9825B"));
+  group.add(sphere(0.039, -0.16, 0.62, 0.34, "#353A3F"));
+  group.add(sphere(0.039, 0.19, 0.61, 0.35, "#353A3F"));
+  group.add(cylinder(0.045, 0.11, [0, 1.02, 0.12], "#B9825B"));
+  group.add(sphere(0.122, 0, 1.11, 0.13, "#B9825B"));
+  const helmet = new THREE.Mesh(
+    new THREE.SphereGeometry(0.136, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2),
+    mat("#F2B544", { roughness: 0.62 }),
+  );
+  helmet.position.set(0, 1.2, 0.13);
+  helmet.castShadow = true;
+  group.add(helmet);
+  group.add(cylinder(0.15, 0.024, [0, 1.18, 0.13], "#F2B544"));
+  // A visible hand tool is attached to each worker rather than floating elsewhere in the model.
+  group.add(rod([0.18, 0.61, 0.36], [0.38, 0.18, 0.62], 0.014, "#816345"));
+  if (tool === "rake") {
+    group.add(cube(0.31, 0.018, 0.045, [0.38, 0.17, 0.62], "#737D85", { metalness: 0.5 }));
+    for (let i = 0; i < 7; i += 1) {
+      group.add(rod([0.25 + i * 0.043, 0.17, 0.62], [0.25 + i * 0.043, 0.115, 0.62], 0.0055, "#737D85", 0.55));
+    }
+  } else {
+    group.add(cube(0.24, 0.018, 0.13, [0.4, 0.18, 0.62], "#AEB6BC", { metalness: 0.38, roughness: 0.5 }));
+  }
+  group.traverse((object) => {
+    if (object instanceof THREE.Mesh) {
+      object.castShadow = true;
+      object.receiveShadow = true;
+    }
+  });
+  return group;
+}
+
 function excavator() {
   const g = new THREE.Group();
   // tracked mini-excavator, articulated boom and bucket
@@ -456,16 +581,118 @@ class SceneBuilder {
     }
     labour.forEach((line, index) => {
       if (this.represented.has(line.id)) return;
-      const positions: Point[] = [
-        [-1.5, elevatedWork ? 1.2 : 0, 0.95],
-        [1.48, 0, 1.0],
-        [-1.5, 0, -0.95],
-        [1.45, 0, -0.95],
-      ];
-      const person = worker(tool, index % 2 ? "#E7A13C" : "#EF8129", 0.8);
+      const positions: Point[] = this.preset.kind === "blinding"
+        ? [
+            [-0.82, 0, 0.63],
+            [0.86, 0, 0.38],
+            [-1.02, 0, -0.42],
+            [1.02, 0, -0.42],
+          ]
+        : [
+            [-1.5, elevatedWork ? 1.2 : 0, 0.95],
+            [1.48, 0, 1.0],
+            [-1.5, 0, -0.95],
+            [1.45, 0, -0.95],
+          ];
+      const person = this.preset.kind === "blinding"
+        ? bendingWorker(index % 2 ? "float" : "rake", index % 2 ? "#E7A13C" : "#EF8129")
+        : worker(tool, index % 2 ? "#E7A13C" : "#EF8129", 0.8);
       person.position.set(...positions[index % positions.length]);
-      this.add(line.id, person, [index % 2 ? 0.12 : -0.1, 0.06, 0.12], {}, "labour");
+      if (this.preset.kind === "blinding") {
+        const [px, , pz] = positions[index % positions.length];
+        person.rotation.y = Math.atan2(-px, -pz);
+      }
+      this.add(line.id, person, [0, 0.03, 0], {}, "labour");
     });
+  }
+
+  blindingSite() {
+    // A real foundation work area: prepared formation, sloped soil faces and set-out strings.
+    const formation = cube(3.04, 0.055, 2.18, [0, 0.0275, -0.15], "#B7A081", {
+      map: texture("#B7A081", "#59432F", 174, 3.2),
+      roughness: 1,
+    });
+    formation.userData.rateSceneRole = "prepared-compacted-subgrade";
+    this.context.push(formation);
+
+    const leftBank = excavationBank(3.45, 1.12, 0.6, 171);
+    leftBank.scale.x = -1;
+    leftBank.position.set(-1.53, 0, -1.875);
+    this.context.push(leftBank);
+    const rightBank = excavationBank(3.45, 1.12, 0.6, 184);
+    rightBank.position.set(1.53, 0, -1.875);
+    this.context.push(rightBank);
+
+    // Uneven spoil and coarse grains make the excavated edge read as soil, not a solid wall.
+    for (let i = 0; i < 58; i += 1) {
+      const random = rng(401 + i * 19);
+      const side = i % 2 === 0 ? -1 : 1;
+      const grit = rock(500 + i * 7, i % 4 === 0 ? "#B18A5F" : "#876141", 0.025 + random() * 0.05);
+      grit.position.set(side * (1.62 + random() * 0.94), 0.025 + random() * 0.27, -1.58 + random() * 2.95);
+      this.context.push(grit);
+    }
+
+    // Timber level pegs and taut set-out lines sit outside the fresh concrete.
+    const pegs: Point[] = [
+      [-1.62, 0.23, -1.30], [1.62, 0.23, -1.30],
+      [-1.62, 0.23, 1.10], [1.62, 0.23, 1.10],
+    ];
+    pegs.forEach(([x, y, z], index) => {
+      const peg = cube(0.045, 0.52, 0.045, [x, y, z], "#9B7148", {
+        map: texture("#9B7148", "#4D301B", 190 + index),
+        roughness: 0.92,
+      });
+      this.context.push(peg);
+    });
+    this.context.push(rod([-1.62, 0.47, -1.30], [1.62, 0.47, -1.30], 0.0045, "#D9A54A", 0.05));
+    this.context.push(rod([-1.62, 0.47, 1.10], [1.62, 0.47, 1.10], 0.0045, "#D9A54A", 0.05));
+    this.context.push(rod([-1.62, 0.47, -1.30], [-1.62, 0.47, 1.10], 0.0045, "#D9A54A", 0.05));
+    this.context.push(rod([1.62, 0.47, -1.30], [1.62, 0.47, 1.10], 0.0045, "#D9A54A", 0.05));
+
+    // The finishing rule rests on the fresh concrete as workers level it.
+    const rail = cube(2.54, 0.036, 0.052, [0.04, 0.165, 0.32], "#87939B", { metalness: 0.3, roughness: 0.45 });
+    rail.userData.rateSceneRole = "screed-levelling-rule";
+    this.context.push(rail);
+    this.context.push(rod([-0.78, 0.20, 0.32], [-0.78, 0.34, 0.55], 0.012, "#8B6746"));
+    this.context.push(rod([0.86, 0.20, 0.32], [0.86, 0.34, 0.55], 0.012, "#8B6746"));
+
+    // Materials and mixing equipment remain visible in the construction view, not only when exploded.
+    const mixerUnit = mixer();
+    mixerUnit.position.set(2.05, 0, 1.65);
+    mixerUnit.rotation.y = -0.28;
+    this.context.push(mixerUnit);
+    const barrow = wheelbarrow();
+    barrow.position.set(-2.03, 0, 1.55);
+    barrow.rotation.y = -0.25;
+    this.context.push(barrow);
+    const sand = materialMound("#D7BC8C", 209, 0.45, false);
+    sand.position.set(-2.15, -0.02, -1.72);
+    this.context.push(sand);
+    const granite = materialMound("#85837D", 213, 0.43, true);
+    granite.position.set(2.12, -0.015, -1.62);
+    this.context.push(granite);
+    for (let i = 0; i < 3; i += 1) {
+      const sack = bag([-1.82 + i * 0.27, 0.07, 1.9], "#A7ADB2");
+      sack.rotation.y = (i - 1) * 0.12;
+      this.context.push(sack);
+    }
+    const bucket = cylinder(0.13, 0.23, [1.62, 0.115, 1.98], "#71808A", { metalness: 0.18, roughness: 0.38 });
+    this.context.push(bucket);
+    this.context.push(rod([1.50, 0.23, 1.98], [1.74, 0.23, 1.98], 0.008, "#C4CBD0", 0.55));
+
+    // A low block perimeter wall situates the operation within a residential building site.
+    const wall = cube(6.2, 1.6, 0.16, [0, 0.72, -3.75], "#C5BEB2", {
+      map: texture("#C5BEB2", "#797166", 215, 2.2),
+      roughness: 0.95,
+    });
+    wall.userData.keepVisible = true;
+    this.context.push(wall);
+    for (let y = 0.05; y < 1.5; y += 0.22) {
+      this.context.push(rod([-3.08, y, -3.655], [3.08, y, -3.655], 0.004, "#8F8577", 0));
+    }
+    for (let x = -2.9; x <= 2.91; x += 0.48) {
+      this.context.push(rod([x, 0, -3.655], [x, 1.5, -3.655], 0.004, "#8F8577", 0));
+    }
   }
 
   addResiduals() {
@@ -600,15 +827,24 @@ class SceneBuilder {
       }
       case "blinding":
       case "concrete-slab": {
-        this.floor("#AD9B82");
+        if (kind === "blinding") this.blindingSite();
+        else this.floor("#AD9B82");
         const h = kind === "blinding" ? 0.075 : Math.max(0.2, t || 0.28);
         const y = 0.06 + h / 2;
         const colour = kind === "blinding" ? "#BAB6AD" : "#A9AAA7";
-        const cast = cube(2.8, h, 1.95, [0, y, -0.15], colour, { map: texture(colour, "#625F58", kind === "blinding" ? 70 : kind === "concrete-slab" ? 72 : 73, 2), roughness: 0.96 });
+        const concreteTexture = texture(colour, "#625F58", kind === "blinding" ? 70 : kind === "concrete-slab" ? 72 : 73, 2);
+        const cast = cube(2.8, h, 1.95, [0, y, -0.15], colour, {
+          map: concreteTexture,
+          roughness: kind === "blinding" ? 0.72 : 0.9,
+          metalness: 0.015,
+        });
         cast.userData.rateSceneRole = kind === "blinding" ? "thin-ground-blinding" : "cast-concrete-sample";
         this.add(/concrete|blinding|cement|sand|granite|aggregate/, cast, [0, 0.55, 0], { hideOnExplode: true });
-        // Exposed cut-edge aggregate and a top-finished plane.
-        this.add(/concrete|blinding|cement|sand|granite|aggregate/, cube(2.8, 0.025, 1.95, [0, y + h / 2 + 0.006, -0.15], kind === "blinding" ? "#C8C4BA" : "#B8B8B2", { roughness: 0.83 }), [0, 0.25, 0], { hideOnExplode: true });
+        // A very thin surface finish sits on the same concrete layer; this is not a second structural slab.
+        this.add(/concrete|blinding|cement|sand|granite|aggregate/, cube(2.8, 0.007, 1.95, [0, y + h / 2 + 0.001, -0.15], colour, {
+          map: concreteTexture,
+          roughness: kind === "blinding" ? 0.5 : 0.82,
+        }), [0, 0.25, 0], { hideOnExplode: true });
         const ingredients = [
           { re: /cement/, p: [-1.2, 0.11, 1.1] as Point, c: "#A5ABB0" },
           { re: /sand/, p: [-0.45, 0.1, 1.1] as Point, c: "#D3B784" },
@@ -619,10 +855,7 @@ class SceneBuilder {
           this.add(ing.re, p, [ing.p[0] < 0 ? -0.16 : 0.16, 0.14, 0.15], { appearOnExplode: true });
         });
         for (let i = 0; i < 3; i += 1) this.add(/cement/, bag([-1.42 + i * 0.36, 0.07, 1.55]), [-0.1, 0.12, 0.1], { appearOnExplode: true });
-        if (kind === "blinding") {
-          const screedRule = cube(1.35, 0.03, 0.035, [0.55, y + h / 2 + 0.03, 0.9], "#7A858D", { metalness: 0.3 });
-          this.context.push(screedRule);
-        } else {
+        if (kind === "concrete-slab") {
           const mix = mixer(); mix.position.set(1.45, 0, 1.12);
           this.add(/mixer|plant|vibrator/, mix, [0.25, 0.12, 0.12], { appearOnExplode: true }, "plant");
           if (/c25/.test(this.item.slug)) {
@@ -1248,19 +1481,23 @@ class SceneBuilder {
     this.addLabourPeople(labourTool);
     this.addResiduals();
 
-    const target = kind.startsWith("ceiling") || kind.startsWith("pop") || kind === "roof-cover" || kind === "fibre-ceiling"
-      ? new THREE.Vector3(0, 1.65, -0.1)
-      : kind === "mechanical-trench" || kind === "manual-trench" || kind === "backfill"
-        ? new THREE.Vector3(0, 0.45, 0)
-        : new THREE.Vector3(0, 0.95, 0);
-    const distance = kind === "ceiling-curved" || kind === "ceiling-recess" ? 7.8 : 7.2;
+    const target = kind === "blinding"
+      ? new THREE.Vector3(0, 0.34, -0.18)
+      : kind.startsWith("ceiling") || kind.startsWith("pop") || kind === "roof-cover" || kind === "fibre-ceiling"
+        ? new THREE.Vector3(0, 1.65, -0.1)
+        : kind === "mechanical-trench" || kind === "manual-trench" || kind === "backfill"
+          ? new THREE.Vector3(0, 0.45, 0)
+          : new THREE.Vector3(0, 0.95, 0);
+    const distance = kind === "blinding" ? 6.45 : kind === "ceiling-curved" || kind === "ceiling-recess" ? 7.8 : 7.2;
+    const overviewTarget = kind === "blinding" ? new THREE.Vector3(0, 0.36, -0.22) : new THREE.Vector3(0, 1.0, 0);
+    const overviewHeight = kind === "blinding" ? 3.6 : 4.2;
     return {
       parts: this.parts,
       context: this.context,
       colors: this.colors,
       process: this.preset.process,
       endResult: this.preset.result,
-      overview: { target: new THREE.Vector3(0, 1.0, 0), position: new THREE.Vector3(distance, 4.2, distance * 1.05) },
+      overview: { target: overviewTarget, position: new THREE.Vector3(distance, overviewHeight, distance * 1.05) },
       focus: { target, position: new THREE.Vector3(target.x + 3.3, target.y + 1.9, target.z + 4.4) },
     };
   }
