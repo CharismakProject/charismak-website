@@ -370,17 +370,17 @@ function bendingWorker(tool: "rake" | "float", uniform = "#EF8129") {
   torso.add(cube(0.195, 0.026, 0.012, [0, 0.11, 0.105], "#F7D875", { roughness: 0.48 }));
   torso.add(cube(0.195, 0.026, 0.012, [0, -0.055, 0.105], "#F7D875", { roughness: 0.48 }));
   group.add(torso);
-  // Knees flexed and feet planted outside the wet concrete, with the torso leaning into the task.
+  // Knees flexed and boot soles aligned with the blinding surface, torso leaning into the task.
   group.add(rod([-0.075, 0.59, -0.01], [-0.16, 0.32, 0.1], 0.046, "#33485B"));
   group.add(rod([-0.16, 0.32, 0.1], [-0.15, 0.1, 0.13], 0.04, "#33485B"));
   group.add(rod([0.075, 0.59, -0.01], [0.17, 0.33, 0.01], 0.046, "#33485B"));
   group.add(rod([0.17, 0.33, 0.01], [0.2, 0.1, 0.13], 0.04, "#33485B"));
   group.add(cube(0.12, 0.07, 0.18, [-0.15, 0.045, 0.18], "#22282D"));
   group.add(cube(0.12, 0.07, 0.18, [0.2, 0.045, 0.18], "#22282D"));
-  group.add(rod([-0.13, 0.9, 0.09], [-0.16, 0.62, 0.34], 0.04, "#B9825B"));
-  group.add(rod([0.13, 0.9, 0.09], [0.19, 0.61, 0.35], 0.04, "#B9825B"));
-  group.add(sphere(0.039, -0.16, 0.62, 0.34, "#353A3F"));
-  group.add(sphere(0.039, 0.19, 0.61, 0.35, "#353A3F"));
+  group.add(rod([-0.13, 0.9, 0.09], [-0.16, 0.48, 0.34], 0.04, "#B9825B"));
+  group.add(rod([0.13, 0.9, 0.09], [0.19, 0.47, 0.35], 0.04, "#B9825B"));
+  group.add(sphere(0.039, -0.16, 0.48, 0.34, "#353A3F"));
+  group.add(sphere(0.039, 0.19, 0.47, 0.35, "#353A3F"));
   group.add(cylinder(0.045, 0.11, [0, 1.02, 0.12], "#B9825B"));
   group.add(sphere(0.122, 0, 1.11, 0.13, "#B9825B"));
   const helmet = new THREE.Mesh(
@@ -392,14 +392,14 @@ function bendingWorker(tool: "rake" | "float", uniform = "#EF8129") {
   group.add(helmet);
   group.add(cylinder(0.15, 0.024, [0, 1.18, 0.13], "#F2B544"));
   // A visible hand tool is attached to each worker rather than floating elsewhere in the model.
-  group.add(rod([0.18, 0.61, 0.36], [0.38, 0.18, 0.62], 0.014, "#816345"));
+  group.add(rod([0.18, 0.47, 0.36], [0.38, 0.01, 0.62], 0.014, "#816345"));
   if (tool === "rake") {
-    group.add(cube(0.31, 0.018, 0.045, [0.38, 0.17, 0.62], "#737D85", { metalness: 0.5 }));
+    group.add(cube(0.31, 0.018, 0.045, [0.38, 0.01, 0.62], "#737D85", { metalness: 0.5 }));
     for (let i = 0; i < 7; i += 1) {
-      group.add(rod([0.25 + i * 0.043, 0.17, 0.62], [0.25 + i * 0.043, 0.115, 0.62], 0.0055, "#737D85", 0.55));
+      group.add(rod([0.25 + i * 0.043, 0.01, 0.62], [0.25 + i * 0.043, -0.045, 0.62], 0.0055, "#737D85", 0.55));
     }
   } else {
-    group.add(cube(0.24, 0.018, 0.13, [0.4, 0.18, 0.62], "#AEB6BC", { metalness: 0.38, roughness: 0.5 }));
+    group.add(cube(0.24, 0.018, 0.13, [0.4, 0.01, 0.62], "#AEB6BC", { metalness: 0.38, roughness: 0.5 }));
   }
   group.traverse((object) => {
     if (object instanceof THREE.Mesh) {
@@ -598,7 +598,8 @@ class SceneBuilder {
       const person = this.preset.kind === "blinding"
         ? bendingWorker(index % 2 ? "float" : "rake", index % 2 ? "#E7A13C" : "#EF8129")
         : worker(tool, index % 2 ? "#E7A13C" : "#EF8129", 0.8);
-      person.position.set(...positions[index % positions.length]);
+      const position = positions[index % positions.length];
+      person.position.set(position[0], this.preset.kind === "blinding" ? 0.12 : position[1], position[2]);
       if (this.preset.kind === "blinding") {
         const [px, , pz] = positions[index % positions.length];
         person.rotation.y = Math.atan2(-px, -pz);
