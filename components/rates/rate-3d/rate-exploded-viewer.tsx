@@ -206,7 +206,7 @@ export default function RateExplodedViewer({ item }: { item: RateBankItem }) {
 
     const polyHaven = "https://dl.polyhaven.org/file/ph-assets/Textures/png/1k";
     loadSurfaceMaps(
-      ["site-ground", "excavated-earth-bank", "compacted-backfill-lift", "laterite-fill-layer"],
+      ["site-ground", "excavated-earth-bank", "prepared-compacted-subgrade", "compacted-backfill-lift", "laterite-fill-layer"],
       `${polyHaven}/terrain_red_01/terrain_red_01_diff_1k.png`,
       `${polyHaven}/terrain_red_01/terrain_red_01_nor_gl_1k.png`,
       [3.2, 2.2],
