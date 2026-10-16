@@ -118,6 +118,100 @@ export default function RateExplodedViewer({ item }: { item: RateBankItem }) {
       });
     });
 
+    // Optional, real PBR maps elevate earth and concrete beyond flat procedural colours.
+    // If the texture host is unavailable, the procedural textures above remain in place.
+    let texturesCancelled = false;
+    const ownedTextures = new Set<THREE.Texture>();
+    const roleTargets = new Map<string, THREE.Mesh[]>();
+    const captureRole = (root: THREE.Object3D) => {
+      const role = root.userData.rateSceneRole as string | undefined;
+      if (!role) return;
+      const targets = roleTargets.get(role) ?? [];
+      root.traverse((child) => {
+        if (child instanceof THREE.Mesh) targets.push(child);
+      });
+      roleTargets.set(role, targets);
+    };
+    scene.context.forEach(captureRole);
+    scene.parts.forEach((part) => captureRole(part.object));
+
+    const loadSurfaceMaps = (
+      roles: string[],
+      diffuseUrl: string,
+      normalUrl: string,
+      repeat: [number, number],
+      minimumRoughness: number,
+      normalStrength: number,
+    ) => {
+      const targetMeshes = [...new Set(roles.flatMap((role) => roleTargets.get(role) ?? []))];
+      if (!targetMeshes.length) return;
+      const loader = new THREE.TextureLoader();
+      loader.setCrossOrigin("anonymous");
+      let diffuse: THREE.Texture | null = null;
+      let normal: THREE.Texture | null = null;
+      let failed = false;
+
+      const setupTexture = (texture: THREE.Texture, isNormal: boolean) => {
+        texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(repeat[0], repeat[1]);
+        texture.colorSpace = isNormal ? THREE.NoColorSpace : THREE.SRGBColorSpace;
+        texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+        texture.needsUpdate = true;
+      };
+
+      const applyIfReady = () => {
+        if (texturesCancelled || failed || !diffuse || !normal) return;
+        ownedTextures.add(diffuse);
+        ownedTextures.add(normal);
+        targetMeshes.forEach((mesh) => {
+          const previous = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+          const updated = previous.map((original) => {
+            if (original.map) ownedTextures.add(original.map);
+            if (original.normalMap) ownedTextures.add(original.normalMap);
+            const material = original.clone() as THREE.MeshStandardMaterial;
+            material.color.set("#FFFFFF");
+            material.map = diffuse;
+            material.normalMap = normal;
+            material.normalScale.set(normalStrength, normalStrength);
+            material.roughness = Math.max(material.roughness, minimumRoughness);
+            material.needsUpdate = true;
+            return material;
+          });
+          mesh.material = Array.isArray(mesh.material) ? updated : updated[0];
+        });
+      };
+
+      const handleError = () => { failed = true; };
+      loader.load(diffuseUrl, (texture) => {
+        diffuse = texture;
+        setupTexture(texture, false);
+        applyIfReady();
+      }, undefined, handleError);
+      loader.load(normalUrl, (texture) => {
+        normal = texture;
+        setupTexture(texture, true);
+        applyIfReady();
+      }, undefined, handleError);
+    };
+
+    const polyHaven = "https://dl.polyhaven.org/file/ph-assets/Textures/png/1k";
+    loadSurfaceMaps(
+      ["site-ground", "excavated-earth-bank", "compacted-backfill-lift", "laterite-fill-layer"],
+      `${polyHaven}/terrain_red_01/terrain_red_01_diff_1k.png`,
+      `${polyHaven}/terrain_red_01/terrain_red_01_nor_gl_1k.png`,
+      [3.2, 2.2],
+      0.93,
+      0.42,
+    );
+    loadSurfaceMaps(
+      ["thin-ground-blinding", "blinding-finish-surface", "cast-concrete-sample", "cast-concrete-finish"],
+      `${polyHaven}/rough_concrete/rough_concrete_diff_1k.png`,
+      `${polyHaven}/rough_concrete/rough_concrete_nor_gl_1k.png`,
+      [2.8, 1.9],
+      0.76,
+      0.32,
+    );
+
     const highlight = (lineIds: string[] | null) => {
       meshes.forEach((mesh) => {
         const material = mesh.material as THREE.MeshStandardMaterial;
@@ -203,17 +297,42 @@ export default function RateExplodedViewer({ item }: { item: RateBankItem }) {
     tick();
 
     return () => {
+      texturesCancelled = true;
       cancelAnimationFrame(frame);
       observer.disconnect();
       controls.dispose();
+      const geometries = new Set<THREE.BufferGeometry>();
+      const materials = new Set<THREE.Material>();
       world.traverse((object) => {
         if (object instanceof THREE.Mesh) {
-          object.geometry.dispose();
-          const material = object.material as THREE.MeshStandardMaterial;
-          material.map?.dispose();
-          material.dispose();
+          geometries.add(object.geometry);
+          const assigned = Array.isArray(object.material) ? object.material : [object.material];
+          assigned.forEach((material) => {
+            materials.add(material);
+            const possibleTextures = material as THREE.Material & {
+              map?: THREE.Texture | null;
+              normalMap?: THREE.Texture | null;
+              roughnessMap?: THREE.Texture | null;
+              metalnessMap?: THREE.Texture | null;
+              aoMap?: THREE.Texture | null;
+              emissiveMap?: THREE.Texture | null;
+              alphaMap?: THREE.Texture | null;
+            };
+            [
+              possibleTextures.map,
+              possibleTextures.normalMap,
+              possibleTextures.roughnessMap,
+              possibleTextures.metalnessMap,
+              possibleTextures.aoMap,
+              possibleTextures.emissiveMap,
+              possibleTextures.alphaMap,
+            ].forEach((texture) => { if (texture) ownedTextures.add(texture); });
+          });
         }
       });
+      geometries.forEach((geometry) => geometry.dispose());
+      materials.forEach((material) => material.dispose());
+      ownedTextures.forEach((texture) => texture.dispose());
       environment.dispose();
       pmrem.dispose();
       renderer.dispose();
