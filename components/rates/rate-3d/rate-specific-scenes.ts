@@ -140,6 +140,14 @@ function cylinder(radius: number, height: number, p: Point, color: string, extra
   return mesh;
 }
 
+function sphere(radius: number, x: number, y: number, z: number, color: string) {
+  const mesh = new THREE.Mesh(new THREE.SphereGeometry(radius, 18, 12), mat(color, { roughness: 0.72 }));
+  mesh.position.set(x, y, z);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  return mesh;
+}
+
 function rod(a: Point, b: Point, radius: number, color: string, metalness = 0.1) {
   const start = new THREE.Vector3(...a);
   const end = new THREE.Vector3(...b);
