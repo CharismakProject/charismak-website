@@ -360,7 +360,9 @@ class SceneBuilder {
       lines = this.item.lines.filter((line) => ids.includes(line.id));
     }
     if (!lines.length) {
-      const fallback = this.first(fallbackCategory) ?? this.item.lines[0];
+      // Only use a fallback from the requested cost category. Never attach a generic
+      // visual to the first available line (which could be labour and suppress the human).
+      const fallback = this.first(fallbackCategory);
       if (fallback) lines = [fallback];
     }
     const lineIds = [...new Set(lines.map((line) => line.id))];
@@ -370,7 +372,7 @@ class SceneBuilder {
       if (row) this.colors[id] = colour(row);
     });
     this.parts.push({
-      lineId: lineIds.length === 1 ? lineIds[0] : lineIds,
+      lineId: lineIds.length === 0 ? "__context" : lineIds.length === 1 ? lineIds[0] : lineIds,
       object,
       dir: new THREE.Vector3(...dir),
       ...opts,
