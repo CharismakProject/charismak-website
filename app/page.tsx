@@ -262,6 +262,59 @@ export default async function HomePage() {
         </div>
       </section>
 
+      <section id="charismak-one" className="bg-white px-5 py-20 md:px-8">
+        <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+          <a href="/charismak-one/charismak-one-flyer.pdf" target="_blank" rel="noreferrer" className="block">
+            <Image
+              src="/charismak-one/charismak-one-flyer.jpg"
+              alt="Charismak One flyer: construction management app, call for beta testers, book a free demo"
+              width={1080}
+              height={1350}
+              sizes="(max-width: 1024px) 100vw, 45vw"
+              className="h-auto w-full border border-[#0D3B66]/10 shadow-xl"
+            />
+          </a>
+          <div>
+            <SectionLabel>Charismak One</SectionLabel>
+            <h2 className="text-3xl font-semibold leading-tight tracking-[-0.03em] text-[#071E33] md:text-5xl">
+              Our construction management app is open for beta testers.
+            </h2>
+            <p className="mt-6 text-base leading-8 text-[#3A4653]">
+              BOQ, site progress, procurement, valuations and payments in one app, built by a working contractor in Abuja. Book a free
+              demo and see how it works for your company.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <a
+                href="https://wa.me/2347066619598?text=Hello%2C%20I%20would%20like%20a%20demo%20of%20Charismak%20One."
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 bg-[#197447] px-6 py-3.5 text-sm font-bold text-white"
+              >
+                <MessageCircle className="h-4 w-4" />
+                WhatsApp +234 706 661 9598
+              </a>
+              <a
+                href="mailto:info@charismakproject.com?subject=Charismak%20One%20demo"
+                className="inline-flex items-center gap-2 bg-[#0D3B66] px-6 py-3.5 text-sm font-bold text-white"
+              >
+                <Mail className="h-4 w-4" />
+                Email us
+              </a>
+              <a
+                href="/charismak-one/charismak-one-flyer.pdf"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 border border-[#0D3B66]/20 px-6 py-3.5 text-sm font-bold text-[#071E33]"
+              >
+                <FileDown className="h-4 w-4" />
+                Flyer (PDF)
+              </a>
+            </div>
+            <p className="mt-5 text-sm text-[#3A4653]">info@charismakproject.com · charismakprojectnigltd@gmail.com</p>
+          </div>
+        </div>
+      </section>
+
       {siteSlides.length > 0 ? (
         <section className="bg-white px-5 py-16 md:px-8 md:py-20">
           <div className="mx-auto max-w-7xl">
@@ -419,59 +472,6 @@ export default async function HomePage() {
                 <p className="mt-3 text-sm leading-7 text-[#3A4653]">{text}</p>
               </article>
             ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="charismak-one" className="bg-white px-5 py-20 md:px-8">
-        <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-          <a href="/charismak-one/charismak-one-flyer.pdf" target="_blank" rel="noreferrer" className="block">
-            <Image
-              src="/charismak-one/charismak-one-flyer.jpg"
-              alt="Charismak One flyer: construction management app, call for beta testers, book a free demo"
-              width={1080}
-              height={1350}
-              sizes="(max-width: 1024px) 100vw, 45vw"
-              className="h-auto w-full border border-[#0D3B66]/10 shadow-xl"
-            />
-          </a>
-          <div>
-            <SectionLabel>Charismak One</SectionLabel>
-            <h2 className="text-3xl font-semibold leading-tight tracking-[-0.03em] text-[#071E33] md:text-5xl">
-              Our construction management app is open for beta testers.
-            </h2>
-            <p className="mt-6 text-base leading-8 text-[#3A4653]">
-              BOQ, site progress, procurement, valuations and payments in one app, built by a working contractor in Abuja. Book a free
-              demo and see how it works for your company.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <a
-                href="https://wa.me/2347066619598?text=Hello%2C%20I%20would%20like%20a%20demo%20of%20Charismak%20One."
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 bg-[#197447] px-6 py-3.5 text-sm font-bold text-white"
-              >
-                <MessageCircle className="h-4 w-4" />
-                WhatsApp +234 706 661 9598
-              </a>
-              <a
-                href="mailto:info@charismakproject.com?subject=Charismak%20One%20demo"
-                className="inline-flex items-center gap-2 bg-[#0D3B66] px-6 py-3.5 text-sm font-bold text-white"
-              >
-                <Mail className="h-4 w-4" />
-                Email us
-              </a>
-              <a
-                href="/charismak-one/charismak-one-flyer.pdf"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 border border-[#0D3B66]/20 px-6 py-3.5 text-sm font-bold text-[#071E33]"
-              >
-                <FileDown className="h-4 w-4" />
-                Flyer (PDF)
-              </a>
-            </div>
-            <p className="mt-5 text-sm text-[#3A4653]">info@charismakproject.com · charismakprojectnigltd@gmail.com</p>
           </div>
         </div>
       </section>
