@@ -1171,7 +1171,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "status": "review",
     "specification": "Prepare and apply three coats of approved emulsion paint to prepared plastered/screeded wall.",
     "methodologyNote": "Paint consumption follows the residential workbook coverage logic; preparation level and product coverage remain editable.",
-    "sourceNote": "Calibrated to the Charismak priced bill, Recreational Centre, Asokoro, Abuja (Oct 2026): 3-coat emulsion ₦4,500/m², reduced by a provisional 15% O/P to ₦3,913/m². Paint consumption from the residential 3-coat workbook; labour raised to ₦1,600/m² to match. Premium washable/anti-mould paint will cost more: edit the paint price.",
+    "sourceNote": "Standard (non-specialised) emulsion. Corroborated by KM Steel quotation, Guzape, Abuja (4 Nov 2026): emulsion 2 coats ₦2,175/m² incl. margin, about ₦1,890/m² after a provisional 15% O/P, or about ₦2,840/m² for 3 coats, within 3% of this rate. Washable/anti-mould specialist systems (e.g. Asokoro Oct 2026 bill, ₦4,500–₦5,250/m²) cost more: edit the paint price and labour.",
     "lines": [
       {
         "id": "paint-emul",
@@ -1196,7 +1196,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "labour",
         "quantity": 1,
         "unit": "m²",
-        "unitRate": 1600
+        "unitRate": 650
       }
     ],
     "allowances": {
