@@ -25,8 +25,15 @@ Deno.serve(async (req) => {
 
   try {
     const today = new Date().toISOString().slice(0, 10);
+    // Approved offers that lapsed in the last 120 days are returned separately as price history.
+    const historyFrom = new Date(Date.now() - 120 * 86_400_000).toISOString().slice(0, 10);
+    const offerColumns = "id,supplier_id,catalogue_item_id,product_name,specification,brand,unit_price,quoted_unit,location,service_area,availability,delivery_included,delivery_fee,valid_until,status,submitted_at,published_at,created_at";
 
-    const [{ data: profiles, error: profileError }, { data: offers, error: offerError }] = await Promise.all([
+    const [
+      { data: profiles, error: profileError },
+      { data: offers, error: offerError },
+      { data: expiredOffers, error: expiredError },
+    ] = await Promise.all([
       db
         .from("supplier_profiles")
         .select("id,supplier_code,business_name,contact_person,phone,whatsapp,email,location,delivery_areas,categories,status,created_at,updated_at")
@@ -34,27 +41,42 @@ Deno.serve(async (req) => {
         .order("updated_at", { ascending: false }),
       db
         .from("supplier_marketplace_offers")
-        .select("id,supplier_id,catalogue_item_id,product_name,specification,brand,unit_price,quoted_unit,location,service_area,availability,delivery_included,delivery_fee,valid_until,status,submitted_at,published_at,created_at")
+        .select(offerColumns)
         .eq("status", "approved")
         .gte("valid_until", today)
         .order("created_at", { ascending: false }),
+      db
+        .from("supplier_marketplace_offers")
+        .select(offerColumns)
+        .eq("status", "approved")
+        .lt("valid_until", today)
+        .gte("valid_until", historyFrom)
+        .order("valid_until", { ascending: false }),
     ]);
 
     if (profileError) return json({ error: profileError.message }, 500);
     if (offerError) return json({ error: offerError.message }, 500);
 
-    const offersBySupplier = new Map<string, unknown[]>();
-    for (const offer of offers ?? []) {
-      const supplierId = String(offer.supplier_id ?? "");
-      if (!supplierId) continue;
-      const current = offersBySupplier.get(supplierId) ?? [];
-      current.push(offer);
-      offersBySupplier.set(supplierId, current);
-    }
+    const groupBySupplier = (rows: { supplier_id?: unknown }[] | null) => {
+      const map = new Map<string, unknown[]>();
+      for (const offer of rows ?? []) {
+        const supplierId = String(offer.supplier_id ?? "");
+        if (!supplierId) continue;
+        const current = map.get(supplierId) ?? [];
+        current.push(offer);
+        map.set(supplierId, current);
+      }
+      return map;
+    };
+    const offersBySupplier = groupBySupplier(offers);
+    // History is optional: if that query fails, the directory still loads with current offers.
+    if (expiredError) console.error(expiredError);
+    const expiredBySupplier = groupBySupplier(expiredError ? [] : expiredOffers);
 
     const directory = (profiles ?? []).map((profile) => ({
       ...profile,
       offers: offersBySupplier.get(String(profile.id)) ?? [],
+      expired_offers: expiredBySupplier.get(String(profile.id)) ?? [],
     }));
 
     return json({ profiles: directory });
