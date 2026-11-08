@@ -1,6 +1,7 @@
 import { JIJI_MARKET_SNAPSHOT } from "@/lib/pricing/jiji-market-snapshot";
 import { DEFAULT_PRICE_ITEMS } from "@/lib/pricing/defaults";
 import { SUPPLIER_FORMS } from "@/lib/pricing/supplier-forms";
+import { RATE_LOCATIONS } from "@/lib/rates/locations";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 export type MarketplaceProfileType = "supplier" | "artisan";
@@ -20,6 +21,8 @@ export type MarketplaceOffer = {
   deliveryFee?: number | null;
   validFrom: string;
   validUntil: string;
+  /** True for an approved offer whose validity date has passed (shown as "last quoted", never as current). */
+  expired?: boolean;
 };
 
 export type MarketplaceProfile = {
@@ -38,6 +41,10 @@ export type MarketplaceProfile = {
   description: string;
   products: string[];
   offers: MarketplaceOffer[];
+  /** Approved offers that have expired recently — history only. */
+  pastOffers: MarketplaceOffer[];
+  /** RATE_LOCATIONS id inferred from the free-text location, when recognisable. */
+  stateId?: string;
   createdAt?: string;
   rating: number;
   reviewCount: number;
@@ -48,62 +55,14 @@ export type MarketplaceProfile = {
   status: "pending" | "approved";
 };
 
-export type NewMarketplaceProfile = Pick<
-  MarketplaceProfile,
-  "type" | "businessName" | "category" | "location" | "serviceArea" | "phone" | "email" | "description"
->;
-
-const LOCAL_KEY = "charismak-marketplace-profiles-v1";
-export const MARKETPLACE_UPDATED_EVENT = "charismak:marketplace-updated";
-
-const readLocal = (): MarketplaceProfile[] => {
-  if (typeof localStorage === "undefined") return [];
-  try {
-    const value = JSON.parse(localStorage.getItem(LOCAL_KEY) ?? "[]");
-    return Array.isArray(value) ? (value as MarketplaceProfile[]) : [];
-  } catch {
-    return [];
-  }
-};
-
-const toProfile = (row: Record<string, unknown>): MarketplaceProfile => ({
-  id: String(row.id),
-  type: row.profile_type === "artisan" ? "artisan" : "supplier",
-  businessName: String(row.business_name ?? ""),
-  category: String(row.category ?? ""),
-  categories: row.category ? [String(row.category)] : [],
-  location: String(row.location ?? ""),
-  serviceArea: String(row.service_area ?? ""),
-  phone: String(row.phone ?? ""),
-  email: String(row.email ?? ""),
-  description: String(row.description ?? ""),
-  products: Array.isArray(row.products) ? row.products.map(String) : [],
-  offers: [],
-  rating: 0,
-  reviewCount: 0,
-  verified: Boolean(row.verified),
-  status: row.status === "approved" ? "approved" : "pending",
-});
-
 const productNameFor = (catalogueItemId: string) => {
   const marketName = JIJI_MARKET_SNAPSHOT[catalogueItemId]?.marketName;
   if (marketName) return marketName;
   return DEFAULT_PRICE_ITEMS.find((item) => item.id === catalogueItemId)?.description ?? catalogueItemId;
 };
 
-const toSupplierDirectoryProfile = (row: Record<string, unknown>): MarketplaceProfile => {
-  const categoryIds = Array.isArray(row.categories) ? row.categories.map(String) : [];
-  const definitions = categoryIds
-    .map((id) => SUPPLIER_FORMS.find((form) => form.id === id))
-    .filter((form): form is (typeof SUPPLIER_FORMS)[number] => Boolean(form));
-  const artisan = definitions.length > 0 && definitions.every((form) => form.group === "Labour & specialists");
-  const categoryNames = definitions.map((form) => form.shortTitle);
-  const type: MarketplaceProfileType = artisan ? "artisan" : "supplier";
-  const location = String(row.location ?? "Nigeria");
-  const serviceArea = String(row.delivery_areas ?? "").trim() || location;
-
-  const rawOffers = Array.isArray(row.offers) ? (row.offers as Record<string, unknown>[]) : [];
-  const offers: MarketplaceOffer[] = rawOffers
+const mapOffers = (row: Record<string, unknown>, value: unknown, expired: boolean): MarketplaceOffer[] =>
+  (Array.isArray(value) ? (value as Record<string, unknown>[]) : [])
     .map((offer) => {
       const catalogueItemId = String(offer.catalogue_item_id ?? "");
       return {
@@ -121,9 +80,46 @@ const toSupplierDirectoryProfile = (row: Record<string, unknown>): MarketplacePr
         deliveryFee: offer.delivery_fee == null ? null : Number(offer.delivery_fee),
         validFrom: String(offer.published_at ?? offer.submitted_at ?? offer.created_at ?? ""),
         validUntil: String(offer.valid_until ?? ""),
+        expired,
       };
     })
-    .filter((offer) => offer.catalogueItemId && Number.isFinite(offer.price));
+    .filter((offer) => offer.catalogueItemId && Number.isFinite(offer.price) && offer.price > 0);
+
+const STATE_ALIASES: Record<string, string[]> = {
+  fct: ["fct", "abuja", "garki", "wuse", "maitama", "asokoro", "gwarimpa", "kubwa", "lugbe", "kado", "jabi", "utako", "life camp", "die-die", "dei-dei", "nyanya", "bwari", "gwagwalada", "kuje"],
+  lagos: ["lagos", "ikeja", "lekki", "ikoyi", "victoria island", "ajah", "surulere", "yaba"],
+  rivers: ["rivers", "port harcourt", "port-harcourt"],
+  "akwa-ibom": ["akwa ibom", "akwa-ibom", "uyo"],
+  "cross-river": ["cross river", "cross-river", "calabar"],
+  nassarawa: ["nasarawa", "nassarawa", "lafia", "keffi", "mararaba", "masaka"],
+};
+
+/** Best-effort match of free-text supplier location to a state id (first match wins). */
+export function stateIdFromText(text: string): string | undefined {
+  const haystack = ` ${text.toLowerCase().replace(/[^a-z\s-]/g, " ")} `;
+  for (const [id, words] of Object.entries(STATE_ALIASES)) {
+    if (words.some((word) => haystack.includes(` ${word} `))) return id;
+  }
+  const hit = RATE_LOCATIONS.find((loc) => {
+    const names = [loc.name.toLowerCase(), loc.capital.toLowerCase(), loc.id.replace(/-/g, " ")];
+    return names.some((name) => haystack.includes(` ${name} `));
+  });
+  return hit?.id;
+}
+
+const toSupplierDirectoryProfile = (row: Record<string, unknown>): MarketplaceProfile => {
+  const categoryIds = Array.isArray(row.categories) ? row.categories.map(String) : [];
+  const definitions = categoryIds
+    .map((id) => SUPPLIER_FORMS.find((form) => form.id === id))
+    .filter((form): form is (typeof SUPPLIER_FORMS)[number] => Boolean(form));
+  const artisan = definitions.length > 0 && definitions.every((form) => form.group === "Labour & specialists");
+  const categoryNames = definitions.map((form) => form.shortTitle);
+  const type: MarketplaceProfileType = artisan ? "artisan" : "supplier";
+  const location = String(row.location ?? "Nigeria");
+  const serviceArea = String(row.delivery_areas ?? "").trim() || location;
+
+  const offers = mapOffers(row, row.offers, false);
+  const pastOffers = mapOffers(row, row.expired_offers, true);
 
   const productNames = Array.from(new Set(offers.map((offer) => offer.productName)));
 
@@ -148,6 +144,8 @@ const toSupplierDirectoryProfile = (row: Record<string, unknown>): MarketplacePr
     description: "",
     products: productNames,
     offers,
+    pastOffers,
+    stateId: stateIdFromText(`${location} ${serviceArea}`),
     createdAt: String(row.created_at ?? ""),
     rating: 0,
     reviewCount: 0,
@@ -181,49 +179,4 @@ export async function loadMarketplaceDirectory(): Promise<MarketplaceDirectoryRe
 /** Live profiles only (empty when unavailable). */
 export async function loadMarketplaceProfiles(): Promise<MarketplaceProfile[]> {
   return (await loadMarketplaceDirectory()).profiles;
-}
-
-export async function submitMarketplaceProfile(
-  input: NewMarketplaceProfile,
-): Promise<{ profile: MarketplaceProfile; published: boolean }> {
-  const base: MarketplaceProfile = {
-    ...input,
-    id: `local-market-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-    categories: input.category ? [input.category] : [],
-    products: [],
-    offers: [],
-    rating: 0,
-    reviewCount: 0,
-    verified: false,
-    status: "pending",
-  };
-
-  const client = getSupabaseBrowserClient();
-  if (client) {
-    const { data, error } = await client
-      .from("marketplace_profiles")
-      .insert({
-        profile_type: input.type,
-        business_name: input.businessName,
-        category: input.category,
-        location: input.location,
-        service_area: input.serviceArea,
-        phone: input.phone,
-        email: input.email,
-        description: input.description,
-        products: [],
-        status: "pending",
-      })
-      .select("*")
-      .single();
-
-    if (!error && data) return { profile: toProfile(data as Record<string, unknown>), published: true };
-  }
-
-  if (typeof localStorage !== "undefined") {
-    localStorage.setItem(LOCAL_KEY, JSON.stringify([base, ...readLocal()]));
-    window.dispatchEvent(new CustomEvent(MARKETPLACE_UPDATED_EVENT));
-  }
-
-  return { profile: base, published: false };
 }
