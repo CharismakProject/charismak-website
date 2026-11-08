@@ -216,7 +216,7 @@ export default function RateBankBrowser() {
           <div>
             <h2 className="font-black text-white">How these rates are built</h2>
             <p className="mt-1 max-w-3xl text-xs leading-6 text-white/60">
-              Abuja rates are reconstructed from Charismak purchase records, priced bills and project calculations; every rate stays marked <em>validating</em> until it passes quantity, material, labour and market checks. Other states apply provisional material, labour and plant adjustments to the Abuja build-up until local quotations confirm them. Allowances: material fluctuation 5%, labour fluctuation 1.5%, risk 5%, public O/P 0%.
+              Abuja rates are built from current market prices, standard material consumption and labour outputs, and checked against recent priced bills; every rate stays marked <em>validating</em> until it passes quantity, material, labour and market checks. Other states apply provisional material, labour and plant adjustments to the Abuja build-up until local quotations confirm them. Allowances: material fluctuation 5%, labour fluctuation 1.5%, risk 5%, public O/P 0%.
             </p>
           </div>
         </div>

@@ -3,7 +3,7 @@
 import { MapPin } from "lucide-react";
 
 import NigeriaMap from "@/components/rates/nigeria-map";
-import { RATE_LOCATIONS, ZONES, blendedIndex, type RateLocation } from "@/lib/rates/locations";
+import { LOCATIONS_REVIEWED, RATE_LOCATIONS, ZONES, blendedIndex, type RateLocation } from "@/lib/rates/locations";
 
 /** State selector: interactive map (larger screens) plus an accessible dropdown. */
 export default function LocationPicker({
@@ -51,7 +51,7 @@ export default function LocationPicker({
       ) : null}
       <p className={`rounded-xl px-3 py-2 text-[11px] leading-5 ${location.status === "base" ? "bg-[#0E3B2E] text-[#9BE7C4]" : "bg-[#3A2A0B] text-[#F7D58C]"}`}>
         {location.status === "base"
-          ? "Abuja base rates — backed by Charismak purchase records and priced bills."
+          ? `Abuja base rates · market prices checked ${new Date(LOCATIONS_REVIEWED).toLocaleDateString("en-NG", { month: "short", year: "numeric" })}.`
           : `Provisional: Abuja rates adjusted for ${location.name} (materials ×${location.material.toFixed(2)}, labour ×${location.labour.toFixed(2)}, plant ×${location.plant.toFixed(2)}; about ${index >= 1 ? "+" : ""}${Math.round((index - 1) * 100)}% overall). Confirm local prices before tendering.`}
         {location.note && location.status !== "base" ? ` ${location.note}` : ""}
       </p>

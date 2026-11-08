@@ -2,7 +2,7 @@ import type { RateCostLine } from "./defaults";
 
 /**
  * Regional cost adjustments relative to the Abuja (FCT) basis, which is backed
- * by Charismak purchase records and priced bills. Every other state is a
+ * by current market prices and recent priced bills. Every other state is a
  * PROVISIONAL planning assumption until local quotations or project costs
  * confirm it; edit the numbers here as evidence arrives.
  *
@@ -35,7 +35,7 @@ const SE = { zone: "South-East", material: 1.03, labour: 1.0, plant: 1.0 } as co
 const P = "provisional" as const;
 
 export const RATE_LOCATIONS: RateLocation[] = [
-  { id: "fct", name: "FCT Abuja", capital: "Abuja", zone: "FCT", material: 1, labour: 1, plant: 1, status: "base", note: "Basis: Charismak purchase records and priced bills (2026)." },
+  { id: "fct", name: "FCT Abuja", capital: "Abuja", zone: "FCT", material: 1, labour: 1, plant: 1, status: "base", },
   // North-Central / Middle Belt — close to Obajana cement and abundant quarries; lower labour cost.
   { id: "niger", name: "Niger", capital: "Minna", ...NC, status: P },
   { id: "kogi", name: "Kogi", capital: "Lokoja", ...NC, material: 0.95, status: P, note: "Near the Obajana cement plant." },
