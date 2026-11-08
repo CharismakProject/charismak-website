@@ -265,7 +265,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "status": "review",
     "specification": "Approved laterite obtained off site, delivered, placed in layers and compacted.",
     "methodologyNote": "Material quantity includes 10% handling/compaction allowance. Haul distance can materially change the rate.",
-    "sourceNote": "FMC/Central Park bulk-material benchmarks; supplier audit still required.",
+    "sourceNote": "FMC/Central Park bulk-material benchmarks. Charismak Abuja supplier list (Oct 2026): laterite ₦60,000 per 10-tonne trip (about ₦10,000/m³ delivered material). An older Gwarimpa bill (Mar 2026) priced imported laterite at ₦8,500/m³ placed; the newer supplier price is used.",
     "lines": [
       {
         "id": "lat-mat",
@@ -892,7 +892,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "status": "review",
     "specification": "15 mm average cement-sand plaster/render, floated finish, including material wastage and application labour.",
     "methodologyNote": "Resource quantities are normalized from the uploaded residential BOQ and current cement/sand inputs.",
-    "sourceNote": "2-bedroom BOQ material consumption + FMC plaster labour benchmark.",
+    "sourceNote": "Calibrated to the Charismak priced bill, Recreational Centre, Asokoro, Abuja (Oct 2026): 15 mm 1:4 render ₦5,950/m², reduced by a provisional 15% O/P to ₦5,174/m². Material consumption from the 2-bedroom BOQ; labour raised to ₦2,500/m² to match.",
     "lines": [
       {
         "id": "plaster-cem",
@@ -917,7 +917,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "labour",
         "quantity": 1,
         "unit": "m²",
-        "unitRate": 900
+        "unitRate": 2500
       }
     ],
     "allowances": {
@@ -935,7 +935,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "region": "Abuja / Nasarawa",
     "city": "Abuja–Keffi market",
     "currency": "NGN",
-    "lastReviewed": "2026-09-26",
+    "lastReviewed": "2026-11-08",
     "slug": "20mm-wall-tile-backing",
     "code": "RB-FN-002",
     "title": "20 mm cement-sand backing to receive wall tiles",
@@ -1171,7 +1171,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "status": "review",
     "specification": "Prepare and apply three coats of approved emulsion paint to prepared plastered/screeded wall.",
     "methodologyNote": "Paint consumption follows the residential workbook coverage logic; preparation level and product coverage remain editable.",
-    "sourceNote": "FMC paint pail benchmark + residential 3-coat consumption.",
+    "sourceNote": "Calibrated to the Charismak priced bill, Recreational Centre, Asokoro, Abuja (Oct 2026): 3-coat emulsion ₦4,500/m², reduced by a provisional 15% O/P to ₦3,913/m². Paint consumption from the residential 3-coat workbook; labour raised to ₦1,600/m² to match. Premium washable/anti-mould paint will cost more: edit the paint price.",
     "lines": [
       {
         "id": "paint-emul",
@@ -1196,7 +1196,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "labour",
         "quantity": 1,
         "unit": "m²",
-        "unitRate": 650
+        "unitRate": 1600
       }
     ],
     "allowances": {
@@ -1214,7 +1214,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "region": "Abuja / Nasarawa",
     "city": "Abuja–Keffi market",
     "currency": "NGN",
-    "lastReviewed": "2026-09-26",
+    "lastReviewed": "2026-11-08",
     "slug": "timber-formwork-foundation-sides",
     "code": "RB-FW-001",
     "title": "Traditional well-sawn plank formwork to below-ground concrete",
@@ -3735,7 +3735,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "unit": "m²",
     "specification": "Supply and fix 0.55 mm oven-baked aluminium roof covering to prepared timber support, including screws and normal laps/accessories.",
     "methodologyNote": "2-bedroom source guide normalized by provisional 15% O/P removal. Current sheet-gauge and manufacturer price require fresh validation.",
-    "sourceNote": "2-bedroom Abuja BOQ guide ₦13,800/m².",
+    "sourceNote": "2-bedroom Abuja BOQ guide ₦13,800/m². Corroborated by KM Steel quotation, Guzape, Abuja (4 Nov 2026): 0.55 mm aluminium roofing incl. accessories ₦15,300/m², about ₦13,300/m² after a provisional 15% O/P, within 2% of this rate.",
     "lines": [
       {
         "id": "roof055-sheet",
