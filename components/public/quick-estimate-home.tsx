@@ -1,13 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   Building2,
-  Calculator,
   Download,
   Factory,
+  Gauge,
   Hammer,
   Layers3,
   Sofa,
@@ -19,18 +20,15 @@ import { createInitialEstimateInput, saveQuickEstimateTransfer } from "@/lib/pro
 import { validateEstimateInput } from "@/lib/projects/public-estimate-decisions";
 import { downloadEstimateBoqPdf } from "@/lib/projects/estimate-pdf";
 import type { BuildingUse } from "@/lib/projects/guided-estimate";
+import LocationPicker from "@/components/rates/location-picker";
+import AnimatedNaira from "@/components/ui/animated-naira";
+import { useRateLocation } from "@/lib/rates/use-rate-location";
 
 const money = (value: number) => new Intl.NumberFormat("en-NG", {
   style: "currency",
   currency: "NGN",
   notation: "compact",
   maximumFractionDigits: 1,
-}).format(value);
-
-const fullMoney = (value: number) => new Intl.NumberFormat("en-NG", {
-  style: "currency",
-  currency: "NGN",
-  maximumFractionDigits: 0,
 }).format(value);
 
 const categories: Array<{ id: EstimateCategory; label: string; short: string; icon: typeof Building2 }> = [
@@ -74,16 +72,29 @@ const roofOptions: Array<[EstimateInput["roofType"], string]> = [
 
 export default function QuickEstimateHome() {
   const router = useRouter();
+  const [location, setLocation] = useRateLocation();
   const [input, setInput] = useState<EstimateInput>(() => createInitialEstimateInput());
-  const [showResult, setShowResult] = useState(false);
-  const [messages, setMessages] = useState<string[]>([]);
+  const reduce = useReducedMotion();
+  const sectionRef = useRef<HTMLElement>(null);
+  const [inView, setInView] = useState(false);
 
-  const result = useMemo(() => calculateEstimateV2(input), [input]);
+  // Show the phone price bar only while the estimator section is on screen.
+  useEffect(() => {
+    const node = sectionRef.current;
+    if (!node || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting), { threshold: 0.05 });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  // The estimator prices for the state chosen here or on the Rate Bank.
+  const priced = useMemo(() => ({ ...input, location: location.name }), [input, location.name]);
+  const result = useMemo(() => calculateEstimateV2(priced), [priced]);
+  const issues = useMemo(() => validateEstimateInput(priced), [priced]);
+  const ready = issues.length === 0;
 
   const update = <K extends keyof EstimateInput>(key: K, value: EstimateInput[K]) => {
     setInput((current) => ({ ...current, [key]: value }));
-    setShowResult(false);
-    setMessages([]);
   };
 
   const updateNumber = (key: keyof EstimateInput, value: string) => {
@@ -94,101 +105,153 @@ export default function QuickEstimateHome() {
     setInput((current) => {
       const fresh = createInitialEstimateInput();
       fresh.category = category;
-      fresh.location = current.location;
       fresh.finishLevel = current.finishLevel;
       return fresh;
     });
-    setShowResult(false);
-    setMessages([]);
-  };
-
-  const calculate = () => {
-    const issues = validateEstimateInput(input);
-    setMessages(issues);
-    if (issues.length) {
-      setShowResult(false);
-      return;
-    }
-    setShowResult(true);
-    requestAnimationFrame(() => document.getElementById("quick-result")?.scrollIntoView({ behavior: "smooth", block: "center" }));
   };
 
   const continueDetailed = () => {
-    saveQuickEstimateTransfer(input);
+    saveQuickEstimateTransfer(priced);
     router.push("/estimator/detailed");
   };
 
+  const sections = [...result.sections].sort((x, y) => y.high - x.high);
+  const maxSection = Math.max(1, ...sections.map((item) => item.high));
+  const perUnit = result.basisQuantity > 0 ? result.midpoint / result.basisQuantity : 0;
+
   return (
-    <section id="quick-estimate" className="bg-white px-5 py-16 md:px-8 md:py-24">
-      <div className="mx-auto max-w-7xl">
-        <div className="grid gap-10 lg:grid-cols-[0.68fr_1.32fr] lg:items-start">
-          <div className="lg:sticky lg:top-28">
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#C8A45D]">Quick Estimate</p>
-            <h2 className="mt-4 max-w-xl text-4xl font-semibold leading-[1.04] tracking-[-0.04em] text-[#071E33] md:text-5xl">Fast, but based on the major cost drivers.</h2>
-            <p className="mt-6 max-w-xl text-base leading-8 text-[#3A4653]">Tell us enough about the proposed work to avoid a meaningless square-metre-only answer. For a building, room counts, floors, building use, finish level and external works can all affect the range.</p>
-            <div className="mt-7 border-l-2 border-[#C8A45D] bg-[#FFF9ED] p-5 text-sm leading-7 text-[#74520D]">You do not need to know everything. For a new building, if the total floor area is unknown, enter the accommodation you want and the estimator can infer a preliminary planning area.</div>
-            <div className="mt-7 space-y-3 text-sm text-[#3A4653]">
-              <p><strong className="text-[#071E33]">Quick:</strong> major project facts and broad specifications.</p>
-              <p><strong className="text-[#071E33]">Detailed:</strong> measured quantities, structural/site details, MEP systems, comparisons, savings, programme and cash flow.</p>
-            </div>
-          </div>
+    <section ref={sectionRef} id="quick-estimate" data-theme="dark" className="relative overflow-hidden bg-[radial-gradient(circle_at_80%_0%,rgba(242,181,68,0.14),transparent_34rem),radial-gradient(circle_at_0%_60%,rgba(56,189,168,0.10),transparent_30rem),linear-gradient(180deg,#071E33,#04121F)] px-5 py-16 md:px-8 md:py-24">
+      <div className="pointer-events-none absolute inset-0 opacity-[0.06] [background-image:linear-gradient(rgba(255,255,255,.6)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.6)_1px,transparent_1px)] [background-size:40px_40px]" />
+      <div className="relative mx-auto max-w-7xl">
+        <div className="max-w-3xl">
+          <p className="inline-flex items-center gap-2 rounded-full border border-[#F2B544]/30 bg-[#F2B544]/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.16em] text-[#F2B544]"><Gauge className="h-3.5 w-3.5" /> Live cost meter</p>
+          <h2 className="mt-4 text-4xl font-semibold leading-[1.04] tracking-[-0.04em] text-white md:text-5xl">Watch your budget build as you answer.</h2>
+          <p className="mt-4 text-base leading-8 text-white/65">Every choice re-prices instantly — state, size, rooms, finish level, extras. No button to press. When you are happy, download the BOQ or carry everything into the detailed estimate.</p>
+        </div>
 
-          <div className="border border-[#0D3B66]/10 bg-[#F7F8FA] p-4 shadow-[0_24px_70px_rgba(7,30,51,0.09)] md:p-7">
-            <div className="flex items-center gap-3 border-b border-[#0D3B66]/10 pb-5">
-              <span className="grid h-11 w-11 place-items-center bg-[#071E33] text-[#C8A45D]"><Calculator className="h-5 w-5" /></span>
-              <div><h3 className="font-semibold text-[#071E33]">What do you want to estimate?</h3><p className="mt-1 text-xs text-[#3A4653]/65">Choose the scope. The quick questions change to match the work.</p></div>
-            </div>
-
-            <div className="mt-5 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-              {categories.map((item) => {
-                const Icon = item.icon;
-                const active = input.category === item.id;
-                return <button key={item.id} type="button" onClick={() => selectCategory(item.id)} className={`p-3 text-left transition ${active ? "bg-[#071E33] text-white" : "border border-[#0D3B66]/10 bg-white text-[#071E33] hover:border-[#C8A45D]"}`}><Icon className={`h-4 w-4 ${active ? "text-[#C8A45D]" : "text-[#0D3B66]"}`} /><strong className="mt-3 block text-xs">{item.label}</strong><span className={`mt-1 block text-[10px] leading-4 ${active ? "text-white/55" : "text-[#3A4653]/55"}`}>{item.short}</span></button>;
-              })}
-            </div>
-
-            <div className="mt-6 grid gap-4 border-t border-[#0D3B66]/10 pt-6 md:grid-cols-2">
-              <TextField label="Project location" value={input.location} onChange={(value) => update("location", value)} placeholder="e.g. Abuja" />
-              <SelectField label="Overall specification / finish level" value={input.finishLevel} onChange={(value) => update("finishLevel", value as SpecLevel)} options={finishLevels} />
-            </div>
-
-            <div className="mt-7">
-              <QuickCategoryFields input={input} update={update} updateNumber={updateNumber} />
-            </div>
-
-            {messages.length ? <div className="mt-5 border border-[#B45151]/25 bg-[#FFF3F3] p-4"><p className="text-xs font-bold text-[#8D2F2F]">Please add the following:</p>{messages.map((item) => <p key={item} className="mt-1 text-xs leading-5 text-[#8D2F2F]">• {item}</p>)}</div> : null}
-
-            <button type="button" onClick={calculate} className="mt-6 inline-flex min-h-14 w-full items-center justify-center gap-3 bg-[#0D3B66] px-6 py-4 text-sm font-bold text-white transition hover:bg-[#071E33]"><Calculator className="h-5 w-5" />Get quick estimate</button>
-
-            {showResult ? (
-              <div id="quick-result" className="mt-6 scroll-mt-28 overflow-hidden border border-[#0D3B66]/10 bg-white">
-                <div className="bg-[#071E33] p-6 text-white md:p-7">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#C8A45D]">Quick planning range</p>
-                  <strong className="mt-3 block text-3xl tracking-[-0.04em] md:text-4xl">{money(result.low)} – {money(result.high)}</strong>
-                  <p className="mt-3 text-xs text-white/60">Likely planning figure: <strong className="text-white">{fullMoney(result.midpoint)}</strong></p>
-                </div>
-                <div className="p-5 md:p-6">
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="bg-[#F7F8FA] p-4"><p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#3A4653]/55">Cost basis</p><strong className="mt-2 block text-sm text-[#071E33]">{Math.round(result.basisQuantity).toLocaleString()} {result.basisUnit}</strong><p className="mt-1 text-[11px] leading-5 text-[#3A4653]/65">{result.basisLabel}</p></div>
-                    <div className="bg-[#F7F8FA] p-4"><p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#3A4653]/55">Information level</p><strong className="mt-2 block text-sm text-[#071E33]">Quick planning estimate</strong><p className="mt-1 text-[11px] leading-5 text-[#3A4653]/65">Major cost drivers included; detailed technical quantities remain assumptions.</p></div>
-                  </div>
-
-                  {result.costDrivers.length ? <div className="mt-5 border border-[#0D3B66]/10 p-4"><p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#0D3B66]">Main factors affecting this result</p><div className="mt-2 space-y-1">{result.costDrivers.slice(0, 4).map((item) => <p key={item} className="text-xs leading-5 text-[#3A4653]">• {item}</p>)}</div></div> : null}
-
-                  <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                    <button type="button" onClick={() => downloadEstimateBoqPdf({ input, result, level: "Quick" })} className="inline-flex min-h-12 items-center justify-center gap-2 border border-[#0D3B66]/15 px-5 py-3 text-xs font-bold text-[#0D3B66]"><Download className="h-4 w-4" />Download BOQ PDF</button>
-                    <button type="button" onClick={continueDetailed} className="inline-flex min-h-12 items-center justify-center gap-2 bg-[#C8A45D] px-5 py-3 text-xs font-bold text-[#071E33]">Continue to Detailed <ArrowRight className="h-4 w-4" /></button>
-                    <button type="button" onClick={() => router.push("/contact")} className="inline-flex min-h-12 items-center justify-center border border-[#0D3B66]/15 px-5 py-3 text-xs font-bold text-[#0D3B66]">Contact Charismak</button>
-                  </div>
-                  <p className="mt-4 text-[10px] leading-5 text-[#3A4653]/55">The downloaded document is a branded preliminary elemental BOQ / cost plan. Everything entered here also carries into the Detailed Estimate.</p>
-                </div>
+        <div className="mt-10 grid gap-6 lg:grid-cols-[1.25fr_0.75fr] lg:items-start">
+          <div className="space-y-5 rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur md:p-6">
+            <div>
+              <StepLabel n={1} text="What are you building?" />
+              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {categories.map((item) => {
+                  const Icon = item.icon;
+                  const active = input.category === item.id;
+                  return (
+                    <button key={item.id} type="button" aria-pressed={active} onClick={() => selectCategory(item.id)} className={`rounded-2xl border p-3 text-left transition ${active ? "border-[#F2B544] bg-[#F2B544]/15 text-white shadow-[0_0_0_1px_rgba(242,181,68,0.4)]" : "border-white/10 bg-white/[0.03] text-white/80 hover:border-white/30"}`}>
+                      <Icon className={`h-4 w-4 ${active ? "text-[#F2B544]" : "text-white/55"}`} />
+                      <strong className="mt-2 block text-xs">{item.label}</strong>
+                      <span className="mt-0.5 block text-[10px] leading-4 text-white/45">{item.short}</span>
+                    </button>
+                  );
+                })}
               </div>
-            ) : null}
+            </div>
+
+            <div className="grid gap-5 md:grid-cols-[0.9fr_1.1fr]">
+              <div>
+                <StepLabel n={2} text="Where?" />
+                <div className="mt-3"><LocationPicker location={location} onChange={setLocation} showMap={false} /></div>
+              </div>
+              <div>
+                <StepLabel n={3} text="Finish level" />
+                <div className="mt-3 grid grid-cols-5 gap-1.5" role="radiogroup" aria-label="Finish level">
+                  {finishLevels.map(([id, text]) => {
+                    const active = input.finishLevel === id;
+                    return (
+                      <button key={id} type="button" role="radio" aria-checked={active} onClick={() => update("finishLevel", id)} title={text} className={`min-h-12 rounded-xl border px-1 text-[11px] font-bold capitalize transition ${active ? "border-[#F2B544] bg-[#F2B544] text-[#071E33]" : "border-white/12 bg-white/[0.04] text-white/70 hover:border-white/35"}`}>
+                        {id.replace("-", " ")}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="mt-2 text-[11px] text-white/45">{finishLevels.find(([id]) => id === input.finishLevel)?.[1]}</p>
+              </div>
+            </div>
+
+            <div>
+              <StepLabel n={4} text="The details that drive cost" />
+              <div className="mt-3"><QuickCategoryFields input={input} update={update} updateNumber={updateNumber} /></div>
+            </div>
           </div>
+
+          <aside id="live-meter" className="scroll-mt-24 lg:sticky lg:top-24" aria-live="polite">
+            <div className="overflow-hidden rounded-[1.75rem] border border-[#F2B544]/25 bg-[linear-gradient(160deg,rgba(242,181,68,0.10),rgba(4,18,31,0.9))] shadow-[0_30px_80px_rgba(0,0,0,0.35)]">
+              <div className="p-5 md:p-6">
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#F2B544]">Planning range · {location.name}</p>
+                {ready ? (
+                  <>
+                    <div className="mt-2 flex flex-wrap items-baseline gap-x-2 text-white">
+                      <AnimatedNaira value={result.low} compact className="text-4xl font-black tracking-[-0.03em]" />
+                      <span className="text-2xl text-white/40">–</span>
+                      <AnimatedNaira value={result.high} compact className="text-4xl font-black tracking-[-0.03em]" />
+                    </div>
+                    <p className="mt-2 text-xs text-white/60">
+                      Likely figure <strong className="text-white"><AnimatedNaira value={result.midpoint} /></strong>
+                      {perUnit ? <> · about <strong className="text-white"><AnimatedNaira value={perUnit} /></strong> per {result.basisUnit}</> : null}
+                    </p>
+                    <p className="mt-1 text-[11px] text-white/45">{Math.round(result.basisQuantity).toLocaleString()} {result.basisUnit} · {result.basisLabel.toLowerCase()}{location.status === "provisional" ? " · provisional regional adjustment" : ""}</p>
+                  </>
+                ) : (
+                  <div className="mt-3">
+                    <p className="text-sm font-bold text-white">Almost there — the meter starts when you add:</p>
+                    <ul className="mt-2 space-y-1">{issues.slice(0, 4).map((item) => <li key={item} className="text-xs leading-5 text-white/65">• {item}</li>)}</ul>
+                  </div>
+                )}
+              </div>
+
+              {ready ? (
+                <div className="border-t border-white/10 p-5 md:p-6">
+                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/50">Where the money goes</p>
+                  <ul className="mt-3 space-y-2.5">
+                    {sections.slice(0, 9).map((item) => (
+                      <li key={item.id} className="text-xs">
+                        <div className="flex justify-between gap-3 text-white/75"><span className="truncate">{item.label}</span><span className="shrink-0 font-bold text-white">{money(item.low)}–{money(item.high)}</span></div>
+                        <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-white/10">
+                          <motion.div initial={false} animate={{ width: `${(item.high / maxSection) * 100}%` }} transition={{ duration: reduce ? 0 : 0.5 }} className="h-full rounded-full bg-gradient-to-r from-[#38BDA8] to-[#F2B544]" />
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                  {result.costDrivers.length ? (
+                    <div className="mt-4 rounded-xl bg-white/[0.05] p-3">
+                      <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#F2B544]">What is moving the price</p>
+                      {result.costDrivers.slice(0, 3).map((item) => <p key={item} className="mt-1 text-[11px] leading-5 text-white/65">• {item}</p>)}
+                    </div>
+                  ) : null}
+                  <div className="mt-4 grid gap-2">
+                    <button type="button" onClick={() => router.push("/quote")} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#F2B544] px-5 text-sm font-black text-[#071E33] transition hover:brightness-105">Get a Charismak quote <ArrowRight className="h-4 w-4" /></button>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button type="button" onClick={() => downloadEstimateBoqPdf({ input: priced, result, level: "Quick" })} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-white/15 px-3 text-xs font-bold text-white hover:border-[#F2B544]"><Download className="h-4 w-4" />BOQ PDF</button>
+                      <button type="button" onClick={continueDetailed} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-white/15 px-3 text-xs font-bold text-white hover:border-[#F2B544]">Go detailed <ArrowRight className="h-4 w-4" /></button>
+                    </div>
+                  </div>
+                  <p className="mt-3 text-[10px] leading-5 text-white/40">Planning estimate only — drawings, measured quantities and current quotations are needed before procurement or contract.</p>
+                </div>
+              ) : null}
+            </div>
+          </aside>
         </div>
       </div>
+
+      {/* Phones: the meter sits below the questions, so keep the live range pinned in view. */}
+      <a href="#live-meter" aria-hidden={!inView} tabIndex={inView ? 0 : -1} className={`fixed inset-x-3 bottom-3 z-40 transition duration-300 ${inView ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-6 opacity-0"} flex items-center justify-between gap-3 rounded-2xl border border-[#F2B544]/40 bg-[#04121F]/95 px-4 py-3 text-white shadow-[0_12px_40px_rgba(0,0,0,0.45)] backdrop-blur lg:hidden`}>
+        <span className="min-w-0">
+          <span className="block text-[10px] font-black uppercase tracking-[0.14em] text-[#F2B544]">Live estimate · {location.name}</span>
+          {ready ? (
+            <span className="block text-lg font-black"><AnimatedNaira value={result.low} compact /> – <AnimatedNaira value={result.high} compact /></span>
+          ) : (
+            <span className="block truncate text-xs text-white/65">Add {issues[0]?.toLowerCase() ?? "details"} to start</span>
+          )}
+        </span>
+        <span className="shrink-0 text-xs font-bold text-[#F2B544]">Breakdown ↓</span>
+      </a>
     </section>
   );
+}
+
+function StepLabel({ n, text }: { n: number; text: string }) {
+  return <p className="flex items-center gap-2 text-sm font-black text-white"><span className="grid h-6 w-6 place-items-center rounded-full bg-[#F2B544] text-[11px] text-[#071E33]">{n}</span>{text}</p>;
 }
 
 type QuickFieldsProps = {
@@ -210,7 +273,7 @@ function QuickCategoryFields({ input, update, updateNumber }: QuickFieldsProps) 
         <SelectField label="Roof type" value={input.roofType} onChange={(value) => update("roofType", value as EstimateInput["roofType"])} options={roofOptions} />
       </div>
 
-      <p className="mt-6 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C8A45D]">Accommodation</p>
+      <p className="mt-6 text-[10px] font-bold uppercase tracking-[0.18em] text-[#F2B544]">Accommodation</p>
       <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <NumberField label="Bedrooms / rooms" value={input.bedrooms} onChange={(value) => updateNumber("bedrooms", value)} />
         <NumberField label="Bathrooms / WCs" value={input.bathrooms} onChange={(value) => updateNumber("bathrooms", value)} />
@@ -222,7 +285,7 @@ function QuickCategoryFields({ input, update, updateNumber }: QuickFieldsProps) 
         <SelectField label="Dining" value={input.dining} onChange={(value) => update("dining", value as EstimateInput["dining"])} options={[["none", "No dining"], ["combined", "Combined with living"], ["separate", "Separate dining room"]]} />
       </div>
 
-      <p className="mt-6 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C8A45D]">External works / extras</p>
+      <p className="mt-6 text-[10px] font-bold uppercase tracking-[0.18em] text-[#F2B544]">External works / extras</p>
       <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         <CheckField label="Boundary fence" checked={input.includeFence} onChange={(value) => { update("includeFence", value); update("includeExternalWorks", value || input.includeGatehouse || input.includePaving || input.includeDrainage || input.includeLandscaping || input.includePool); }} />
         <CheckField label="Gatehouse" checked={input.includeGatehouse} onChange={(value) => { update("includeGatehouse", value); update("includeExternalWorks", value || input.includeFence || input.includePaving || input.includeDrainage || input.includeLandscaping || input.includePool); }} />
@@ -336,21 +399,17 @@ function QuickCategoryFields({ input, update, updateNumber }: QuickFieldsProps) 
 }
 
 function SectionTitle({ title, text }: { title: string; text: string }) {
-  return <div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#C8A45D]">Major cost drivers</p><h4 className="mt-2 text-xl font-semibold text-[#071E33]">{title}</h4><p className="mt-2 max-w-3xl text-xs leading-6 text-[#3A4653]/65">{text}</p></div>;
-}
-
-function TextField({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string }) {
-  return <label className="text-xs font-semibold text-[#3A4653]">{label}<input value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="mt-2 min-h-12 w-full border border-[#0D3B66]/15 bg-white px-4 text-sm text-[#071E33] outline-none focus:border-[#0D3B66]" /></label>;
+  return <div><h4 className="text-base font-semibold text-white">{title}</h4><p className="mt-1 max-w-3xl text-xs leading-6 text-white/50">{text}</p></div>;
 }
 
 function NumberField({ label, value, onChange, placeholder = "0", min = 0, step = 1 }: { label: string; value: number; onChange: (value: string) => void; placeholder?: string; min?: number; step?: number }) {
-  return <label className="text-xs font-semibold text-[#3A4653]">{label}<input type="number" min={min} step={step} value={value || ""} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="mt-2 min-h-12 w-full border border-[#0D3B66]/15 bg-white px-4 text-sm text-[#071E33] outline-none focus:border-[#0D3B66]" /></label>;
+  return <label className="text-xs font-semibold text-white/70">{label}<input type="number" inputMode="decimal" min={min} step={step} value={value || ""} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="mt-2 min-h-12 w-full rounded-xl border px-4 text-sm outline-none bg-white/10! text-white! border-white/15! placeholder:text-white/35! focus:border-[#F2B544]!" /></label>;
 }
 
 function SelectField({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: Array<readonly [string, string]> | Array<[string, string]> }) {
-  return <label className="text-xs font-semibold text-[#3A4653]">{label}<select value={value} onChange={(event) => onChange(event.target.value)} className="mt-2 min-h-12 w-full border border-[#0D3B66]/15 bg-white px-4 text-sm text-[#071E33] outline-none focus:border-[#0D3B66]">{options.map(([id, text]) => <option key={id} value={id}>{text}</option>)}</select></label>;
+  return <label className="text-xs font-semibold text-white/70">{label}<select value={value} onChange={(event) => onChange(event.target.value)} className="mt-2 min-h-12 w-full rounded-xl border px-4 text-sm outline-none bg-white/10! text-white! border-white/15! placeholder:text-white/35! focus:border-[#F2B544]! [&_option]:bg-[#071E33]">{options.map(([id, text]) => <option key={id} value={id}>{text}</option>)}</select></label>;
 }
 
 function CheckField({ label, checked, onChange }: { label: string; checked: boolean; onChange: (value: boolean) => void }) {
-  return <label className={`flex min-h-12 cursor-pointer items-center gap-3 border p-3 text-xs font-semibold transition ${checked ? "border-[#0D3B66] bg-[#0D3B66] text-white" : "border-[#0D3B66]/12 bg-white text-[#3A4653]"}`}><input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} className="accent-[#C8A45D]" />{label}</label>;
+  return <label className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border p-3 text-xs font-semibold transition ${checked ? "border-[#F2B544] bg-[#F2B544]/15 text-white" : "border-white/12 bg-white/[0.04] text-white/70 hover:border-white/30"}`}><input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} className="accent-[#C8A45D]" />{label}</label>;
 }
