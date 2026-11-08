@@ -36,7 +36,7 @@ const qty = (value: number) =>
     ? value.toFixed(2).replace(/\.00$/, "").replace(/(\.\d)0$/, "$1")
     : Math.round(value).toLocaleString("en-NG");
 
-async function imageDataUrl(url: string, alpha = 1) {
+export async function imageDataUrl(url: string, alpha = 1) {
   try {
     const response = await fetch(url);
     if (!response.ok) return null;

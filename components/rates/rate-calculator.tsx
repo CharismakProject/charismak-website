@@ -1,15 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Calculator,
   Check,
+  Download,
   HardHat,
   PackageCheck,
   Pencil,
   RotateCcw,
+  Save,
   ShieldCheck,
+  Trash2,
   Truck,
 } from "lucide-react";
 
@@ -18,6 +21,8 @@ import {
   type RateBankItem,
   type RateCostLine,
 } from "@/lib/rates/defaults";
+import { downloadRatePdf } from "@/lib/rates/rate-pdf";
+import { applySavedRate, clearSavedRate, loadSavedRate, saveRate } from "@/lib/rates/saved-rate";
 
 const money = (value: number, currency = "NGN") =>
   new Intl.NumberFormat("en-NG", {
@@ -56,6 +61,25 @@ export default function RateCalculator({ item }: { item: RateBankItem }) {
     item.lines.map((line) => ({ ...line })),
   );
   const [allowances, setAllowances] = useState(() => ({ ...item.allowances }));
+  const [savedAt, setSavedAt] = useState<string | null>(null);
+  const [notice, setNotice] = useState("");
+  const [pdfBusy, setPdfBusy] = useState(false);
+
+  // Restore this visitor's saved copy (kept only on their device) after mount.
+  useEffect(() => {
+    const saved = loadSavedRate(item.slug);
+    if (!saved) return;
+    const restored = applySavedRate(item, saved);
+    setLines(restored.lines);
+    setAllowances(restored.allowances);
+    setWorkQuantity(restored.workQuantity);
+    setSavedAt(saved.savedAt);
+    setNotice(
+      restored.changedSinceSave
+        ? "Your saved copy was loaded. Charismak has changed this build-up since you saved it: new lines use the published values, removed lines were dropped."
+        : "Your saved copy was loaded.",
+    );
+  }, [item]);
 
   const publicCalculation = useMemo(
     () => calculateRate(item.lines, item.allowances),
@@ -114,6 +138,43 @@ export default function RateCalculator({ item }: { item: RateBankItem }) {
     ],
     [lines],
   );
+
+  const edited =
+    JSON.stringify(lines.map((line) => [line.id, line.quantity, line.unitRate])) !==
+      JSON.stringify(item.lines.map((line) => [line.id, line.quantity, line.unitRate])) ||
+    JSON.stringify(allowances) !== JSON.stringify(item.allowances);
+
+  const saveCopy = () => {
+    const saved = saveRate(item.slug, {
+      workQuantity: safeWorkQuantity,
+      allowances,
+      lines: lines.map(({ id, quantity, unitRate }) => ({ id, quantity, unitRate })),
+    });
+    if (saved) {
+      setSavedAt(saved.savedAt);
+      setNotice("Saved on this device. It reloads automatically next time you open this rate here.");
+    } else {
+      setNotice("This browser is not allowing saved data (private mode or storage blocked). Download the PDF to keep a copy.");
+    }
+  };
+
+  const deleteCopy = () => {
+    if (!window.confirm("Delete your saved copy of this rate from this device?")) return;
+    clearSavedRate(item.slug);
+    setSavedAt(null);
+    setNotice("Saved copy deleted. Your current edits stay on screen until you reset or leave the page.");
+  };
+
+  const downloadPdf = async () => {
+    setPdfBusy(true);
+    try {
+      await downloadRatePdf({ item, lines, allowances, calculation: personalCalculation, workQuantity: safeWorkQuantity, edited });
+    } catch {
+      setNotice("The PDF could not be created. Please try again.");
+    } finally {
+      setPdfBusy(false);
+    }
+  };
 
   const reset = () => {
     setLines(item.lines.map((line) => ({ ...line })));
@@ -187,7 +248,7 @@ export default function RateCalculator({ item }: { item: RateBankItem }) {
             {money(personalCalculation.total, item.currency)}
           </strong>
           <span className="mt-1 block text-xs text-[#617286]">
-            per {item.unit} · your edits stay private
+            per {item.unit} · {savedAt ? "saved on this device" : "your edits stay private"}
           </span>
         </div>
 
@@ -284,6 +345,25 @@ export default function RateCalculator({ item }: { item: RateBankItem }) {
           </div>
 
           <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => void downloadPdf()}
+              disabled={pdfBusy}
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-[#DCE4EC] px-4 text-xs font-black text-[#0D3B66] transition hover:border-[#C8A45D] disabled:opacity-50"
+            >
+              <Download className="h-4 w-4" />
+              {pdfBusy ? "Preparing PDF…" : edited ? "Download my rate (PDF)" : "Download PDF"}
+            </button>
+            {editing || edited ? (
+              <button
+                type="button"
+                onClick={saveCopy}
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-[#C8A45D] bg-[#FFF9ED] px-4 text-xs font-black text-[#7C5C08] transition hover:bg-[#FFF1D6]"
+              >
+                <Save className="h-4 w-4" />
+                Save my copy
+              </button>
+            ) : null}
             {editing ? (
               <>
                 <button
@@ -316,10 +396,24 @@ export default function RateCalculator({ item }: { item: RateBankItem }) {
           </div>
         </div>
 
+        {savedAt || notice ? (
+          <div className="mx-5 mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl bg-[#FFF9ED] px-4 py-3 text-xs text-[#5D4600]" role="status">
+            <span>
+              {notice}
+              {savedAt ? ` Last saved ${new Date(savedAt).toLocaleString("en-NG", { dateStyle: "medium", timeStyle: "short" })}.` : ""}
+            </span>
+            {savedAt ? (
+              <button type="button" onClick={deleteCopy} className="inline-flex items-center gap-1 font-black text-[#A82B05]">
+                <Trash2 className="h-3.5 w-3.5" /> Delete saved copy
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+
         <div className="p-5 text-sm leading-6 text-[#617286]">
           {editing
             ? "Editing is active. Change any per-unit resource quantity or price in the breakdown tables above, then adjust the percentages below."
-            : "Click Edit & calculate my rate to change the material quantities, material prices, labour input, plant/logistics and allowances. Your changes do not alter the rate shown to other visitors."}
+            : "Click Edit & calculate my rate to change the material quantities, material prices, labour input, plant/logistics and allowances. Your changes do not alter the rate shown to other visitors. Save my copy keeps your version on this device; Download PDF gives you a printable build-up."}
         </div>
       </section>
 
