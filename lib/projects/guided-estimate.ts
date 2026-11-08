@@ -230,6 +230,17 @@ const finishFactors: Record<PublicFinishLevel, number> = {
   luxury: 1.68,
 };
 
+/** Default detailed selections (must match createInitialEstimateInput). */
+export const SPEC_DEFAULTS = {
+  windowSpec: "standard-aluminium",
+  doorSpec: "standard",
+  facadeSpec: "paint-render",
+  floorFinish: "porcelain",
+  ceilingFinish: "gypsum-pop",
+  kitchenSpec: "standard",
+  bathroomSpec: "standard",
+} as const satisfies Partial<Record<keyof PublicEstimateInput, string>>;
+
 const finishGenericRates: Record<PublicFinishLevel, [number, number]> = {
   economy: [65_000, 110_000],
   standard: [110_000, 180_000],
@@ -411,8 +422,10 @@ export function calculatePublicEstimate(input: PublicEstimateInput): PublicEstim
   const loc = locationFactor(input.location);
   const rate = buildingUseRates[input.buildingUse];
   const finishFactor = finishFactors[input.finishLevel];
-  const baseLow = area * rate[0] * finishFactor * loc;
-  const baseHigh = area * rate[1] * finishFactor * loc;
+  // The overall finish level is applied per element (below), not to the whole
+  // building: it must not inflate foundations or the structural frame.
+  const baseLow = area * rate[0] * loc;
+  const baseHigh = area * rate[1] * loc;
 
   const resolvedFrame = inferFrame(input, totalFloors);
   const shares = elementShares(input, totalFloors, resolvedFrame);
@@ -442,20 +455,37 @@ export function calculatePublicEstimate(input: PublicEstimateInput): PublicEstim
   const finishSectionFactor = ((floorFinishFactor + ceilingFactor + facadeFactor) / 3) * wetRoomAdjustment;
   const joineryFactor = ((kitchenFactor + bathroomFactor) / 2) * (input.includeWardrobes ? 1.12 : 1) * (input.includeKitchenJoinery ? 1.08 : 1);
 
+  // How strongly each element follows the overall finish level. When the visitor
+  // has made explicit selections for an element (e.g. marble floors, premium
+  // kitchen), those selections price it and the overall level is not applied
+  // again, so the specification uplift is never counted twice.
+  const customised = (keys: Array<keyof typeof SPEC_DEFAULTS>) => keys.some((key) => input[key] !== SPEC_DEFAULTS[key]);
+  const finishUplift = (sensitivity: number) => 1 + (finishFactor - 1) * sensitivity;
+  const finishSensitivity = {
+    substructure: 0,
+    frame: 0,
+    walls: 0.25,
+    roof: 0.4,
+    openings: customised(["windowSpec", "doorSpec", "facadeSpec"]) ? 0 : 1,
+    finishes: customised(["floorFinish", "ceilingFinish", "facadeSpec"]) ? 0 : 1,
+    mep: 0.6,
+    joinery: customised(["kitchenSpec", "bathroomSpec"]) ? 0 : 1,
+  };
+
   const structuralLabel = resolvedFrame === "masonry" ? "Structural concrete & support" : "Structural frame";
   const structuralExplanation = resolvedFrame === "masonry"
     ? "Allowance for lintels, ring beams, local columns and other structural concrete/support. No suspended upper-floor slab is assumed for this ground-floor masonry profile."
     : `Structural ${resolvedFrame.replace("-", " ")} system, including the associated frame, reinforcement/formwork or steelwork allowance.`;
 
   const core: GuidedEstimateSection[] = [
-    section("substructure", "Foundation & ground works", baseLow, baseHigh, shares.substructure, siteFactor * foundationFactor, "Excavation, earthworks, foundations, filling, DPM/hardcore and ground-floor construction adjusted for selected site/foundation condition."),
-    section("frame", structuralLabel, baseLow, baseHigh, shares.frame, frameFactor * floorFactor, structuralExplanation),
-    section("walls", "Walls & partitions", baseLow, baseHigh, shares.walls, wallComplexity, "External walls, internal partitions, lintels and related masonry adjusted for room density."),
-    section("roof", "Roof", baseLow, baseHigh, shares.roof, roofFactor, "Roof structure, covering and rainwater goods adjusted for selected roof type and complexity."),
-    section("openings", "Doors, windows & façade", baseLow, baseHigh, shares.openings, openingFactor * facadeFactor, "Windows, doors, glazing and façade treatment adjusted for selected specification."),
-    section("finishes", "Internal & architectural finishes", baseLow, baseHigh, shares.finishes, finishSectionFactor, "Floor, wall and ceiling finishes adjusted for detailed finish selections and wet-room intensity."),
-    section("mep", "Electrical, plumbing & building services", baseLow, baseHigh, shares.mep, mepFactor * wetRoomAdjustment, "Electrical, plumbing, cooling, water, waste, power and selected life-safety/security systems, adjusted for building use and wet-room density."),
-    section("joinery", "Kitchen, sanitary & fitted joinery", baseLow, baseHigh, shares.joinery, joineryFactor, "Kitchen fittings, sanitary fittings, wardrobes and related fitted joinery allowances."),
+    section("substructure", "Foundation & ground works", baseLow, baseHigh, shares.substructure, siteFactor * foundationFactor * finishUplift(finishSensitivity.substructure), "Excavation, earthworks, foundations, filling, DPM/hardcore and ground-floor construction adjusted for selected site/foundation condition."),
+    section("frame", structuralLabel, baseLow, baseHigh, shares.frame, frameFactor * floorFactor * finishUplift(finishSensitivity.frame), structuralExplanation),
+    section("walls", "Walls & partitions", baseLow, baseHigh, shares.walls, wallComplexity * finishUplift(finishSensitivity.walls), "External walls, internal partitions, lintels and related masonry adjusted for room density."),
+    section("roof", "Roof", baseLow, baseHigh, shares.roof, roofFactor * finishUplift(finishSensitivity.roof), "Roof structure, covering and rainwater goods adjusted for selected roof type and complexity."),
+    section("openings", "Doors, windows & façade", baseLow, baseHigh, shares.openings, openingFactor * facadeFactor * finishUplift(finishSensitivity.openings), "Windows, doors, glazing and façade treatment adjusted for selected specification."),
+    section("finishes", "Internal & architectural finishes", baseLow, baseHigh, shares.finishes, finishSectionFactor * finishUplift(finishSensitivity.finishes), "Floor, wall and ceiling finishes adjusted for detailed finish selections and wet-room intensity."),
+    section("mep", "Electrical, plumbing & building services", baseLow, baseHigh, shares.mep, mepFactor * wetRoomAdjustment * finishUplift(finishSensitivity.mep), "Electrical, plumbing, cooling, water, waste, power and selected life-safety/security systems, adjusted for building use and wet-room density."),
+    section("joinery", "Kitchen, sanitary & fitted joinery", baseLow, baseHigh, shares.joinery, joineryFactor * finishUplift(finishSensitivity.joinery), "Kitchen fittings, sanitary fittings, wardrobes and related fitted joinery allowances."),
   ];
 
   const coreLow = core.reduce((sum, item) => sum + item.low, 0);
