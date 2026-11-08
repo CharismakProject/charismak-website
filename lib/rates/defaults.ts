@@ -4136,29 +4136,78 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     },
     "slug": "fibre-cement-external-ceiling",
     "code": "RB-CL-009",
-    "title": "Fibre-cement / asbestos-type external ceiling — supply and fix",
-    "shortTitle": "External fibre-cement ceiling",
+    "title": "Fibre-cement (cement board) ceiling on metal frame — supply and fix",
+    "shortTitle": "Cement board ceiling",
     "section": "Ceilings",
     "unit": "m²",
-    "specification": "Supply and fix external ceiling boards to prepared framing including normal cutting, fixings and installation.",
-    "methodologyNote": "2-bedroom guide normalized by provisional 15% O/P removal; board type/specification must be updated before verification.",
-    "sourceNote": "2-bedroom Abuja BOQ guide ₦7,500/m².",
+    "specification": "Supply and fix 6 mm fibre-cement ceiling boards on suspended galvanised metal frame, including hangers, screws, joint filling, normal cutting and installation. Suitable for external soffits and wet areas.",
+    "methodologyNote": "Frame quantities follow the flat gypsum ceiling build-up (main and secondary profiles, hangers). Board, screws and joint filler per 1 m² with cutting waste. Total calibrated to the Charismak Abuja market range of ₦11,000–₦15,000/m² for cement board ceilings (Nov 2026).",
+    "sourceNote": "Charismak Abuja market range for POP and cement board ceilings, ₦11,000–₦15,000/m², Nov 2026. Board sheet price is a working figure back-solved to that range — confirm with a supplier quote.",
     "lines": [
       {
         "id": "fceiling-mat",
-        "label": "External ceiling board + fixings",
+        "label": "6 mm fibre-cement board (1.2×2.4 m sheet)",
         "category": "material",
+        "quantity": 0.375,
+        "unit": "sheet",
+        "unitRate": 8000,
+        "note": "Face area with about 8% cutting waste. Working sheet price — replace with your supplier quote."
+      },
+      {
+        "id": "fceiling-main",
+        "label": "Main ceiling channel/profile",
+        "category": "material",
+        "quantity": 1.134,
+        "unit": "linear m",
+        "unitRate": 667
+      },
+      {
+        "id": "fceiling-furring",
+        "label": "Furring / secondary channel",
+        "category": "material",
+        "quantity": 2.376,
+        "unit": "linear m",
+        "unitRate": 667
+      },
+      {
+        "id": "fceiling-hanger",
+        "label": "Hanger rods/wires and fixing points",
+        "category": "material",
+        "quantity": 1.2,
+        "unit": "set",
+        "unitRate": 250
+      },
+      {
+        "id": "fceiling-screws",
+        "label": "Board screws",
+        "category": "consumable",
+        "quantity": 27,
+        "unit": "pcs",
+        "unitRate": 25
+      },
+      {
+        "id": "fceiling-joint",
+        "label": "Joint filler / flexible sealant",
+        "category": "consumable",
         "quantity": 1,
         "unit": "m²",
-        "unitRate": 5000
+        "unitRate": 300
       },
       {
         "id": "fceiling-lab",
-        "label": "Installation labour",
+        "label": "Ceiling installation labour",
         "category": "labour",
         "quantity": 1,
         "unit": "m²",
-        "unitRate": 1522
+        "unitRate": 4500
+      },
+      {
+        "id": "fceiling-log",
+        "label": "Handling / local transport allocation",
+        "category": "logistics",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 1000
       }
     ],
     "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
