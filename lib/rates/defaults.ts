@@ -866,8 +866,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "labour",
         "quantity": 1,
         "unit": "m²",
-        "unitRate": 1450,
-        "note": "Mason ₦15,000 + labourer ₦8,000 = ₦23,000/day ÷ about 16 m²/day (6-inch blocks lay faster) ≈ ₦1,450/m². Edit if your gang output differs. Charismak Abuja labour rates, Nov 2026."
+        "unitRate": 1650,
+        "note": "Mason ₦15,000 + labourer ₦8,000 = ₦23,000/day ÷ about 14 m²/day (≈140 blocks/day, same output as 9-inch) ≈ ₦1,650/m². Edit if your gang output differs. Charismak Abuja labour rates, Nov 2026."
       }
     ],
     "allowances": {
