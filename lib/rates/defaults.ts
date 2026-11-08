@@ -538,8 +538,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "labour",
         "quantity": 0.125,
         "unit": "gang-day",
-        "unitRate": 63000,
-        "note": "1 concrete mason @ ₦15,000/day + 6 labourers @ ₦8,000/day = ₦63,000/gang-day; output basis remains editable."
+        "unitRate": 75000,
+        "note": "1 concrete mason @ ₦15,000/day + 6 labourers @ ₦10,000/day (concrete day rate) = ₦75,000 per gang-day; about 8 m³ placed per day. Charismak Abuja labour rates, Nov 2026."
       },
       {
         "id": "c15-plant",
@@ -608,8 +608,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "labour",
         "quantity": 0.125,
         "unit": "gang-day",
-        "unitRate": 63000,
-        "note": "1 concrete mason @ ₦15,000/day + 6 labourers @ ₦8,000/day = ₦63,000/gang-day; output basis remains editable."
+        "unitRate": 75000,
+        "note": "1 concrete mason @ ₦15,000/day + 6 labourers @ ₦10,000/day (concrete day rate) = ₦75,000 per gang-day; about 8 m³ placed per day. Charismak Abuja labour rates, Nov 2026."
       },
       {
         "id": "c20-plant",
@@ -678,8 +678,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "labour",
         "quantity": 0.125,
         "unit": "gang-day",
-        "unitRate": 63000,
-        "note": "1 concrete mason @ ₦15,000/day + 6 labourers @ ₦8,000/day = ₦63,000/gang-day; output basis remains editable."
+        "unitRate": 75000,
+        "note": "1 concrete mason @ ₦15,000/day + 6 labourers @ ₦10,000/day (concrete day rate) = ₦75,000 per gang-day; about 8 m³ placed per day. Charismak Abuja labour rates, Nov 2026."
       },
       {
         "id": "c25-plant",
@@ -740,7 +740,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "labour",
         "quantity": 1,
         "unit": "t",
-        "unitRate": 85000
+        "unitRate": 100000,
+        "note": "Iron bender piecework ₦100,000 per tonne cut, bent and fixed (alternative: ₦15,000/day). Charismak Abuja labour rates, Nov 2026."
       }
     ],
     "allowances": {
@@ -802,7 +803,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "labour",
         "quantity": 1,
         "unit": "m²",
-        "unitRate": 1000
+        "unitRate": 1650,
+        "note": "Mason ₦15,000 + labourer ₦8,000 = ₦23,000/day ÷ about 14 m²/day (≈140 nr 9-inch blocks) ≈ ₦1,650/m². Edit if your gang output differs. Charismak Abuja labour rates, Nov 2026."
       }
     ],
     "allowances": {
@@ -864,7 +866,8 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "labour",
         "quantity": 1,
         "unit": "m²",
-        "unitRate": 1000
+        "unitRate": 1450,
+        "note": "Mason ₦15,000 + labourer ₦8,000 = ₦23,000/day ÷ about 16 m²/day (6-inch blocks lay faster) ≈ ₦1,450/m². Edit if your gang output differs. Charismak Abuja labour rates, Nov 2026."
       }
     ],
     "allowances": {
