@@ -1,4 +1,5 @@
 import { calculatePublicEstimate, type PublicEstimateInput } from "./guided-estimate";
+import { estimateLocationFactor } from "@/lib/rates/locations";
 
 export type EstimateCategory =
   | "new-building"
@@ -105,17 +106,8 @@ const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(mi
 const n = (v: number) => (Number.isFinite(v) && v > 0 ? v : 0);
 const pct = (v: number) => clamp(n(v), 0, 100) / 100;
 
-function locationFactor(location: string) {
-  const value = location.toLowerCase();
-  if (value.includes("lekki") || value.includes("ikoyi") || value.includes("victoria island")) return 1.22;
-  if (value.includes("lagos")) return 1.14;
-  if (value.includes("abuja") || value.includes("fct")) return 1.08;
-  if (value.includes("port harcourt") || value.includes("rivers")) return 1.1;
-  if (value.includes("kano") || value.includes("kaduna")) return 0.96;
-  if (value.includes("ibadan") || value.includes("oyo")) return 0.94;
-  if (value.includes("akure") || value.includes("ondo") || value.includes("ekiti")) return 0.92;
-  return 1;
-}
+// Location factor comes from the shared state table (Abuja basis = 1.08 of national).
+const locationFactor = (location: string) => estimateLocationFactor(location);
 
 const specFactor: Record<SpecLevel, number> = {
   economy: 0.84,

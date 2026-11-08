@@ -54,7 +54,8 @@ type Group = {
   lines: RateCostLine[];
 };
 
-export default function RateCalculator({ item }: { item: RateBankItem }) {
+export default function RateCalculator({ item, storageKey }: { item: RateBankItem; storageKey?: string }) {
+  const saveKey = storageKey ?? item.slug;
   const [editing, setEditing] = useState(false);
   const [workQuantity, setWorkQuantity] = useState(1);
   const [lines, setLines] = useState<RateCostLine[]>(() =>
@@ -67,7 +68,7 @@ export default function RateCalculator({ item }: { item: RateBankItem }) {
 
   // Restore this visitor's saved copy (kept only on their device) after mount.
   useEffect(() => {
-    const saved = loadSavedRate(item.slug);
+    const saved = loadSavedRate(saveKey);
     if (!saved) return;
     const restored = applySavedRate(item, saved);
     setLines(restored.lines);
@@ -79,7 +80,7 @@ export default function RateCalculator({ item }: { item: RateBankItem }) {
         ? "Your saved copy was loaded. Charismak has changed this build-up since you saved it: new lines use the published values, removed lines were dropped."
         : "Your saved copy was loaded.",
     );
-  }, [item]);
+  }, [item, saveKey]);
 
   const publicCalculation = useMemo(
     () => calculateRate(item.lines, item.allowances),
@@ -145,7 +146,7 @@ export default function RateCalculator({ item }: { item: RateBankItem }) {
     JSON.stringify(allowances) !== JSON.stringify(item.allowances);
 
   const saveCopy = () => {
-    const saved = saveRate(item.slug, {
+    const saved = saveRate(saveKey, {
       workQuantity: safeWorkQuantity,
       allowances,
       lines: lines.map(({ id, quantity, unitRate }) => ({ id, quantity, unitRate })),
@@ -160,7 +161,7 @@ export default function RateCalculator({ item }: { item: RateBankItem }) {
 
   const deleteCopy = () => {
     if (!window.confirm("Delete your saved copy of this rate from this device?")) return;
-    clearSavedRate(item.slug);
+    clearSavedRate(saveKey);
     setSavedAt(null);
     setNotice("Saved copy deleted. Your current edits stay on screen until you reset or leave the page.");
   };

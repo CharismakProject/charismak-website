@@ -11,7 +11,7 @@ export const metadata = createSeoMetadata({
 
 export default function RatesPage() {
   return (
-    <main className="min-h-screen bg-[#F5F7FA] pt-20">
+    <main className="min-h-screen bg-[#04121F] pt-20">
       <div className="mx-auto max-w-7xl px-4 py-10 md:px-8 md:py-14">
         <RateBankBrowser />
       </div>
