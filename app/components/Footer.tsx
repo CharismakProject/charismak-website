@@ -23,7 +23,7 @@ export default async function Footer() {
   const whatsappLink = `https://wa.me/${whatsappDigits}?text=Hello%20Charismak%20Project%2C%20I%20would%20like%20to%20discuss%20a%20construction%20project.`;
 
   return (
-    <footer className="cx-grid-bg border-t border-white/10 bg-[#02080F] text-white">
+    <footer className="cx-grid-bg border-t border-white/10 bg-[var(--cx-void)] text-white">
       <section className="border-b border-white/10 px-5 py-16 md:px-8 lg:py-20">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1fr_auto] lg:items-end">
           <div>
@@ -57,12 +57,12 @@ export default async function Footer() {
         <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1.3fr_0.8fr_0.8fr_1fr]">
           <div>
             <h3 className="text-xl font-black tracking-[0.08em]">CHARISMAK</h3>
-            <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#D9B26A]">Project Nigeria Limited</p>
+            <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--cx-gold)]">Project Nigeria Limited</p>
             <p className="mt-6 max-w-md text-sm leading-7 text-white/55">{about}</p>
             <p className="mt-5 text-xs font-semibold uppercase tracking-[0.14em] text-white/35">{company.rcNumber}</p>
           </div>
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-[0.22em] text-[#D9B26A]">Company</h4>
+            <h4 className="text-xs font-bold uppercase tracking-[0.22em] text-[var(--cx-gold)]">Company</h4>
             <div className="mt-6 flex flex-col gap-3 text-sm text-white/58">
               <Link className="hover:text-white" href="/about">About</Link>
               <Link className="hover:text-white" href="/services">Services</Link>
@@ -72,7 +72,7 @@ export default async function Footer() {
             </div>
           </div>
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-[0.22em] text-[#D9B26A]">Digital Tools</h4>
+            <h4 className="text-xs font-bold uppercase tracking-[0.22em] text-[var(--cx-gold)]">Digital Tools</h4>
             <div className="mt-6 flex flex-col gap-3 text-sm text-white/58">
               <Link className="hover:text-white" href="/estimator">Estimator</Link>
               <Link className="hover:text-white" href="/prices">Prices & Suppliers</Link>
@@ -82,18 +82,18 @@ export default async function Footer() {
             </div>
           </div>
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-[0.22em] text-[#D9B26A]">Contact</h4>
+            <h4 className="text-xs font-bold uppercase tracking-[0.22em] text-[var(--cx-gold)]">Contact</h4>
             <div className="mt-6 space-y-5 text-sm text-white/58">
               <Link href={`mailto:${email}`} className="flex gap-3 hover:text-white">
-                <Mail className="h-4 w-4 shrink-0 text-[#D9B26A]" />
+                <Mail className="h-4 w-4 shrink-0 text-[var(--cx-gold)]" />
                 <span>{email}</span>
               </Link>
               <p className="flex gap-3">
-                <Phone className="h-4 w-4 shrink-0 text-[#D9B26A]" />
+                <Phone className="h-4 w-4 shrink-0 text-[var(--cx-gold)]" />
                 <span>{phone}</span>
               </p>
               <p className="flex gap-3 leading-6">
-                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#D9B26A]" />
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[var(--cx-gold)]" />
                 <span>{address}</span>
               </p>
             </div>

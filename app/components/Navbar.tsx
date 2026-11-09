@@ -43,7 +43,7 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="fixed left-0 top-0 z-[120] w-full border-b border-white/10 bg-[#02080F]/85 backdrop-blur-xl backdrop-saturate-150">
+      <header className="fixed left-0 top-0 z-[120] w-full border-b border-white/10 bg-[var(--cx-void)]/85 backdrop-blur-xl backdrop-saturate-150">
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 md:px-8">
           <Link href="/" className="flex items-center gap-3">
             <div className="relative h-11 w-11 overflow-hidden rounded-md bg-white p-1">
@@ -60,7 +60,7 @@ export default function Navbar() {
               <h2 className="text-xl font-black tracking-[0.12em] text-white md:text-2xl">
                 CHARISMAK
               </h2>
-              <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.24em] text-[#D9B26A]">
+              <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.24em] text-[var(--cx-gold)]">
                 Project Nigeria Limited
               </p>
             </div>
@@ -89,7 +89,7 @@ export default function Navbar() {
               </button>
               {toolsOpen ? (
                 <div className="absolute left-1/2 top-full w-72 -translate-x-1/2 pt-3">
-                  <ul className="border border-white/10 bg-[#040F1C]/95 p-2 shadow-[0_24px_60px_rgba(0,0,0,0.5)] backdrop-blur-xl">
+                  <ul className="border border-white/10 bg-[var(--cx-deep)]/95 p-2 shadow-[0_24px_60px_rgba(0,0,0,0.5)] backdrop-blur-xl">
                     {toolItems.map((item) => (
                       <li key={item.href}>
                         <Link href={item.href} onClick={() => setToolsOpen(false)} className="block px-3 py-2.5 transition hover:bg-white/5 focus:bg-white/5 focus:outline-none">
@@ -110,7 +110,7 @@ export default function Navbar() {
           <div className="hidden items-center gap-3 lg:flex">
             <Link
               href="/quote"
-              className="inline-flex items-center gap-2 bg-[#D9B26A] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.16em] text-[#02080F] transition hover:bg-[#F2C879]"
+              className="inline-flex items-center gap-2 bg-[var(--cx-gold)] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--cx-void)] transition hover:bg-[var(--cx-gold-bright)]"
             >
               Get a Quote
             </Link>
@@ -118,7 +118,7 @@ export default function Navbar() {
               href={whatsappLink}
               target="_blank"
               aria-label="Chat with Charismak on WhatsApp"
-              className="grid h-11 w-11 place-items-center border border-white/20 text-white transition hover:border-[#D9B26A] hover:bg-[#D9B26A] hover:text-[#02080F]"
+              className="grid h-11 w-11 place-items-center border border-white/20 text-white transition hover:border-[var(--cx-gold)] hover:bg-[var(--cx-gold)] hover:text-[var(--cx-void)]"
             >
               <Phone className="h-4 w-4" />
             </Link>
@@ -136,7 +136,7 @@ export default function Navbar() {
       </header>
 
       {mobileOpen && (
-        <div className="fixed inset-0 z-[200] overflow-y-auto bg-[#02080F] text-white xl:hidden">
+        <div className="fixed inset-0 z-[200] overflow-y-auto bg-[var(--cx-void)] text-white xl:hidden">
           <div className="flex items-center justify-between border-b border-white/10 px-5 py-5">
             <Link href="/" onClick={() => setMobileOpen(false)} className="flex items-center gap-3">
               <div className="relative h-10 w-10 bg-white">

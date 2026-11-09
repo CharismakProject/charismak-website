@@ -27,6 +27,8 @@ export async function POST(request: NextRequest) {
 
   revalidateTag("website-projects", { expire: 0 });
   revalidateTag("website-project-updates", { expire: 0 });
+  revalidateTag("website-content", { expire: 0 });
+  revalidatePath("/", "layout");
   revalidatePath("/");
   revalidatePath("/projects");
   if (slug) revalidatePath(`/projects/${slug}`);
