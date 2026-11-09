@@ -56,7 +56,7 @@ export default function QuotePage() {
   }
 
   return (
-    <main className="overflow-hidden bg-white pt-20 text-[#151B22]">
+    <main className="cx-skin overflow-hidden bg-white pt-20 text-[#151B22]">
       <section className="relative min-h-[590px] overflow-hidden bg-[#071E33] text-white">
         <Image
           src="/Images/Projects/fabrication/cover.jpg"

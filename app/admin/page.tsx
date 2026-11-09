@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 export default function AdminPage() {
   return (
-    <main className={`${styles.adminPage} min-h-screen bg-[#F5F7FA] pt-20`}>
+    <main className={`cx-skin ${styles.adminPage} min-h-screen bg-[#F5F7FA] pt-20`}>
       <AdminNav />
       <AdminEmailAccess />
       <AdminPrimaryActions />

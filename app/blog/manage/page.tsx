@@ -6,5 +6,5 @@ export const metadata = {
 };
 
 export default function BlogManagePage() {
-  return <BlogManager />;
+  return <div className="cx-skin"><BlogManager /></div>;
 }

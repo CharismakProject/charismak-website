@@ -25,7 +25,7 @@ const formattedDate = (value: string) => new Date(value).toLocaleDateString("en-
 function StoryImage({ article, className = "h-full w-full object-cover" }: { article: BlogArticle; className?: string }) {
   return article.imageUrl
     ? <img src={article.imageUrl} alt={article.imageAlt || article.title} className={className} />
-    : <div className="grid h-full min-h-44 place-items-center bg-[linear-gradient(135deg,#E8EEF4,#F8FAFC)]"><ImageIcon className="h-8 w-8 text-[#9AA8B6]" /></div>;
+    : <div className="cx-grid-bg grid h-full min-h-44 place-items-center bg-[var(--cx-panel)]"><ImageIcon className="h-8 w-8 text-white/25" /></div>;
 }
 
 export default async function BlogPage() {
@@ -40,7 +40,7 @@ export default async function BlogPage() {
   const topics = [...new Set(sorted.map((article) => article.category))];
 
   return (
-    <main className="min-h-screen bg-[#F7F8FA] pt-20">
+    <main className="cx-skin min-h-screen bg-[#F7F8FA] pt-20">
       <section className="border-b border-white/10 bg-[#071E33] text-white">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-6 gap-y-2 px-5 py-3 text-[10px] font-bold uppercase tracking-[0.14em] text-white/55 md:px-8">
           <span className="text-[#F2B544]">Charismak News & Learning</span><Link href="#latest" className="hover:text-white">Latest</Link>{newsroom.length ? <Link href="#newsroom" className="hover:text-white">Newsroom</Link> : null}<Link href="#learning" className="hover:text-white">Learning Centre</Link><Link href="/prices" className="hover:text-white">Market Prices</Link><Link href="/estimator" className="hover:text-white">Estimator</Link><span className="ml-auto hidden md:block">Nigeria construction intelligence</span>

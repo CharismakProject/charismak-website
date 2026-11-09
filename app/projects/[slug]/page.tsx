@@ -45,7 +45,7 @@ export default async function ProjectDetailsPage({ params }: Props) {
   const heroImage = project.heroImages[0] || project.cover || project.images[0] || "/Images/Projects/coco/hero.jpg";
 
   return (
-    <main className="overflow-hidden bg-white pt-20">
+    <main className="cx-skin overflow-hidden bg-white pt-20">
       <JsonLd
         data={breadcrumbJsonLd([
           { name: "Home", path: "/" },

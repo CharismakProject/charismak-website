@@ -16,9 +16,9 @@ import { loadPublishedServices } from "@/lib/content/website-cms";
 import { createSeoMetadata } from "@/lib/seo";
 
 export const metadata = createSeoMetadata({
-  title: "Construction Services in Abuja, Nigeria",
+  title: "Construction Services in Abuja & Across Nigeria",
   description:
-    "Building construction, civil engineering, renovation, steel fabrication, project management, facility maintenance and architectural finishing services in Abuja and across Nigeria.",
+    "Building construction, civil engineering, renovation, steel fabrication, project management, facility maintenance and finishing services in Abuja and Nigeria.",
   path: "/services",
   keywords: ["construction services Abuja", "building contractor Abuja", "renovation contractor Abuja", "steel fabrication Abuja"],
 });
@@ -61,14 +61,14 @@ export default async function ServicesPage() {
   const services = await loadPublishedServices();
 
   return (
-    <main className="overflow-hidden bg-white pt-20">
+    <main className="cx-skin overflow-hidden bg-white pt-20">
       <section className="relative overflow-hidden bg-[#071E33] px-5 py-24 text-white md:px-8 lg:py-32">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_82%_20%,rgba(200,164,93,0.15),transparent_30rem)]" />
         <div className="relative mx-auto max-w-7xl">
-          <p className="mb-5 text-xs font-bold uppercase tracking-[0.32em] text-[#F2B544]">What We Do</p>
+          <p className="mb-5 text-xs font-bold uppercase tracking-[0.32em] text-[#F2B544]">Construction services · Abuja & Nigeria</p>
           <h1 className="max-w-5xl text-5xl font-semibold leading-[1.02] tracking-[-0.04em] sm:text-6xl lg:text-7xl">
             Construction services built around
-            <span className="mt-2 block text-[#E8C77F]">the needs of the project.</span>
+            <span className="mt-2 block text-[#E8C77F]">the needs of your project.</span>
           </h1>
           <p className="mt-7 max-w-3xl text-base leading-8 text-white/72 md:text-lg">
             New construction, renovation, project management, fabrication and technical support — handled as part of one coordinated project team where required.

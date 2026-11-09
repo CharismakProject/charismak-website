@@ -35,7 +35,7 @@ import {
 export const metadata = createSeoMetadata({
   title: "Construction Company in Abuja, Nigeria",
   description:
-    "Charismak Project Nigeria Limited is an Abuja construction company providing building construction, civil engineering, renovation, steel fabrication, project management, cost planning and finishing services across Nigeria.",
+    "Abuja construction company for building construction, renovation, civil engineering, steel fabrication, project management and cost planning across Nigeria.",
   path: "/",
   keywords: [
     "construction company Abuja",
@@ -190,7 +190,7 @@ export default async function HomePage() {
         <div className="relative mx-auto flex min-h-[calc(100svh-5rem)] max-w-7xl flex-col justify-between px-5 pb-10 pt-20 md:px-8 md:pt-28">
           <div className="grid items-center gap-12 lg:grid-cols-[1.15fr_0.5fr]">
             <div className="max-w-4xl">
-              <Eyebrow>Design · Cost · Build — Abuja, Nigeria</Eyebrow>
+              <Eyebrow>Construction company · Abuja, Nigeria</Eyebrow>
               <h1 className="cx-title text-5xl sm:text-7xl xl:text-[6.5rem]">
                 Priced right.
                 <span className="block bg-gradient-to-r from-[#F2C879] to-[#D9B26A] bg-clip-text text-transparent">Built to last.</span>

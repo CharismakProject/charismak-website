@@ -11,9 +11,9 @@ import {
 } from "@/lib/content/website-cms";
 
 export const metadata = createSeoMetadata({
-  title: "About Charismak – Abuja Construction Company",
+  title: "About Us – Construction Company in Abuja",
   description:
-    "Learn about Charismak Project Nigeria Limited, an Abuja-based construction company delivering building construction, civil engineering, renovation, project management, cost control and specialist works.",
+    "Charismak Project Nigeria Limited (RC 1982890) is an Abuja construction company combining building, renovation, engineering, cost and project management.",
   path: "/about",
   keywords: ["Abuja construction company", "construction company Nigeria", "quantity surveying Abuja"],
 });
@@ -68,7 +68,7 @@ export default async function AboutPage() {
     "/Images/Projects/Flawless/cover.jpg";
 
   return (
-    <main className="overflow-hidden bg-white pt-20">
+    <main className="cx-skin overflow-hidden bg-white pt-20">
       <section className="relative min-h-[660px] overflow-hidden bg-[#071E33] text-white">
         <Image
           src={heroImage}
@@ -82,7 +82,7 @@ export default async function AboutPage() {
         <div className="absolute inset-0 bg-gradient-to-t from-[#071E33]/65 via-transparent to-transparent" />
         <div className="relative mx-auto flex min-h-[660px] max-w-7xl items-center px-5 py-20 md:px-8">
           <div className="max-w-4xl">
-            <p className="mb-5 text-xs font-bold uppercase tracking-[0.32em] text-[#F2B544]">About Charismak</p>
+            <p className="mb-5 text-xs font-bold uppercase tracking-[0.32em] text-[#F2B544]">About Charismak · Abuja, Nigeria</p>
             <h1 className="max-w-5xl text-5xl font-semibold leading-[1.02] tracking-[-0.04em] sm:text-6xl lg:text-7xl">
               Construction experience.
               <span className="mt-2 block text-[#E8C77F]">Practical project delivery.</span>

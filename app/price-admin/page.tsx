@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
 export default function MarketPriceAdminPage() {
   return (
-    <main className="min-h-screen bg-[#F5F7FA] pt-20">
+    <main className="cx-skin min-h-screen bg-[#F5F7FA] pt-20">
       <div className="mx-auto max-w-7xl px-4 py-8 md:px-8 md:py-12">
         <section className="mb-5 flex flex-col gap-4 rounded-2xl border border-[#DCE4EC] bg-white p-4 sm:flex-row sm:items-center sm:justify-between md:p-5">
           <div>
