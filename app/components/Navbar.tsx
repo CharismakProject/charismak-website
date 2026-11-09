@@ -43,10 +43,10 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="fixed left-0 top-0 z-[120] w-full border-b border-[#0D3B66]/10 bg-white/96 shadow-[0_4px_24px_rgba(7,30,51,0.05)] backdrop-blur-xl">
+      <header className="fixed left-0 top-0 z-[120] w-full border-b border-white/10 bg-[#02080F]/85 backdrop-blur-xl backdrop-saturate-150">
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 md:px-8">
           <Link href="/" className="flex items-center gap-3">
-            <div className="relative h-11 w-11 overflow-hidden">
+            <div className="relative h-11 w-11 overflow-hidden rounded-md bg-white p-1">
               <Image
                 src={company.logo}
                 alt="Charismak Logo"
@@ -57,10 +57,10 @@ export default function Navbar() {
               />
             </div>
             <div className="leading-none">
-              <h2 className="text-xl font-black tracking-[0.09em] text-[#0D3B66] md:text-2xl">
+              <h2 className="text-xl font-black tracking-[0.12em] text-white md:text-2xl">
                 CHARISMAK
               </h2>
-              <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.2em] text-[#3A4653]/70">
+              <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.24em] text-[#D9B26A]">
                 Project Nigeria Limited
               </p>
             </div>
@@ -71,7 +71,7 @@ export default function Navbar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-[13px] font-semibold text-[#151B22] transition hover:text-[#0D3B66]"
+                className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/75 transition hover:text-white"
               >
                 {item.label}
               </Link>
@@ -83,18 +83,18 @@ export default function Navbar() {
                 aria-haspopup="true"
                 onClick={(event) => setToolsOpen((open) => (event.detail === 0 ? !open : true))}
                 onMouseEnter={() => setToolsOpen(true)}
-                className="inline-flex items-center gap-1 text-[13px] font-semibold text-[#151B22] transition hover:text-[#0D3B66]"
+                className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/75 transition hover:text-white"
               >
                 Construction Tools <ChevronDown className={`h-3.5 w-3.5 transition ${toolsOpen ? "rotate-180" : ""}`} />
               </button>
               {toolsOpen ? (
                 <div className="absolute left-1/2 top-full w-72 -translate-x-1/2 pt-3">
-                  <ul className="border border-[#0D3B66]/10 bg-white p-2 shadow-[0_18px_40px_rgba(7,30,51,0.14)]">
+                  <ul className="border border-white/10 bg-[#040F1C]/95 p-2 shadow-[0_24px_60px_rgba(0,0,0,0.5)] backdrop-blur-xl">
                     {toolItems.map((item) => (
                       <li key={item.href}>
-                        <Link href={item.href} onClick={() => setToolsOpen(false)} className="block px-3 py-2.5 transition hover:bg-[#F5F7FA] focus:bg-[#F5F7FA] focus:outline-none">
-                          <span className="block text-sm font-semibold text-[#071E33]">{item.label}</span>
-                          <span className="block text-xs text-[#617286]">{item.description}</span>
+                        <Link href={item.href} onClick={() => setToolsOpen(false)} className="block px-3 py-2.5 transition hover:bg-white/5 focus:bg-white/5 focus:outline-none">
+                          <span className="block text-sm font-semibold text-white">{item.label}</span>
+                          <span className="block text-xs text-white/50">{item.description}</span>
                         </Link>
                       </li>
                     ))}
@@ -102,7 +102,7 @@ export default function Navbar() {
                 </div>
               ) : null}
             </div>
-            <Link href="/contact" className="text-[13px] font-semibold text-[#151B22] transition hover:text-[#0D3B66]">
+            <Link href="/contact" className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/75 transition hover:text-white">
               Contact
             </Link>
           </nav>
@@ -110,7 +110,7 @@ export default function Navbar() {
           <div className="hidden items-center gap-3 lg:flex">
             <Link
               href="/quote"
-              className="inline-flex items-center gap-2 bg-[#071E33] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#0D3B66]"
+              className="inline-flex items-center gap-2 bg-[#D9B26A] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.16em] text-[#02080F] transition hover:bg-[#F2C879]"
             >
               Get a Quote
             </Link>
@@ -118,7 +118,7 @@ export default function Navbar() {
               href={whatsappLink}
               target="_blank"
               aria-label="Chat with Charismak on WhatsApp"
-              className="grid h-11 w-11 place-items-center border border-[#0D3B66]/15 text-[#0D3B66] transition hover:border-[#C8A45D] hover:bg-[#C8A45D] hover:text-[#071E33]"
+              className="grid h-11 w-11 place-items-center border border-white/20 text-white transition hover:border-[#D9B26A] hover:bg-[#D9B26A] hover:text-[#02080F]"
             >
               <Phone className="h-4 w-4" />
             </Link>
@@ -128,7 +128,7 @@ export default function Navbar() {
             type="button"
             onClick={() => setMobileOpen(true)}
             aria-label="Open navigation"
-            className="grid h-11 w-11 place-items-center border border-[#0D3B66]/15 text-[#0D3B66] xl:hidden"
+            className="grid h-11 w-11 place-items-center border border-white/20 text-white xl:hidden"
           >
             <Menu className="h-6 w-6" />
           </button>
@@ -136,7 +136,7 @@ export default function Navbar() {
       </header>
 
       {mobileOpen && (
-        <div className="fixed inset-0 z-[200] overflow-y-auto bg-[#071E33] text-white xl:hidden">
+        <div className="fixed inset-0 z-[200] overflow-y-auto bg-[#02080F] text-white xl:hidden">
           <div className="flex items-center justify-between border-b border-white/10 px-5 py-5">
             <Link href="/" onClick={() => setMobileOpen(false)} className="flex items-center gap-3">
               <div className="relative h-10 w-10 bg-white">

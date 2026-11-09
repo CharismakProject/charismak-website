@@ -101,3 +101,55 @@ main article[class*="border-[#0D3B66]/10"]:hover { border-color: rgba(13, 59, 10
   [data-estimator-app] .fence-workflow input:not([type="checkbox"]):not([type="radio"]), [data-estimator-app] .fence-workflow select, [data-estimator-app] .fence-workflow textarea { padding-left: 0.7rem !important; padding-right: 0.7rem !important; }
   [data-estimator-app] .estimator-mobile-nav { gap: 0; padding-left: 0.25rem; padding-right: 0.25rem; }
 }
+
+/* ===== Charismak "CX" design system: dark, technical, premium (rolled out page by page) ===== */
+:root {
+  --cx-void: #02080F;      /* deepest background */
+  --cx-deep: #040F1C;      /* section background */
+  --cx-panel: #071A2E;     /* raised panel */
+  --cx-line: rgba(255, 255, 255, 0.09);
+  --cx-line-strong: rgba(255, 255, 255, 0.18);
+  --cx-text: #EAF0F6;
+  --cx-muted: rgba(234, 240, 246, 0.62);
+  --cx-gold: #D9B26A;
+  --cx-gold-bright: #F2C879;
+}
+.cx-page { background: var(--cx-void); color: var(--cx-text); }
+.cx-page ::selection { background: var(--cx-gold); color: #02080F; }
+.cx-section { position: relative; padding: 6rem 1.25rem; }
+@media (min-width: 768px) { .cx-section { padding: 8rem 2rem; } }
+.cx-alt { background: var(--cx-deep); }
+/* Fine engineering grid with a soft glow – the signature texture. */
+.cx-grid-bg {
+  background-image:
+    radial-gradient(ellipse 60% 50% at 80% 0%, rgba(217, 178, 106, 0.08), transparent 70%),
+    radial-gradient(ellipse 50% 60% at 0% 100%, rgba(13, 59, 102, 0.35), transparent 70%),
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: auto, auto, 56px 56px, 56px 56px;
+}
+.cx-eyebrow { font-family: var(--font-geist-mono), ui-monospace, monospace; font-size: 11px; font-weight: 600; letter-spacing: 0.32em; text-transform: uppercase; color: var(--cx-gold); }
+.cx-eyebrow::before { content: ""; display: inline-block; width: 28px; height: 1px; background: currentColor; vertical-align: middle; margin-right: 12px; opacity: .8; }
+.cx-title { font-weight: 600; letter-spacing: -0.045em; line-height: 1.02; color: #fff; }
+.cx-lead { color: var(--cx-muted); line-height: 1.85; }
+.cx-mono { font-family: var(--font-geist-mono), ui-monospace, monospace; }
+.cx-card { background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015)); border: 1px solid var(--cx-line); backdrop-filter: blur(14px); transition: border-color .3s ease, transform .3s ease, background .3s ease; }
+.cx-card:hover { border-color: rgba(217, 178, 106, 0.45); }
+.cx-btn { display: inline-flex; align-items: center; gap: .6rem; padding: 1rem 1.6rem; font-size: 12px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+.cx-btn-primary { background: var(--cx-gold); color: #02080F; }
+.cx-btn-primary:hover { background: var(--cx-gold-bright); box-shadow: 0 0 40px rgba(217, 178, 106, 0.35); }
+.cx-btn-ghost { border: 1px solid var(--cx-line-strong); color: #fff; background: rgba(255,255,255,0.03); }
+.cx-btn-ghost:hover { border-color: #fff; background: #fff; color: #02080F; }
+.cx-link { display: inline-flex; align-items: center; gap: .5rem; font-size: 12px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: #fff; }
+.cx-link:hover { color: var(--cx-gold-bright); }
+.cx-hairline { height: 1px; background: linear-gradient(90deg, transparent, var(--cx-line-strong), transparent); }
+/* Gentle fade-up as sections scroll into view (modern browsers; others simply show the content). */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .cx-reveal { animation: cx-rise linear both; animation-timeline: view(); animation-range: entry 0% cover 28%; }
+  }
+}
+@keyframes cx-rise { from { opacity: 0; transform: translateY(36px); } to { opacity: 1; transform: none; } }
+@keyframes cx-scroll-cue { 0%, 100% { transform: translateY(0); opacity: .4; } 50% { transform: translateY(8px); opacity: 1; } }
+.cx-scroll-cue { animation: cx-scroll-cue 2.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .cx-scroll-cue { animation: none; } }
