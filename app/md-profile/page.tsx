@@ -89,7 +89,7 @@ const professionalProjects = projects
 
 export default function MDProfilePage() {
   return (
-    <main className="executive-profile min-h-screen bg-[#EEF2F5] px-4 py-8 text-[#17212B] sm:px-6 lg:py-12">
+    <main className="cx-skin executive-profile min-h-screen bg-[#EEF2F5] px-4 py-8 text-[#17212B] sm:px-6 lg:py-12">
       <style>{`
         @media print {
           @page { size: A4; margin: 10mm; }
@@ -107,6 +107,10 @@ export default function MDProfilePage() {
           .career-entry { break-inside: avoid; page-break-inside: avoid; }
           .project-row { break-inside: avoid; page-break-inside: avoid; }
           a { color: inherit !important; text-decoration: none !important; }
+          /* Print and PDF stay white like a normal profile document. */
+          html .executive-profile.cx-skin, html .executive-profile.cx-skin * { background-color: transparent !important; color: #17212B !important; border-color: rgba(13, 59, 102, 0.14) !important; box-shadow: none !important; }
+          html .executive-profile.cx-skin .resume-sheet { background-color: #fff !important; }
+          html .executive-profile.cx-skin [class~="text-[#C09543]"], html .executive-profile.cx-skin [class~="text-[#A77B28]"] { color: #A77B28 !important; }
         }
       `}</style>
 
