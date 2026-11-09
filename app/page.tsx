@@ -508,35 +508,67 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-      <section id="ceo-app" className="bg-white px-5 py-10 md:px-8">
-        <div className="mx-auto flex max-w-4xl flex-col gap-5 border border-[#0D3B66]/10 bg-[#F3F6F4] p-5 sm:flex-row sm:items-center">
-          <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-[#197447] text-sm font-black tracking-wide text-white">CEO</div>
-          <div className="flex-1">
+      <section id="ceo-app" className="bg-white px-5 py-12 md:px-8">
+        <div className="mx-auto grid max-w-5xl items-center gap-8 border border-[#0D3B66]/10 bg-[#F3F6F4] p-6 md:grid-cols-[1fr_220px] md:p-8">
+          <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#C8A45D]">Also from Charismak · Free app</p>
-            <h3 className="mt-1 text-lg font-semibold text-[#071E33]">CEO – Shop Manager for traders</h3>
-            <p className="mt-1 text-sm leading-6 text-[#3A4653]">
-              Sales, stock, debts and daily profit on your phone. Shows missing cash or stock at close of day. Works offline.
+            <h3 className="mt-2 text-xl font-semibold leading-snug text-[#071E33] md:text-2xl">CEO – Shop Manager for traders</h3>
+            <p className="mt-2 text-sm leading-6 text-[#3A4653]">
+              Record sales, stock, expenses and debts on your phone and see your real profit every day. At close of day CEO shows any
+              missing cash or stock. Works offline, in English, Pidgin, Yorùbá, Hausa and Igbo.
             </p>
+            <ul className="mt-3 grid gap-1 text-xs text-[#3A4653] sm:grid-cols-2">
+              <li>✔ Snap invoices and old records</li>
+              <li>✔ Barcode scanning</li>
+              <li>✔ WhatsApp debt reminders</li>
+              <li>✔ Stock summary and Excel reports</li>
+            </ul>
+            <div className="mt-5 flex flex-wrap gap-2">
+              <a
+                href="https://ceo.charismakproject.com/download"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 bg-[#197447] px-4 py-2.5 text-xs font-bold text-white"
+              >
+                <FileDown className="h-4 w-4" />
+                Download (Android)
+              </a>
+              <a
+                href="https://ceo.charismakproject.com"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center border border-[#0D3B66]/20 bg-white px-4 py-2.5 text-xs font-bold text-[#071E33]"
+              >
+                Learn more
+              </a>
+            </div>
           </div>
-          <div className="flex shrink-0 flex-wrap gap-2">
-            <a
-              href="https://ceo.charismakproject.com/download"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 bg-[#197447] px-4 py-2.5 text-xs font-bold text-white"
-            >
-              <FileDown className="h-4 w-4" />
-              Download (Android)
-            </a>
-            <a
-              href="https://ceo.charismakproject.com"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center border border-[#0D3B66]/20 bg-white px-4 py-2.5 text-xs font-bold text-[#071E33]"
-            >
-              Learn more
-            </a>
-          </div>
+          <a href="https://ceo.charismakproject.com" target="_blank" rel="noreferrer" aria-label="CEO – Shop Manager app" className="mx-auto block w-[200px]">
+            <div className="rounded-[28px] bg-[#111] p-2 shadow-xl">
+              <div className="rounded-[22px] bg-white p-3 text-[#1C1917]">
+                <div className="mb-2 text-[11px] font-extrabold">Good evening, Boss 👋</div>
+                <div className="rounded-xl bg-gradient-to-br from-[#0F7A3D] to-[#084A25] p-3 text-white">
+                  <div className="text-[9px] opacity-80">Today&apos;s sales</div>
+                  <div className="text-xl font-black">₦48,500</div>
+                  <div className="text-[9px] opacity-80">Profit ₦12,300</div>
+                </div>
+                <div className="my-2 grid grid-cols-4 gap-1 text-center text-sm">
+                  {["🧾", "📒", "💸", "📊"].map((i) => (
+                    <div key={i} className="rounded-lg bg-[#F3F6F4] py-1">{i}</div>
+                  ))}
+                </div>
+                {[
+                  ["💵 3 Star, 1 Malt", "+₦3,700"],
+                  ["📲 2 Indomie", "+₦21,000"],
+                ].map(([x, y]) => (
+                  <div key={x} className="mt-1 flex justify-between rounded-md bg-[#F3F6F4] px-2 py-1 text-[9px]">
+                    <span>{x}</span>
+                    <b className="text-[#15803D]">{y}</b>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </a>
         </div>
       </section>
     </main>
