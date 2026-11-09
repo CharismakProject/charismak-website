@@ -508,6 +508,37 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+      <section id="ceo-app" className="bg-white px-5 py-10 md:px-8">
+        <div className="mx-auto flex max-w-4xl flex-col gap-5 border border-[#0D3B66]/10 bg-[#F3F6F4] p-5 sm:flex-row sm:items-center">
+          <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-[#197447] text-sm font-black tracking-wide text-white">CEO</div>
+          <div className="flex-1">
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#C8A45D]">Also from Charismak · Free app</p>
+            <h3 className="mt-1 text-lg font-semibold text-[#071E33]">CEO – Shop Manager for traders</h3>
+            <p className="mt-1 text-sm leading-6 text-[#3A4653]">
+              Sales, stock, debts and daily profit on your phone. Shows missing cash or stock at close of day. Works offline.
+            </p>
+          </div>
+          <div className="flex shrink-0 flex-wrap gap-2">
+            <a
+              href="https://ceo.charismakproject.com/download"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 bg-[#197447] px-4 py-2.5 text-xs font-bold text-white"
+            >
+              <FileDown className="h-4 w-4" />
+              Download (Android)
+            </a>
+            <a
+              href="https://ceo.charismakproject.com"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center border border-[#0D3B66]/20 bg-white px-4 py-2.5 text-xs font-bold text-[#071E33]"
+            >
+              Learn more
+            </a>
+          </div>
+        </div>
+      </section>
     </main>
   );
 }
