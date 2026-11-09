@@ -14,7 +14,6 @@ import {
   Home,
   Mail,
   MessageCircle,
-  Smartphone,
   ShieldCheck,
   Sparkles,
   Wrench,
@@ -316,84 +315,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section id="ceo-app" className="bg-[#F3F6F4] px-5 py-20 md:px-8">
-        <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-          <div>
-            <SectionLabel>CEO – Shop Manager</SectionLabel>
-            <h2 className="text-3xl font-semibold leading-tight tracking-[-0.03em] text-[#071E33] md:text-5xl">
-              Run your shop like a CEO. Free Android app for traders.
-            </h2>
-            <p className="mt-6 text-base leading-8 text-[#3A4653]">
-              Record sales, stock, expenses, debts and tabs on your phone and see your real profit every day. Close the day and CEO shows
-              exactly what cash or stock is missing. Made for provision stores, bars, food sellers, building materials, chemists, phone
-              shops and more.
-            </p>
-            <ul className="mt-6 grid gap-2 text-sm text-[#3A4653] sm:grid-cols-2">
-              <li>✔ Snap old records, invoices and price lists</li>
-              <li>✔ Barcode scanning and speak-to-sell</li>
-              <li>✔ Tabs approved by the Boss, WhatsApp debt reminders</li>
-              <li>✔ Stock summary and Excel reports</li>
-              <li>✔ English, Pidgin, Yorùbá, Hausa, Igbo</li>
-              <li>✔ Works offline · never touches your money</li>
-            </ul>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <a
-                href="https://ceo.charismakproject.com/download"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 bg-[#197447] px-6 py-3.5 text-sm font-bold text-white"
-              >
-                <FileDown className="h-4 w-4" />
-                Download for Android – free
-              </a>
-              <a
-                href="https://ceo.charismakproject.com"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 border border-[#0D3B66]/20 bg-white px-6 py-3.5 text-sm font-bold text-[#071E33]"
-              >
-                <Smartphone className="h-4 w-4" />
-                See all features
-              </a>
-            </div>
-            <p className="mt-5 text-sm text-[#3A4653]">
-              iPhone or computer? Use it in the browser at{" "}
-              <a href="https://ceo.charismakproject.com/app" target="_blank" rel="noreferrer" className="font-semibold text-[#0D3B66] underline">
-                ceo.charismakproject.com/app
-              </a>
-              .
-            </p>
-          </div>
-          <a href="https://ceo.charismakproject.com" target="_blank" rel="noreferrer" aria-label="CEO – Shop Manager app" className="mx-auto block w-full max-w-[290px]">
-            <div className="rounded-[36px] bg-[#111] p-3 shadow-2xl">
-              <div className="rounded-[26px] bg-[#F2F5F3] p-4 text-[#1C1917]">
-                <div className="mb-3 text-sm font-extrabold">Good evening, Boss 👋</div>
-                <div className="rounded-2xl bg-gradient-to-br from-[#0F7A3D] to-[#084A25] p-4 text-white">
-                  <div className="text-xs opacity-80">Today&apos;s sales</div>
-                  <div className="text-3xl font-black">₦48,500</div>
-                  <div className="text-xs opacity-80">Profit ₦12,300</div>
-                </div>
-                <div className="my-3 grid grid-cols-4 gap-2 text-center text-xl">
-                  {["🧾", "📒", "💸", "📊"].map((i) => (
-                    <div key={i} className="rounded-xl bg-white py-2">{i}</div>
-                  ))}
-                </div>
-                {[
-                  ["💵 3 Star, 1 Malt", "+₦3,700"],
-                  ["📲 2 Indomie (carton)", "+₦21,000"],
-                  ["📒 Mama Ada paid", "+₦1,200"],
-                ].map(([a, b]) => (
-                  <div key={a} className="mt-2 flex justify-between rounded-lg bg-white px-3 py-2 text-xs">
-                    <span>{a}</span>
-                    <b className="text-[#15803D]">{b}</b>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </a>
-        </div>
-      </section>
-
       {siteSlides.length > 0 ? (
         <section className="bg-white px-5 py-16 md:px-8 md:py-20">
           <div className="mx-auto max-w-7xl">
@@ -584,6 +505,37 @@ export default async function HomePage() {
                 Market Prices <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
+          </div>
+        </div>
+      </section>
+      <section id="ceo-app" className="bg-white px-5 py-10 md:px-8">
+        <div className="mx-auto flex max-w-4xl flex-col gap-5 border border-[#0D3B66]/10 bg-[#F3F6F4] p-5 sm:flex-row sm:items-center">
+          <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-[#197447] text-sm font-black tracking-wide text-white">CEO</div>
+          <div className="flex-1">
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#C8A45D]">Also from Charismak · Free app</p>
+            <h3 className="mt-1 text-lg font-semibold text-[#071E33]">CEO – Shop Manager for traders</h3>
+            <p className="mt-1 text-sm leading-6 text-[#3A4653]">
+              Sales, stock, debts and daily profit on your phone. Shows missing cash or stock at close of day. Works offline.
+            </p>
+          </div>
+          <div className="flex shrink-0 flex-wrap gap-2">
+            <a
+              href="https://ceo.charismakproject.com/download"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 bg-[#197447] px-4 py-2.5 text-xs font-bold text-white"
+            >
+              <FileDown className="h-4 w-4" />
+              Download (Android)
+            </a>
+            <a
+              href="https://ceo.charismakproject.com"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center border border-[#0D3B66]/20 bg-white px-4 py-2.5 text-xs font-bold text-[#071E33]"
+            >
+              Learn more
+            </a>
           </div>
         </div>
       </section>
