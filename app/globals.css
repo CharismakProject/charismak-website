@@ -196,3 +196,9 @@ main article[class*="border-[#0D3B66]/10"]:hover { border-color: rgba(13, 59, 10
 .cx-skin tr { background-color: transparent !important; }
 @media (max-width: 767px) { .cx-skin tr { background-color: var(--cx-deep) !important; } }
 /* gold stays gold */ .cx-skin [class~="bg-[#C8A45D]"], .cx-skin [class~="bg-[#F2B544]"], .cx-skin [class~="bg-[#E8C77F]"] { color: var(--cx-void) !important; background-color: var(--cx-gold) !important; }
+
+/* Extra light-theme colours used on the MD profile */
+.cx-skin [class~="text-[#17212B]"], .cx-skin [class~="text-[#334150]"], .cx-skin [class~="text-[#394754]"] { color: #fff !important; }
+.cx-skin [class~="text-[#52606D]"], .cx-skin [class~="text-[#44515E]"], .cx-skin [class~="text-[#6B7784]"], .cx-skin [class~="text-[#7A8793]"] { color: var(--cx-muted) !important; }
+.cx-skin [class~="text-[#C09543]"], .cx-skin [class~="text-[#A77B28]"] { color: var(--cx-gold) !important; }
+.cx-skin [class~="border-[#0D3B66]/12"], .cx-skin [class~="border-[#0D3B66]/8"], .cx-skin [class~="border-[#D9C49C]"] { border-color: var(--cx-line) !important; }
