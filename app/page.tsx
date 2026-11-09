@@ -183,8 +183,8 @@ export default async function HomePage() {
       {/* ===== HERO ===== */}
       <section className="relative min-h-[calc(100svh-5rem)] overflow-hidden bg-[var(--cx-void)] text-white">
         <Image src={heroImage} alt={heroProject?.title || "Charismak construction project"} fill priority sizes="100vw" className="object-cover opacity-80" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#02080F] via-[#02080F]/80 to-[#02080F]/10" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#02080F] via-transparent to-[#02080F]/40" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[var(--cx-void)] via-[var(--cx-void)]/80 to-[var(--cx-void)]/10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[var(--cx-void)] via-transparent to-[var(--cx-void)]/40" />
         <div className="cx-grid-bg absolute inset-0 opacity-60" />
 
         <div className="relative mx-auto flex min-h-[calc(100svh-5rem)] max-w-7xl flex-col justify-between px-5 pb-10 pt-20 md:px-8 md:pt-28">
@@ -193,7 +193,7 @@ export default async function HomePage() {
               <Eyebrow>Construction company · Abuja, Nigeria</Eyebrow>
               <h1 className="cx-title text-5xl sm:text-7xl xl:text-[6.5rem]">
                 Priced right.
-                <span className="block bg-gradient-to-r from-[#F2C879] to-[#D9B26A] bg-clip-text text-transparent">Built to last.</span>
+                <span className="block bg-gradient-to-r from-[var(--cx-gold-bright)] to-[var(--cx-gold)] bg-clip-text text-transparent">Built to last.</span>
               </h1>
               <p className="cx-lead mt-8 max-w-2xl text-base md:text-lg">
                 Charismak Project Nigeria Limited is an Abuja-based construction company handling building construction, renovation, engineering, cost planning and project management from planning through completion.
@@ -216,7 +216,7 @@ export default async function HomePage() {
             </div>
 
             <div className="hidden justify-self-end lg:block">
-              <div className="cx-card w-[330px] bg-[#02080F]/60">
+              <div className="cx-card w-[330px] bg-[var(--cx-void)]/60">
                 {[
                   [ShieldCheck, "Quality supervision", "Workmanship and important details checked throughout construction."],
                   [ClipboardCheck, "Project coordination", "Scope, procurement, programme and site communication kept together."],
@@ -321,9 +321,9 @@ export default async function HomePage() {
                     sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
                     className="object-cover transition duration-700 group-hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#02080F] via-[#02080F]/20 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[var(--cx-void)] via-[var(--cx-void)]/20 to-transparent" />
                   <span className="cx-mono absolute right-4 top-4 text-xs text-white/70">{String(index + 1).padStart(2, "0")}</span>
-                  <span className="absolute left-4 top-4 border border-white/20 bg-[#02080F]/70 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-white backdrop-blur">
+                  <span className="absolute left-4 top-4 border border-white/20 bg-[var(--cx-void)]/70 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-white backdrop-blur">
                     {project.engagementTag}
                   </span>
                 </div>
@@ -432,7 +432,7 @@ export default async function HomePage() {
               sizes="(max-width: 1024px) 100vw, 45vw"
               className="object-cover opacity-60"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#02080F]/40 to-[#02080F]/90" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[var(--cx-void)]/40 to-[var(--cx-void)]/90" />
             <div className="cx-grid-bg absolute inset-0" />
           </div>
           <div className="flex flex-col justify-center bg-[var(--cx-deep)] p-8 md:p-14">
@@ -470,7 +470,7 @@ export default async function HomePage() {
                 <FileDown className="h-4 w-4" />
                 Download (Android)
               </a>
-              <a href="https://ceo.charismakproject.com" target="_blank" rel="noreferrer" className="inline-flex items-center border border-white/20 px-4 py-2.5 text-xs font-bold text-white hover:bg-white hover:text-[#02080F]">
+              <a href="https://ceo.charismakproject.com" target="_blank" rel="noreferrer" className="inline-flex items-center border border-white/20 px-4 py-2.5 text-xs font-bold text-white hover:bg-white hover:text-[var(--cx-void)]">
                 Learn more
               </a>
             </div>

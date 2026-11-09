@@ -14,6 +14,8 @@ import {
 } from "@/lib/seo";
 import SiteChrome from "./components/SiteChrome";
 import Footer from "./components/Footer";
+import { loadWebsiteContent } from "@/lib/content/website-cms";
+import { cleanTheme, isDefaultTheme, themeCss } from "@/lib/theme";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -92,10 +94,14 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Colours chosen in Admin → Website Colours (falls back to the built-in theme).
+  const themeRecord = (await loadWebsiteContent("theme")).find((record) => record.contentKey === "theme.colors");
+  const theme = cleanTheme(themeRecord?.value);
   return (
     <html lang="en-NG" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body className="bg-white text-[#151B22] antialiased">
+        {!isDefaultTheme(theme) ? <style id="cx-theme">{themeCss(theme)}</style> : null}
         <JsonLd data={[organizationJsonLd, websiteJsonLd]} />
         <SiteChrome footer={<Footer />}>{children}</SiteChrome>
         <Analytics />
