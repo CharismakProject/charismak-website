@@ -9,9 +9,9 @@ import {
 import { createSeoMetadata } from "@/lib/seo";
 
 export const metadata = createSeoMetadata({
-  title: "Construction HSE & Quality Management",
+  title: "Construction Health, Safety & Quality (HSE)",
   description:
-    "Charismak Project Nigeria Limited's approach to construction health and safety, environmental responsibility, quality assurance, supervision and controlled project delivery.",
+    "How Charismak manages construction health and safety, quality assurance, environmental responsibility and site supervision on projects in Abuja and Nigeria.",
   path: "/hse",
   keywords: ["construction HSE Nigeria", "construction quality assurance Abuja", "site safety Nigeria"],
 });
@@ -41,11 +41,11 @@ const hseItems = [
 
 export default function HsePage() {
   return (
-    <main className="overflow-hidden bg-white pt-20">
+    <main className="cx-skin overflow-hidden bg-white pt-20">
       <section className="relative overflow-hidden bg-[#071E33] px-5 py-24 text-white md:px-8 lg:py-32">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_15%,rgba(200,164,93,0.15),transparent_28rem)]" />
         <div className="relative mx-auto max-w-7xl">
-          <p className="mb-5 text-xs font-bold uppercase tracking-[0.32em] text-[#F2B544]">HSE & Quality</p>
+          <p className="mb-5 text-xs font-bold uppercase tracking-[0.32em] text-[#F2B544]">Health, Safety, Environment & Quality</p>
           <h1 className="max-w-5xl text-5xl font-semibold leading-[1.02] tracking-[-0.04em] sm:text-6xl lg:text-7xl">
             Build safely.
             <span className="mt-2 block text-[#E8C77F]">Deliver responsibly.</span>

@@ -97,7 +97,7 @@ export default async function BlogArticlePage({ params }: Props) {
   };
 
   return (
-    <main className="min-h-screen bg-[#F7F8FA] pt-20">
+    <main className="cx-skin min-h-screen bg-[#F7F8FA] pt-20">
       <JsonLd
         data={[
           articleJsonLd,

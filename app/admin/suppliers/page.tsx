@@ -4,5 +4,5 @@ import SupplierProfileOwnershipManager from "@/components/admin/supplier-profile
 export const metadata = { title: "Admin Supplier Profiles" };
 
 export default function AdminSupplierProfilesPage() {
-  return <main className="min-h-screen bg-[#F5F7FA] pt-20"><AdminNav /><SupplierProfileOwnershipManager /></main>;
+  return <main className="cx-skin min-h-screen bg-[#F5F7FA] pt-20"><AdminNav /><SupplierProfileOwnershipManager /></main>;
 }

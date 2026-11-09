@@ -7,9 +7,9 @@ import type { Person } from "../site-data";
 import { createSeoMetadata } from "@/lib/seo";
 
 export const metadata = createSeoMetadata({
-  title: "Construction Leadership & Project Team",
+  title: "Leadership & Project Team",
   description:
-    "Meet the leadership, construction management and project-delivery professionals behind Charismak Project Nigeria Limited in Abuja, Nigeria.",
+    "Meet the leadership and project team behind Charismak Project Nigeria Limited, a construction and project management company based in Abuja, Nigeria.",
   path: "/leadership",
 });
 
@@ -22,12 +22,12 @@ export default async function LeadershipPage() {
   const managingDirector = activeTeam.find((person) => person.name.toLowerCase().includes("abiodun christopher akinola"));
 
   return (
-    <main className="overflow-hidden bg-white pt-20">
+    <main className="cx-skin overflow-hidden bg-white pt-20">
       <section className="relative overflow-hidden bg-[#071E33] text-white">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(200,164,93,0.16),transparent_28rem)]" />
         <div className="relative mx-auto grid min-h-[640px] max-w-7xl items-center gap-12 px-5 py-20 md:px-8 lg:grid-cols-[0.9fr_0.7fr]">
           <div className="max-w-4xl">
-            <p className="mb-5 text-xs font-bold uppercase tracking-[0.32em] text-[#F2B544]">The People Behind The Work</p>
+            <p className="mb-5 text-xs font-bold uppercase tracking-[0.32em] text-[#F2B544]">The people behind the work</p>
             <h1 className="max-w-4xl text-5xl font-semibold leading-[1.02] tracking-[-0.04em] sm:text-6xl lg:text-7xl">Leadership grounded in<span className="mt-2 block text-[#E8C77F]">practical project delivery.</span></h1>
             <p className="mt-7 max-w-2xl text-base leading-8 text-white/72 md:text-lg">Charismak combines executive leadership, technical supervision and project-specific professional capacity to manage construction from planning through handover.</p>
             <div className="mt-9 flex flex-wrap gap-4"><Link href="/projects" className="inline-flex items-center gap-3 bg-[#0D3B66] px-7 py-4 text-sm font-bold text-white">See Our Work <ArrowRight className="h-5 w-5" /></Link><Link href="/contact" className="inline-flex items-center gap-3 border border-white/30 bg-white/5 px-7 py-4 text-sm font-bold text-white">Work With Us <ArrowRight className="h-5 w-5" /></Link></div>

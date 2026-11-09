@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 
 import { company } from "./site-data";
+import { CxSection, Eyebrow, Stat } from "@/components/ui/cx";
 import ProjectStatusBadge from "@/components/projects/project-status-badge";
 import SiteUpdatesSlider, { type SiteUpdateSlide } from "@/components/home/site-updates-slider";
 import { selectSliderPictures } from "@/lib/content/site-pictures";
@@ -34,7 +35,7 @@ import {
 export const metadata = createSeoMetadata({
   title: "Construction Company in Abuja, Nigeria",
   description:
-    "Charismak Project Nigeria Limited is an Abuja construction company providing building construction, civil engineering, renovation, steel fabrication, project management, cost planning and finishing services across Nigeria.",
+    "Abuja construction company for building construction, renovation, civil engineering, steel fabrication, project management and cost planning across Nigeria.",
   path: "/",
   keywords: [
     "construction company Abuja",
@@ -45,10 +46,6 @@ export const metadata = createSeoMetadata({
     "quantity surveying Nigeria",
   ],
 });
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <p className="mb-4 text-xs font-bold uppercase tracking-[0.28em] text-[#C8A45D]">{children}</p>;
-}
 
 const textValue = (value: unknown, fallback: string) => {
   if (typeof value === "string") return value || fallback;
@@ -182,369 +179,304 @@ export default async function HomePage() {
         .slice(0, 6);
 
   return (
-    <main className="overflow-hidden bg-white pt-20">
-      <section className="relative min-h-[600px] overflow-hidden bg-[#071E33] text-white lg:min-h-[680px]">
-        <Image
-          src={heroImage}
-          alt={heroProject?.title || "Charismak construction project"}
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#071E33]/96 via-[#071E33]/76 to-[#071E33]/18" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#071E33]/65 via-transparent to-transparent" />
+    <main className="cx-page overflow-hidden pt-20">
+      {/* ===== HERO ===== */}
+      <section className="relative min-h-[calc(100svh-5rem)] overflow-hidden bg-[var(--cx-void)] text-white">
+        <Image src={heroImage} alt={heroProject?.title || "Charismak construction project"} fill priority sizes="100vw" className="object-cover opacity-80" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#02080F] via-[#02080F]/80 to-[#02080F]/10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#02080F] via-transparent to-[#02080F]/40" />
+        <div className="cx-grid-bg absolute inset-0 opacity-60" />
 
-        <div className="relative mx-auto grid min-h-[600px] max-w-7xl items-center gap-12 px-5 py-16 md:px-8 lg:min-h-[680px] lg:grid-cols-[1.05fr_0.55fr]">
-          <div className="max-w-4xl">
-            <p className="mb-5 text-xs font-bold uppercase tracking-[0.32em] text-[#F2B544]">Design · Cost · Build</p>
-            <h1 className="max-w-3xl text-5xl font-semibold leading-[1] tracking-[-0.04em] sm:text-6xl xl:text-7xl">
-              Priced right.
-              <span className="mt-2 block text-[#E8C77F]">Built to last.</span>
-            </h1>
-            <p className="mt-7 max-w-2xl text-base leading-8 text-white/76 md:text-lg">
-              Charismak Project Nigeria Limited is an Abuja-based construction company handling building construction, renovation, engineering, cost planning and project management from planning through completion.
-            </p>
-            <div className="mt-9 flex flex-wrap gap-4">
-              <Link
-                href="/quote"
-                className="inline-flex items-center gap-3 bg-[#C8A45D] px-7 py-4 text-sm font-bold text-[#071E33] shadow-xl transition hover:bg-[#F2B544]"
-              >
-                Start Your Project <ArrowRight className="h-5 w-5" />
-              </Link>
-              <Link
-                href="/projects"
-                className="inline-flex items-center gap-3 border border-white/55 bg-white/5 px-7 py-4 text-sm font-bold text-white backdrop-blur-sm transition hover:bg-white hover:text-[#071E33]"
-              >
-                View Our Projects <ArrowRight className="h-5 w-5" />
-              </Link>
+        <div className="relative mx-auto flex min-h-[calc(100svh-5rem)] max-w-7xl flex-col justify-between px-5 pb-10 pt-20 md:px-8 md:pt-28">
+          <div className="grid items-center gap-12 lg:grid-cols-[1.15fr_0.5fr]">
+            <div className="max-w-4xl">
+              <Eyebrow>Construction company · Abuja, Nigeria</Eyebrow>
+              <h1 className="cx-title text-5xl sm:text-7xl xl:text-[6.5rem]">
+                Priced right.
+                <span className="block bg-gradient-to-r from-[#F2C879] to-[#D9B26A] bg-clip-text text-transparent">Built to last.</span>
+              </h1>
+              <p className="cx-lead mt-8 max-w-2xl text-base md:text-lg">
+                Charismak Project Nigeria Limited is an Abuja-based construction company handling building construction, renovation, engineering, cost planning and project management from planning through completion.
+              </p>
+              <div className="mt-10 flex flex-wrap gap-3">
+                <Link href="/quote" className="cx-btn cx-btn-primary">Start Your Project <ArrowRight className="h-4 w-4" /></Link>
+                <Link href="/projects" className="cx-btn cx-btn-ghost backdrop-blur-sm">View Our Projects <ArrowRight className="h-4 w-4" /></Link>
+              </div>
+              {heroProject ? (
+                <Link href={`/projects/${heroProject.slug}`} className="mt-10 inline-flex items-center gap-3 border-l border-[var(--cx-gold)] pl-4 text-sm text-white/65 hover:text-white">
+                  <span>
+                    <span className="cx-mono text-[11px] uppercase tracking-[0.2em] text-[var(--cx-gold)]">Featured</span>{" "}
+                    <strong className="text-white">{heroProject.title}</strong>
+                    <span className="mx-2 text-white/30">·</span>
+                    {heroProject.location}
+                  </span>
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              ) : null}
             </div>
-            {heroProject ? (
-              <Link
-                href={`/projects/${heroProject.slug}`}
-                className="mt-10 inline-flex items-center gap-3 border-l-2 border-[#C8A45D] pl-4 text-sm text-white/70 transition hover:text-white"
-              >
-                <span>
-                  Featured: <strong className="text-white">{heroProject.title}</strong>
-                  <span className="mx-2 text-white/35">·</span>
-                  {heroProject.location}
-                </span>
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            ) : null}
+
+            <div className="hidden justify-self-end lg:block">
+              <div className="cx-card w-[330px] bg-[#02080F]/60">
+                {[
+                  [ShieldCheck, "Quality supervision", "Workmanship and important details checked throughout construction."],
+                  [ClipboardCheck, "Project coordination", "Scope, procurement, programme and site communication kept together."],
+                  [Sparkles, "Practical delivery", "Solutions chosen for the way the project will be built, used and maintained."],
+                ].map(([Icon, title, text], index) => {
+                  const ItemIcon = Icon as typeof ShieldCheck;
+                  return (
+                    <div key={String(title)} className={`grid grid-cols-[40px_1fr] gap-4 p-6 ${index > 0 ? "border-t border-white/10" : ""}`}>
+                      <div className="grid h-10 w-10 place-items-center border border-[var(--cx-gold)]/40 text-[var(--cx-gold)]">
+                        <ItemIcon className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-semibold">{String(title)}</h3>
+                        <p className="mt-2 text-xs leading-5 text-white/55">{String(text)}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
-          <div className="hidden justify-self-end lg:block">
-            <div className="w-[330px] overflow-hidden border border-white/15 bg-[#071E33]/72 shadow-2xl backdrop-blur-xl">
-              {[
-                [ShieldCheck, "Quality supervision", "Workmanship and important details checked throughout construction."],
-                [ClipboardCheck, "Project coordination", "Scope, procurement, programme and site communication kept together."],
-                [Sparkles, "Practical delivery", "Solutions chosen for the way the project will be built, used and maintained."],
-              ].map(([Icon, title, text], index) => {
-                const ItemIcon = Icon as typeof ShieldCheck;
-                return (
-                  <div
-                    key={String(title)}
-                    className={`grid grid-cols-[44px_1fr] gap-4 p-6 ${index > 0 ? "border-t border-white/10" : ""}`}
-                  >
-                    <div className="grid h-11 w-11 place-items-center border border-[#C8A45D]/35 bg-[#C8A45D]/10">
-                      <ItemIcon className="h-5 w-5 text-[#F2B544]" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-bold">{String(title)}</h3>
-                      <p className="mt-2 text-xs leading-5 text-white/62">{String(text)}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+          <div className="mt-16 grid grid-cols-2 gap-8 border-t border-white/10 pt-8 md:grid-cols-4">
+            <Stat value={directProjects.length || "—"} label="Projects in portfolio" />
+            <Stat value={managedServices.length || "—"} label="Services offered" />
+            <Stat value="FCT" label="Abuja head office" />
+            <Stat value={<span className="text-[var(--cx-gold)]">24/7</span>} label="Online estimator & rates" />
           </div>
         </div>
       </section>
 
-      <section id="charismak-one" className="bg-white px-5 py-20 md:px-8">
-        <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-          <a href="/charismak-one/charismak-one-flyer.pdf" target="_blank" rel="noreferrer" className="block">
+      {/* ===== CHARISMAK ONE ===== */}
+      <CxSection id="charismak-one" grid>
+        <div className="cx-reveal grid gap-14 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
+          <a href="/charismak-one/charismak-one-flyer.pdf" target="_blank" rel="noreferrer" className="group relative block">
+            <div className="absolute -inset-4 bg-[radial-gradient(circle,rgba(217,178,106,0.18),transparent_70%)] blur-2xl" />
             <Image
               src="/charismak-one/charismak-one-flyer.jpg"
               alt="Charismak One flyer: construction management app, call for beta testers, book a free demo"
               width={1080}
               height={1350}
-              sizes="(max-width: 1024px) 100vw, 45vw"
-              className="h-auto w-full border border-[#0D3B66]/10 shadow-xl"
+              sizes="(max-width: 1024px) 100vw, 40vw"
+              className="relative h-auto w-full border border-white/10 shadow-2xl transition duration-500 group-hover:-translate-y-1"
             />
           </a>
           <div>
-            <SectionLabel>Charismak One</SectionLabel>
-            <h2 className="text-3xl font-semibold leading-tight tracking-[-0.03em] text-[#071E33] md:text-5xl">
-              Our construction management app is open for beta testers.
-            </h2>
-            <p className="mt-6 text-base leading-8 text-[#3A4653]">
-              BOQ, site progress, procurement, valuations and payments in one app, built by a working contractor in Abuja. Book a free
-              demo and see how it works for your company.
+            <Eyebrow>Charismak One</Eyebrow>
+            <h2 className="cx-title text-4xl md:text-6xl">Our construction management app is open for beta testers.</h2>
+            <p className="cx-lead mt-7 text-base">
+              BOQ, site progress, procurement, valuations and payments in one app, built by a working contractor in Abuja. Book a free demo and see how it works for your company.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <a
-                href="https://wa.me/2347066619598?text=Hello%2C%20I%20would%20like%20a%20demo%20of%20Charismak%20One."
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 bg-[#197447] px-6 py-3.5 text-sm font-bold text-white"
-              >
-                <MessageCircle className="h-4 w-4" />
-                WhatsApp +234 706 661 9598
+            <div className="mt-10 flex flex-wrap gap-3">
+              <a href="https://wa.me/2347066619598?text=Hello%2C%20I%20would%20like%20a%20demo%20of%20Charismak%20One." target="_blank" rel="noreferrer" className="cx-btn cx-btn-primary">
+                <MessageCircle className="h-4 w-4" /> WhatsApp +234 706 661 9598
               </a>
-              <a
-                href="mailto:info@charismakproject.com?subject=Charismak%20One%20demo"
-                className="inline-flex items-center gap-2 bg-[#0D3B66] px-6 py-3.5 text-sm font-bold text-white"
-              >
-                <Mail className="h-4 w-4" />
-                Email us
+              <a href="mailto:info@charismakproject.com?subject=Charismak%20One%20demo" className="cx-btn cx-btn-ghost">
+                <Mail className="h-4 w-4" /> Email us
               </a>
-              <a
-                href="/charismak-one/charismak-one-flyer.pdf"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 border border-[#0D3B66]/20 px-6 py-3.5 text-sm font-bold text-[#071E33]"
-              >
-                <FileDown className="h-4 w-4" />
-                Flyer (PDF)
+              <a href="/charismak-one/charismak-one-flyer.pdf" target="_blank" rel="noreferrer" className="cx-btn cx-btn-ghost">
+                <FileDown className="h-4 w-4" /> Flyer (PDF)
               </a>
             </div>
-            <p className="mt-5 text-sm text-[#3A4653]">info@charismakproject.com · charismakprojectnigltd@gmail.com</p>
+            <p className="cx-mono mt-6 text-xs text-white/45">info@charismakproject.com · charismakprojectnigltd@gmail.com</p>
           </div>
         </div>
-      </section>
+      </CxSection>
 
+      {/* ===== SITE UPDATES ===== */}
       {siteSlides.length > 0 ? (
-        <section className="bg-white px-5 py-16 md:px-8 md:py-20">
-          <div className="mx-auto max-w-7xl">
-            <div className="mb-8 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+        <CxSection alt>
+          <div className="cx-reveal">
+            <div className="mb-10 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
               <div>
-                <SectionLabel>{hasSiteUpdates ? "Site Progress & Project Updates" : "Project Portfolio"}</SectionLabel>
-                <h2 className="text-3xl font-semibold tracking-[-0.03em] text-[#071E33] md:text-4xl">
-                  {hasSiteUpdates ? "Latest photographs from our sites." : "Photos from Charismak projects."}
-                </h2>
+                <Eyebrow>{hasSiteUpdates ? "Site Progress & Project Updates" : "Project Portfolio"}</Eyebrow>
+                <h2 className="cx-title text-4xl md:text-5xl">{hasSiteUpdates ? "Latest photographs from our sites." : "Photos from Charismak projects."}</h2>
               </div>
-              <Link href="/projects" className="inline-flex items-center gap-2 text-sm font-bold text-[#0D3B66]">
-                All projects <ArrowRight className="h-4 w-4" />
-              </Link>
+              <Link href="/projects" className="cx-link">All projects <ArrowRight className="h-4 w-4" /></Link>
             </div>
             <SiteUpdatesSlider slides={siteSlides} />
           </div>
-        </section>
+        </CxSection>
       ) : null}
 
-      <section className="bg-[#F7F8FA] px-5 py-20 md:px-8">
-        <div className="mx-auto max-w-7xl">
-          <div className="grid gap-8 lg:grid-cols-[0.55fr_1.45fr] lg:items-end">
-            <div>
-              <SectionLabel>Selected Projects</SectionLabel>
-              <h2 className="text-3xl font-semibold leading-tight tracking-[-0.03em] text-[#071E33] md:text-5xl">
-                A selection of projects from our portfolio.
-              </h2>
-              <Link href="/projects" className="mt-7 inline-flex items-center gap-2 text-sm font-bold text-[#0D3B66]">
-                View Project Portfolio <ArrowRight className="h-4 w-4" />
+      {/* ===== SELECTED PROJECTS ===== */}
+      <CxSection>
+        <div className="cx-reveal">
+          <div className="mb-12 flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
+            <div className="max-w-2xl">
+              <Eyebrow>Selected Projects</Eyebrow>
+              <h2 className="cx-title text-4xl md:text-6xl">A selection of projects from our portfolio.</h2>
+            </div>
+            <Link href="/projects" className="cx-link">View Project Portfolio <ArrowRight className="h-4 w-4" /></Link>
+          </div>
+          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+            {featuredProjects.map((project, index) => (
+              <Link key={project.slug} href={`/projects/${project.slug}`} className="cx-card group overflow-hidden hover:-translate-y-1">
+                <div className="relative h-64 overflow-hidden bg-[var(--cx-panel)]">
+                  <Image
+                    src={project.cover || project.heroImages?.[0] || project.images[0] || heroImage}
+                    alt={project.title}
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
+                    className="object-cover transition duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#02080F] via-[#02080F]/20 to-transparent" />
+                  <span className="cx-mono absolute right-4 top-4 text-xs text-white/70">{String(index + 1).padStart(2, "0")}</span>
+                  <span className="absolute left-4 top-4 border border-white/20 bg-[#02080F]/70 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-white backdrop-blur">
+                    {project.engagementTag}
+                  </span>
+                </div>
+                <div className="p-6">
+                  <p className="cx-mono text-[10px] uppercase tracking-[0.2em] text-[var(--cx-gold)]">{project.role}</p>
+                  <h3 className="mt-3 text-lg font-semibold leading-snug text-white">{project.title}</h3>
+                  <p className="mt-2 text-xs text-white/50">{project.location}</p>
+                  <div className="mt-4"><ProjectStatusBadge status={project.status} tone="dark" /></div>
+                  <div className="cx-link mt-6 text-[11px]">View Project <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" /></div>
+                </div>
               </Link>
-            </div>
-
-            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-              {featuredProjects.map((project) => (
-                <Link
-                  key={project.slug}
-                  href={`/projects/${project.slug}`}
-                  className="group overflow-hidden bg-white shadow-[0_10px_35px_rgba(7,30,51,0.07)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(7,30,51,0.14)]"
-                >
-                  <div className="relative h-56 overflow-hidden bg-[#071E33]">
-                    <Image
-                      src={project.cover || project.heroImages?.[0] || project.images[0] || heroImage}
-                      alt={project.title}
-                      fill
-                      sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
-                      className="object-cover transition duration-700 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#071E33]/55 via-transparent to-transparent" />
-                    <span className="absolute left-4 top-4 bg-[#071E33]/85 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.14em] text-white backdrop-blur">
-                      {project.engagementTag}
-                    </span>
-                  </div>
-                  <div className="p-5">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#C8A45D]">{project.role}</p>
-                    <h3 className="mt-3 text-lg font-bold leading-snug text-[#071E33]">{project.title}</h3>
-                    <p className="mt-2 text-xs text-[#3A4653]">{project.location}</p>
-                    <div className="mt-3"><ProjectStatusBadge status={project.status} /></div>
-                    <div className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-[#0D3B66]">
-                      View Project <ArrowRight className="h-4 w-4" />
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
+            ))}
           </div>
         </div>
-      </section>
+      </CxSection>
 
-
-      <section className="bg-white px-5 py-20 md:px-8">
-        <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.72fr_1.28fr] lg:items-start">
+      {/* ===== ABOUT ===== */}
+      <CxSection alt grid>
+        <div className="cx-reveal grid gap-14 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
           <div>
-            <SectionLabel>About Charismak</SectionLabel>
-            <h2 className="max-w-xl text-4xl font-semibold leading-[1.05] tracking-[-0.04em] text-[#071E33] md:text-5xl">
-              Construction experience with cost and project management built in.
-            </h2>
-            <p className="mt-6 max-w-xl text-base leading-8 text-[#3A4653]">{overview}</p>
-            <Link
-              href="/about"
-              className="mt-7 inline-flex items-center gap-2 bg-[#0D3B66] px-6 py-3.5 text-sm font-bold text-white transition hover:bg-[#071E33]"
-            >
-              About Charismak <ArrowRight className="h-4 w-4" />
-            </Link>
+            <Eyebrow>About Charismak</Eyebrow>
+            <h2 className="cx-title max-w-xl text-4xl md:text-5xl">Construction experience with cost and project management built in.</h2>
+            <p className="cx-lead mt-7 max-w-xl text-base">{overview}</p>
+            <Link href="/about" className="cx-btn cx-btn-ghost mt-9">About Charismak <ArrowRight className="h-4 w-4" /></Link>
           </div>
-
-          <div className="grid gap-px overflow-hidden border border-[#0D3B66]/10 bg-[#0D3B66]/10 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-px overflow-hidden border border-white/10 bg-white/10 sm:grid-cols-2">
             {strengths.map(({ title, text, icon: Icon }) => (
-              <article key={title} className="bg-white p-6">
-                <Icon className="h-7 w-7 text-[#0D3B66]" />
-                <h3 className="mt-6 text-base font-bold text-[#071E33]">{title}</h3>
-                <p className="mt-3 text-sm leading-6 text-[#3A4653]">{text}</p>
+              <article key={title} className="bg-[var(--cx-deep)] p-8 transition hover:bg-[var(--cx-panel)]">
+                <Icon className="h-6 w-6 text-[var(--cx-gold)]" />
+                <h3 className="mt-8 text-base font-semibold text-white">{title}</h3>
+                <p className="mt-3 text-sm leading-6 text-white/55">{text}</p>
               </article>
             ))}
           </div>
         </div>
-      </section>
+      </CxSection>
 
-      <section className="bg-[#071E33] px-5 py-20 text-white md:px-8">
-        <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
-          <div>
-            <SectionLabel>What We Do</SectionLabel>
-            <h2 className="text-4xl font-semibold leading-tight tracking-[-0.03em] md:text-5xl">
-              Construction services from planning to handover.
-            </h2>
-            <p className="mt-6 max-w-xl text-base leading-8 text-white/68">
-              Construction, renovation, engineering, project management and finishing services organised around the needs of each project.
-            </p>
-            <Link
-              href="/services"
-              className="mt-8 inline-flex items-center gap-2 bg-[#C8A45D] px-6 py-3.5 text-sm font-bold text-[#071E33] transition hover:bg-[#F2B544]"
-            >
-              Explore Our Services <ArrowRight className="h-4 w-4" />
-            </Link>
+      {/* ===== SERVICES ===== */}
+      <CxSection>
+        <div className="cx-reveal">
+          <div className="mb-14 grid gap-8 lg:grid-cols-[1fr_0.9fr] lg:items-end">
+            <div>
+              <Eyebrow>What We Do</Eyebrow>
+              <h2 className="cx-title text-4xl md:text-6xl">Construction services from planning to handover.</h2>
+            </div>
+            <div>
+              <p className="cx-lead text-base">Construction, renovation, engineering, project management and finishing services organised around the needs of each project.</p>
+              <Link href="/services" className="cx-btn cx-btn-primary mt-7">Explore Our Services <ArrowRight className="h-4 w-4" /></Link>
+            </div>
           </div>
-
           <div className="grid gap-px overflow-hidden border border-white/10 bg-white/10 sm:grid-cols-2 lg:grid-cols-4">
-            {managedServices.slice(0, 8).map((service) => {
+            {managedServices.slice(0, 8).map((service, index) => {
               const Icon = serviceIconMap[service.iconKey as keyof typeof serviceIconMap] || Building2;
               return (
-                <article key={service.id} className="group bg-[#0A2A49] p-6 transition hover:bg-white hover:text-[#071E33]">
-                  <Icon className="h-7 w-7 text-[#F2B544] transition group-hover:text-[#0D3B66]" />
-                  <h3 className="mt-6 text-base font-bold">{service.title}</h3>
-                  <p className="mt-3 text-sm leading-6 text-white/62 transition group-hover:text-[#3A4653]">
-                    {service.description}
-                  </p>
+                <article key={service.id} className="group relative bg-[var(--cx-void)] p-7 transition hover:bg-[var(--cx-panel)]">
+                  <span className="absolute inset-x-0 top-0 h-px origin-left scale-x-0 bg-[var(--cx-gold)] transition duration-500 group-hover:scale-x-100" />
+                  <div className="flex items-center justify-between">
+                    <Icon className="h-6 w-6 text-[var(--cx-gold)]" />
+                    <span className="cx-mono text-[11px] text-white/30">{String(index + 1).padStart(2, "0")}</span>
+                  </div>
+                  <h3 className="mt-8 text-base font-semibold text-white">{service.title}</h3>
+                  <p className="mt-3 text-sm leading-6 text-white/55">{service.description}</p>
                 </article>
               );
             })}
           </div>
         </div>
-      </section>
+      </CxSection>
 
-      <section className="border-b border-[#0D3B66]/10 bg-white px-5 py-20 md:px-8">
-        <div className="mx-auto max-w-7xl">
-          <div className="grid gap-8 lg:grid-cols-[0.55fr_1.45fr] lg:items-end">
+      {/* ===== PROCESS ===== */}
+      <CxSection alt>
+        <div className="cx-reveal">
+          <div className="grid gap-8 lg:grid-cols-[1fr_0.9fr] lg:items-end">
             <div>
-              <SectionLabel>Project Delivery</SectionLabel>
-              <h2 className="text-3xl font-semibold leading-tight tracking-[-0.03em] text-[#071E33] md:text-5xl">
-                From the first brief to final handover.
-              </h2>
+              <Eyebrow>Project Delivery</Eyebrow>
+              <h2 className="cx-title text-4xl md:text-6xl">From the first brief to final handover.</h2>
             </div>
-            <p className="max-w-2xl text-base leading-8 text-[#3A4653] lg:justify-self-end">
+            <p className="cx-lead text-base">
               Every project is different, but the basics stay the same: understand the work, coordinate it properly, supervise construction and close it out well.
             </p>
           </div>
-
-          <div className="mt-12 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="relative mt-16 grid gap-10 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="cx-hairline absolute left-0 right-0 top-[22px] hidden xl:block" />
             {processSteps.map(({ number, title, text, icon: Icon }) => (
-              <article key={title} className="border-t border-[#0D3B66]/15 pt-7">
-                <div className="flex items-center justify-between">
-                  <Icon className="h-6 w-6 text-[#0D3B66]" />
-                  <span className="text-xs font-bold tracking-[0.2em] text-[#C8A45D]">{number}</span>
+              <article key={title} className="relative">
+                <div className="flex items-center gap-4">
+                  <span className="cx-mono grid h-11 w-11 place-items-center border border-[var(--cx-gold)]/50 bg-[var(--cx-deep)] text-sm text-[var(--cx-gold)]">{number}</span>
+                  <Icon className="h-5 w-5 text-white/40" />
                 </div>
-                <h3 className="mt-6 text-lg font-bold text-[#071E33]">{title}</h3>
-                <p className="mt-3 text-sm leading-7 text-[#3A4653]">{text}</p>
+                <h3 className="mt-7 text-xl font-semibold text-white">{title}</h3>
+                <p className="mt-3 text-sm leading-7 text-white/55">{text}</p>
               </article>
             ))}
           </div>
         </div>
-      </section>
+      </CxSection>
 
-      <section className="bg-[#F7F8FA] px-5 py-20 md:px-8">
-        <div className="mx-auto grid max-w-7xl overflow-hidden border border-[#0D3B66]/10 lg:grid-cols-[0.9fr_1.1fr]">
-          <div className="relative min-h-[430px] bg-[#071E33]">
+      {/* ===== PLAN BEFORE YOU BUILD ===== */}
+      <CxSection>
+        <div className="cx-reveal grid overflow-hidden border border-white/10 lg:grid-cols-[0.9fr_1.1fr]">
+          <div className="relative min-h-[360px] bg-[var(--cx-panel)]">
             <Image
               src={featuredProjects[1]?.heroImages?.[0] || featuredProjects[1]?.cover || heroImage}
               alt="Charismak construction and digital tools"
               fill
               sizes="(max-width: 1024px) 100vw, 45vw"
-              className="object-cover opacity-65"
+              className="object-cover opacity-60"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#071E33]/92 via-[#071E33]/70 to-[#071E33]/25" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#02080F]/40 to-[#02080F]/90" />
+            <div className="cx-grid-bg absolute inset-0" />
           </div>
-          <div className="flex flex-col justify-center bg-white p-8 md:p-12">
-            <SectionLabel>Plan Before You Build</SectionLabel>
-            <h2 className="text-3xl font-semibold leading-tight tracking-[-0.03em] text-[#071E33] md:text-5xl">
-              Check your budget and current prices before you start.
-            </h2>
-            <p className="mt-6 text-base leading-8 text-[#3A4653]">
+          <div className="flex flex-col justify-center bg-[var(--cx-deep)] p-8 md:p-14">
+            <Eyebrow>Plan Before You Build</Eyebrow>
+            <h2 className="cx-title text-3xl md:text-5xl">Check your budget and current prices before you start.</h2>
+            <p className="cx-lead mt-6 text-base">
               Use the estimator for an early cost range, then check the price catalogue for current material and supplier references.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/estimator" className="inline-flex items-center gap-2 bg-[#0D3B66] px-6 py-3.5 text-sm font-bold text-white">
-                <Calculator className="h-4 w-4" />
-                Estimator
-              </Link>
-              <Link href="/prices" className="inline-flex items-center gap-2 border border-[#0D3B66]/20 px-6 py-3.5 text-sm font-bold text-[#071E33]">
-                Market Prices <ArrowRight className="h-4 w-4" />
-              </Link>
+            <div className="mt-9 flex flex-wrap gap-3">
+              <Link href="/estimator" className="cx-btn cx-btn-primary"><Calculator className="h-4 w-4" /> Estimator</Link>
+              <Link href="/prices" className="cx-btn cx-btn-ghost">Market Prices <ArrowRight className="h-4 w-4" /></Link>
             </div>
           </div>
         </div>
-      </section>
-      <section id="ceo-app" className="bg-white px-5 py-12 md:px-8">
-        <div className="mx-auto grid max-w-5xl items-center gap-8 border border-[#0D3B66]/10 bg-[#F3F6F4] p-6 md:grid-cols-[1fr_220px] md:p-8">
+      </CxSection>
+
+      {/* ===== CEO APP (small banner) ===== */}
+      <section id="ceo-app" className="bg-[var(--cx-void)] px-5 pb-20 md:px-8">
+        <div className="cx-card cx-reveal mx-auto grid max-w-5xl items-center gap-8 p-6 md:grid-cols-[1fr_220px] md:p-8">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#C8A45D]">Also from Charismak · Free app</p>
-            <h3 className="mt-2 text-xl font-semibold leading-snug text-[#071E33] md:text-2xl">CEO – Shop Manager for traders</h3>
-            <p className="mt-2 text-sm leading-6 text-[#3A4653]">
+            <p className="cx-eyebrow">Also from Charismak · Free app</p>
+            <h3 className="mt-3 text-xl font-semibold leading-snug text-white md:text-2xl">CEO – Shop Manager for traders</h3>
+            <p className="mt-2 text-sm leading-6 text-white/60">
               Record sales, stock, expenses and debts on your phone and see your real profit every day. At close of day CEO shows any
               missing cash or stock. Works offline, in English, Pidgin, Yorùbá, Hausa and Igbo.
             </p>
-            <ul className="mt-3 grid gap-1 text-xs text-[#3A4653] sm:grid-cols-2">
+            <ul className="mt-3 grid gap-1 text-xs text-white/55 sm:grid-cols-2">
               <li>✔ Snap invoices and old records</li>
               <li>✔ Barcode scanning</li>
               <li>✔ WhatsApp debt reminders</li>
               <li>✔ Stock summary and Excel reports</li>
             </ul>
             <div className="mt-5 flex flex-wrap gap-2">
-              <a
-                href="https://ceo.charismakproject.com/download"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 bg-[#197447] px-4 py-2.5 text-xs font-bold text-white"
-              >
+              <a href="https://ceo.charismakproject.com/download" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 bg-[#197447] px-4 py-2.5 text-xs font-bold text-white hover:bg-[#1f8a55]">
                 <FileDown className="h-4 w-4" />
                 Download (Android)
               </a>
-              <a
-                href="https://ceo.charismakproject.com"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center border border-[#0D3B66]/20 bg-white px-4 py-2.5 text-xs font-bold text-[#071E33]"
-              >
+              <a href="https://ceo.charismakproject.com" target="_blank" rel="noreferrer" className="inline-flex items-center border border-white/20 px-4 py-2.5 text-xs font-bold text-white hover:bg-white hover:text-[#02080F]">
                 Learn more
               </a>
             </div>
           </div>
           <a href="https://ceo.charismakproject.com" target="_blank" rel="noreferrer" aria-label="CEO – Shop Manager app" className="mx-auto block w-[200px]">
-            <div className="rounded-[28px] bg-[#111] p-2 shadow-xl">
+            <div className="rounded-[28px] border border-white/15 bg-[#111] p-2 shadow-xl">
               <div className="rounded-[22px] bg-white p-3 text-[#1C1917]">
                 <div className="mb-2 text-[11px] font-extrabold">Good evening, Boss 👋</div>
                 <div className="rounded-xl bg-gradient-to-br from-[#0F7A3D] to-[#084A25] p-3 text-white">

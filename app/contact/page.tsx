@@ -5,9 +5,9 @@ import { loadWebsiteContent } from "@/lib/content/website-cms";
 import { createSeoMetadata } from "@/lib/seo";
 
 export const metadata = createSeoMetadata({
-  title: "Contact a Construction Company in Abuja",
+  title: "Contact Us – Construction Company in Maitama, Abuja",
   description:
-    "Contact Charismak Project Nigeria Limited in Maitama, Abuja for building construction, renovation, steel fabrication, project management, estimating and construction enquiries.",
+    "Call, WhatsApp or email Charismak Project Nigeria Limited in Maitama, Abuja about construction, renovation, fabrication, estimating or project management.",
   path: "/contact",
 });
 
@@ -30,13 +30,13 @@ export default async function ContactPage() {
   const address = textValue(byKey.get("company.address"), company.addresses[0]);
 
   return (
-    <main className="overflow-hidden bg-white pt-20">
+    <main className="cx-skin overflow-hidden bg-white pt-20">
       <section className="relative overflow-hidden bg-[#071E33] px-5 py-24 text-white md:px-8 lg:py-32">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_82%_18%,rgba(200,164,93,0.15),transparent_28rem)]" />
         <div className="relative mx-auto max-w-7xl">
-          <p className="mb-5 text-xs font-bold uppercase tracking-[0.32em] text-[#F2B544]">Contact Charismak</p>
+          <p className="mb-5 text-xs font-bold uppercase tracking-[0.32em] text-[#F2B544]">Contact Charismak · Maitama, Abuja</p>
           <h1 className="max-w-5xl text-5xl font-semibold leading-[1.02] tracking-[-0.04em] sm:text-6xl lg:text-7xl">Tell us what you want to build.</h1>
-          <p className="mt-7 max-w-3xl text-base leading-8 text-white/72 md:text-lg">Share your project brief, location and the stage you are currently at. We can discuss construction, renovation, engineering, project management or specialist works. If you came from the estimator, its project details will be carried into the enquiry form automatically.</p>
+          <p className="mt-7 max-w-3xl text-base leading-8 text-white/72 md:text-lg">Share your project brief, location and the stage you are currently at. We can discuss construction, renovation, engineering, project management or specialist works. If you came from the estimator, your project details are carried into the enquiry form automatically.</p>
         </div>
       </section>
 

@@ -5,7 +5,7 @@ export const metadata = { title: "Admin Projects" };
 
 export default function AdminProjectsPage() {
   return (
-    <main className="min-h-screen bg-[#F5F7FA] pt-20">
+    <main className="cx-skin min-h-screen bg-[#F5F7FA] pt-20">
       <AdminNav />
       <ProjectManager />
     </main>

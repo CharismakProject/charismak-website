@@ -43,7 +43,7 @@ export default function ProjectsClient({ initialProjects }: { initialProjects: P
   ).length;
 
   return (
-    <main className="overflow-hidden bg-white pt-20">
+    <main className="cx-skin overflow-hidden bg-white pt-20">
       <section className="relative overflow-hidden bg-[#071E33] px-5 py-24 text-white md:px-8 lg:py-32">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_82%_18%,rgba(200,164,93,0.15),transparent_30rem)]" />
         <div className="relative mx-auto max-w-7xl">
