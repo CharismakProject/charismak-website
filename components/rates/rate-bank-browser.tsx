@@ -106,6 +106,10 @@ export default function RateBankBrowser() {
         </div>
       </section>
 
+      <Link href="/construction-explorer" className="flex items-center justify-between gap-4 rounded-2xl border border-[#F2B544]/25 bg-[#F2B544]/5 px-5 py-4 text-sm text-white hover:border-[#F2B544]/60">
+        <span><strong className="block text-[#F2B544]">Explore how construction works</strong><span className="mt-1 block text-xs text-white/65">Six interactive models: buildings, complex structures, steelwork, plumbing and electrical. Bungalow quantities and rates are included separately.</span></span><ArrowRight className="h-5 w-5 shrink-0 text-[#F2B544]" />
+      </Link>
+
       <section className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="-mx-4 overflow-x-auto px-4 lg:mx-0 lg:px-0">
           <div className="flex w-max gap-2">
