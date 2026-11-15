@@ -5,9 +5,9 @@ type LightingEngine = Pick<typeof THREE, "AmbientLight" | "DirectionalLight" | "
 // WebGPURenderer registers lights by constructor identity. Its lights must
 // therefore be instantiated from the same module as the renderer itself.
 export function createWalkthroughLighting(Engine: LightingEngine, software: boolean) {
-  const sky = new Engine.HemisphereLight(0xe8f6ff, 0x96765a, 2.2);
-  const fill = new Engine.AmbientLight(0xffffff, software ? 0.65 : 0.35);
-  const sun = new Engine.DirectionalLight(0xffeed7, software ? 0.65 : 3.1);
+  const sky = new Engine.HemisphereLight(0xe6f0ff, 0x526475, software ? 0.7 : 1.1);
+  const fill = new Engine.AmbientLight(0xffffff, software ? 0.42 : 0.25);
+  const sun = new Engine.DirectionalLight(0xffeed7, software ? 0.55 : 2.2);
   sun.position.set(-9, 18, 12);
   sun.castShadow = true;
   sun.shadow.mapSize.set(1024, 1024);

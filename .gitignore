@@ -39,3 +39,5 @@ desktop.ini
 *.temp
 *.bak
 ~$*
+# Generated locally from pinned IFC / PDF packages during the build
+/public/construction-assets/

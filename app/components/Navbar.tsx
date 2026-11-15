@@ -13,6 +13,7 @@ const navItems = [
 ];
 
 const toolItems = [
+  { label: "Construction Studio", href: "/construction-studio", description: "Upload a drawing and BOQ; explore cost and programme" },
   { label: "Cost Estimator", href: "/estimator", description: "Early budget range for your project" },
   { label: "Material Prices", href: "/prices", description: "Abuja prices with source and date" },
   { label: "Rate Bank", href: "/rates", description: "Build-ups for common construction work" },
