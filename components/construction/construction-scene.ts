@@ -30,10 +30,10 @@ export async function createConstructionScene(host: HTMLElement, options: Option
   });
   const wallFaces: THREE.Group[] = [];
   const material = (color: string, roughness = 0.85, metalness = 0) => new Engine.MeshStandardMaterial({ color, roughness, metalness });
-  const dirt = material("#a88e6d"); const earthSide = material("#705842");
-  const concrete = material("#bebbb0"); const timber = material("#b68b53"); const darkSteel = material("#354c50", 0.45, 0.4);
-  const cream = material("#eee6d5"); const roofMat = material("#334a4f", 0.45, 0.35); const gold = material("#ddb465", 0.45, 0.3);
-  const glass = new Engine.MeshStandardMaterial({ color: "#91bac5", metalness: 0.35, roughness: 0.15, transparent: true, opacity: 0.7 });
+  const dirt = material("#34475d"); const earthSide = material("#263448");
+  const concrete = material("#8ca1be"); const timber = material("#bb7632"); const darkSteel = material("#354c50", 0.45, 0.4);
+  const cream = material("#eee6d5"); const roofMat = material("#173957", 0.45, 0.35); const gold = material("#ddb465", 0.45, 0.3);
+  const glass = new Engine.MeshStandardMaterial({ color: "#3cc2df", metalness: 0.35, roughness: 0.15, transparent: true, opacity: 0.7 });
   const baseY = 0.43;
   const box = (parent: THREE.Object3D, w: number, h: number, d: number, x: number, y: number, z: number, mat: THREE.Material) => {
     const segments = (length: number) => software ? Math.max(1, Math.min(18, Math.ceil(length / 1.1))) : 1;
@@ -51,8 +51,8 @@ export async function createConstructionScene(host: HTMLElement, options: Option
   const texture = (kind: "blocks" | "tiles") => {
     const canvas = document.createElement("canvas"); canvas.width = 256; canvas.height = 128;
     const context = canvas.getContext("2d")!;
-    context.fillStyle = kind === "blocks" ? "#b8b3a2" : "#d9d2c4"; context.fillRect(0, 0, 256, 128);
-    context.strokeStyle = kind === "blocks" ? "#8e8a7c" : "#f2eee7"; context.lineWidth = 3;
+    context.fillStyle = kind === "blocks" ? "#d98242" : "#d9d2c4"; context.fillRect(0, 0, 256, 128);
+    context.strokeStyle = kind === "blocks" ? "#8b412d" : "#f2eee7"; context.lineWidth = 3;
     for (let row = 0; row < 2; row++) {
       const offset = row % 2 ? 64 : 0;
       for (let x = -1; x < 3; x++) context.strokeRect(x * 128 + offset, row * 64, 128, 64);
@@ -62,7 +62,7 @@ export async function createConstructionScene(host: HTMLElement, options: Option
   const blockMap = texture("blocks");
   const blockMat = (length: number, height: number) => {
     const map = blockMap.clone(); map.repeat.set(length / 0.9, height / 0.45);
-    return new Engine.MeshStandardMaterial({ map, color: software ? "#b9b4a4" : "#e1d8c2", roughness: 1 });
+    return new Engine.MeshStandardMaterial({ map, color: software ? "#d98242" : "#ffffff", roughness: 1 });
   };
 
   // A cut soil base makes excavation and the below-ground foundation visible.
@@ -75,7 +75,7 @@ export async function createConstructionScene(host: HTMLElement, options: Option
   box(cutGround, 4.6, 1.05, 11, -8.7, -0.55, 0, dirt);
   box(cutGround, 4.6, 1.05, 11, 8.7, -0.55, 0, dirt);
   for (const x of [-3, 3]) for (const z of [-2.5, 2.5]) box(cutGround, 5.15, 1.05, 4.15, x, -0.55, z, dirt);
-  const datum = new Engine.GridHelper(21, 21, 0x8eaa9c, 0xc2c8b8); datum.position.y = -0.015; world.add(datum);
+  const datum = new Engine.GridHelper(21, 21, 0xff5b9d, 0x9caec7); datum.position.y = -0.015; world.add(datum);
 
   // Setting-out profiles and offset strings remain visible until walling begins.
   for (const x of [-6.8, 6.8]) for (const z of [-5.8, 5.8]) {
@@ -186,7 +186,7 @@ export async function createConstructionScene(host: HTMLElement, options: Option
   box(groups[11], 0.65, 0.035, 0.4, 3.4, 1.43, 4.5, darkSteel);
   box(groups[11], 2.1, 0.08, 1.2, 0.8, 0.14, 5.8, concrete);
 
-  const paving = material("#c5b99f");
+  const paving = material("#8196b0");
   box(groups[12], 15.5, 0.09, 3.6, 0, 0.02, 7.1, paving);
   box(groups[12], 2.1, 0.08, 10.4, 7.3, 0.01, 0, paving);
   const grass = material("#7b9472");
@@ -211,10 +211,10 @@ export async function createConstructionScene(host: HTMLElement, options: Option
     groups[12].traverse((object) => { if (object instanceof Engine.Mesh && object.position.y < 0.2) object.renderOrder = -30; });
   }
 
-  let stage = 5, cutaway = false, disposed = false, dirty = true, frame = 0;
+  let stage = 13, cutaway = false, disposed = false, dirty = true, frame = 0;
   const animated = groups.map(() => 1);
-  const paint = new Engine.MeshStandardMaterial({ color: "#ece5d4", roughness: 0.85 });
-  const plaster = new Engine.MeshStandardMaterial({ color: "#d4c9b3", roughness: 1 });
+  const paint = new Engine.MeshStandardMaterial({ color: "#278b89", roughness: 0.85 });
+  const plaster = new Engine.MeshStandardMaterial({ color: "#e5e2d7", roughness: 1 });
   for (const wall of walls) wall.userData.originalMaterial = wall.material;
   const update = (next: number, section: boolean) => {
     stage = next; cutaway = section; dirty = true;

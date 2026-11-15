@@ -1,27 +1,26 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowDown, ArrowLeft, ArrowRight, Check, CheckCircle2, ChevronLeft, ChevronRight, Download, Expand, Layers3, MapPin, MousePointer2, Pause, Play, RotateCcw, ShieldCheck } from "lucide-react";
-import { BUILD_STAGES, SAMPLE_BUILDING, compactMoney, csvCell, money, priceStages, type Overrides } from "../../lib/construction/walkthrough";
+import { BUILD_STAGES, SAMPLE_BUILDING, compactMoney, csvCell, money } from "../../lib/construction/walkthrough";
 import { RATE_LOCATIONS, getLocation } from "../../lib/rates/locations";
 import type { SceneHandle } from "./construction-scene";
 import styles from "./construction-walkthrough.module.css";
+import ConstructionCostPanel from "./construction-cost-panel";
+import { useConstructionCosts } from "./use-construction-costs";
 
-const STORAGE = "charismak-walkthrough-v1";
-const finite = (value: number) => Number.isFinite(value) && value >= 0 && value <= 1e10;
 type Props = { siteOrigin?: string };
 
 export default function ConstructionWalkthrough({ siteOrigin = "" }: Props) {
-  const [stage, setStage] = useState(5);
-  const [locationId, setLocationId] = useState("fct");
+  const [stage, setStage] = useState(13);
+  const costs = useConstructionCosts("bungalow");
+  const { locationId, setLocationId, saved, priced } = costs;
   const [cutaway, setCutaway] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [showAll, setShowAll] = useState(false);
-  const [overrides, setOverrides] = useState<Overrides>({});
   const [restored, setRestored] = useState(false);
-  const [saved, setSaved] = useState(false);
   const hostRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<SceneHandle | null>(null);
@@ -39,39 +38,22 @@ export default function ConstructionWalkthrough({ siteOrigin = "" }: Props) {
       onSelect: (next) => { if (!cancelled) { setPlaying(false); selectStage(next); } },
       onReady: () => { if (!cancelled) setReady(true); },
       onError: () => { if (!cancelled) setFailed(true); },
-    })).then((handle) => { if (cancelled) handle.dispose(); else { sceneRef.current = handle; handle.update(5, false); } }).catch(() => { if (!cancelled) setFailed(true); });
+    })).then((handle) => { if (cancelled) handle.dispose(); else { sceneRef.current = handle; handle.update(13, false); } }).catch(() => { if (!cancelled) setFailed(true); });
     return () => { cancelled = true; sceneRef.current?.dispose(); sceneRef.current = null; };
   }, [selectStage]);
 
   useEffect(() => { sceneRef.current?.update(stage, cutaway); }, [stage, cutaway, ready]);
   useEffect(() => {
     if (!playing) return;
-    const timer = window.setTimeout(() => { if (stage === BUILD_STAGES.length - 1) setPlaying(false); else selectStage(stage + 1); }, 4500);
+    const timer = window.setTimeout(() => { if (stage === BUILD_STAGES.length - 1) setPlaying(false); else selectStage(stage + 1); }, 10000);
     return () => window.clearTimeout(timer);
   }, [playing, stage, selectStage]);
   useEffect(() => {
-    try {
-      const raw = JSON.parse(window.localStorage.getItem(STORAGE) ?? "null");
-      if (raw && typeof raw === "object") {
-        const valid: Overrides = {};
-        if (raw.overrides && typeof raw.overrides === "object") for (const [key, value] of Object.entries(raw.overrides)) {
-          if (!value || typeof value !== "object" || !/^[a-z-]+:[a-z-]+$/.test(key)) continue;
-          const entry = value as { quantity?: unknown; rate?: unknown };
-          valid[key] = { ...(typeof entry.quantity === "number" && finite(entry.quantity) ? { quantity: entry.quantity } : {}), ...(typeof entry.rate === "number" && finite(entry.rate) ? { rate: entry.rate } : {}) };
-        }
-        setOverrides(valid);
-        if (RATE_LOCATIONS.some((item) => item.id === raw.locationId)) setLocationId(raw.locationId);
-      }
-    } catch { /* Local storage is optional. */ }
     const hash = window.location.hash.slice(1);
     const match = BUILD_STAGES.findIndex((item) => item.id === hash);
     if (match >= 0) selectStage(match);
     setRestored(true);
   }, [selectStage]);
-  useEffect(() => {
-    if (!restored) return;
-    try { window.localStorage.setItem(STORAGE, JSON.stringify({ locationId, overrides })); setSaved(true); } catch { setSaved(false); }
-  }, [overrides, locationId, restored]);
   useEffect(() => {
     if (!restored) return;
     window.history.replaceState(null, "", `#${BUILD_STAGES[stage].id}`);
@@ -82,27 +64,15 @@ export default function ConstructionWalkthrough({ siteOrigin = "" }: Props) {
     }
   }, [stage, restored]);
 
-  const priced = useMemo(() => priceStages(locationId, overrides), [locationId, overrides]);
   const current = priced[stage];
   const full = priced.reduce((sum, item) => sum + item.total, 0);
   const pending = priced.reduce((sum, item) => sum + item.unpriced, 0);
   const cumulative = priced.slice(0, stage + 1).reduce((sum, item) => sum + item.total, 0);
   const location = getLocation(locationId);
   const displayed = showAll ? priced : [current];
-  const manualCount = Object.keys(overrides).filter((key) => key.startsWith(`${locationId}:`)).length;
-  const edit = (id: string, field: "quantity" | "rate", raw: string) => {
-    const value = Number(raw);
-    if (raw !== "" && !finite(value)) return;
-    const key = `${locationId}:${id}`;
-    setOverrides((old) => {
-      const entry = { ...old[key] };
-      if (raw === "") delete entry[field]; else entry[field] = value;
-      const next = { ...old };
-      if (entry.quantity === undefined && entry.rate === undefined) delete next[key]; else next[key] = entry;
-      return next;
-    });
-  };
-  const reset = () => setOverrides((old) => Object.fromEntries(Object.entries(old).filter(([key]) => !key.startsWith(`${locationId}:`))));
+  const manualCount = priced.flatMap(phase => phase.items).filter(item => item.custom).length;
+  const edit = costs.editWork;
+  const reset = costs.resetModel;
   const download = () => {
     const rows: (string | number)[][] = [
       ["CHARISMAK — ILLUSTRATIVE CONSTRUCTION WALKTHROUGH"],
@@ -146,7 +116,7 @@ export default function ConstructionWalkthrough({ siteOrigin = "" }: Props) {
           <div className={styles.checkTitle}><ShieldCheck size={16} /> BEFORE YOU MOVE ON</div><ul className={styles.checks}>{current.checks.map((item) => <li key={item}><CheckCircle2 size={16} /><span>{item}</span></li>)}</ul>
           <div className={styles.stageCost}><div><small>PRICED WORK AT THIS STAGE</small><strong>{current.items.every((item) => item.rate === null) ? "Rate required" : compactMoney(current.total)}</strong></div><a href="#work-costs">See breakdown <ArrowDown size={14} /></a></div>
           {current.unpriced > 0 && <p className={styles.unpriced}>{current.unpriced} item{current.unpriced > 1 ? "s" : ""} still need{current.unpriced === 1 ? "s" : ""} a rate. Subtotal excludes these.</p>}
-          <div className={styles.stepControls}><button type="button" onClick={() => { setPlaying(false); selectStage(stage - 1); }} disabled={stage === 0} aria-label="Previous stage"><ChevronLeft size={18} /></button><button type="button" className={styles.playButton} onClick={() => { if (playing) setPlaying(false); else { selectStage(0); setPlaying(true); } }}>{playing ? <Pause size={15} fill="currentColor" /> : <Play size={15} fill="currentColor" />}{playing ? "Pause walkthrough" : "Play from the start"}</button><button type="button" onClick={() => { setPlaying(false); selectStage(stage + 1); }} disabled={stage === 13} aria-label="Next stage"><ChevronRight size={18} /></button></div>
+          <details className={styles.inlineBuildUp}><summary>Rate build-up & edit</summary><ConstructionCostPanel costs={costs} model="bungalow" step={stage} heading={false} onInteract={() => setPlaying(false)} /></details><div className={styles.stepControls}><button type="button" onClick={() => { setPlaying(false); selectStage(stage - 1); }} disabled={stage === 0} aria-label="Previous stage"><ChevronLeft size={18} /></button><button type="button" className={styles.playButton} onClick={() => { if (playing) setPlaying(false); else { selectStage(0); setPlaying(true); } }}>{playing ? <Pause size={15} fill="currentColor" /> : <Play size={15} fill="currentColor" />}{playing ? "Pause walkthrough" : "Play from the start"}</button><button type="button" onClick={() => { setPlaying(false); selectStage(stage + 1); }} disabled={stage === 13} aria-label="Next stage"><ChevronRight size={18} /></button></div>
         </aside>
       </section>
 
@@ -154,7 +124,7 @@ export default function ConstructionWalkthrough({ siteOrigin = "" }: Props) {
 
       <section className={styles.summary} aria-label="Cost summary"><div><small>PRICED THROUGH STAGE {String(stage + 1).padStart(2, "0")}</small><strong>{compactMoney(cumulative)}</strong><span>Based on the items entered so far</span></div><div><small>ALL-STAGE PRICED WORK SUBTOTAL</small><strong>{compactMoney(full)}</strong><span>{pending} unpriced items excluded · not a complete budget</span></div><div className={styles.rateBasis}><span className={styles.referenceBadge}>REFERENCE RATES · UNDER REVIEW</span><p>{location.name}{location.status === "provisional" ? " uses provisional regional adjustments." : " uses the existing Abuja rate-bank build-ups."} Quantities are illustrative. Edit them against your project.</p></div></section>
 
-      <section id="work-costs" className={styles.costSection}>
+      <section id="work-costs" className={styles.costSection} onFocusCapture={() => setPlaying(false)}>
         <header className={styles.costHeading}><div><p className={styles.eyebrow}>UNDERSTAND THE NUMBERS</p><h2>The work behind the cost.</h2><p>Quantity × unit rate. Open a reference to inspect its build-up.</p></div><button type="button" className={styles.export} onClick={download}><Download size={16} /> Export all stages</button></header>
         <div className={styles.tableTools}><div className={styles.tabs}><button type="button" aria-pressed={!showAll} onClick={() => setShowAll(false)}>This stage</button><button type="button" aria-pressed={showAll} onClick={() => setShowAll(true)}>All 14 stages</button></div><div className={styles.saveInfo}><span>{saved ? <><Check size={13} /> Saved on this device</> : "Edits apply on this device"}</span>{manualCount > 0 && <button type="button" onClick={reset}><RotateCcw size={12} /> Reset {location.name} edits</button>}</div></div>
         {displayed.map((phase) => <div className={styles.phaseTable} key={phase.id}><div className={styles.phaseTitle}><h3>{phase.title}</h3><span>{phase.unpriced ? `${phase.unpriced} unpriced · ` : ""}{money(phase.total)}</span></div><div className={styles.tableScroll}><table><thead><tr><th>Work description</th><th>Quantity</th><th>Unit</th><th>Rate (₦)</th><th>Amount (₦)</th></tr></thead><tbody>{phase.items.map((item) => <tr key={item.id}><td><strong>{item.title}</strong><div className={styles.source}>{item.custom ? <span className={styles.custom}>Your rate</span> : item.reference ? <a href={`${siteOrigin}/rates/${item.reference.slug}${locationId === "fct" ? "" : `?state=${locationId}`}`} target="_blank" rel="noopener noreferrer">{item.reference.code} · {item.reference.lastReviewed} · under review ↗</a> : <span className={styles.needsRate}>Rate required</span>}</div><details><summary>Quantity and scope basis</summary><p>{item.basis}</p>{item.reference && <p>{item.reference.specification}</p>}</details></td><td><input type="number" min="0" max="10000000000" step="any" aria-label={`${item.title} quantity`} value={item.quantity} onChange={(event) => edit(item.id, "quantity", event.target.value)} /></td><td>{item.unit}</td><td><input type="number" min="0" max="10000000000" step="any" placeholder="Enter rate" aria-label={`${item.title} rate`} value={item.rate === null ? "" : Math.round(item.rate * 100) / 100} onChange={(event) => edit(item.id, "rate", event.target.value)} /></td><td className={styles.amount}>{item.rate === null ? <span>Unpriced</span> : money(item.amount).replace("₦", "")}</td></tr>)}</tbody></table></div></div>)}

@@ -1,0 +1,71 @@
+.panel { color:#edf0e9;font-size:13px;min-width:0; }
+.panel h3 { font-size:23px!important;line-height:1.2!important;margin:0 0 18px!important; }
+.eyebrow { color:#dfbd78;font-size:10px;letter-spacing:1px;margin:0 0 12px; }
+.panel label { display:block;color:#c2cfcd;font-size:11px;line-height:1.5;min-width:0; }
+.panel input,.panel select { display:block;width:100%;min-width:0;margin-top:6px;padding:10px 9px;border:1px solid #ffffff24;border-radius:5px;background:#09212d;color:#f0f0e7;font-size:13px;font-family:inherit; }
+.panel select { cursor:pointer; }
+.panel input:focus,.panel select:focus { border-color:#dfbd78;outline:1px solid #dfbd78;outline-offset:1px; }
+.panel input::placeholder { color:#81999b; }
+.panel label>span { color:#829e9f; }
+.location { display:flex;align-items:end;gap:14px; }
+.location label { flex:1; }
+.location>span { max-width:110px;font-size:10px;color:#97aeab;line-height:1.6;padding-bottom:3px; }
+.locationNote,.editNote { font-size:11px;line-height:1.6;color:#a7bab7;margin:12px 0; }
+.locationNote { color:#dfbd78; }
+.editNote { padding:10px 0;border-bottom:1px solid #ffffff13; }
+.workSelect { margin-bottom:16px; }
+.workFields { display:grid;grid-template-columns:1fr 1fr;gap:12px; }
+.workTotal { display:flex;align-items:center;justify-content:space-between;gap:12px;background:#dfbd780b;border:1px solid #dfbd782a;border-radius:6px;padding:13px 11px;margin-top:14px; }
+.workTotal>span { font-size:11px;line-height:1.6; }
+.workTotal small { display:block;font-size:10px;color:#9fb4ae; }
+.workTotal strong { font-size:17px;color:#dfbd78;font-weight:500;white-space:nowrap; }
+.basis { margin:16px 0 22px; }
+.panel summary { color:#dfbd78;font-size:11px;cursor:pointer;line-height:1.6; }
+.panel details p { color:#9eb3af;font-size:11px;line-height:1.75;margin:9px 0; }
+.basis a { color:#dfbd78!important;font-size:11px; }
+.resourceHeading { display:flex;gap:10px;align-items:center;justify-content:space-between;border-top:1px solid #ffffff13;padding-top:18px; }
+.resourceHeading strong { font-size:13px;font-weight:500; }
+.resourceHeading>span { font-size:10px;color:#94ada9;text-align:right; }
+.group { margin:18px 0; }
+.group h5 { color:#dfbd78;font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;margin:0 0 10px; }
+.resource { border:1px solid #ffffff12;background:#ffffff03;border-radius:6px;padding:12px 10px;margin-top:8px; }
+.resourceTitle { display:flex;align-items:baseline;justify-content:space-between;gap:10px; }
+.resourceTitle>span { font-size:12px;line-height:1.5;overflow-wrap:anywhere; }
+.resourceTitle strong { font-size:12px;font-weight:500;color:#e8e7cf;white-space:nowrap; }
+.resourceFields { display:grid;grid-template-columns:minmax(0,1fr) 8px minmax(0,1fr);align-items:end;gap:8px;margin-top:10px; }
+.resourceFields>span { padding-bottom:11px;color:#859c98; }
+.resourceFields label { font-size:10px; }
+.resource details { margin-top:8px; }
+.resource summary { font-size:10px;color:#8fa8a3; }
+.resource details p { font-size:10px; }
+.add,.reset { display:flex;align-items:center;gap:7px;border:0!important;background:none!important;color:#dfbd78!important;padding:0!important;font-size:11px!important;line-height:1.6; }
+.addForm { padding:13px;border:1px solid #dfbd7835;border-radius:6px;margin-top:13px; }
+.addForm>div { display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px; }
+.addForm button { padding:9px 13px;border:1px solid #dfbd7850;background:#dfbd7813;color:#dfbd78;border-radius:4px;margin-top:13px;font-size:11px; }
+.direct { display:flex;justify-content:space-between;gap:12px;border-top:1px solid #ffffff18;margin-top:23px;padding:16px 0;font-size:12px; }
+.direct strong { color:#dfbd78;font-weight:500; }
+.allowances { border-top:1px solid #ffffff18;padding-top:12px; }
+.allowances summary { margin-bottom:14px; }
+.allowances>div { display:grid;grid-template-columns:minmax(0,1fr) 70px 78px;align-items:center;gap:7px;margin-top:13px; }
+.allowances label { font-size:11px; }
+.allowances label small { display:block;font-size:9px;color:#839d98;margin-top:3px; }
+.allowances>div>span { display:flex;align-items:center;gap:3px;color:#a1b7af;font-size:11px; }
+.allowances input { padding:8px 6px;font-size:12px;margin-top:0; }
+.allowances strong { text-align:right;font-size:11px;font-weight:500; }
+.adjustment { display:flex;gap:12px;justify-content:space-between;border-top:1px solid #ffffff13;margin-top:18px;padding-top:15px;font-size:12px; }
+.adjustment small { display:block;font-size:10px;line-height:1.6;color:#9cb1ab;margin-top:5px; }
+.adjustment strong { white-space:nowrap;color:#dfbd78;font-weight:500; }
+.missing { color:#e5c583;background:#dfbd780b;border-left:2px solid #dfbd78;padding:10px 11px;font-size:11px;line-height:1.7;margin-top:18px; }
+.rateResult { display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid #dfbd7840;margin-top:20px;padding-top:17px;font-size:12px; }
+.rateResult small { display:block;font-size:10px;color:#94aca5;line-height:1.6;margin-top:4px; }
+.rateResult strong { font-size:16px;color:#dfbd78;font-weight:500;text-align:right; }
+.help { font-size:10px;line-height:1.8;color:#8fa8a1;margin:12px 0; }
+.footer { display:flex;align-items:center;flex-wrap:wrap;gap:12px;border-top:1px solid #ffffff13;margin-top:24px;padding-top:18px; }
+.footer button { display:flex;align-items:center;gap:6px;font-size:10px;background:#dfbd7810;color:#dfbd78;border:1px solid #dfbd7825;border-radius:4px;padding:8px; }
+.noWork { font-size:13px;color:#b0c3bb;line-height:1.8;padding:15px 0; }
+.live { margin:18px 22px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 12px; }
+.live>div>span { display:block;color:#91aaa7;font-size:9px;line-height:1.5; }
+.live strong { display:block;font-size:16px;letter-spacing:-.4px;color:#dfbd78;font-weight:500;margin-top:5px; }
+.live p { grid-column:1/-1;font-size:10px;line-height:1.7;margin:1px 0 0;color:#9fb2aa; }
+.live button { grid-column:1/-1;display:flex;align-items:center;gap:7px;border:0;background:none;color:#dfbd78;font-size:11px;padding:5px 0 0;text-align:left; }
+@media(max-width:550px) { .live { margin:17px 20px; }.live strong { font-size:15px; }.resourceTitle strong { font-size:11px; }.allowances>div { grid-template-columns:minmax(0,1fr) 65px 70px;gap:5px; }.allowances label { font-size:10px; }.allowances strong { font-size:10px; }.panel input,.panel select { font-size:14px; }.resourceFields label { font-size:10px; } }

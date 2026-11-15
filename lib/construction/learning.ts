@@ -25,9 +25,9 @@ export const LEARNING_REFERENCES: Record<string, { title: string; source: string
 
 export const LEARNING_MODELS: LearningModel[] = [
   {
-    id: "bungalow", track: "building", title: "The bungalow journey", subtitle: "A 120 m² home, explained in 14 stages", defaultStep: 5, explodable: true,
+    id: "bungalow", track: "building", title: "The bungalow journey", subtitle: "A 120 m² home, explained in 14 stages", defaultStep: 13, explodable: true,
     note: "The house and quantities are illustrative. Ground conditions, drawings, approvals and engineered details determine the actual project.", references: ["loadpath"],
-    legend: [{ color: "#b4946d", label: "Ground" }, { color: "#b6b7ad", label: "Concrete & masonry" }, { color: "#b88c56", label: "Timber" }, { color: "#45616a", label: "Roof & metalwork" }],
+    legend: [{ color: "#34475d", label: "Ground" }, { color: "#397bb3", label: "Concrete" }, { color: "#d98242", label: "Blockwork" }, { color: "#e5e2d7", label: "Plaster" }, { color: "#278b89", label: "Paint" }, { color: "#173957", label: "Roof" }],
     lessons: [
       lesson("Planning & approvals", "Plan", "An empty site before work starts.", "The brief, ground information, coordinated drawings and budget establish what will be built.", "Confirm boundaries, access, surveys, responsibilities and required approvals."),
       lesson("Clearing & setting out", "Set out", "Profiles and strings establish the building lines.", "Setting out turns the drawing into positions and levels on the ground.", "Check setbacks, diagonals and the permanent level benchmark."),
@@ -47,9 +47,9 @@ export const LEARNING_MODELS: LearningModel[] = [
     parts: [part("house-foundations", "Foundation system", 3, "The below-ground support of this sample bungalow."), part("house-floor", "Floor build-up", 4, "Several separate layers sit beneath the finished floor."), part("house-walls", "Walls & openings", 5, "External walls, partitions, lintels and the ring beam."), part("house-roof", "Roof framing", 6, "Framing and connections beneath the roof covering."), part("house-services", "Concealed services", 8, "Use the separate plumbing and electrical models to explore these systems."), part("house-complete", "Completed building", 13, "Explore the exterior or remove the roof to inspect the inside.")],
   },
   {
-    id: "concrete-frame", track: "structures", title: "Multi-storey concrete frame", subtitle: "Four storeys, a structural core and an open stairwell", defaultStep: 4, explodable: true, pathsLabel: "Show load paths",
+    id: "concrete-frame", track: "structures", title: "Multi-storey concrete frame", subtitle: "Four storeys, a structural core and an open stairwell", defaultStep: 6, explodable: true, pathsLabel: "Show load paths",
     note: "Floor cycles are grouped for teaching. Temporary works, foundation choice, member sizes and reinforcement require an engineered design; the paths are conceptual, not a force analysis.", references: ["loadpath"],
-    legend: [{ color: "#aeb6b0", label: "Columns & beams" }, { color: "#d9c9a9", label: "Slabs" }, { color: "#7d9b9c", label: "Structural core" }, { color: "#e0ae4c", label: "Conceptual load path" }],
+    legend: [{ color: "#397bb3", label: "Columns & beams" }, { color: "#d9c9a9", label: "Slabs" }, { color: "#7d9b9c", label: "Structural core" }, { color: "#e0ae4c", label: "Conceptual load path" }],
     lessons: [
       lesson("Foundations & ground beams", "Foundations", "Pad supports and connecting ground beams beneath the column grid.", "The support system carries the frame and core into the ground.", "Confirm foundation type and positions from the ground investigation and structural design."),
       lesson("Ground-storey columns & core", "Starters", "The first column lifts and the start of the core.", "A coordinated grid leaves space for the intended rooms, openings and vertical circulation.", "Inspect reinforcement continuity, cover and starter locations."),
@@ -62,9 +62,9 @@ export const LEARNING_MODELS: LearningModel[] = [
     parts: [part("rc-footings", "Footings & ground beams", 0, "The supports beneath the column grid; foundation sizes are schematic."), part("rc-columns", "Column lifts", 1, "Vertical members that receive loads from the floor framing."), part("rc-first", "First-floor framing", 2, "Beams and slab panels leave an opening for the stair."), part("rc-upper", "Upper-storey framing", 3, "Repeated floor cycles extend the supporting frame."), part("rc-core", "Structural core", 1, "A continuous core participates in the designed lateral stability system."), part("rc-stairs", "Stair flights & landings", 4, "Flights connect the storeys through a reserved opening."), part("rc-envelope", "Facade panels", 5, "Enclosure panels sit outside the structural frame.")],
   },
   {
-    id: "truss-bridge", track: "structures", title: "Long-span truss bridge", subtitle: "Deck, triangulated trusses, bearings and abutments", defaultStep: 4, explodable: true, pathsLabel: "Show load paths",
+    id: "truss-bridge", track: "structures", title: "Long-span truss bridge", subtitle: "Deck, triangulated trusses, bearings and abutments", defaultStep: 5, explodable: true, pathsLabel: "Show load paths",
     note: "This is a schematic structural-system model. Member actions, buckling, connection design, bearings and the erection method are not calculated.", references: ["steel", "bracing"],
-    legend: [{ color: "#678c94", label: "Trusses" }, { color: "#d2c8ae", label: "Deck" }, { color: "#d7aa62", label: "Bearings" }, { color: "#aab3ac", label: "Abutments" }],
+    legend: [{ color: "#2459a6", label: "Trusses" }, { color: "#d9a755", label: "Deck" }, { color: "#e9ac29", label: "Bearings" }, { color: "#8497b5", label: "Abutments" }],
     lessons: [
       lesson("Abutments & supports", "Supports", "Two support zones define the ends of the crossing.", "The bridge needs a clear route for forces to reach its foundations.", "The support and ground design must suit the crossing and site conditions."),
       lesson("Bearing zones", "Bearings", "Bearings sit between the superstructure and the supporting concrete.", "The bearing arrangement transfers actions while accommodating the designed movements.", "Check the specified bearing positions, restraints and installation details."),
@@ -76,9 +76,9 @@ export const LEARNING_MODELS: LearningModel[] = [
     parts: [part("bridge-supports", "Abutments", 0, "Concrete support zones at the ends of the span."), part("bridge-bearings", "Bearing pads", 1, "Interfaces between the steel superstructure and concrete supports."), part("bridge-trusses", "Chords & diagonals", 2, "The triangulated side frames of the crossing."), part("bridge-cross", "Cross members & plan bracing", 3, "Members linking and restraining the two side trusses."), part("bridge-deck", "Deck panels", 4, "A load-carrying surface supported by the cross framing."), part("bridge-rails", "Edge rails", 4, "The schematic edge-protection arrangement.")],
   },
   {
-    id: "steel-frame", track: "steel", title: "Steel portal-frame building", subtitle: "I-sections, bolted bases, roof members and bracing", defaultStep: 3, explodable: true, pathsLabel: "Show load paths",
+    id: "steel-frame", track: "steel", title: "Steel portal-frame building", subtitle: "I-sections, bolted bases, roof members and bracing", defaultStep: 6, explodable: true, pathsLabel: "Show load paths",
     note: "Sections and connection geometry are illustrative. Bolt sizes, welds, anchors, bracing and erection stability require project-specific design and inspection.", references: ["steel", "bracing"],
-    legend: [{ color: "#678795", label: "Primary frame" }, { color: "#d8b469", label: "Plates & anchors" }, { color: "#b28065", label: "Bracing" }, { color: "#9eacac", label: "Secondary steel" }],
+    legend: [{ color: "#2459a6", label: "Primary frame" }, { color: "#e9ac29", label: "Plates & anchors" }, { color: "#df693e", label: "Bracing" }, { color: "#6fa8b8", label: "Secondary steel" }],
     lessons: [
       lesson("Concrete supports", "Supports", "Concrete foundations provide the starting points for the steel frame.", "Steel reactions must be carried through the bases into the foundation system.", "Confirm setting out, levels and the approved foundation details."),
       lesson("Base plates & anchors", "Bases", "Plates, grout zones and anchor rods form the column bases.", "The base assembly is an important connection rather than simply a column touching concrete.", "Check anchor setting, plate bearing, grout and the specified tightening procedure."),
@@ -91,9 +91,9 @@ export const LEARNING_MODELS: LearningModel[] = [
     parts: [part("steel-supports", "Concrete supports", 0, "The foundation and pedestal zones beneath each steel column."), part("steel-bases", "Base plates, grout & anchors", 1, "Select and zoom in to inspect an illustrative four-anchor base."), part("steel-portals", "I-section portal frames", 2, "Primary columns and rafters with visible web and flange geometry."), part("steel-bracing", "Permanent bracing", 3, "Diagonal members connecting the frames into a stability system."), part("steel-connections", "Bolted connection zones", 3, "Schematic plates and bolts at the knees and ridge."), part("steel-secondary", "Purlins & rails", 4, "Secondary steel beneath the cladding."), part("steel-cladding", "Roof & wall sheets", 5, "Use section view to remove the enclosure and inspect the frame.")],
   },
   {
-    id: "plumbing", track: "plumbing", title: "Water, waste & ventilation", subtitle: "A two-level service model with selectable pipe systems", defaultStep: 3, explodable: false, pathsLabel: "Animate water routes",
+    id: "plumbing", track: "plumbing", title: "Water, waste & ventilation", subtitle: "A two-level service model with selectable pipe systems", defaultStep: 5, explodable: false, pathsLabel: "Animate water routes",
     note: "Routes and fittings are schematic. Pipe sizes, falls, pressure, water-heating safety and local approval requirements are not specified by this model.", references: ["vents"],
-    legend: [{ color: "#3e9fd0", label: "Cold water" }, { color: "#cc6653", label: "Hot water" }, { color: "#a07c59", label: "Soil & waste" }, { color: "#77a77b", label: "Ventilation" }],
+    legend: [{ color: "#1479d0", label: "Cold water" }, { color: "#e14a3b", label: "Hot water" }, { color: "#9d6130", label: "Soil & waste" }, { color: "#149775", label: "Ventilation" }],
     lessons: [
       lesson("Water source & control", "Source", "A storage/source zone and a pump/control point feed the building.", "The supply arrangement must match the available source and the required service conditions.", "Confirm water quality, backflow protection, controls and the designed supply arrangement."),
       lesson("Cold-water distribution", "Cold water", "Blue routes rise and branch to fixtures on both levels.", "Distribution delivers water while isolation points allow sections to be maintained.", "Coordinate accessible valves, supports, penetrations and the pressure test."),
@@ -105,9 +105,9 @@ export const LEARNING_MODELS: LearningModel[] = [
     parts: [part("plumb-source", "Source, tank & pump", 0, "A schematic incoming-water and control arrangement."), part("plumb-cold", "Cold-water network", 1, "The blue supply rises to cold-water outlets on both levels."), part("plumb-heaters", "Heater zones", 2, "Local heaters shown to explain where the hot-water branches begin."), part("plumb-hot", "Hot-water branches", 2, "Red branches serve hot-water outlets, not the WC cistern."), part("plumb-waste", "Soil & waste stack", 3, "Wastewater leaves fixtures and reaches the external discharge route."), part("plumb-vent", "Vent continuation", 3, "The upper air path helps protect the drainage trap seals."), part("plumb-traps", "Trap & inspection chamber", 4, "A simplified U-shaped water seal and external maintenance access.")],
   },
   {
-    id: "electrical", track: "electrical", title: "Electrical distribution & circuits", subtitle: "Trace a conceptual installation from supply to final circuits", defaultStep: 3, explodable: false, pathsLabel: "Highlight circuit routes",
+    id: "electrical", track: "electrical", title: "Electrical distribution & circuits", subtitle: "Trace a conceptual installation from supply to final circuits", defaultStep: 5, explodable: false, pathsLabel: "Highlight circuit routes",
     note: "Colours identify circuit groups, not individual cable cores. Lines represent grouped routes, not a wiring or connection diagram. Real installation and testing require competent personnel.", references: ["protection", "isolation"],
-    legend: [{ color: "#dfad49", label: "Lighting circuits" }, { color: "#55a9c0", label: "Socket circuits" }, { color: "#a48ac4", label: "Dedicated loads" }, { color: "#78a36c", label: "Protective earth" }],
+    legend: [{ color: "#e3a500", label: "Lighting circuits" }, { color: "#008fad", label: "Socket circuits" }, { color: "#8d40c7", label: "Dedicated loads" }, { color: "#61ab42", label: "Protective earth" }],
     lessons: [
       lesson("Supply entry & metering", "Supply", "A service-entry route reaches the meter and main isolation point.", "The incoming arrangement establishes the boundary between the supply and the installation.", "Confirm the supply characteristics and the approved service-entry arrangement."),
       lesson("Distribution & protection", "Distribution", "The board contains separate protective-device ways and an earth bar.", "Protection, isolation and earthing have different functions and must be coordinated.", "Device selection and earthing arrangements must follow the actual system design."),

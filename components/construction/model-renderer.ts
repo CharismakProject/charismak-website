@@ -23,7 +23,7 @@ export async function createModelRenderer() {
         await gpu.init();
         gpu.setPixelRatio(Math.min(window.devicePixelRatio, 1.6));
         gpu.toneMapping = Core.ACESFilmicToneMapping;
-        gpu.toneMappingExposure = 1.15;
+        gpu.toneMappingExposure = 1;
         gpu.shadowMap.enabled = true;
         renderer = gpu;
         Engine = gpuEngine;
@@ -37,7 +37,7 @@ export async function createModelRenderer() {
       const gl = new Core.WebGLRenderer({ canvas, context, antialias: true, alpha: true });
       gl.setPixelRatio(Math.min(window.devicePixelRatio, 1.6));
       gl.toneMapping = Core.ACESFilmicToneMapping;
-      gl.toneMappingExposure = 1.15;
+      gl.toneMappingExposure = 1;
       gl.shadowMap.enabled = true;
       renderer = gl;
     }
@@ -46,7 +46,7 @@ export async function createModelRenderer() {
   if (!renderer) {
     const { SVGRenderer } = await import("three/addons/renderers/SVGRenderer.js");
     const svg = new SVGRenderer();
-    svg.setClearColor(new Core.Color("#dce3db"), 0);
+    svg.setClearColor(new Core.Color("#dce7f4"), 0);
     svg.setPrecision(2);
     renderer = svg;
   }

@@ -1,0 +1,53 @@
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
+import * as THREE from "three";
+import * as XLSX from "xlsx";
+import { IfcAPI } from "web-ifc";
+import { detectBoqColumns, parseBoqRows, emptyProject, lineAmount, lineDuration, proposeSchedule, plannedCostAt, workingDate, validateProject, replaceProjectBoq, replaceProjectDrawing } from "../lib/construction/project";
+import { import3D, traceToModel, readDxf } from "../lib/construction/project-import";
+
+async function verify() {
+  const data = await readFile(resolve("scripts/fixtures/construction-boq.csv"));
+  const workbook = XLSX.read(data, { type: "buffer" }), rows = XLSX.utils.sheet_to_json<unknown[]>(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
+  const detected = detectBoqColumns(rows), parsed = parseBoqRows(rows, detected.map, detected.header, "test");
+  assert.equal(parsed.lines.length, 10); assert.equal(parsed.skipped, 1); assert.equal(parsed.lines.reduce((sum, line) => sum + (lineAmount(line) ?? 0), 0), 11865000);
+  assert.equal(parsed.lines.find(line => line.code === "A3")!.stage, "foundations");
+  const excel = XLSX.read(XLSX.write(workbook, { type: "buffer", bookType: "xlsx" }), { type: "buffer" });
+  const excelRows = XLSX.utils.sheet_to_json<unknown[]>(excel.Sheets[excel.SheetNames[0]], { header: 1 });
+  const excelColumns = detectBoqColumns(excelRows);
+  assert.equal(parseBoqRows(excelRows, excelColumns.map, excelColumns.header).lines.length, 10, "Binary XLSX imports must match the CSV bill");
+  const traced = traceToModel({ image: "", width: 1200, height: 1000, outline: [[0, 0], [1200, 0], [1200, 1000], [0, 1000]], calibration: [[0, 0], [1200, 0]], distance: 12, floors: 2, storeyHeight: 3, wallThickness: 0.225, segments: [{ a: [480, 1000], b: [570, 1000], type: "door" }, { a: [100, 0], b: [250, 0], type: "window" }] });
+  assert.equal(traced.unmatched, 0); assert.ok(traced.parts.some(part => part.line && part.stage === "setting-out")); assert.ok(traced.parts.some(part => part.stage === "roof")); assert.ok(traced.parts.some(part => part.name.includes("window")));
+  assert.ok(traced.parts.filter(part => part.stage === "finishes").every(part => part.covers?.length === 1), "Finishes must replace covered masonry in the software display");
+  for (const part of traced.parts) assert.ok(part.positions.every(Number.isFinite));
+  assert.throws(() => traceToModel({ image: "", width: 1, height: 1, outline: [], segments: [], calibration: [], distance: 10, floors: 1, storeyHeight: 3, wallThickness: 0.225 }), /Calibrate/);
+  const project = { ...emptyProject(), parts: traced.parts, boq: parsed.lines, start: "2026-11-13" };
+  const schedule = proposeSchedule(project), end = Math.max(...schedule.map(stage => stage.finish));
+  assert.equal(plannedCostAt(schedule, 0), 0); assert.equal(plannedCostAt(schedule, end), 11865000);
+  for (let n = 1; n < schedule.length; n++) assert.equal(schedule[n].start, schedule[n - 1].finish, "Default FS sequence must not overlap itself");
+  const foundations = schedule.find(stage => stage.id === "foundations")!;
+  const overlapped = proposeSchedule({ ...project, rules: { foundations: { predecessor: "earthworks", relationship: "SS", lag: 2, days: 4 } } }).find(stage => stage.id === "foundations")!;
+  assert.equal(overlapped.start, schedule.find(stage => stage.id === "earthworks")!.start + 2); assert.equal(overlapped.days, 4); assert.ok(overlapped.start <= foundations.start + 2);
+  assert.equal(workingDate("2026-11-13", 1, 5), "2026-11-16"); assert.equal(workingDate("2026-11-13", 1, 6), "2026-11-14"); assert.equal(workingDate("2026-11-13", 2, 6), "2026-11-16");
+  const line = parsed.lines[4]; assert.equal(lineDuration({ ...line, quantity: 24, output: 12, crews: 2, duration: null }), 1);
+  const linked = { ...project, boq: project.boq.map(item => ({ ...item, partIds: traced.parts.slice(0, 5).map(part => part.id) })) };
+  assert.equal(plannedCostAt(proposeSchedule(linked), end), 11865000, "Linking five elements must not bill the same quantity five times");
+  assert.equal(validateProject(JSON.parse(JSON.stringify(project))).parts.length, project.parts.length);
+  assert.throws(() => validateProject({ ...project, parts: [{ ...traced.parts[0], positions: [NaN, 0, 0] }] }), /invalid geometry/);
+  assert.throws(() => validateProject({ ...project, boq: [line, line] }), /unique/);
+  const example = { ...project, sourceKind: "traced example", boq: project.boq.map(item => ({ ...item, id: "example-" + item.id })) };
+  assert.equal(replaceProjectDrawing(example, traced.parts, "My Model.ifc", "ifc").boq.length, 0, "Never mix an uploaded project with the teaching example’s cost");
+  assert.equal(replaceProjectBoq(example, parsed.lines).parts.length, 0, "An uploaded BOQ must not be presented as the demo building’s own bill");
+  const missing = parseBoqRows([["Description", "Qty", "Unit", "Rate", "Amount"], ["Wall", 2, "m2", "", 10000], ["Door", 1, "No.", 0, 0], ["Unknown service", 1, "item", "", ""]], { code: -1, description: 0, quantity: 1, unit: 2, rate: 3, amount: 4 }, 0);
+  assert.equal(missing.lines[0].rate, 5000); assert.equal(missing.lines[1].rate, 0); assert.equal(missing.lines[2].rate, null);
+  const obj = "o Blockwork_Wall\nv 0 0 0\nv 1 0 0\nv 0 3 0\nf 1 2 3\n";
+  const imported = await import3D(new File([obj], "wall.obj"), () => {}); assert.equal(imported.length, 1); assert.equal(imported[0].stage, "walls");
+  const dxfText = "0\nSECTION\n2\nENTITIES\n0\nLINE\n8\nWALLS\n10\n0\n20\n0\n30\n0\n11\n12000\n21\n0\n31\n0\n0\nENDSEC\n0\nEOF\n";
+  const dxf = await readDxf(new File([dxfText], "walls.dxf")); assert.equal(dxf.lines.length, 1); assert.equal(dxf.layers[0], "WALLS");
+  const api = new IfcAPI(); api.SetWasmPath(resolve("node_modules/web-ifc") + "/", true); await api.Init(undefined, true);
+  const model = api.OpenModel(new Uint8Array(await readFile(resolve("scripts/fixtures/construction-wall.ifc"))), { COORDINATE_TO_ORIGIN: true }); let count = 0;
+  try { api.StreamAllMeshes(model, mesh => { count++; assert.equal(api.GetNameFromTypeCode(api.GetLineType(model, mesh.expressID)), "IfcWall"); const placed = mesh.geometries.get(0), geometry = api.GetGeometry(model, placed.geometryExpressID), vertices = api.GetVertexArray(geometry.GetVertexData(), geometry.GetVertexDataSize()); assert.ok(vertices.length > 0 && [...vertices].every(Number.isFinite)); const point = new THREE.Vector3(vertices[0], vertices[1], vertices[2]).applyMatrix4(new THREE.Matrix4().fromArray(placed.flatTransformation)); assert.ok(point.toArray().every(Number.isFinite)); geometry.delete(); }, true); assert.equal(count, 1); } finally { api.CloseModel(model); api.Dispose(); }
+  console.log("Construction Studio verified: Excel/CSV BOQ parsing, totals, price gaps, stage mapping, scaled 2D geometry/openings, OBJ/DXF/IFC imports, FS/SS programme, working calendar, cost projection, project validation and demo/upload isolation.");
+}
+void verify().catch(error => { console.error(error); process.exitCode = 1; });
