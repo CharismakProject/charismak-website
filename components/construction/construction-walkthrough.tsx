@@ -121,7 +121,7 @@ export default function ConstructionWalkthrough({ siteOrigin = "" }: Props) {
   return <main className={styles.walkthrough}>
     <div className={styles.container}>
       <header className={styles.intro}>
-        <div><a className={styles.back} href={`${siteOrigin}/rates`}><ArrowLeft size={14} /> Charismak Rate Bank</a><p className={styles.eyebrow}>THE BUILDING JOURNEY <span> / </span> AN INTERACTIVE GUIDE</p><h1>From bare ground.<br /><span>To your front door.</span></h1><p className={styles.lead}>Watch a home take shape. Explore the work, understand the checks,<br className={styles.desktopBreak} /> and see how the costs come together — one stage at a time.</p></div>
+        <div><a className={styles.back} href={`${siteOrigin}/construction-explorer`}><ArrowLeft size={14} /> Construction Explorer</a><p className={styles.eyebrow}>THE BUILDING JOURNEY <span> / </span> AN INTERACTIVE GUIDE</p><h1>From bare ground.<br /><span>To your front door.</span></h1><p className={styles.lead}>Watch a home take shape. Explore the work, understand the checks,<br className={styles.desktopBreak} /> and see how the costs come together — one stage at a time.</p></div>
         <div className={styles.introAside}><span className={styles.tag}><span /> Design · Cost · Build</span><p>One building.<br /><strong>Every step explained.</strong></p><a href="#work-costs">Explore the quantities <ArrowDown size={15} /></a></div>
       </header>
 

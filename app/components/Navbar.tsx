@@ -16,7 +16,7 @@ const toolItems = [
   { label: "Cost Estimator", href: "/estimator", description: "Early budget range for your project" },
   { label: "Material Prices", href: "/prices", description: "Abuja prices with source and date" },
   { label: "Rate Bank", href: "/rates", description: "Build-ups for common construction work" },
-  { label: "Building Journey", href: "/rates/walkthrough", description: "Explore a building from ground to handover in 3D" },
+  { label: "Construction Explorer", href: "/construction-explorer", description: "Learn building, structures, steelwork and services in 3D" },
   { label: "Supplier Directory", href: "/marketplace", description: "Suppliers and artisans" },
   { label: "News & Learning", href: "/blog", description: "Guides and company updates" },
 ];

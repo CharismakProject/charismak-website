@@ -1,41 +1,13 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { assertWalkthroughLighting, createWalkthroughLighting } from "./construction-lighting";
+import { createModelRenderer } from "./model-renderer";
 
-export type SceneHandle = { update: (stage: number, cutaway: boolean) => void; reset: () => void; dispose: () => void };
+export type SceneHandle = { update: (stage: number, cutaway: boolean) => void; reset: () => void; view: (mode: "iso" | "plan" | "front") => void; explode: (enabled: boolean) => void; dispose: () => void };
 type Options = { onSelect: (stage: number) => void; onReady: () => void; onError: () => void };
 
 export async function createConstructionScene(host: HTMLElement, options: Options): Promise<SceneHandle> {
-  type ModelRenderer = { domElement: HTMLElement | SVGElement; setSize: (w: number, h: number) => void; render: (scene: THREE.Scene, camera: THREE.Camera) => void; dispose?: () => void };
-  type SceneEngine = Pick<typeof THREE, "AmbientLight" | "BoxGeometry" | "BufferGeometry" | "CanvasTexture" | "Color" | "DirectionalLight" | "Float32BufferAttribute" | "GridHelper" | "Group" | "HemisphereLight" | "IcosahedronGeometry" | "Line" | "LineBasicMaterial" | "Mesh" | "MeshStandardMaterial" | "PerspectiveCamera" | "Raycaster" | "Scene" | "Vector2" | "Vector3">;
-  let Engine: SceneEngine = THREE;
-  let renderer: ModelRenderer | undefined;
-  if ("gpu" in navigator) {
-    try {
-      const gpuEngine = await import("three/webgpu");
-      const gpu = new gpuEngine.WebGPURenderer({ antialias: true, alpha: true });
-      try {
-        await gpu.init(); gpu.setPixelRatio(Math.min(window.devicePixelRatio, 1.6));
-        gpu.toneMapping = THREE.ACESFilmicToneMapping; gpu.toneMappingExposure = 1.25; gpu.shadowMap.enabled = true;
-        renderer = gpu;
-        Engine = gpuEngine;
-      } catch { try { gpu.dispose(); } catch { /* A partially initialised backend may have no context. */ } }
-    } catch { /* Try the compatible renderers below. */ }
-  }
-  if (!renderer) {
-    const canvas = document.createElement("canvas");
-    const context = canvas.getContext("webgl2", { antialias: true, alpha: true });
-    if (context) {
-      const gl = new THREE.WebGLRenderer({ canvas, context, antialias: true, alpha: true });
-      gl.setPixelRatio(Math.min(window.devicePixelRatio, 1.6)); gl.toneMapping = THREE.ACESFilmicToneMapping; gl.toneMappingExposure = 1.25; gl.shadowMap.enabled = true;
-      renderer = gl;
-    }
-  }
-  const software = !renderer;
-  if (!renderer) {
-    const { SVGRenderer } = await import("three/addons/renderers/SVGRenderer.js");
-    const svg = new SVGRenderer(); svg.setClearColor(new Engine.Color("#d8dfd1"), 0); svg.setPrecision(2); renderer = svg;
-  }
+  const { Engine, renderer, software } = await createModelRenderer();
   const world = new Engine.Scene();
   const camera = new Engine.PerspectiveCamera(35, 1, 0.1, 100);
   const home = new Engine.Vector3(20, 16, 23);
@@ -315,5 +287,10 @@ export async function createConstructionScene(host: HTMLElement, options: Option
     };
     frame = requestAnimationFrame(render); options.onReady();
   } catch (error) { console.error("Construction viewer initialization failed:", error); dispose(); options.onError(); }
-  return { update, reset: () => { camera.position.copy(home); controls.target.set(0, 0.8, 0); controls.update(); dirty = true; }, dispose };
+  const view = (mode: "iso" | "plan" | "front") => {
+    camera.position.copy(mode === "plan" ? new Engine.Vector3(0, 29, 0.01) : mode === "front" ? new Engine.Vector3(0, 5, 31) : home);
+    controls.target.set(0, 0.8, 0); controls.update(); dirty = true;
+  };
+  const explode = (enabled: boolean) => { groups.forEach((group, index) => { group.position.y = enabled && index >= 3 ? (index - 2) * 0.28 : 0; }); dirty = true; };
+  return { update, reset: () => view("iso"), view, explode, dispose };
 }
