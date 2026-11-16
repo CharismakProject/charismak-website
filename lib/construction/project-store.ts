@@ -1,0 +1,30 @@
+import { validateProject, type ConstructionProject } from "./project";
+function openProjects(): Promise<IDBDatabase> { return new Promise((resolve, reject) => { const request = indexedDB.open("charismak-construction-studio", 2); request.onupgradeneeded = () => { for (const name of ["projects", "summaries", "documents"]) if (!request.result.objectStoreNames.contains(name)) request.result.createObjectStore(name, { keyPath: "id" }); }; request.onsuccess = () => { request.result.onversionchange = () => request.result.close(); resolve(request.result); }; request.onerror = () => reject(new Error("Browser project storage is unavailable. Export a project file to keep your work.")); }); }
+let pendingSave: Promise<void> = Promise.resolve();
+export function saveConstructionProject(project: ConstructionProject): Promise<void> {
+  // Serialize writes so a slow earlier edit cannot replace a newer project snapshot.
+  const save = pendingSave.catch(() => {}).then(async () => {
+    const db = await openProjects();
+    try { await new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction(["projects", "summaries"], "readwrite");
+      transaction.objectStore("projects").put(project);
+      transaction.objectStore("summaries").put({ id: project.id, name: project.name, updatedAt: new Date().toISOString() });
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = transaction.onabort = () => reject(new Error("Could not save this project. Browser storage may be full; download an optional backup."));
+    }); } finally { db.close(); }
+  });
+  pendingSave = save; return save;
+}
+const lastProjectKey = "charismak-construction-last-project";
+export function lastConstructionProject(): string | null { try { return localStorage.getItem(lastProjectKey); } catch { return null; } }
+export function rememberConstructionProject(id: string | null) { try { if (id) localStorage.setItem(lastProjectKey, id); else localStorage.removeItem(lastProjectKey); } catch { /* IndexedDB saving remains available if localStorage is disabled. */ } }
+export async function listConstructionProjects(): Promise<{ id: string; name: string; updatedAt: string }[]> { const db = await openProjects(); try { return await new Promise((resolve, reject) => { const request = db.transaction("summaries").objectStore("summaries").getAll(); request.onsuccess = () => resolve(request.result.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))); request.onerror = () => reject(request.error); }); } finally { db.close(); } }
+export async function loadConstructionProject(id: string): Promise<ConstructionProject> { const db = await openProjects(); try { return await new Promise((resolve, reject) => { const request = db.transaction("projects").objectStore("projects").get(id); request.onsuccess = () => { try { resolve(validateProject(request.result)); } catch (error) { reject(error); } }; request.onerror = () => reject(request.error); }); } finally { db.close(); } }
+export async function saveDrawingSource(id: string, file: File): Promise<void> {
+  const db = await openProjects();
+  try { await new Promise<void>((resolve, reject) => { const transaction = db.transaction("documents", "readwrite"); transaction.objectStore("documents").put({ id, name: file.name, file }); transaction.oncomplete = () => resolve(); transaction.onerror = transaction.onabort = () => reject(new Error("Could not save the original drawing in this browser. Check available browser storage.")); }); } finally { db.close(); }
+}
+export async function loadDrawingSource(id: string): Promise<File> {
+  const db = await openProjects();
+  try { return await new Promise((resolve, reject) => { const request = db.transaction("documents").objectStore("documents").get(id); request.onsuccess = () => { const source = request.result; if (!source?.file) { reject(new Error("The original drawing is not stored in this browser. Upload the same PDF to restore unopened pages; saved traces and model geometry remain available.")); return; } resolve(new File([source.file], source.name, { type: source.file.type })); }; request.onerror = () => reject(request.error); }); } finally { db.close(); }
+}

@@ -1,0 +1,13 @@
+CHARISMAK TEST BOQ,,,,,
+Item,Description,Qty,Unit,Rate,Amount
+A1,Setting out,1,item,25000,25000
+A2,Manual excavation,40,m3,6000,240000
+A3,Foundation concrete,10,m3,150000,1500000
+A4,Floor slab,120,m2,20000,2400000
+A5,Blockwork walls,200,m2,15000,3000000
+A6,Roof covering,120,m2,25000,3000000
+A7,Plumbing installation,1,item,200000,200000
+A8,Electrical installation,1,item,300000,300000
+A9,Plaster and paint,200,m2,4000,800000
+A10,Doors and windows,5,No.,80000,400000
+,Grand total,,,,11865000

@@ -13,9 +13,11 @@ const navItems = [
 ];
 
 const toolItems = [
+  { label: "Construction Studio", href: "/construction-studio", description: "Upload a drawing and BOQ; explore cost and programme" },
   { label: "Cost Estimator", href: "/estimator", description: "Early budget range for your project" },
   { label: "Material Prices", href: "/prices", description: "Abuja prices with source and date" },
   { label: "Rate Bank", href: "/rates", description: "Build-ups for common construction work" },
+  { label: "Construction Explorer", href: "/construction-explorer", description: "Learn building, structures, steelwork and services in 3D" },
   { label: "Supplier Directory", href: "/marketplace", description: "Suppliers and artisans" },
   { label: "News & Learning", href: "/blog", description: "Guides and company updates" },
 ];
