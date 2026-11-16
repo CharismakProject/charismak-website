@@ -65,6 +65,9 @@ async function verify() {
   assert.equal(projectCostSummary({ ...allowancesProject, boq: [{ ...detail.lines[0], quantity: 4 }] }).total, 225.88, "Allowance bases recalculate after BOQ edits");
   assert.throws(() => validateProject({ ...allowancesProject, charges: [{ ...allowancesProject.charges[0], percentage: Infinity }] }), /allowance/);
   assert.throws(() => validateProject({ ...project, parts: [{ ...traced.parts[0], color: "url(evil)" }] }), /colour/);
+  const planDraft = { image: "data:image/png;base64,", width: 1000, height: 600, outline: [[0, 0], [800, 0], [800, 500]] as [number, number][], segments: [], calibration: [], distance: 0, floors: 1, storeyHeight: 3, wallThickness: 0.225 };
+  assert.deepEqual(validateProject(JSON.parse(JSON.stringify({ ...emptyProject(), planDraft }))).planDraft, planDraft, "An unfinished plan trace survives a project save and reload, even before a scale is entered");
+  assert.throws(() => validateProject({ ...emptyProject(), planDraft: { ...planDraft, image: "https://invalid.example/plan.png" } }), /saved plan trace/);
   const obj = "o Blockwork_Wall\nv 0 0 0\nv 1 0 0\nv 0 3 0\nf 1 2 3\n";
   const imported = await import3D(new File([obj], "wall.obj"), () => {}); assert.equal(imported.length, 1); assert.equal(imported[0].stage, "walls");
   const dxfText = "0\nSECTION\n2\nENTITIES\n0\nLINE\n8\nWALLS\n10\n0\n20\n0\n30\n0\n11\n12000\n21\n0\n31\n0\n0\nENDSEC\n0\nEOF\n";
