@@ -3,10 +3,10 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { createModelRenderer } from "./model-renderer";
 import { assertWalkthroughLighting, createWalkthroughLighting } from "./construction-lighting";
 import { stageInfo, type ModelPart, type ProjectStage, type ScheduledStage } from "@/lib/construction/project";
-export type ProjectViewState = { day: number; schedule: ScheduledStage[]; hidden: ProjectStage[]; selected: string | null };
+export type ProjectViewState = { day: number; schedule: ScheduledStage[]; hidden: ProjectStage[]; selected: string | null; section?: boolean };
 export type ProjectScene = { update: (value: ProjectViewState) => void; view: (mode: "iso" | "plan" | "front") => void; focus: (id: string) => void; dispose: () => void };
 
-export async function createProjectScene(host: HTMLElement, parts: ModelPart[], scale: number, upAxis: "y" | "z", onSelect: (id: string) => void): Promise<ProjectScene> {
+export async function createProjectScene(host: HTMLElement, parts: ModelPart[], scale: number, upAxis: "y" | "z", onSelect: (id: string) => void, groundLevel?: number): Promise<ProjectScene> {
   const { Engine, renderer, software } = await createModelRenderer();
   const world = new Engine.Scene(), root = new Engine.Group(); world.add(root);
   const lights = createWalkthroughLighting(Engine, software); assertWalkthroughLighting(renderer, lights); world.add(...lights, lights[2].target);
@@ -38,10 +38,10 @@ export async function createProjectScene(host: HTMLElement, parts: ModelPart[], 
     if (software && !part.line && (geometry.index?.count ?? geometry.getAttribute("position").count) < 1500 && triangles < 14000) geometry = subdivideForPainter(geometry);
     triangles += (geometry.index?.count ?? geometry.getAttribute("position").count) / 3;
     let object: THREE.Object3D;
-    if (part.line) object = new Engine.Line(geometry, new Engine.LineBasicMaterial({ color: stageInfo(part.stage).color, linewidth: 2 }));
+    if (part.line) object = new Engine.Line(geometry, new Engine.LineBasicMaterial({ color: part.color ?? stageInfo(part.stage).color, linewidth: 2 }));
     else {
       geometry.computeVertexNormals();
-      const material = new Engine.MeshStandardMaterial({ color: stageInfo(part.stage).color, roughness: 0.9, metalness: 0, side: THREE.DoubleSide });
+      const material = new Engine.MeshStandardMaterial({ color: part.color ?? stageInfo(part.stage).color, roughness: 0.9, metalness: 0, side: THREE.DoubleSide });
       materials.set(part.id, material); const mesh = new Engine.Mesh(geometry, material); mesh.castShadow = true; mesh.receiveShadow = true; object = mesh;
       if (parts.length < 1500) { const edge = new Engine.LineSegments(new Engine.EdgesGeometry(geometry, 28), new Engine.LineBasicMaterial({ color: "#17283d", transparent: true, opacity: 0.48 })); object.add(edge); }
     }
@@ -50,8 +50,9 @@ export async function createProjectScene(host: HTMLElement, parts: ModelPart[], 
   const bounds = new Engine.Box3().setFromObject(root), size = bounds.getSize(new Engine.Vector3()), rawCenter = bounds.getCenter(new Engine.Vector3());
   root.position.set(-rawCenter.x, -bounds.min.y, -rawCenter.z); root.updateMatrixWorld(true);
   const radius = Math.max(2, size.length() * 0.5), center = new Engine.Vector3(0, size.y * 0.43, 0);
-  const ground = new Engine.Mesh(new Engine.BoxGeometry(radius * 2.6, 0.08, radius * 2.6, software ? 14 : 1, 1, software ? 14 : 1), new Engine.MeshStandardMaterial({ color: "#30475f", roughness: 1 })); ground.position.y = -0.1; ground.renderOrder = software ? -100 : 0; world.add(ground);
-  const grid = new Engine.GridHelper(radius * 2.6, 24, 0xc3d1e1, 0x637d98); grid.position.y = -0.05; world.add(grid);
+  const datum = groundLevel === undefined ? 0 : groundLevel * scale + root.position.y;
+  const ground = new Engine.Mesh(new Engine.BoxGeometry(radius * 2.6, 0.08, radius * 2.6, software ? 14 : 1, 1, software ? 14 : 1), new Engine.MeshStandardMaterial({ color: "#30475f", roughness: 1 })); ground.position.y = datum - 0.1; ground.renderOrder = software && groundLevel === undefined ? -100 : 0; world.add(ground);
+  const grid = new Engine.GridHelper(radius * 2.6, 24, 0xc3d1e1, 0x637d98); grid.position.y = datum - 0.05; world.add(grid);
   const camera = new Engine.PerspectiveCamera(38, 1, 0.01, Math.max(2000, radius * 20));
   const controls = new OrbitControls(camera, renderer.domElement as HTMLElement); controls.target.copy(center); controls.enableDamping = true; controls.minDistance = Math.max(0.2, radius / 50); controls.maxDistance = radius * 12; controls.maxPolarAngle = Math.PI * 0.49;
   let dirty = true, disposed = false, frame = 0, previous = 0;
@@ -61,12 +62,17 @@ export async function createProjectScene(host: HTMLElement, parts: ModelPart[], 
   const observer = new ResizeObserver(resize); observer.observe(host); resize(); view("iso"); controls.addEventListener("change", () => { dirty = true; });
   const update = (state: ProjectViewState) => {
     const max = Math.max(1, ...state.schedule.map(stage => stage.finish));
+    if (groundLevel !== undefined) {
+      const excavation = state.schedule.find(stage => stage.id === "earthworks"), slab = state.schedule.find(stage => stage.id === "slabs");
+      const belowGroundView = state.section || (excavation && state.day >= excavation.start && state.day < (slab?.finish ?? excavation.finish));
+      ground.visible = !belowGroundView; grid.visible = !state.section;
+    }
     const groups = new Map<ProjectStage, ModelPart[]>();
     for (const part of parts) groups.set(part.stage, [...groups.get(part.stage) ?? [], part]);
     for (const [stageId, group] of groups) {
       const stage = state.schedule.find(item => item.id === stageId), fraction = !stage || state.day >= max ? 1 : Math.min(1, Math.max(0, (state.day - stage.start) / stage.days));
       group.forEach((part, index) => {
-        const object = partObjects.get(part.id)!; object.visible = !state.hidden.includes(part.stage) && (fraction >= 1 || index < Math.ceil(fraction * group.length) || (!!part.line && state.day >= (stage?.start ?? 0)));
+        const object = partObjects.get(part.id)!; object.visible = !(state.section && part.cutaway) && !state.hidden.includes(part.stage) && (fraction >= 1 || index < Math.ceil(fraction * group.length) || (!!part.line && state.day >= (stage?.start ?? 0)));
         const material = materials.get(part.id); if (material) { material.emissive.set(part.id === state.selected ? "#f0c24d" : fraction > 0 && fraction < 1 ? "#4d3512" : "#000000"); material.emissiveIntensity = part.id === state.selected ? 0.35 : 0.1; }
       });
     }

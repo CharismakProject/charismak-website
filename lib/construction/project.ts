@@ -11,10 +11,11 @@ export const PROJECT_STAGES = [
   { id: "unmapped", title: "Needs stage mapping", color: "#9a9ca2" },
 ] as const;
 export type ProjectStage = typeof PROJECT_STAGES[number]["id"];
-export type ModelPart = { id: string; name: string; stage: ProjectStage; positions: number[]; indices?: number[]; matrix?: number[]; line?: boolean; covers?: string[] };
-export type BoqLine = { id: string; code: string; description: string; section: string; quantity: number; unit: string; rate: number | null; originalAmount: number | null; stage: ProjectStage; output: number; crews: number; duration: number | null; partIds: string[]; notes: string[]; analysis?: { resources: Resource[]; allowances: RateBankItem["allowances"]; bankSlug?: string; manual: boolean; baseRate: number | null } };
+export type ModelPart = { id: string; name: string; stage: ProjectStage; positions: number[]; indices?: number[]; matrix?: number[]; line?: boolean; covers?: string[]; color?: string; cutaway?: boolean };
+export type BoqLine = { id: string; code: string; description: string; section: string; quantity: number; unit: string; rate: number | null; originalAmount: number | null; stage: ProjectStage; output: number; crews: number; duration: number | null; partIds: string[]; notes: string[]; excluded?: boolean; analysis?: { resources: Resource[]; allowances: RateBankItem["allowances"]; bankSlug?: string; manual: boolean; baseRate: number | null } };
+export type ProjectCharge = { id: string; label: string; percentage: number; basis: "works" | "running" };
 export type StageRule = { days?: number; predecessor?: ProjectStage | "none"; relationship?: "FS" | "SS"; lag?: number; parallel?: boolean };
-export type ConstructionProject = { version: 1; id: string; name: string; sourceName: string; sourceKind: string; parts: ModelPart[]; boq: BoqLine[]; start: string; workingDays: 5 | 6 | 7; rules: Partial<Record<ProjectStage, StageRule>>; unitScale: number; upAxis: "y" | "z"; createdAt: string };
+export type ConstructionProject = { version: 1; id: string; name: string; sourceName: string; sourceKind: string; parts: ModelPart[]; boq: BoqLine[]; start: string; workingDays: 5 | 6 | 7; rules: Partial<Record<ProjectStage, StageRule>>; unitScale: number; upAxis: "y" | "z"; createdAt: string; charges?: ProjectCharge[]; reviewNotes?: string[]; groundLevel?: number };
 export const stageInfo = (id: ProjectStage) => PROJECT_STAGES.find(stage => stage.id === id) ?? PROJECT_STAGES.at(-1)!;
 export const roundProject = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
 export const projectMoney = (value: number) => new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(value);
@@ -32,7 +33,7 @@ export function suggestProjectStage(text: string): ProjectStage {
   const rules: [ProjectStage, RegExp][] = [
     ["setting-out", /setting\s*out|set\s*out|survey|grid\s*line/], ["handover", /handover|commission|testing|snag|as\s*built/],
     ["planning", /mobilis|mobiliz|preliminar|approval|design\s*fee/], ["earthworks", /excavat|earthwork|cart\s*away|disposal|backfill|site\s*clear/],
-    ["foundations", /footing|foundation|pile\b|blinding|substruct|ifcfooting/], ["roof", /roof|rafter|purlin|gutter|ridge|truss/],
+    ["foundations", /footing|foundation|pile\b|blinding|substruct|column\s*base|starter\s*column|ifcfooting/], ["frame", /roof\s*beam|ring\s*beam|lintel|column/], ["roof", /roof|rafter|purlin|gutter|ridge|truss/],
     ["electrical", /electr|cable|conduit|socket|lighting|earthing|distribution\s*board|ifccable/], ["plumbing", /plumb|pipe|soil\s*stack|drain|sanitary|water\s*tank|basin|\bwc\b|ifcflow/],
     ["fittings", /window|glazing|door|ironmonger|cabinet|joinery|ifcdoor|ifcwindow/], ["finishes", /plaster|paint|tiling|tiles|screed|ceiling|cladding|finish|ifccovering/],
     ["slabs", /slab|floor\s*plate|floor\s*deck|oversite/], ["walls", /blockwork|masonry|wall|partition/],
@@ -65,8 +66,18 @@ export function starterOutput(stage: ProjectStage, unit: string) {
   if (unit === "No." || unit === "point") return 4;
   return 1;
 }
-export const lineAmount = (line: BoqLine) => line.rate === null ? null : roundProject(line.quantity * line.rate);
-export const lineDuration = (line: BoqLine) => line.quantity === 0 ? 0 : Math.min(3650, Math.max(1, Math.ceil(line.duration ?? (line.quantity / Math.max(0.001, line.output) / Math.max(1, line.crews)))));
+export const lineAmount = (line: BoqLine) => line.excluded || line.rate === null ? null : roundProject(line.quantity * line.rate);
+export const lineDuration = (line: BoqLine) => line.excluded || line.quantity === 0 ? 0 : Math.min(3650, Math.max(1, Math.ceil(line.duration ?? (line.quantity / Math.max(0.001, line.output) / Math.max(1, line.crews)))));
+export function projectCostSummary(project: Pick<ConstructionProject, "boq" | "charges">, worksOverride?: number) {
+  const works = worksOverride ?? roundProject(project.boq.reduce((sum, line) => sum + (lineAmount(line) ?? 0), 0));
+  let total = works;
+  const charges = (project.charges ?? []).map(charge => {
+    const base = charge.basis === "works" ? works : total, amount = roundProject(base * charge.percentage);
+    total = roundProject(total + amount);
+    return { ...charge, base, amount };
+  });
+  return { works, charges, total: roundProject(total) };
+}
 
 export type ColumnMap = { code: number; description: number; quantity: number; unit: number; rate: number; amount: number };
 const aliases: Record<keyof ColumnMap, RegExp> = { code: /^(item|item\s*no|item\s*code|code|ref|reference|s\/n|sn|no)\.?$/i, description: /description|particular|work\s*item|details\s*of\s*work/i, quantity: /^(qty|quantity|quantities|qnty)\.?$/i, unit: /^(unit|units|uom|u\/m)$/i, rate: /^(unit\s*rate|rate|rate\s*ngn|rate\s*₦|unit\s*price|price)\b/i, amount: /amount|line\s*total|total\s*cost/i };
@@ -81,23 +92,30 @@ export function detectBoqColumns(rows: unknown[][]) {
 }
 export function parseBoqRows(rows: unknown[][], map: ColumnMap, header: number, sheet = "BOQ"): { lines: BoqLine[]; skipped: number; warnings: string[] } {
   if (map.description < 0) throw new Error("Choose the work-description column before importing.");
-  const lines: BoqLine[] = [], warnings: string[] = []; let section = sheet, skipped = 0;
+  const lines: BoqLine[] = [], warnings: string[] = []; let section = sheet, skipped = 0, inSummary = false;
+  let headings: string[] = [];
   rows.slice(header + 1, header + 20001).forEach((row, index) => {
     const description = String(row[map.description] ?? "").trim(); if (!description) return;
-    if (/^(sub\s*total|grand\s*total|total(?:\s+carried|\s+for|\s+to|\s+of|$)|vat|value\s*added\s*tax|carried\s*forward|brought\s*forward|summary)\b/i.test(description)) { skipped++; return; }
+    if (/^(?:work\s*)?description$/i.test(description)) { headings = []; inSummary = false; skipped++; return; }
+    if (/^(?:general\s+)?summary$/i.test(description)) { inSummary = true; skipped++; return; }
+    if (inSummary || /^(sub\s*total|grand\s*total|total(?:\s+carried|\s+for|\s+to|\s+of|$)|vat|value\s*added\s*tax|carried\s*forward|brought\s*forward)\b/i.test(description) || /\bto\s+(?:general\s+)?summary\b/i.test(description)) { skipped++; return; }
     const unitRaw = map.unit >= 0 ? String(row[map.unit] ?? "").trim() : "";
     const quantityRaw = map.quantity >= 0 ? costNumber(row[map.quantity]) : null, amount = map.amount >= 0 ? costNumber(row[map.amount]) : null;
-    if (quantityRaw === null && !unitRaw && amount === null) { section = description; return; }
+    if (quantityRaw === null && !unitRaw && amount === null) { headings = [...headings.filter(item => item !== description), description].slice(-6); section = headings.join(" · "); return; }
+    if (quantityRaw === null && amount !== null && !unitRaw && (headings.length === 0 || !String(row[map.code] ?? "").trim())) { skipped++; warnings.push(`Row ${header + index + 2}: amount-only subtotal / allowance needs separate review (${description.slice(0, 60)}).`); return; }
     const quantity = quantityRaw ?? (amount !== null && (!unitRaw || /item|sum|lump/i.test(unitRaw)) ? 1 : null);
     if (quantity === null || quantity < 0) { skipped++; warnings.push(`Row ${header + index + 2}: quantity needs review (${description.slice(0, 60)}).`); return; }
     const unit = normaliseWorkUnit(unitRaw), importedRate = map.rate >= 0 ? costNumber(row[map.rate]) : null;
     const rate = importedRate !== null && importedRate >= 0 ? importedRate : amount !== null && amount >= 0 && quantity > 0 ? amount / quantity : null;
-    const directStage = suggestProjectStage(description), stage = directStage === "unmapped" ? suggestProjectStage(section) : directStage, notes: string[] = [];
+    const directStage = suggestProjectStage(description), contextStage = suggestProjectStage(section);
+    const stage = directStage === "unmapped" || (["walls", "frame"].includes(directStage) && ["finishes", "fittings", "plumbing", "electrical"].includes(contextStage)) ? contextStage : directStage, notes: string[] = [];
+    const excluded = /^(?:n\/?a|not\s*applicable|excluded|not\s*included)$/i.test(String(map.amount >= 0 ? row[map.amount] ?? "" : "").trim());
+    if (excluded) notes.push("Amount marked N/A / excluded in the source BOQ. Its printed rate is retained for reference and excluded from project cost until you include the item.");
     if (importedRate === null && amount !== null && rate !== null) notes.push("Rate derived from supplied amount ÷ quantity.");
     if (rate !== null && amount !== null && Math.abs(quantity * rate - amount) > Math.max(1, Math.abs(amount) * 0.001)) notes.push("BOQ amount differs from quantity × rate. Simulation uses quantity × rate; confirm the source bill.");
     if (stage === "unmapped") notes.push("Choose a construction stage.");
     notes.push("Productivity is an editable starter assumption, not a committed programme.");
-    lines.push({ id: `boq-${sheet.replace(/[^a-z0-9]/gi, "").slice(0, 12)}-${header + index + 2}`, code: map.code >= 0 ? String(row[map.code] ?? "").trim() : "", description, section, quantity, unit, rate: rate === null ? null : roundProject(rate), originalAmount: amount, stage, output: starterOutput(stage, unit), crews: 1, duration: unit === "item" ? 5 : null, partIds: [], notes });
+    lines.push({ id: `boq-${sheet.replace(/[^a-z0-9]/gi, "").slice(0, 12)}-${header + index + 2}`, code: map.code >= 0 ? String(row[map.code] ?? "").trim() : "", description, section, quantity, unit, rate: rate === null ? null : roundProject(rate), originalAmount: amount, stage, output: starterOutput(stage, unit), crews: 1, duration: unit === "item" ? 5 : null, partIds: [], notes, ...(excluded ? { excluded: true } : {}) });
   });
   if (!lines.length) warnings.push("No measurable work items found. Check the sheet, header row and column mapping.");
   return { lines, skipped, warnings };
@@ -114,7 +132,7 @@ export function proposeSchedule(project: ConstructionProject): ScheduledStage[] 
     const predecessor = rule.predecessor === "none" ? undefined : result.find(item => item.id === rule.predecessor) ?? result.at(-1);
     const relationship = rule.relationship === "SS" ? "SS" : "FS", lag = Number.isFinite(rule.lag) ? Math.round(rule.lag!) : 0;
     const start = Math.max(0, predecessor ? (relationship === "SS" ? predecessor.start : predecessor.finish) + lag : 0);
-    result.push({ ...stage, start, finish: start + days, days, amount: roundProject(lines.reduce((sum, line) => sum + (lineAmount(line) ?? 0), 0)), missing: lines.filter(line => line.quantity > 0 && line.rate === null).length, lines, parts: project.parts.filter(part => part.stage === stage.id).length, predecessor: predecessor?.id ?? "none", relationship, lag });
+    result.push({ ...stage, start, finish: start + days, days, amount: roundProject(lines.reduce((sum, line) => sum + (lineAmount(line) ?? 0), 0)), missing: lines.filter(line => !line.excluded && line.quantity > 0 && line.rate === null).length, lines, parts: project.parts.filter(part => part.stage === stage.id).length, predecessor: predecessor?.id ?? "none", relationship, lag });
   }
   return result;
 }
@@ -141,11 +159,17 @@ export function validateProject(value: unknown): ConstructionProject {
     vertices += part.positions.length / 3;
     if (part.indices && (!Array.isArray(part.indices) || part.indices.some(v => !Number.isInteger(v) || v < 0 || v >= part.positions.length / 3))) throw new Error("A model element has invalid face indices.");
     if (part.covers && (!Array.isArray(part.covers) || part.covers.some(id => typeof id !== "string"))) throw new Error("Invalid finish-layer mapping.");
+    if (part.color !== undefined && !/^#[0-9a-f]{6}$/i.test(part.color)) throw new Error("Invalid model material colour.");
+    if (part.cutaway !== undefined && typeof part.cutaway !== "boolean") throw new Error("Invalid cutaway setting.");
     if (part.matrix && (part.matrix.length !== 16 || part.matrix.some(v => !Number.isFinite(v)))) throw new Error("Invalid model transform.");
   }
   if (vertices > 1500000) throw new Error("This model exceeds the browser limit of 1.5 million vertices. Export a lighter coordination model.");
   if (new Set(p.parts.map(part => part.id)).size !== p.parts.length || new Set(p.boq.map(line => line.id)).size !== p.boq.length) throw new Error("Model / BOQ IDs must be unique.");
+  if (p.charges && (!Array.isArray(p.charges) || p.charges.length > 20 || new Set(p.charges.map(charge => charge.id)).size !== p.charges.length || p.charges.some(charge => !charge || typeof charge.id !== "string" || typeof charge.label !== "string" || !Number.isFinite(charge.percentage) || charge.percentage < 0 || charge.percentage > 1 || !["works", "running"].includes(charge.basis)))) throw new Error("Invalid project percentage allowance.");
+  if (p.reviewNotes && (!Array.isArray(p.reviewNotes) || p.reviewNotes.length > 50 || p.reviewNotes.some(note => typeof note !== "string" || note.length > 2000))) throw new Error("Invalid project review notes.");
+  if (p.groundLevel !== undefined && (!Number.isFinite(p.groundLevel) || Math.abs(p.groundLevel) > 1e9)) throw new Error("Invalid ground datum.");
   for (const line of p.boq) {
+    if (line?.excluded !== undefined && typeof line.excluded !== "boolean") throw new Error("Invalid BOQ exclusion setting.");
     if (!line || typeof line.id !== "string" || typeof line.description !== "string" || !Number.isFinite(line.quantity) || line.quantity < 0 || line.quantity > 1e9 || (line.rate !== null && (!Number.isFinite(line.rate) || line.rate < 0 || line.rate > 1e9)) || !PROJECT_STAGES.some(stage => stage.id === line.stage)) throw new Error("The project contains an invalid BOQ line.");
     if (line.analysis && (!Array.isArray(line.analysis.resources) || line.analysis.resources.length > 100 || line.analysis.resources.some(resource => !resource || typeof resource.id !== "string" || typeof resource.label !== "string" || !Number.isFinite(resource.quantity) || resource.quantity < 0 || (resource.unitRate !== null && (!Number.isFinite(resource.unitRate) || resource.unitRate < 0))) || !line.analysis.allowances || Object.values(line.analysis.allowances).some(value => !Number.isFinite(value) || value < 0 || value > 1))) throw new Error("A resource build-up contains invalid values.");
   }
