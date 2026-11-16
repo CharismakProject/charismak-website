@@ -3,6 +3,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { createModelRenderer } from "./model-renderer";
 import { assertWalkthroughLighting, createWalkthroughLighting } from "./construction-lighting";
 import { stageInfo, type ModelPart, type ProjectStage, type ScheduledStage } from "@/lib/construction/project";
+import { visibleProjectParts } from "@/lib/construction/project-visibility";
 export type ProjectViewState = { day: number; schedule: ScheduledStage[]; hidden: ProjectStage[]; selected: string | null; section?: boolean };
 export type ProjectScene = { update: (value: ProjectViewState) => void; view: (mode: "iso" | "plan" | "front") => void; focus: (id: string) => void; dispose: () => void };
 
@@ -62,6 +63,7 @@ export async function createProjectScene(host: HTMLElement, parts: ModelPart[], 
   const observer = new ResizeObserver(resize); observer.observe(host); resize(); view("iso"); controls.addEventListener("change", () => { dirty = true; });
   const update = (state: ProjectViewState) => {
     const max = Math.max(1, ...state.schedule.map(stage => stage.finish));
+    const visible = visibleProjectParts(parts, state);
     if (groundLevel !== undefined) {
       const excavation = state.schedule.find(stage => stage.id === "earthworks"), slab = state.schedule.find(stage => stage.id === "slabs");
       const belowGroundView = state.section || (excavation && state.day >= excavation.start && state.day < (slab?.finish ?? excavation.finish));
@@ -71,12 +73,11 @@ export async function createProjectScene(host: HTMLElement, parts: ModelPart[], 
     for (const part of parts) groups.set(part.stage, [...groups.get(part.stage) ?? [], part]);
     for (const [stageId, group] of groups) {
       const stage = state.schedule.find(item => item.id === stageId), fraction = !stage || state.day >= max ? 1 : Math.min(1, Math.max(0, (state.day - stage.start) / stage.days));
-      group.forEach((part, index) => {
-        const object = partObjects.get(part.id)!; object.visible = !(state.section && part.cutaway) && !state.hidden.includes(part.stage) && (fraction >= 1 || index < Math.ceil(fraction * group.length) || (!!part.line && state.day >= (stage?.start ?? 0)));
+      group.forEach(part => {
+        const object = partObjects.get(part.id)!; object.visible = visible.has(part.id);
         const material = materials.get(part.id); if (material) { material.emissive.set(part.id === state.selected ? "#f0c24d" : fraction > 0 && fraction < 1 ? "#4d3512" : "#000000"); material.emissiveIntensity = part.id === state.selected ? 0.35 : 0.1; }
       });
     }
-    for (const part of parts) if (partObjects.get(part.id)?.visible) for (const covered of part.covers ?? []) { const object = partObjects.get(covered); if (object) object.visible = false; }
     dirty = true;
   };
   const focus = (id: string) => { const object = partObjects.get(id); if (!object) return; const box = new Engine.Box3().setFromObject(object), target = box.getCenter(new Engine.Vector3()), r = Math.max(0.7, box.getSize(new Engine.Vector3()).length() * 0.65); controls.target.copy(target); camera.position.copy(target).add(new Engine.Vector3(r * 1.4, r, r * 1.7)); controls.update(); dirty = true; };

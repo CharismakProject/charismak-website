@@ -6,6 +6,7 @@ import * as XLSX from "xlsx";
 import { IfcAPI } from "web-ifc";
 import { detectBoqColumns, parseBoqRows, emptyProject, projectCostSummary, lineAmount, lineDuration, proposeSchedule, plannedCostAt, workingDate, validateProject, replaceProjectBoq, replaceProjectDrawing } from "../lib/construction/project";
 import { import3D, traceToModel, readDxf } from "../lib/construction/project-import";
+import { visibleProjectParts } from "../lib/construction/project-visibility";
 
 async function verify() {
   const data = await readFile(resolve("scripts/fixtures/construction-boq.csv"));
@@ -24,6 +25,17 @@ async function verify() {
   assert.throws(() => traceToModel({ image: "", width: 1, height: 1, outline: [], segments: [], calibration: [], distance: 10, floors: 1, storeyHeight: 3, wallThickness: 0.225 }), /Calibrate/);
   const project = { ...emptyProject(), parts: traced.parts, boq: parsed.lines, start: "2026-11-13" };
   const schedule = proposeSchedule(project), end = Math.max(...schedule.map(stage => stage.finish));
+  const settingOut = schedule.find(stage => stage.id === "setting-out")!;
+  const pegs = traced.parts.filter(part => part.stage === "setting-out");
+  assert.ok(pegs.length > 0);
+  const setOutVisible = visibleProjectParts(traced.parts, { schedule, day: settingOut.finish });
+  assert.ok(pegs.every(part => setOutVisible.has(part.id)), "Setting-out profiles are visible while the substructure is being built");
+  const slabEnd = schedule.find(stage => stage.id === "slabs")!.finish;
+  for (const day of [slabEnd, end]) {
+    const visible = visibleProjectParts(traced.parts, { schedule, day });
+    assert.ok(pegs.every(part => !visible.has(part.id)), "Temporary pegs and strings disappear after the substructure and in the completed view");
+  }
+  assert.ok(pegs.every(part => visibleProjectParts(traced.parts, { schedule, day: settingOut.finish }).has(part.id)), "Scrubbing back restores the setting-out profiles");
   assert.equal(plannedCostAt(schedule, 0), 0); assert.equal(plannedCostAt(schedule, end), 11865000);
   for (let n = 1; n < schedule.length; n++) assert.equal(schedule[n].start, schedule[n - 1].finish, "Default FS sequence must not overlap itself");
   const foundations = schedule.find(stage => stage.id === "foundations")!;
