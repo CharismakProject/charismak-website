@@ -1,5 +1,7 @@
+import { WALKTHROUGH_STEPS } from "../rates/walkthrough";
+
 export type TrackId = "building" | "structures" | "steel" | "plumbing" | "electrical";
-export type ModelId = "bungalow" | "concrete-frame" | "truss-bridge" | "steel-frame" | "plumbing" | "electrical";
+export type ModelId = "bungalow" | "storey-building" | "concrete-frame" | "truss-bridge" | "steel-frame" | "plumbing" | "electrical";
 export type Lesson = { title: string; short: string; see: string; why: string; check: string };
 export type TeachingPart = { id: string; title: string; detail: string; step: number };
 export type LearningModel = { id: ModelId; track: TrackId; title: string; subtitle: string; defaultStep: number; explodable: boolean; pathsLabel?: string; note: string; lessons: Lesson[]; parts: TeachingPart[]; legend: { color: string; label: string }[]; references: string[] };
@@ -45,6 +47,23 @@ export const LEARNING_MODELS: LearningModel[] = [
       lesson("Testing & handover", "Handover", "The completed house, ready for a final inspection.", "Completion includes defect closure, records, operating information and the final account.", "Close the snag list and hand over test records, warranties and keys."),
     ],
     parts: [part("house-foundations", "Foundation system", 3, "The below-ground support of this sample bungalow."), part("house-floor", "Floor build-up", 4, "Several separate layers sit beneath the finished floor."), part("house-walls", "Walls & openings", 5, "External walls, partitions, lintels and the ring beam."), part("house-roof", "Roof framing", 6, "Framing and connections beneath the roof covering."), part("house-services", "Concealed services", 8, "Use the separate plumbing and electrical models to explore these systems."), part("house-complete", "Completed building", 13, "Explore the exterior or remove the roof to inspect the inside.")],
+  },
+  {
+    id: "storey-building", track: "building", title: "Two-storey house: survey to handover", subtitle: "A 160 m² duplex from the site survey to the keys, in 23 stages", defaultStep: WALKTHROUGH_STEPS.length - 1, explodable: false,
+    note: "The house, quantities and site set-up are illustrative. Rates come from the Charismak Rate Bank for the chosen state; stages without a Rate Bank rate are left for a project quotation.", references: ["loadpath"],
+    legend: [{ color: "#bfbbb3", label: "Concrete" }, { color: "#a9adb2", label: "Blockwork" }, { color: "#e0a33a", label: "Reinforcement" }, { color: "#b04c3c", label: "Roof" }, { color: "#f0e4c8", label: "Paint" }, { color: "#ff7a1a", label: "Services" }],
+    lessons: WALKTHROUGH_STEPS.map(step => lesson(step.title, step.short, step.summary, step.detail, step.qsNote)),
+    parts: ([
+      ["storey-site", "Site set-up & hoarding", "mobilisation", "Hoarding, site office, water and signboard: priced as Preliminaries."],
+      ["storey-foundations", "Strip foundation", "footing", "Concrete footing under every load-bearing wall."],
+      ["storey-ground-slab", "Ground floor slab", "ground-slab", "Hardcore, DPM, BRC mesh and a 150 mm slab."],
+      ["storey-columns", "Reinforced columns", "gf-columns", "Six 230 × 230 mm columns per floor; the rebar cage is shown in x-ray."],
+      ["storey-slab", "First floor slab & staircase", "ff-slab", "Beams, slab and stair cast on propped formwork."],
+      ["storey-roof", "Roof carcass & covering", "roof-carcass", "Gable walls, wall plate, rafters, purlins and long-span sheets."],
+      ["storey-services", "Concealed services", "mep-first-fix", "Conduits and pipes fixed before plastering."],
+      ["storey-finishes", "Finishes & fittings", "second-fix", "Plaster, ceilings, tiles, paint and sanitary fittings."],
+      ["storey-external", "External works", "external-works", "Fence, gate, paving and landscaping."],
+    ] as const).map(([id, title, stepId, detail]) => part(id, title, WALKTHROUGH_STEPS.findIndex(step => step.id === stepId), detail)),
   },
   {
     id: "concrete-frame", track: "structures", title: "Multi-storey concrete frame", subtitle: "Four storeys, a structural core and an open stairwell", defaultStep: 6, explodable: true, pathsLabel: "Show load paths",

@@ -12,6 +12,7 @@ import { useConstructionCosts } from "./use-construction-costs";
 type ViewerHandle = Pick<TeachingSceneHandle, "view" | "focus">;
 type ViewerProps = { model: LearningModel; state: TeachingSceneState; onPart: (id: string) => void; onStage: (step: number) => void; onControllerReady: (handle: ViewerHandle | null) => void };
 const TRACK_ICONS = [Building2, Layers3, Wrench, Droplets, Zap];
+const MODEL_SHORT_NAMES: Partial<Record<ModelId, string>> = { bungalow: "Bungalow", "storey-building": "Two-storey house", "concrete-frame": "Concrete frame", "truss-bridge": "Truss bridge" };
 
 function ModelViewport({ model, state, onPart, onStage, onControllerReady }: ViewerProps) {
   const host = useRef<HTMLDivElement>(null);
@@ -23,7 +24,21 @@ function ModelViewport({ model, state, onPart, onStage, onControllerReady }: Vie
     let cancelled = false;
     const target = host.current!;
     async function start() {
-      if (model.id === "bungalow") {
+      if (model.id === "storey-building") {
+        // Two-storey survey-to-handover model (WebGPU with WebGL 2 fallback).
+        const canvas = document.createElement("canvas");
+        canvas.style.display = "block"; canvas.style.width = "100%"; canvas.style.height = "100%"; canvas.style.touchAction = "none";
+        canvas.setAttribute("aria-label", "3D model of a two-storey house under construction. Drag to rotate, pinch or scroll to zoom.");
+        target.appendChild(canvas);
+        const { createWalkthroughScene } = await import("@/components/rates/walkthrough/walkthrough-scene");
+        if (cancelled) { canvas.remove(); return; }
+        const handle = await createWalkthroughScene(canvas);
+        if (cancelled) { handle.dispose(); canvas.remove(); return; }
+        const update = (value: TeachingSceneState) => { handle.setStep(value.step); handle.setSection(value.section); };
+        scene.current = { update, dispose: () => { handle.dispose(); canvas.remove(); } };
+        onControllerReady({ view: handle.view, focus: () => handle.view("iso") });
+        update(latest.current.state); setStatus("ready");
+      } else if (model.id === "bungalow") {
         const { createConstructionScene } = await import("./construction-scene");
         if (cancelled) return;
         const handle = await createConstructionScene(target, { onSelect: step => latest.current.onStage(step), onReady: () => { if (!cancelled) setStatus("ready"); }, onError: () => { if (!cancelled) setStatus("error"); } });
@@ -62,7 +77,8 @@ export default function ConstructionExplorer() {
   }, []);
   useEffect(() => {
     const read = () => {
-      const [id, index] = window.location.hash.slice(1).split("/");
+      const query = new URLSearchParams(window.location.search);
+      const [id, index] = window.location.hash ? window.location.hash.slice(1).split("/") : [query.get("model") ?? "", query.get("step") ?? undefined];
       const match = LEARNING_MODELS.find(item => item.id === id);
       if (match) changeModel(match.id, index !== undefined && /^\d+$/.test(index) ? Number(index) : undefined);
     };
@@ -102,7 +118,7 @@ export default function ConstructionExplorer() {
     <div className={styles.container}>
       <header className={styles.intro}>
         <div><p className={styles.eyebrow}><GraduationCap size={16} /> CHARISMAK LEARNING SPACE</p><h1>See how <span>it’s built.</span></h1><p className={styles.lead}>Explore construction in 3D. Peel back the layers, follow the systems,<br className={styles.desktopBreak} /> and understand what makes a building work.</p></div>
-        <div className={styles.introAside}><span><strong>06</strong> interactive models</span><span><strong>{LESSON_COUNT}</strong> guided lessons</span><Link href="/construction-studio">Build your own project <ArrowRight size={15} /></Link></div>
+        <div className={styles.introAside}><span><strong>{String(LEARNING_MODELS.length).padStart(2, "0")}</strong> interactive models</span><span><strong>{LESSON_COUNT}</strong> guided lessons</span><Link href="/construction-studio">Build your own project <ArrowRight size={15} /></Link></div>
       </header>
 
       <Link className={styles.studioEntry} href="/construction-studio"><span><strong>Bring your own drawing and BOQ.</strong> Upload a model or trace a plan, review the stages and play a proposed construction programme with cost.</span><ArrowRight size={19} /></Link>
@@ -111,7 +127,7 @@ export default function ConstructionExplorer() {
       })}</nav>
 
       <section className={`${styles.explorer} ${tab === "costs" ? styles.costLayout : ""}`} aria-label="Interactive construction explorer">
-        <div className={styles.modelBar}><div><span className={styles.miniLabel}>EXPLORE THE MODEL</span><h2>{model.title}</h2></div>{relatedModels.length > 1 ? <div className={styles.modelChoices} aria-label="Structure model">{relatedModels.map(item => <button key={item.id} type="button" aria-pressed={modelId === item.id} onClick={() => changeModel(item.id)}>{item.id === "concrete-frame" ? "Concrete frame" : "Truss bridge"}</button>)}</div> : <span className={styles.modelSubtitle}>{model.subtitle}</span>}</div>
+        <div className={styles.modelBar}><div><span className={styles.miniLabel}>EXPLORE THE MODEL</span><h2>{model.title}</h2></div>{relatedModels.length > 1 ? <div className={styles.modelChoices} aria-label="Structure model">{relatedModels.map(item => <button key={item.id} type="button" aria-pressed={modelId === item.id} onClick={() => changeModel(item.id)}>{MODEL_SHORT_NAMES[item.id] ?? item.title}</button>)}</div> : <span className={styles.modelSubtitle}>{model.subtitle}</span>}</div>
         <div className={styles.viewer} ref={viewer}>
           <ModelViewport key={modelId} model={model} state={sceneState} onPart={choosePart} onStage={chooseStep} onControllerReady={onControllerReady} />
           <div className={styles.viewerTop}><span className={styles.liveBadge}><i /> INTERACTIVE MODEL</span><div className={styles.views} aria-label="Camera view">{(["iso", "plan", "front"] as ViewMode[]).map(mode => <button type="button" aria-pressed={viewMode === mode} key={mode} onClick={() => changeView(mode)}>{mode === "iso" ? "3D" : mode === "plan" ? "Plan" : "Front"}</button>)}</div></div>
@@ -134,7 +150,7 @@ export default function ConstructionExplorer() {
         <div className={styles.timeline}><div className={styles.timelineHeading}><span><span className={styles.miniLabel}>CONSTRUCTION SEQUENCE</span><small>{step + 1} of {model.lessons.length}</small></span><button type="button" onClick={() => { chooseStep(model.lessons.length - 1); setSection(modelId === "plumbing" || modelId === "electrical"); setExploded(false); }}>Explore complete model <ArrowRight size={14} /></button></div><div className={styles.steps}>{model.lessons.map((item, index) => <button type="button" key={item.title} aria-current={step === index ? "step" : undefined} onClick={() => chooseStep(index)}><span>{index < step ? <Check size={14} /> : String(index + 1).padStart(2, "0")}</span><small>{item.short}</small></button>)}</div><label className={styles.srOnly} htmlFor="construction-step">Construction stage</label><input id="construction-step" className={styles.stageRange} type="range" min={0} max={model.lessons.length - 1} value={step} onChange={event => chooseStep(Number(event.target.value))} aria-valuetext={lesson.title} /></div>
       </section>
 
-      <div className={styles.below}><div className={styles.learningNote}><GraduationCap size={23} /><div><strong>Learn the system. Understand the sequence.</strong><p>{model.note}</p>{model.id === "electrical" && <p>Route colours identify circuit groups; this is not a conductor-colour key or an installation wiring diagram.</p>}<details><summary>Further reading <ArrowDown size={13} /></summary><ul>{model.references.map(key => { const ref = LEARNING_REFERENCES[key]; return <li key={key}><a href={ref.url} target="_blank" rel="noreferrer">{ref.title} <ExternalLink size={12} /></a><small>{ref.source}</small></li>; })}</ul><p>These references explain general principles. Apply the requirements and professional approvals relevant to the actual project in Nigeria.</p></details></div></div><div className={styles.rateCard}><Layers3 size={21} /><div><strong>From the model to the numbers</strong><p>Explore the detailed bungalow worksheet. Your edits are shared with this explorer on the same device.</p><Link href="/rates/walkthrough">Open quantities & rates <ArrowRight size={15} /></Link></div></div></div>
+      <div className={styles.below}><div className={styles.learningNote}><GraduationCap size={23} /><div><strong>Learn the system. Understand the sequence.</strong><p>{model.note}</p>{model.id === "electrical" && <p>Route colours identify circuit groups; this is not a conductor-colour key or an installation wiring diagram.</p>}<details><summary>Further reading <ArrowDown size={13} /></summary><ul>{model.references.map(key => { const ref = LEARNING_REFERENCES[key]; return <li key={key}><a href={ref.url} target="_blank" rel="noreferrer">{ref.title} <ExternalLink size={12} /></a><small>{ref.source}</small></li>; })}</ul><p>These references explain general principles. Apply the requirements and professional approvals relevant to the actual project in Nigeria.</p></details></div></div><div className={styles.rateCard}><Layers3 size={21} /><div><strong>From the model to the numbers</strong><p>Every stage links to its Rate Bank build-up. Open the Rate Bank to see all rates and edit your own copy.</p><Link href="/rates">Open the Rate Bank <ArrowRight size={15} /></Link></div></div></div>
       <div className={styles.bottomLine}><span>Built to explore. Designed to explain.</span><Link href="/contact">Discuss your project <ArrowRight size={14} /></Link></div>
     </div>
   </main>;

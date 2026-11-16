@@ -2,6 +2,7 @@ import { RATE_BANK_ITEMS, calculateRate, type RateBankItem, type RateCostLine } 
 import { DEFAULT_PRICE_ITEMS, DEFAULT_RATE_TEMPLATES } from "../pricing/defaults";
 import { getLocation, localiseLines } from "../rates/locations";
 import { BUILD_STAGES, type WorkItem } from "./walkthrough";
+import { WALKTHROUGH_STEPS } from "../rates/walkthrough";
 import { getLearningModel, type ModelId } from "./learning";
 
 export type Resource = Omit<RateCostLine, "unitRate"> & { unitRate: number | null };
@@ -33,8 +34,26 @@ const rebar = (id: string, q: number) => rb(id, "Reinforcement supply & fixing",
 const steel = (id: string, title: string, q: number) => tpl(id, title, q, "structural-steel-installed", "Provisional steel weight for cost teaching, not calculated from mesh geometry. Includes the template’s fabrication/erection resources; special connections and coatings are separate where listed.");
 const pipe50 = (id: string, title: string, q: number) => custom(id, title, q, "m", [catalogue("pvc-pipe-50", 1.05), resource("fittings", "Branches, bends, supports and fittings", "material", 1, "m", null), catalogue("pipework-labour", 1)], "Illustrative net route length. Consumption includes 5% cutting waste; fittings need a project quotation.");
 
+// Quotation-only work for the two-storey stages that have no Rate Bank rate.
+const STOREY_QUOTES: Record<string, CostWork[]> = {
+  survey: [quote("survey-fees", "Survey, soil investigation & design fees", 1, "item", "Lump-sum professional fees; enter the consultants' quotations.", "logistics")],
+  mobilisation: [quote("preliminaries", "Preliminaries: set-up, hoarding, site office, water & supervision", 1, "item", "Normally a lump sum or a percentage of the works in the BoQ.", "logistics")],
+  "setting-out": [quote("setting-out", "Setting out (where not included in Preliminaries)", 1, "item", "Usually inside Preliminaries; enter a separate amount only if the contract measures it.", "labour")],
+  "mep-first-fix": [quote("electrical", "Electrical installation (subcontract)", 1, "item", "Usually priced per point or as a subcontract; enter the agreed sum.", "labour"), quote("plumbing", "Plumbing installation (subcontract)", 1, "item", "Usually priced per point or as a subcontract; enter the agreed sum.", "labour")],
+  "external-works": [quote("external-works", "Fence, gate, paving, drainage & landscaping", 1, "item", "Measure from the external works drawing or enter a quotation.")],
+  handover: [quote("handover", "Final cleaning, snagging & handover", 1, "item", "Normally inside Preliminaries.", "labour")],
+};
+const storeyWorks = (): CostWork[][] => WALKTHROUGH_STEPS.map(step => step.items.length
+  ? step.items.map((item, index) => {
+    const reference = bank.get(item.slug);
+    if (!reference) throw new Error(`Missing two-storey rate: ${item.slug}`);
+    return rb(`${step.id}-${index}`, reference.shortTitle, item.quantity, reference.unit, item.slug, item.basis);
+  })
+  : STOREY_QUOTES[step.id] ?? []);
+
 const MODEL_WORKS: Record<ModelId, CostWork[][]> = {
   bungalow: BUILD_STAGES.map(stage => stage.items),
+  "storey-building": storeyWorks(),
   "concrete-frame": [
     [rb("excavate", "Pad foundation excavation", 38.99, "m³", "manual-trench-excavation", "12 assumed pits × 1.90 × 1.90 × 0.90 m."), rb("blinding", "Pad blinding", 1.63, "m³", "c15-blinding-1-3-6", "12 × 1.65 × 1.65 × 0.05 m."), concrete("pads", "Pads & ground-beam concrete", 20.04, "12 model pads plus schematic ground beams, less overlaps; sizes are illustrative."), rebar("foundation-bars", 2.2)],
     [concrete("starters", "Ground-storey columns & core", 12.22, "12 columns × 0.38 × 0.38 × 3 m plus 7.02 m³ schematic core."), rebar("starter-bars", 1.8), rb("starter-forms", "Column & core formwork", 120, "m²", "plywood-formwork-columns", "Provisional concrete-contact area; core geometry and reuse require measurement.")],
