@@ -5,7 +5,8 @@ import { RATE_LOCATIONS, getLocation } from "../lib/rates/locations";
 import { MODEL, WALKTHROUGH_STEPS, priceWalkthrough } from "../lib/rates/walkthrough";
 
 for (const step of WALKTHROUGH_STEPS) {
-  assert.ok(getRateBankItem(step.primary), `${step.id}: primary rate ${step.primary} missing`);
+  if (step.primary) assert.ok(getRateBankItem(step.primary), `${step.id}: primary rate ${step.primary} missing`);
+  else assert.ok(step.notPriced && step.items.length === 0, `${step.id}: unpriced stage needs a notPriced note`);
   for (const item of step.items) {
     assert.ok(getRateBankItem(item.slug), `${step.id}: rate ${item.slug} missing from the Rate Bank`);
     assert.ok(item.quantity > 0 && Number.isFinite(item.quantity), `${step.id}: bad quantity for ${item.slug}`);
@@ -24,7 +25,7 @@ assert.equal(base.length, WALKTHROUGH_STEPS.length);
 for (const step of base) {
   const sum = step.items.reduce((total, item) => total + item.rate * item.quantity, 0);
   assert.ok(Math.abs(sum - step.subtotal) < 0.01, `${step.step.id}: subtotal mismatch`);
-  assert.ok(step.primaryBuildUp && step.primaryBuildUp.calc.total > 0, `${step.step.id}: no build-up`);
+  if (step.step.primary) assert.ok(step.primaryBuildUp && step.primaryBuildUp.calc.total > 0, `${step.step.id}: no build-up`);
 }
 const total = base.at(-1)!.cumulative;
 assert.ok(Math.abs(total - base.reduce((t, s) => t + s.subtotal, 0)) < 0.01, "cumulative total mismatch");

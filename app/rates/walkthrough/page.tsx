@@ -21,9 +21,9 @@ export default function WalkthroughPage() {
         <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="cx-eyebrow">Test page · 3D walkthrough</p>
-            <h1 className="cx-title mt-3 text-3xl md:text-5xl">How a building goes up, and what each part costs</h1>
+            <h1 className="cx-title mt-3 text-3xl md:text-5xl">From survey to handover: how a building goes up, and what each part costs</h1>
             <p className="cx-lead mt-3 max-w-3xl text-sm md:text-base">
-              Follow a two-storey frame from the first trench to the roof. Each stage shows the structural element, how a quantity surveyor measures it, and how its Rate Bank rate is built up from materials, labour and plant.
+              Follow a two-storey building from the site survey to handing over the keys. Each stage shows what is built, how a quantity surveyor measures it, and how its Rate Bank rate is built up from materials, labour and plant.
             </p>
           </div>
         </div>

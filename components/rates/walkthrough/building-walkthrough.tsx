@@ -7,7 +7,7 @@ import { ChevronLeft, ChevronRight, Cpu, MapPin, Pause, Play, RotateCcw } from "
 import AnimatedNaira from "@/components/ui/animated-naira";
 import { RATE_LOCATIONS, ZONES } from "@/lib/rates/locations";
 import { useRateLocation } from "@/lib/rates/use-rate-location";
-import { MODEL, WALKTHROUGH_STEPS, priceWalkthrough } from "@/lib/rates/walkthrough";
+import { MODEL, PHASES, WALKTHROUGH_STEPS, priceWalkthrough } from "@/lib/rates/walkthrough";
 
 import type { WalkthroughScene } from "./walkthrough-scene";
 
@@ -158,19 +158,29 @@ export default function BuildingWalkthrough() {
             Step <strong className="text-white">{index + 1}</strong> / {last + 1}
           </span>
         </div>
-        <ol className="mt-3 grid grid-cols-11 gap-1" aria-label="Construction stages">
-          {WALKTHROUGH_STEPS.map((step, i) => (
-            <li key={step.id}>
-              <button
-                type="button"
-                onClick={() => go(i)}
-                aria-label={`Step ${i + 1}: ${step.title}`}
-                aria-current={i === index ? "step" : undefined}
-                className={`block h-2 w-full rounded-full transition ${i === index ? "bg-[#D9B26A]" : i < index ? "bg-[#D9B26A]/45" : "bg-white/12"}`}
-              />
-            </li>
-          ))}
-        </ol>
+        <div className="mt-3 flex gap-2" role="list" aria-label="Construction stages">
+          {PHASES.map((phase) => {
+            const steps = WALKTHROUGH_STEPS.map((step, i) => ({ step, i })).filter(({ step }) => step.phase === phase);
+            const active = current.step.phase === phase;
+            return (
+              <div key={phase} role="listitem" className="min-w-0" style={{ flex: steps.length }}>
+                <div className="flex gap-0.5">
+                  {steps.map(({ step, i }) => (
+                    <button
+                      key={step.id}
+                      type="button"
+                      onClick={() => go(i)}
+                      aria-label={`Step ${i + 1}: ${step.title}`}
+                      aria-current={i === index ? "step" : undefined}
+                      className={`block h-2 flex-1 rounded-full transition ${i === index ? "bg-[#D9B26A]" : i < index ? "bg-[#D9B26A]/45" : "bg-white/12 hover:bg-white/25"}`}
+                    />
+                  ))}
+                </div>
+                <p className={`mt-1.5 truncate text-[9px] font-bold uppercase tracking-[0.1em] ${active ? "text-[#F2C879]" : "text-white/35"}`}>{phase}</p>
+              </div>
+            );
+          })}
+        </div>
       </section>
 
       {/* Explanation + pricing */}
@@ -207,6 +217,9 @@ export default function BuildingWalkthrough() {
 
         <article className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
           <h3 className="text-sm font-black text-white">Quantity × rate = cost (this model)</h3>
+          {current.step.notPriced ? (
+            <p className="mt-3 rounded-xl border border-dashed border-white/15 px-3 py-3 text-xs leading-6 text-white/60">{current.step.notPriced}</p>
+          ) : null}
           <div className="mt-3 space-y-3">
             {current.items.map((item, i) => (
               <div key={`${item.slug}-${i}`} className="rounded-xl bg-black/25 p-3">
@@ -237,6 +250,23 @@ export default function BuildingWalkthrough() {
             </div>
           </div>
         </article>
+
+        {index === last ? (
+          <article className="rounded-2xl border border-[#D9B26A]/40 bg-[#D9B26A]/[0.07] p-5">
+            <h3 className="text-sm font-black text-[#F2C879]">Handover summary</h3>
+            <p className="mt-2 text-xs leading-6 text-white/70">
+              Measured work priced from the Rate Bank: <strong className="text-white">{money(current.cumulative)}</strong> for a {MODEL.grossFloorArea} m² two-storey building in {location.name}.
+            </p>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-xs leading-6 text-white/60">
+              {priced.filter((p) => p.step.notPriced).map((p) => (
+                <li key={p.step.id}><strong className="text-white/80">{p.step.title}:</strong> not priced here</li>
+              ))}
+              <li>Supply of windows, doors and sanitary fittings (only their installation is priced)</li>
+              <li>Contractor overheads & profit, VAT, contingency and professional fees</li>
+            </ul>
+            <p className="mt-2 text-[11px] leading-5 text-white/45">A real tender adds these, so the final contract sum will be higher than the measured-work figure.</p>
+          </article>
+        ) : null}
 
         {build ? (
           <details className="group rounded-2xl border border-white/10 bg-white/[0.04] p-5" open>
@@ -284,7 +314,7 @@ export default function BuildingWalkthrough() {
         ) : null}
 
         <p className="rounded-xl border border-white/10 px-4 py-3 text-[11px] leading-5 text-white/45">
-          Illustrative model only: a simple {MODEL.length} m × {MODEL.width} m two-storey frame with simplified quantities. It leaves out doors, windows, tiling, plumbing, electrical, external works, preliminaries and contractor margin, so it is not a project estimate.
+          Illustrative model only: a simple {MODEL.length} m × {MODEL.width} m two-storey frame with simplified quantities. Stages without Rate Bank rates are explained but not priced, so this is not a project estimate.
           Use the <Link href="/estimator" className="text-[#F2C879] underline">estimator</Link> for a full building budget.
         </p>
       </section>
