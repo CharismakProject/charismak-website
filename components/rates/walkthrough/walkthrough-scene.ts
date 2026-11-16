@@ -13,6 +13,9 @@ import { MODEL, WALKTHROUGH_STEPS } from "@/lib/rates/walkthrough";
 export type WalkthroughScene = {
   backend: "WebGPU" | "WebGL 2";
   setStep: (index: number) => void;
+  /** Section view: roof off, walls see-through. */
+  setSection: (on: boolean) => void;
+  view: (mode: "iso" | "plan" | "front") => void;
   dispose: () => void;
 };
 
@@ -755,7 +758,7 @@ export async function createWalkthroughScene(
     }
   });
 
-  add("roof-covering", (g) => {
+  const roofCover = add("roof-covering", (g) => {
     const sheets = material(0xffffff, { map: textured(tex.roof, (10 + 2 * over) / 0.19, 1), metalness: 0.45, roughness: 0.45, side: THREE.DoubleSide });
     const fascia = material(C.white, { roughness: 0.5 });
     const ridge = material(0x7a2c22, { metalness: 0.4, roughness: 0.45 });
@@ -1014,6 +1017,7 @@ export async function createWalkthroughScene(
   // ---------- Stage state ----------
   let current = 0;
   let previous = -1;
+  let section = false;
   const xraySteps = new Set(["mep-first-fix", "ceilings", "tiling", "second-fix"].map(idx));
   const plasterStep = idx("plaster");
   const paintStep = idx("painting");
@@ -1024,6 +1028,7 @@ export async function createWalkthroughScene(
   const clock = new THREE.Clock();
 
   const applyStep = () => {
+    const stepChanged = current !== previous;
     const forward = current > previous;
     const now = clock.getElapsedTime();
     for (const e of entries) {
@@ -1041,7 +1046,8 @@ export async function createWalkthroughScene(
       if (e.start < 0) e.group.scale.set(1, 1, 1);
     }
     // Concrete goes see-through while its reinforcement is explained; walls go see-through for interior stages.
-    const xray = xraySteps.has(current);
+    const xray = xraySteps.has(current) || section;
+    if (section) roofCover.group.visible = false;
     const wallOpacity = xray ? 0.16 : 1;
     for (const m of [plasterMat, paintMat, ...wallMeshes.map((w) => w.block)]) {
       m.opacity = wallOpacity;
@@ -1088,10 +1094,12 @@ export async function createWalkthroughScene(
       m.opacity = dusk ? 0.85 : 0.45;
     }
     for (const m of lampMaterials) m.emissiveIntensity = dusk ? 2.5 : 0.2;
-    const cam = WALKTHROUGH_STEPS[current].camera;
-    goalTarget.set(...cam.target);
-    toSpherical(cam.position, cam.target, goalSph);
-    idleSince = performance.now();
+    if (stepChanged) {
+      const cam = WALKTHROUGH_STEPS[current].camera;
+      goalTarget.set(...cam.target);
+      toSpherical(cam.position, cam.target, goalSph);
+      idleSince = performance.now();
+    }
     previous = current;
   };
   // Concrete materials that can turn see-through (to show rebar, or for interior stages), with their stage.
@@ -1213,6 +1221,26 @@ export async function createWalkthroughScene(
     setStep: (index: number) => {
       current = THREE.MathUtils.clamp(index, 0, order.length - 1);
       applyStep();
+    },
+    setSection: (on: boolean) => {
+      if (on === section) return;
+      section = on;
+      previous = current; // re-apply without replaying grow animations
+      applyStep();
+    },
+    view: (mode) => {
+      if (mode === "iso") {
+        const cam = WALKTHROUGH_STEPS[current].camera;
+        goalTarget.set(...cam.target);
+        toSpherical(cam.position, cam.target, goalSph);
+      } else if (mode === "plan") {
+        goalTarget.set(5, 0, 2);
+        goalSph.set(34, 0.05, goalSph.theta);
+      } else {
+        goalTarget.set(5, 3, 4);
+        goalSph.set(26, 1.42, Math.PI);
+      }
+      idleSince = performance.now();
     },
     dispose: () => {
       renderer.setAnimationLoop(null);

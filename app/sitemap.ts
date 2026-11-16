@@ -24,7 +24,6 @@ const staticRoutes: Array<{
   { path: "/estimator/materials", changeFrequency: "monthly", priority: 0.9 },
   { path: "/prices", changeFrequency: "daily", priority: 0.95 },
   { path: "/rates", changeFrequency: "weekly", priority: 0.95 },
-  { path: "/rates/walkthrough", changeFrequency: "monthly", priority: 0.9 },
   { path: "/construction-explorer", changeFrequency: "monthly", priority: 0.9 },
   { path: "/construction-studio", changeFrequency: "monthly", priority: 0.9 },
   { path: "/marketplace", changeFrequency: "daily", priority: 0.85 },

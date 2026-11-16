@@ -3,9 +3,9 @@ import * as THREE from "three";
 import { LEARNING_MODELS, LEARNING_REFERENCES, LEARNING_TRACKS, LESSON_COUNT, getLearningModel } from "../lib/construction/learning";
 import { buildTeachingModel } from "../components/construction/teaching-models";
 
-assert.equal(LEARNING_MODELS.length, 6);
-assert.equal(LESSON_COUNT, 46);
-assert.equal(new Set(LEARNING_MODELS.map(model => model.id)).size, 6);
+assert.equal(LEARNING_MODELS.length, 7);
+assert.equal(LESSON_COUNT, 69);
+assert.equal(new Set(LEARNING_MODELS.map(model => model.id)).size, 7);
 assert.equal(getLearningModel("invalid-link").id, "bungalow");
 for (const track of LEARNING_TRACKS) assert.ok(LEARNING_MODELS.some(model => model.track === track.id));
 let meshCount = 0;
@@ -15,7 +15,8 @@ for (const model of LEARNING_MODELS) {
   for (const part of model.parts) assert.ok(part.step >= 0 && part.step < model.lessons.length, `${part.id}: component must exist in its lesson`);
   for (const reference of model.references) assert.ok(LEARNING_REFERENCES[reference]?.url.startsWith("https://"));
   for (const lesson of model.lessons) assert.ok(lesson.see && lesson.why && lesson.check, `${model.id}: incomplete lesson`);
-  if (model.id === "bungalow") continue;
+  // These two use their own dedicated scenes rather than the shared teaching geometry.
+  if (model.id === "bungalow" || model.id === "storey-building") continue;
   for (const software of [false, true]) {
     const built = buildTeachingModel(THREE, model.id, software);
     assert.equal(built.stages.length, model.lessons.length);
@@ -52,4 +53,4 @@ for (const model of LEARNING_MODELS) {
     }
   }
 }
-console.log(`Construction education verified: 6 models, 46 lessons, all selectable components, ${meshCount} meshes across hardware/software geometry, finite route animation and service-system checks.`);
+console.log(`Construction education verified: 7 models, 69 lessons, all selectable components, ${meshCount} meshes across hardware/software geometry, finite route animation and service-system checks.`);

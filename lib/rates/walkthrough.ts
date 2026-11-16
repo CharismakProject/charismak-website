@@ -30,6 +30,8 @@ export type Phase = (typeof PHASES)[number];
 
 export type WalkthroughStep = {
   id: string;
+  /** One- or two-word label for timelines. */
+  short: string;
   phase: Phase;
   stage: string;
   title: string;
@@ -63,6 +65,7 @@ type StepInput = Omit<WalkthroughStep, "stage">;
 const STEP_INPUTS: StepInput[] = [
   {
     id: "survey",
+    short: "Survey",
     phase: "Pre-construction",
     title: "Site survey & soil investigation",
     summary: "Before anything is built, the plot is surveyed and the soil is tested.",
@@ -75,6 +78,7 @@ const STEP_INPUTS: StepInput[] = [
   },
   {
     id: "mobilisation",
+    short: "Mobilise",
     phase: "Pre-construction",
     title: "Site clearance & mobilisation",
     summary: "The bush is cleared, the site is fenced off, and the contractor sets up an office, water and storage.",
@@ -87,6 +91,7 @@ const STEP_INPUTS: StepInput[] = [
   },
   {
     id: "setting-out",
+    short: "Set out",
     phase: "Pre-construction",
     title: "Setting out",
     summary: "Profile boards and string lines mark exactly where every wall and column will go.",
@@ -99,6 +104,7 @@ const STEP_INPUTS: StepInput[] = [
   },
   {
     id: "excavation",
+    short: "Excavate",
     phase: "Substructure",
     title: "Trench excavation",
     summary: "Trenches are dug along every load-bearing wall down to firm ground.",
@@ -113,6 +119,7 @@ const STEP_INPUTS: StepInput[] = [
   },
   {
     id: "blinding",
+    short: "Blinding",
     phase: "Substructure",
     title: "Blinding concrete",
     summary: "A thin layer of weak concrete seals the trench bottom so the footing is cast on a clean, level bed.",
@@ -125,6 +132,7 @@ const STEP_INPUTS: StepInput[] = [
   },
   {
     id: "footing",
+    short: "Footing",
     phase: "Substructure",
     title: "Strip foundation (footing)",
     summary: "A continuous concrete strip spreads the weight of the walls and columns into the ground.",
@@ -140,6 +148,7 @@ const STEP_INPUTS: StepInput[] = [
   },
   {
     id: "substructure-walls",
+    short: "Sub-walls",
     phase: "Substructure",
     title: "Foundation blockwork & backfill",
     summary: "9-inch blocks are laid from the footing to just above ground level, then the trenches are backfilled.",
@@ -155,6 +164,7 @@ const STEP_INPUTS: StepInput[] = [
   },
   {
     id: "ground-slab",
+    short: "Ground slab",
     phase: "Substructure",
     title: "Hardcore, DPM & ground floor slab",
     summary: "Compacted hardcore fills the inside, a damp-proof membrane stops moisture, and a mesh-reinforced slab forms the floor.",
@@ -172,6 +182,7 @@ const STEP_INPUTS: StepInput[] = [
   },
   {
     id: "gf-columns",
+    short: "GF columns",
     phase: "Frame",
     title: "Ground floor columns",
     summary: "Reinforced concrete columns carry the floor and roof loads down to the foundation.",
@@ -188,6 +199,7 @@ const STEP_INPUTS: StepInput[] = [
   },
   {
     id: "gf-walls",
+    short: "GF walls",
     phase: "Frame",
     title: "Ground floor blockwork & lintels",
     summary: "9-inch hollow sandcrete blocks fill in between the columns up to beam level, leaving door and window openings.",
@@ -203,6 +215,7 @@ const STEP_INPUTS: StepInput[] = [
   },
   {
     id: "ff-slab",
+    short: "1st slab",
     phase: "Frame",
     title: "Beams & first floor slab",
     summary: "Beams run along every wall line and a 150 mm reinforced slab spans between them to form the first floor.",
@@ -222,6 +235,7 @@ const STEP_INPUTS: StepInput[] = [
   },
   {
     id: "first-floor",
+    short: "1st floor",
     phase: "Frame",
     title: "First floor columns, walls & ring beam",
     summary: "The frame and blockwork repeat on the first floor, finished with a ring beam that ties the walls and carries the roof.",
@@ -240,6 +254,7 @@ const STEP_INPUTS: StepInput[] = [
   },
   {
     id: "roof-carcass",
+    short: "Roof frame",
     phase: "Roof",
     title: "Gable walls & timber roof carcass",
     summary: "Triangular gable walls close the ends; a wall plate, rafters and purlins form the roof frame.",
@@ -257,6 +272,7 @@ const STEP_INPUTS: StepInput[] = [
   },
   {
     id: "roof-covering",
+    short: "Roof cover",
     phase: "Roof",
     title: "Roofing sheets, fascia & ridge",
     summary: "0.55 mm long-span aluminium sheets are screwed to the purlins, finished with fascia boards and a ridge cap.",
@@ -273,6 +289,7 @@ const STEP_INPUTS: StepInput[] = [
   },
   {
     id: "mep-first-fix",
+    short: "First fix",
     phase: "Services & finishes",
     title: "Electrical & plumbing first fix",
     summary: "Conduits, boxes and pipes are chased into the walls and slab before plastering.",
@@ -285,6 +302,7 @@ const STEP_INPUTS: StepInput[] = [
   },
   {
     id: "plaster",
+    short: "Plaster",
     phase: "Services & finishes",
     title: "Plastering & floor screed",
     summary: "Walls are rendered in cement-sand and floors levelled with a screed.",
@@ -299,6 +317,7 @@ const STEP_INPUTS: StepInput[] = [
   },
   {
     id: "windows-doors",
+    short: "Windows",
     phase: "Services & finishes",
     title: "Windows & doors",
     summary: "Aluminium windows and doors are fixed into the openings.",
@@ -314,6 +333,7 @@ const STEP_INPUTS: StepInput[] = [
   },
   {
     id: "ceilings",
+    short: "Ceilings",
     phase: "Services & finishes",
     title: "POP ceilings",
     summary: "Plaster of Paris ceilings hide the slab soffit and roof structure.",
@@ -325,6 +345,7 @@ const STEP_INPUTS: StepInput[] = [
   },
   {
     id: "tiling",
+    short: "Tiling",
     phase: "Services & finishes",
     title: "Floor & wall tiling",
     summary: "600 × 600 porcelain tiles go on the floors; wall tiles line the toilets.",
@@ -340,6 +361,7 @@ const STEP_INPUTS: StepInput[] = [
   },
   {
     id: "painting",
+    short: "Paint",
     phase: "Services & finishes",
     title: "Painting",
     summary: "Three coats of emulsion finish the plastered walls inside and out.",
@@ -351,6 +373,7 @@ const STEP_INPUTS: StepInput[] = [
   },
   {
     id: "second-fix",
+    short: "Second fix",
     phase: "Services & finishes",
     title: "Second fix: sanitary fittings",
     summary: "WCs, basins, showers, sink and floor drains are fixed and connected; switches, sockets and lights go on.",
@@ -367,6 +390,7 @@ const STEP_INPUTS: StepInput[] = [
   },
   {
     id: "external-works",
+    short: "Outside",
     phase: "External & handover",
     title: "External works",
     summary: "The boundary fence, gate, interlocking paving, drainage and landscaping complete the plot.",
@@ -378,6 +402,7 @@ const STEP_INPUTS: StepInput[] = [
   },
   {
     id: "handover",
+    short: "Handover",
     phase: "External & handover",
     title: "Cleaning, snagging & handover",
     summary: "The building is cleaned, defects are listed and fixed, and the keys are handed to the client.",
