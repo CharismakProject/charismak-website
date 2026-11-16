@@ -15,8 +15,15 @@ export default function DxfPlanSetup({ drawing, onUse }: { drawing: Awaited<Retu
     const selected = mapped.lines.filter(line => line.layer === layer);
     const area = (p: PlanPoint[]) => Math.abs(p.reduce((sum, point, i) => { const next = p[(i + 1) % p.length]; return sum + point[0] * next[1] - next[0] * point[1]; }, 0));
     const outline = selected.filter(line => line.closed && line.points.length >= 3).sort((a, b) => area(b.points) - area(a.points))[0];
-    const paths = mapped.lines.slice(0, 10000).map(line => `<polyline points="${[...line.points, ...(line.closed ? [line.points[0]] : [])].map(p => p.join(",")).join(" ")}" fill="none" stroke="${line.layer === layer ? "#333333" : "#bdc6d0"}" stroke-width="2"/>`).join("");
-    const image = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200"><rect width="1200" height="1200" fill="white"/>${paths}</svg>`)}`;
+    const canvas = document.createElement("canvas"); canvas.width = canvas.height = 1200;
+    const context = canvas.getContext("2d"); if (!context) return;
+    context.fillStyle = "white"; context.fillRect(0, 0, 1200, 1200); context.lineWidth = 2;
+    for (const line of mapped.lines.slice(0, 10000)) {
+      if (!line.points.length) continue;
+      context.strokeStyle = line.layer === layer ? "#333333" : "#bdc6d0"; context.beginPath(); context.moveTo(...line.points[0]);
+      line.points.slice(1).forEach(point => context.lineTo(...point)); if (line.closed) context.closePath(); context.stroke();
+    }
+    const image = canvas.toDataURL("image/png");
     onUse({ image, width: 1200, height: 1200, calibration: [[50, 50], [150, 50]], distance: 100 / mapped.scale * unitScale, outline: outline?.points ?? [], segments: selected.filter(line => line !== outline).flatMap(line => line.points.slice(1).map((point, i) => ({ a: line.points[i], b: point, type: "wall" as const }))), floors: 1, storeyHeight: 3, wallThickness: 0.225 });
   }}>Review this layer as a traced plan</button></section>;
 }

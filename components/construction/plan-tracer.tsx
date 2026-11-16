@@ -1,12 +1,13 @@
 "use client";
-import { useState, type PointerEvent } from "react";
+import { useEffect, useState, type PointerEvent } from "react";
 import { RotateCcw, Undo2 } from "lucide-react";
 import { traceToModel, type PlanPoint, type TracePlan } from "@/lib/construction/project-import";
 import type { ModelPart } from "@/lib/construction/project";
 import styles from "./construction-studio.module.css";
 
-export default function PlanTracer({ initial, onBuild }: { initial: TracePlan; onBuild: (parts: ModelPart[], note: string) => void }) {
+export default function PlanTracer({ initial, onBuild, onChange }: { initial: TracePlan; onBuild: (parts: ModelPart[], note: string) => void; onChange?: (plan: TracePlan) => void }) {
   const [plan, setPlan] = useState(initial), [tool, setTool] = useState<"calibrate" | "outline" | "wall" | "door" | "window">("calibrate"), [pending, setPending] = useState<PlanPoint | null>(null), [error, setError] = useState("");
+  useEffect(() => { onChange?.(plan); }, [plan, onChange]);
   const click = (event: PointerEvent<SVGSVGElement>) => {
     const bounds = event.currentTarget.getBoundingClientRect(), point: PlanPoint = [(event.clientX - bounds.left) / bounds.width * plan.width, (event.clientY - bounds.top) / bounds.height * plan.height];
     if (tool === "calibrate") setPlan(old => ({ ...old, calibration: old.calibration.length >= 2 ? [point] : [...old.calibration, point] }));

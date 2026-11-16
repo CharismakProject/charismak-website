@@ -6,6 +6,7 @@ import * as XLSX from "xlsx";
 import { IfcAPI } from "web-ifc";
 import { detectBoqColumns, parseBoqRows, emptyProject, projectCostSummary, lineAmount, lineDuration, proposeSchedule, plannedCostAt, workingDate, validateProject, replaceProjectBoq, replaceProjectDrawing } from "../lib/construction/project";
 import { import3D, traceToModel, readDxf } from "../lib/construction/project-import";
+import { visibleProjectParts } from "../lib/construction/project-visibility";
 
 async function verify() {
   const data = await readFile(resolve("scripts/fixtures/construction-boq.csv"));
@@ -24,6 +25,17 @@ async function verify() {
   assert.throws(() => traceToModel({ image: "", width: 1, height: 1, outline: [], segments: [], calibration: [], distance: 10, floors: 1, storeyHeight: 3, wallThickness: 0.225 }), /Calibrate/);
   const project = { ...emptyProject(), parts: traced.parts, boq: parsed.lines, start: "2026-11-13" };
   const schedule = proposeSchedule(project), end = Math.max(...schedule.map(stage => stage.finish));
+  const settingOut = schedule.find(stage => stage.id === "setting-out")!;
+  const pegs = traced.parts.filter(part => part.stage === "setting-out");
+  assert.ok(pegs.length > 0);
+  const setOutVisible = visibleProjectParts(traced.parts, { schedule, day: settingOut.finish });
+  assert.ok(pegs.every(part => setOutVisible.has(part.id)), "Setting-out profiles are visible while the substructure is being built");
+  const slabEnd = schedule.find(stage => stage.id === "slabs")!.finish;
+  for (const day of [slabEnd, end]) {
+    const visible = visibleProjectParts(traced.parts, { schedule, day });
+    assert.ok(pegs.every(part => !visible.has(part.id)), "Temporary pegs and strings disappear after the substructure and in the completed view");
+  }
+  assert.ok(pegs.every(part => visibleProjectParts(traced.parts, { schedule, day: settingOut.finish }).has(part.id)), "Scrubbing back restores the setting-out profiles");
   assert.equal(plannedCostAt(schedule, 0), 0); assert.equal(plannedCostAt(schedule, end), 11865000);
   for (let n = 1; n < schedule.length; n++) assert.equal(schedule[n].start, schedule[n - 1].finish, "Default FS sequence must not overlap itself");
   const foundations = schedule.find(stage => stage.id === "foundations")!;
@@ -53,6 +65,9 @@ async function verify() {
   assert.equal(projectCostSummary({ ...allowancesProject, boq: [{ ...detail.lines[0], quantity: 4 }] }).total, 225.88, "Allowance bases recalculate after BOQ edits");
   assert.throws(() => validateProject({ ...allowancesProject, charges: [{ ...allowancesProject.charges[0], percentage: Infinity }] }), /allowance/);
   assert.throws(() => validateProject({ ...project, parts: [{ ...traced.parts[0], color: "url(evil)" }] }), /colour/);
+  const planDraft = { image: "data:image/png;base64,", width: 1000, height: 600, outline: [[0, 0], [800, 0], [800, 500]] as [number, number][], segments: [], calibration: [], distance: 0, floors: 1, storeyHeight: 3, wallThickness: 0.225 };
+  assert.deepEqual(validateProject(JSON.parse(JSON.stringify({ ...emptyProject(), planDraft }))).planDraft, planDraft, "An unfinished plan trace survives a project save and reload, even before a scale is entered");
+  assert.throws(() => validateProject({ ...emptyProject(), planDraft: { ...planDraft, image: "https://invalid.example/plan.png" } }), /saved plan trace/);
   const obj = "o Blockwork_Wall\nv 0 0 0\nv 1 0 0\nv 0 3 0\nf 1 2 3\n";
   const imported = await import3D(new File([obj], "wall.obj"), () => {}); assert.equal(imported.length, 1); assert.equal(imported[0].stage, "walls");
   const dxfText = "0\nSECTION\n2\nENTITIES\n0\nLINE\n8\nWALLS\n10\n0\n20\n0\n30\n0\n11\n12000\n21\n0\n31\n0\n0\nENDSEC\n0\nEOF\n";
