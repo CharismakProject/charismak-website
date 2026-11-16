@@ -106,6 +106,7 @@ function wrappedText(ctx: CanvasRenderingContext2D, text: string, x: number, y: 
 export function createVideoPresentation(project: ConstructionProject, ctx: CanvasRenderingContext2D) {
   const width = 900, height = 510, render = createProjectExportRenderer(project, width, height), image = ctx.createImageData(width, height);
   const schedule = proposeSchedule(project), end = Math.max(1, ...schedule.map(stage => stage.finish)), cost = projectCostSummary(project);
+  const money = (value: number) => project.boq.length ? exportMoney(value) : "BOQ not supplied";
   return (progress: number) => {
     const intro = progress < 0.05, complete = progress >= 0.87, inside = progress >= 0.87 && progress < 0.94;
     const day = intro || complete ? end : Math.min(end, (progress - 0.05) / 0.82 * end);
@@ -122,8 +123,8 @@ export function createVideoPresentation(project: ConstructionProject, ctx: Canva
     wrappedText(ctx, intro ? "From setting out to handover" : complete ? inside ? "See inside" : "Ready for handover" : active.map(stage => stage.title).join(" + ") || "Between stages", x, 204, 305, 34);
     ctx.fillStyle = "#b2c9d7"; ctx.font = "16px sans-serif"; ctx.fillText(workingDate(project.start, Math.min(Math.floor(day), end - 1), project.workingDays), x, 323);
     ctx.fillStyle = "#b2c9d7"; ctx.font = "14px sans-serif"; ctx.fillText(intro ? "PROJECT TOTAL WITH ALLOWANCES" : "PLANNED COST TO THIS POINT", x, 377);
-    ctx.fillStyle = "#dfbd78"; ctx.font = "bold 25px sans-serif"; ctx.fillText(exportMoney(intro || complete ? cost.total : projectCostSummary(project, plannedCostAt(schedule, day)).total), x, 412);
-    ctx.fillStyle = "#b2c9d7"; ctx.font = "14px sans-serif"; ctx.fillText("PRICED WORKS", x, 464); ctx.fillStyle = "#ffffff"; ctx.font = "20px sans-serif"; ctx.fillText(exportMoney(cost.works), x, 494);
+    ctx.fillStyle = "#dfbd78"; ctx.font = "bold 25px sans-serif"; ctx.fillText(money(intro || complete ? cost.total : projectCostSummary(project, plannedCostAt(schedule, day)).total), x, 412);
+    ctx.fillStyle = "#b2c9d7"; ctx.font = "14px sans-serif"; ctx.fillText("PRICED WORKS", x, 464); ctx.fillStyle = "#ffffff"; ctx.font = "20px sans-serif"; ctx.fillText(money(cost.works), x, 494);
     ctx.fillStyle = "#b2c9d7"; ctx.font = "14px sans-serif";
     wrappedText(ctx, `${project.boq.filter(line => !line.excluded && line.quantity > 0 && line.rate === null).length} unpriced items excluded. Proposed dates and cost allocation need project review.`, x, 543, 305, 22);
     ctx.fillStyle = "#304b5e"; ctx.fillRect(30, 666, 1220, 7); ctx.fillStyle = "#dfbd78"; ctx.fillRect(30, 666, 1220 * (intro ? 0 : Math.min(1, (progress - 0.05) / 0.82)), 7);

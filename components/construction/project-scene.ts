@@ -4,7 +4,7 @@ import { createModelRenderer } from "./model-renderer";
 import { assertWalkthroughLighting, createWalkthroughLighting } from "./construction-lighting";
 import { stageInfo, type ModelPart, type ProjectStage, type ScheduledStage } from "@/lib/construction/project";
 import { visibleProjectParts } from "@/lib/construction/project-visibility";
-export type ProjectViewState = { day: number; schedule: ScheduledStage[]; hidden: ProjectStage[]; selected: string | null; section?: boolean };
+export type ProjectViewState = { day: number; schedule: ScheduledStage[]; hidden: ProjectStage[]; selected: string | null; section?: boolean; levelId?: string; colourMode?: "materials" | "stages" };
 export type ProjectScene = { update: (value: ProjectViewState) => void; view: (mode: "iso" | "plan" | "front") => void; focus: (id: string) => void; dispose: () => void };
 
 export async function createProjectScene(host: HTMLElement, parts: ModelPart[], scale: number, upAxis: "y" | "z", onSelect: (id: string) => void, groundLevel?: number): Promise<ProjectScene> {
@@ -42,7 +42,7 @@ export async function createProjectScene(host: HTMLElement, parts: ModelPart[], 
     if (part.line) object = new Engine.Line(geometry, new Engine.LineBasicMaterial({ color: part.color ?? stageInfo(part.stage).color, linewidth: 2 }));
     else {
       geometry.computeVertexNormals();
-      const material = new Engine.MeshStandardMaterial({ color: part.color ?? stageInfo(part.stage).color, roughness: 0.9, metalness: 0, side: THREE.DoubleSide });
+      const material = new Engine.MeshStandardMaterial({ color: part.color ?? stageInfo(part.stage).color, roughness: part.material?.roughness ?? 0.9, metalness: part.material?.metalness ?? 0, side: THREE.DoubleSide });
       materials.set(part.id, material); const mesh = new Engine.Mesh(geometry, material); mesh.castShadow = true; mesh.receiveShadow = true; object = mesh;
       if (parts.length < 1500) { const edge = new Engine.LineSegments(new Engine.EdgesGeometry(geometry, 28), new Engine.LineBasicMaterial({ color: "#17283d", transparent: true, opacity: 0.48 })); object.add(edge); }
     }
@@ -75,7 +75,7 @@ export async function createProjectScene(host: HTMLElement, parts: ModelPart[], 
       const stage = state.schedule.find(item => item.id === stageId), fraction = !stage || state.day >= max ? 1 : Math.min(1, Math.max(0, (state.day - stage.start) / stage.days));
       group.forEach(part => {
         const object = partObjects.get(part.id)!; object.visible = visible.has(part.id);
-        const material = materials.get(part.id); if (material) { material.emissive.set(part.id === state.selected ? "#f0c24d" : fraction > 0 && fraction < 1 ? "#4d3512" : "#000000"); material.emissiveIntensity = part.id === state.selected ? 0.35 : 0.1; }
+        const material = materials.get(part.id); if (material) { material.color.set(state.colourMode === "stages" ? stageInfo(part.stage).color : part.color ?? stageInfo(part.stage).color); material.roughness = state.colourMode === "stages" ? .9 : part.material?.roughness ?? .9; material.metalness = state.colourMode === "stages" ? 0 : part.material?.metalness ?? 0; material.emissive.set(part.id === state.selected ? "#f0c24d" : fraction > 0 && fraction < 1 ? "#4d3512" : "#000000"); material.emissiveIntensity = part.id === state.selected ? 0.35 : 0.1; }
       });
     }
     dirty = true;

@@ -53,6 +53,36 @@
 .sourceReview ul { padding-left: 20px; max-width: 1050px; color: #bdced9; }
 .sourceReview li { padding: 5px 0; line-height: 1.8; }
 .projectBar input { background: #091e29; border: 1px solid #365563; border-radius: 5px; color: #edf4f7; font-size: 15px; padding: 9px 12px; width: 100%; }
+.drawingRegister { margin: 28px 0; padding: 24px; border: 1px solid #365563; border-radius: 12px; background: #102c38; }
+.registerHeading { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; }
+.registerHeading h2 { display: flex; gap: 12px; align-items: center; font-size: 27px; font-weight: 500; margin: 6px 0 12px; }
+.registerHeading p:not(.eyebrow), .levelManager p { color: #b1c8d1; font-size: 13px; line-height: 1.8; max-width: 900px; }
+.registerHeading > span { white-space: nowrap; color: #dfbd78; font-size: 12px; margin-top: 25px; }
+.levelManager { border: 1px solid #3a5966; border-radius: 8px; padding: 17px; margin: 20px 0; background: #0c2531; }
+.levelManager summary { display: flex; align-items: center; gap: 9px; color: #e5c588; cursor: pointer; font-size: 14px; }
+.levelCards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 15px; margin-bottom: 15px; }
+.levelCards > div { padding: 14px; border: 1px solid #365563; border-radius: 7px; display: grid; gap: 13px; }
+.groundDatum { max-width: 300px; }
+.drawingRegister label, .modelViewSettings label { display: grid; gap: 7px; font-size: 12px; color: #bfd1da; }
+.drawingRegister input:not([type=checkbox]), .drawingRegister select, .modelViewSettings select { width: 100%; min-width: 0; border: 1px solid #406171; border-radius: 5px; padding: 10px 12px; background: #091e29; color: #edf4f7; font-size: 13px; }
+.drawingRegister button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
+.sheetNavigation { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; margin: 22px 0; }
+.sheetNavigation > label { flex: 1; min-width: 220px; }
+.sheetSettings { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin: 20px 0; }
+.sheetSettings > label:first-child { grid-column: span 2; }
+.drawingRegister .includeDrawing { display: flex; flex-direction: row; align-items: center; gap: 10px; font-size: 14px; margin: 20px 0; color: #e5c588; }
+.drawingRegister .tracer { background: #0c2531; }
+.drawingRegister .small { font-size: 12px; color: #b1c8d1; line-height: 1.9; margin-top: 18px; }
+.restoreSource { margin: 18px 0; font-size: 12px; color: #b1c8d1; }
+.restoreSource summary { cursor: pointer; color: #dfbd78; }
+.restoreSource p { line-height: 1.8; max-width: 900px; }
+.traceZoom { display: flex!important; flex-wrap: wrap; align-items: center; gap: 14px!important; font-size: 12px!important; margin: 18px 0; color: #bfd1da; }
+.traceZoom select { width: 110px!important; }
+.traceZoom small { font-size: 11px; color: #91afbb; }
+.modelViewSettings { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid var(--line); padding: 15px 24px; background: #102c38; }
+.modelViewSettings label { min-width: 200px; }
+.modelViewSettings small { max-width: 440px; font-size: 11px; color: #a6bdc8; line-height: 1.7; margin-left: auto; }
+@media (max-width: 720px) { .drawingRegister { padding: 17px; } .registerHeading { flex-direction: column; gap: 0; } .registerHeading > span { margin-top: 0; } .sheetSettings { grid-template-columns: 1fr 1fr; } .sheetNavigation { align-items: stretch; } .sheetNavigation > label { flex-basis: 100%; } .modelViewSettings label { min-width: 0; flex: 1; } .modelViewSettings small { margin-left: 0; } }
 .openProject p, .openProject small { color: #b7c9d4; line-height: 1.6; font-size: 12px; }
 .openProject details, .projectActions details { position: relative; font-size: 12px; }
 .openProject summary, .projectActions summary { cursor: pointer; color: #e4c688; padding: 8px 0; }

@@ -23,7 +23,7 @@ export function useProjectAutosave(project: ConstructionProject, restore: (proje
     return () => { cancelled = true; };
   }, [hasInitialProject, restore]);
   useEffect(() => {
-    if (!ready || (!project.parts.length && !project.boq.length && !project.planDraft) || saved.current === project) return;
+    if (!ready || (!project.parts.length && !project.boq.length && !project.planDraft && !project.drawingSheets?.length) || saved.current === project) return;
     setStatus("Saving changes…");
     const timer = window.setTimeout(() => {
       void saveConstructionProject(project).then(async () => {
@@ -37,7 +37,7 @@ export function useProjectAutosave(project: ConstructionProject, restore: (proje
     if (!ready) return;
     const flush = () => {
       const latest = current.current;
-      if (latest !== saved.current && (latest.parts.length || latest.boq.length || latest.planDraft)) void saveConstructionProject(latest).then(() => { if (current.current === latest) rememberConstructionProject(latest.id); }).catch(() => {});
+      if (latest !== saved.current && (latest.parts.length || latest.boq.length || latest.planDraft || latest.drawingSheets?.length)) void saveConstructionProject(latest).then(() => { if (current.current === latest) rememberConstructionProject(latest.id); }).catch(() => {});
     };
     const hidden = () => { if (document.visibilityState === "hidden") flush(); };
     window.addEventListener("pagehide", flush); document.addEventListener("visibilitychange", hidden);

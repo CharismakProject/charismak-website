@@ -1,0 +1,50 @@
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
+import * as THREE from "three";
+import * as IFC from "web-ifc";
+import { assembleDrawingModel, documentSheets } from "../lib/construction/drawings";
+import { emptyProject, projectCostSummary, proposeSchedule, validateProject, type ConstructionProject, type ModelPart } from "../lib/construction/project";
+import { import3D, readIfcSpatialMetadata, type TracePlan } from "../lib/construction/project-import";
+import { visibleProjectParts } from "../lib/construction/project-visibility";
+
+async function verify() {
+  const ground: TracePlan = { image: "", width: 1400, height: 1100, outline: [[100,100],[1100,100],[1100,900],[100,900]], calibration: [[100,100],[1100,100]], anchor:[100,100], distance:10, floors:1, storeyHeight:3.3, wallThickness:.225, segments:[] };
+  const upper: TracePlan = { ...ground, outline:[[200,300],[600,300],[600,600],[200,600]], calibration:[[200,300],[700,300]], anchor:[200,300], storeyHeight:3 };
+  const doc = { id:"doc",name:"Different floors.pdf",pages:4,kind:"pdf" as const };
+  const sheets = documentSheets(doc,ground);
+  sheets[0]={...sheets[0],role:"floor-plan",included:true,levelId:"ground",title:"Ground floor"};
+  sheets[1]={...sheets[1],role:"floor-plan",included:true,levelId:"first",trace:upper,title:"First floor"};
+  sheets[2]={...sheets[2],role:"section",trace:ground,title:"Section A-A"};
+  const project: ConstructionProject = {...emptyProject(),drawingDocuments:[doc],drawingSheets:sheets,levels:[{id:"ground",name:"Ground floor",elevation:0,height:3.3},{id:"first",name:"First floor",elevation:3.3,height:3}],boq:[{id:"sum",code:"P1",description:"Whole-project plumbing sum",section:"Services",quantity:1,unit:"sum",rate:5000,originalAmount:5000,stage:"plumbing",output:1,crews:1,duration:1,notes:[],partIds:[]}],charges:[{id:"ohp",label:"Overhead",percentage:.1,basis:"works"}]};
+  const built=assembleDrawingModel(project);
+  const bounds=(part:ModelPart)=>{const box=new THREE.Box3(); for(let i=0;i<part.positions.length;i+=3)box.expandByPoint(new THREE.Vector3(...part.positions.slice(i,i+3)).applyMatrix4(new THREE.Matrix4().fromArray(part.matrix!)));return box;};
+  const slabs=built.parts.filter(part=>part.stage==="slabs"); assert.equal(slabs.length,2);
+  const lowerBox=bounds(slabs.find(part=>part.levelId==="ground")!),upperBox=bounds(slabs.find(part=>part.levelId==="first")!);
+  assert.ok(Math.abs(lowerBox.getSize(new THREE.Vector3()).x-10)<1e-5); assert.ok(Math.abs(upperBox.getSize(new THREE.Vector3()).x-8)<1e-5,"Each page uses its own calibration and footprint");
+  assert.ok(Math.abs(lowerBox.min.x-upperBox.min.x)<1e-5 && Math.abs(lowerBox.min.z-upperBox.min.z)<1e-5,"Different scales / sheet origins align at the shared anchor");
+  assert.ok(Math.abs(lowerBox.max.y)<1e-5 && Math.abs(upperBox.max.y-3.3)<1e-5,"Slab tops match FFL and are not translated twice");
+  assert.ok(built.parts.filter(part=>part.stage==="foundations" || part.stage==="setting-out").every(part=>part.levelId==="ground"));
+  assert.equal(built.parts.filter(part=>part.stage==="roof").length,1); assert.ok(built.parts.filter(part=>part.stage==="roof").every(part=>part.levelId==="first"));
+  assert.ok(built.parts.every(part=>part.source?.sheetId!==sheets[2].id),"A section is not another floor");
+  const combined={...project,...built}; assert.equal(projectCostSummary(combined).total,5500,"Adding floors cannot multiply a project-wide BOQ sum");
+  assert.equal(validateProject(JSON.parse(JSON.stringify(combined))).drawingSheets?.[1].trace?.distance,10,"All independent traces survive save/reload");
+  const schedule=proposeSchedule(combined),day=Math.max(...schedule.map(stage=>stage.finish));
+  const upperVisible=visibleProjectParts(built.parts,{schedule,day,levelId:"first"}); assert.ok([...upperVisible].every(id=>built.parts.find(part=>part.id===id)?.levelId==="first"));
+  const lowerWall=built.parts.find(part=>part.levelId==="ground"&&part.stage==="walls")!,upperWall=built.parts.find(part=>part.levelId==="first"&&part.stage==="walls")!;
+  const linked={...combined,boq:[{...project.boq[0],partIds:[lowerWall.id,upperWall.id]}]};
+  assert.equal(assembleDrawingModel(linked).detached,0,"Unchanged geometry preserves reviewed links");
+  const changed={...linked,drawingSheets:linked.drawingSheets!.map(sheet=>sheet.id===sheets[0].id?{...sheet,trace:{...sheet.trace!,wallThickness:.3}}:sheet)};
+  const rebuilt=assembleDrawingModel(changed);assert.equal(rebuilt.detached,1);assert.deepEqual(rebuilt.boq[0].partIds,[upperWall.id],"Changing one floor does not corrupt links to a different floor");
+  assert.throws(()=>assembleDrawingModel({...project,drawingSheets:sheets.map(sheet=>sheet.id===sheets[0].id?{...sheet,trace:{...ground,anchor:undefined}}:sheet)}),/anchor/);
+  assert.throws(()=>assembleDrawingModel({...project,levels:project.levels!.map(level=>level.id==="first"?{...level,elevation:2}:level)}),/overlaps/);
+  const shaft={...upperWall,id:"shaft",levelId:"ground",referenceLevelIds:["first"]};assert.ok(visibleProjectParts([shaft],{schedule,day,levelId:"first"}).has("shaft"),"Referenced multi-storey elements remain visible on relevant floors");
+  const api=new IFC.IfcAPI();api.SetWasmPath(resolve("node_modules/web-ifc")+"/",true);await api.Init(undefined,true);const model=api.OpenModel(new Uint8Array(await readFile(resolve("scripts/fixtures/construction-wall.ifc"))),{COORDINATE_TO_ORIGIN:true});
+  try {const before=api.GetWorldTransformMatrix(model,9),spatial=readIfcSpatialMetadata(api,model,IFC);assert.equal(spatial.primary.get(16)?.name,"Ground floor");assert.equal(spatial.primary.get(16)?.id,"storey-2YvctVUKr0kugbFTf53O9L");assert.deepEqual(api.GetWorldTransformMatrix(model,9),before,"Reading storey metadata never translates source IFC geometry");}finally{api.CloseModel(model);api.Dispose();}
+  if(typeof ProgressEvent==="undefined")Object.defineProperty(globalThis,"ProgressEvent",{value:class ProgressEvent {constructor(public type:string,public init:unknown){}}});
+  const buffer=Buffer.from(new Float32Array([0,0,0,1,0,0,0,1,0]).buffer);
+  const gltf={asset:{version:"2.0"},buffers:[{uri:"data:application/octet-stream;base64,"+buffer.toString("base64"),byteLength:buffer.length}],bufferViews:[{buffer:0,byteOffset:0,byteLength:buffer.length}],accessors:[{bufferView:0,componentType:5126,count:3,type:"VEC3",min:[0,0,0],max:[1,1,0]}],materials:[{pbrMetallicRoughness:{baseColorFactor:[1,0,0,1],roughnessFactor:.2,metallicFactor:.8}},{pbrMetallicRoughness:{baseColorFactor:[0,0,1,1],roughnessFactor:.7,metallicFactor:0}}],meshes:[{name:"Steel_Frame",primitives:[{attributes:{POSITION:0},material:0},{attributes:{POSITION:0},material:1}]}],nodes:[{mesh:0,name:"Steel_Frame"}],scenes:[{nodes:[0]}],scene:0};
+  const imported=await import3D(new File([JSON.stringify(gltf)],"two-materials.gltf"),()=>{});assert.ok(imported.some(part=>part.color==="#ff0000")&&imported.some(part=>part.color==="#0000ff"),"Imported material groups preserve distinct base colours");assert.ok(imported.some(part=>part.material?.metalness===.8));
+  console.log("Drawing sets verified: independent page scales, shared anchors, different floor footprints, FFL, single foundations/top roof, source links, cost conservation, safe rebuilds, IFC storeys and source material colours.");
+}
+void verify().catch(error=>{console.error(error);process.exitCode=1;});

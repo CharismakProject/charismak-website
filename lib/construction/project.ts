@@ -1,6 +1,8 @@
 import type { Resource } from "./costs";
 import type { RateBankItem } from "../rates/defaults";
 import type { TracePlan } from "./project-import";
+import type { DrawingDocument, DrawingLevel, DrawingSheet } from "./drawing-types";
+import { validateDrawingRegister, validatePlanTrace } from "./drawing-validation";
 export const PROJECT_STAGES = [
   { id: "planning", title: "Planning & mobilisation", color: "#8c67c7" }, { id: "setting-out", title: "Setting out", color: "#f43f89" },
   { id: "earthworks", title: "Excavation & earthworks", color: "#895331" }, { id: "foundations", title: "Foundations", color: "#7797c4" },
@@ -12,11 +14,11 @@ export const PROJECT_STAGES = [
   { id: "unmapped", title: "Needs stage mapping", color: "#9a9ca2" },
 ] as const;
 export type ProjectStage = typeof PROJECT_STAGES[number]["id"];
-export type ModelPart = { id: string; name: string; stage: ProjectStage; positions: number[]; indices?: number[]; matrix?: number[]; line?: boolean; covers?: string[]; color?: string; cutaway?: boolean };
+export type ModelPart = { id: string; name: string; stage: ProjectStage; positions: number[]; indices?: number[]; matrix?: number[]; line?: boolean; covers?: string[]; color?: string; cutaway?: boolean; levelId?: string; referenceLevelIds?: string[]; material?: { roughness: number; metalness: number }; source?: { documentId?: string; sheetId?: string; page?: number; elementId?: string; ifcType?: string; levelName?: string; levelElevation?: number } };
 export type BoqLine = { id: string; code: string; description: string; section: string; quantity: number; unit: string; rate: number | null; originalAmount: number | null; stage: ProjectStage; output: number; crews: number; duration: number | null; partIds: string[]; notes: string[]; excluded?: boolean; analysis?: { resources: Resource[]; allowances: RateBankItem["allowances"]; bankSlug?: string; manual: boolean; baseRate: number | null } };
 export type ProjectCharge = { id: string; label: string; percentage: number; basis: "works" | "running" };
 export type StageRule = { days?: number; predecessor?: ProjectStage | "none"; relationship?: "FS" | "SS"; lag?: number; parallel?: boolean };
-export type ConstructionProject = { version: 1; id: string; name: string; sourceName: string; sourceKind: string; parts: ModelPart[]; boq: BoqLine[]; start: string; workingDays: 5 | 6 | 7; rules: Partial<Record<ProjectStage, StageRule>>; unitScale: number; upAxis: "y" | "z"; createdAt: string; charges?: ProjectCharge[]; reviewNotes?: string[]; groundLevel?: number; planDraft?: TracePlan };
+export type ConstructionProject = { version: 1; id: string; name: string; sourceName: string; sourceKind: string; parts: ModelPart[]; boq: BoqLine[]; start: string; workingDays: 5 | 6 | 7; rules: Partial<Record<ProjectStage, StageRule>>; unitScale: number; upAxis: "y" | "z"; createdAt: string; charges?: ProjectCharge[]; reviewNotes?: string[]; groundLevel?: number; planDraft?: TracePlan; drawingDocuments?: DrawingDocument[]; drawingSheets?: DrawingSheet[]; levels?: DrawingLevel[] };
 export const stageInfo = (id: ProjectStage) => PROJECT_STAGES.find(stage => stage.id === id) ?? PROJECT_STAGES.at(-1)!;
 export const roundProject = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
 export const projectMoney = (value: number) => new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(value);
@@ -162,6 +164,10 @@ export function validateProject(value: unknown): ConstructionProject {
     if (part.covers && (!Array.isArray(part.covers) || part.covers.some(id => typeof id !== "string"))) throw new Error("Invalid finish-layer mapping.");
     if (part.color !== undefined && !/^#[0-9a-f]{6}$/i.test(part.color)) throw new Error("Invalid model material colour.");
     if (part.cutaway !== undefined && typeof part.cutaway !== "boolean") throw new Error("Invalid cutaway setting.");
+    if (part.levelId !== undefined && (typeof part.levelId !== "string" || part.levelId.length > 160)) throw new Error("Invalid element level.");
+    if (part.referenceLevelIds && (!Array.isArray(part.referenceLevelIds) || part.referenceLevelIds.length > 100 || part.referenceLevelIds.some(id => typeof id !== "string" || id.length > 160))) throw new Error("Invalid referenced levels.");
+    if (part.material && [part.material.roughness, part.material.metalness].some(v => !Number.isFinite(v) || v < 0 || v > 1)) throw new Error("Invalid model material.");
+    if (part.source && (typeof part.source !== "object" || Object.entries(part.source).some(([key, value]) => ["page", "levelElevation"].includes(key) ? !Number.isFinite(value) || Math.abs(Number(value)) > 1e9 : typeof value !== "string" || value.length > 512))) throw new Error("Invalid model source information.");
     if (part.matrix && (part.matrix.length !== 16 || part.matrix.some(v => !Number.isFinite(v)))) throw new Error("Invalid model transform.");
   }
   if (vertices > 1500000) throw new Error("This model exceeds the browser limit of 1.5 million vertices. Export a lighter coordination model.");
@@ -169,11 +175,8 @@ export function validateProject(value: unknown): ConstructionProject {
   if (p.charges && (!Array.isArray(p.charges) || p.charges.length > 20 || new Set(p.charges.map(charge => charge.id)).size !== p.charges.length || p.charges.some(charge => !charge || typeof charge.id !== "string" || typeof charge.label !== "string" || !Number.isFinite(charge.percentage) || charge.percentage < 0 || charge.percentage > 1 || !["works", "running"].includes(charge.basis)))) throw new Error("Invalid project percentage allowance.");
   if (p.reviewNotes && (!Array.isArray(p.reviewNotes) || p.reviewNotes.length > 50 || p.reviewNotes.some(note => typeof note !== "string" || note.length > 2000))) throw new Error("Invalid project review notes.");
   if (p.groundLevel !== undefined && (!Number.isFinite(p.groundLevel) || Math.abs(p.groundLevel) > 1e9)) throw new Error("Invalid ground datum.");
-  if (p.planDraft) {
-    const plan = p.planDraft;
-    const point = (value: unknown) => Array.isArray(value) && value.length === 2 && value.every(v => Number.isFinite(v) && Math.abs(v) <= 1e7);
-    if (typeof plan.image !== "string" || plan.image.length > 30 * 1024 * 1024 || !/^(data:image\/(png|jpeg|webp);base64,|$)/.test(plan.image) || ![plan.width, plan.height, plan.floors, plan.storeyHeight, plan.wallThickness].every(v => Number.isFinite(v) && v > 0 && v <= 1e7) || !Number.isFinite(plan.distance) || plan.distance < 0 || plan.distance > 1e7 || !Array.isArray(plan.outline) || plan.outline.length > 10000 || !plan.outline.every(point) || !Array.isArray(plan.calibration) || plan.calibration.length > 2 || !plan.calibration.every(point) || !Array.isArray(plan.segments) || plan.segments.length > 10000 || plan.segments.some(segment => !point(segment.a) || !point(segment.b) || !["wall", "door", "window"].includes(segment.type))) throw new Error("Invalid saved plan trace.");
-  }
+  if (p.planDraft) validatePlanTrace(p.planDraft);
+  validateDrawingRegister(p);
   for (const line of p.boq) {
     if (line?.excluded !== undefined && typeof line.excluded !== "boolean") throw new Error("Invalid BOQ exclusion setting.");
     if (!line || typeof line.id !== "string" || typeof line.description !== "string" || !Number.isFinite(line.quantity) || line.quantity < 0 || line.quantity > 1e9 || (line.rate !== null && (!Number.isFinite(line.rate) || line.rate < 0 || line.rate > 1e9)) || !PROJECT_STAGES.some(stage => stage.id === line.stage)) throw new Error("The project contains an invalid BOQ line.");
