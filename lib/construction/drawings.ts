@@ -50,7 +50,7 @@ export function assembleDrawingModel(project: ConstructionProject) {
     for (const part of retained) {
       const matrix = part.matrix ? transform.clone().multiply(new THREE.Matrix4().fromArray(part.matrix)) : transform;
       const colour = part.stage === "finishes" ? "#e4d5b8" : part.stage === "walls" ? "#c77d49" : part.stage === "slabs" ? "#9eacb9" : part.stage === "foundations" ? "#8095af" : part.stage === "roof" ? "#31516c" : part.stage === "fittings" ? part.name.startsWith("door") ? "#956848" : "#62b4d3" : undefined;
-      parts.push({ ...part, color: colour, id: ids.get(part.id)!, name: `${level.name} / ${part.name}`, matrix: matrix.toArray(), levelId: level.id, source: { documentId: sheet.documentId, sheetId: sheet.id, page: sheet.page, levelName: level.name, levelElevation: level.elevation }, covers: part.covers?.map(id => ids.get(id)!).filter(Boolean), cutaway: part.stage === "roof" });
+      parts.push({ ...part, color: colour, id: ids.get(part.id)!, name: `${level.name} / ${part.name}`, matrix: Array.from(matrix.toArray()), levelId: level.id, source: { documentId: sheet.documentId, sheetId: sheet.id, page: sheet.page, levelName: level.name, levelElevation: level.elevation }, covers: part.covers?.map(id => ids.get(id)!).filter(Boolean), cutaway: part.stage === "roof" });
     }
     generatedLevels.push(level);
   }
