@@ -1,6 +1,6 @@
 import type { ModelPart, ProjectStage, ScheduledStage } from "./project";
 
-export type ProjectVisibility = { day: number; schedule: ScheduledStage[]; hidden?: ProjectStage[]; section?: boolean };
+export type ProjectVisibility = { day: number; schedule: ScheduledStage[]; hidden?: ProjectStage[]; section?: boolean; levelId?: string };
 
 /** Setting-out profiles and pegs belong to temporary works, not the finished building. */
 export function visibleProjectParts(parts: ModelPart[], state: ProjectVisibility): Set<string> {
@@ -21,6 +21,7 @@ export function visibleProjectParts(parts: ModelPart[], state: ProjectVisibility
     const fraction = !stage || state.day >= end ? 1 : Math.min(1, Math.max(0, (state.day - stage.start) / stage.days));
     group.forEach((part, index) => {
       if (state.section && part.cutaway) return;
+      if (state.levelId && state.levelId !== "all" && (state.levelId === "unassigned" ? !!part.levelId : part.levelId !== state.levelId && !part.referenceLevelIds?.includes(state.levelId))) return;
       if (fraction >= 1 || index < Math.ceil(fraction * group.length) || (part.line && state.day >= (stage?.start ?? 0))) visible.add(part.id);
     });
   }

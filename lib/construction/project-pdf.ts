@@ -11,6 +11,7 @@ const number = (value: number) => value.toLocaleString("en-NG", { maximumFractio
 export function buildProjectPdf(project: ConstructionProject, images: ProjectPdfImage[], detailed = true) {
   const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4", compress: true });
   const schedule = proposeSchedule(project), end = Math.max(1, ...schedule.map(stage => stage.finish)), costs = projectCostSummary(project);
+  const money = (value: number) => project.boq.length ? exportMoney(value) : "BOQ not supplied";
   let y = 36, title = "Project overview";
   const text = (value: string, x: number, top: number, width: number, size = 11, bold = false, colour = "#203b4a") => {
     doc.setFont("helvetica", bold ? "bold" : "normal"); doc.setFontSize(size); doc.setTextColor(colour);
@@ -36,14 +37,14 @@ export function buildProjectPdf(project: ConstructionProject, images: ProjectPdf
   picture(end, false, 15, y, 166, 94);
   const right = 190, top = y;
   text("PROJECT TOTAL WITH ALLOWANCES", right, top + 7, 91, 10, true);
-  text(exportMoney(costs.total), right, top + 18, 91, 20, true);
-  text(`Priced works: ${exportMoney(costs.works)}`, right, top + 31, 91);
+  text(money(costs.total), right, top + 18, 91, 20, true);
+  text(`Priced works: ${money(costs.works)}`, right, top + 31, 91);
   text(`${end} working days | ${project.workingDays}-day week\n${workingDate(project.start, 0, project.workingDays)} to ${workingDate(project.start, end - 1, project.workingDays)}\n${project.parts.length} model elements\n${project.boq.length} BOQ / programme items`, right, top + 44, 91);
   y += 105;
   paragraph("This report captures the current model, quantities, rates and proposed programme. Stage costs are planned allocations; they do not represent actual expenditure. Temporary setting-out profiles and strings are removed after the substructure.");
 
   page("Cost summary and review status");
-  const summaryRow = (label: string, amount: number, note = "", bold = false) => { room(note ? 15 : 10); text(label, 15, y, 174, 12, bold); text(exportMoney(amount), 200, y, 82, 12, bold); y += 7; if (note) { text(note, 20, y, 253, 10); y += 7; } };
+  const summaryRow = (label: string, amount: number, note = "", bold = false) => { room(note ? 15 : 10); text(label, 15, y, 174, 12, bold); text(money(amount), 200, y, 82, 12, bold); y += 7; if (note) { text(note, 20, y, 253, 10); y += 7; } };
   summaryRow("BOQ priced works subtotal", costs.works, "Quantity x current unit rate; each BOQ item is counted once.");
   for (const charge of costs.charges) summaryRow(charge.label, charge.amount, `${number(charge.percentage * 100)}% of ${charge.basis === "works" ? "priced works" : "running subtotal"}: ${exportMoney(charge.base)}.`);
   summaryRow("PROJECT TOTAL", costs.total, "", true);

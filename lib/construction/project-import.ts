@@ -2,12 +2,24 @@ import * as THREE from "three";
 import { suggestProjectStage, type ModelPart } from "./project";
 export type PlanPoint = [number, number];
 export type PlanSegment = { a: PlanPoint; b: PlanPoint; type: "wall" | "door" | "window" };
-export type TracePlan = { width: number; height: number; image: string; outline: PlanPoint[]; segments: PlanSegment[]; calibration: PlanPoint[]; distance: number; floors: number; storeyHeight: number; wallThickness: number };
+export type TracePlan = { width: number; height: number; image: string; outline: PlanPoint[]; segments: PlanSegment[]; calibration: PlanPoint[]; distance: number; floors: number; storeyHeight: number; wallThickness: number; anchor?: PlanPoint };
 const LIMIT = 1500000;
 
-function asPart(mesh: THREE.Mesh, id: string, name: string): ModelPart {
-  const geometry = mesh.geometry, positions = geometry.getAttribute("position");
-  return { id, name, stage: suggestProjectStage(name), positions: Array.from(positions.array), indices: geometry.index ? Array.from(geometry.index.array) : undefined, matrix: mesh.matrixWorld.toArray() };
+function asParts(mesh: THREE.Mesh, id: string, name: string): ModelPart[] {
+  const geometry = mesh.geometry, position = geometry.getAttribute("position"), materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+  const groups = Array.isArray(mesh.material) && geometry.groups.length ? geometry.groups : [{ start: 0, count: geometry.index?.count ?? position.count, materialIndex: 0 }];
+  return groups.map((group, index) => {
+    const remap = new Map<number, number>(), positions: number[] = [], indices: number[] = [];
+    for (let n = group.start; n < Math.min(group.start + group.count, geometry.index?.count ?? position.count); n++) {
+      const original = geometry.index ? geometry.index.getX(n) : n;
+      let mapped = remap.get(original);
+      if (mapped === undefined) { mapped = remap.size; remap.set(original, mapped); positions.push(position.getX(original), position.getY(original), position.getZ(original)); }
+      indices.push(mapped);
+    }
+    const material = materials[group.materialIndex ?? 0] as THREE.MeshStandardMaterial | undefined;
+    const sourceId = mesh.userData?.GlobalId ?? mesh.userData?.globalId;
+    return { id: groups.length > 1 ? `${id}-material-${index}` : id, name, stage: suggestProjectStage(name), positions, indices, matrix: mesh.matrixWorld.toArray(), color: material?.color ? `#${material.color.getHexString()}` : undefined, material: { roughness: Number.isFinite(material?.roughness) ? material!.roughness : .85, metalness: Number.isFinite(material?.metalness) ? material!.metalness : 0 }, ...(typeof sourceId === "string" ? { source: { elementId: sourceId } } : {}) };
+  }).filter(part => part.positions.length > 0);
 }
 export async function import3D(file: File, report: (message: string) => void): Promise<ModelPart[]> {
   if (file.size > 80 * 1024 * 1024) throw new Error("Use a coordination model below 80 MB. Remove textures and unnecessary detail before exporting.");
@@ -30,9 +42,10 @@ export async function import3D(file: File, report: (message: string) => void): P
   root.traverse(object => {
     const mesh = object as THREE.Mesh;
     if (!mesh.isMesh || !mesh.geometry.getAttribute("position")) return;
-    vertices += mesh.geometry.getAttribute("position").count;
+    const imported = asParts(mesh, `mesh-${parts.length + 1}`, [mesh.parent?.name, mesh.name].filter(Boolean).join(" / ") || `Element ${parts.length + 1}`);
+    vertices += imported.reduce((sum, part) => sum + part.positions.length / 3, 0);
     if (vertices > LIMIT || parts.length > 10000) throw new Error("Model too detailed. Export fewer than 1.5 million vertices / 10,000 mesh elements.");
-    parts.push(asPart(mesh, `mesh-${parts.length + 1}`, [mesh.parent?.name, mesh.name].filter(Boolean).join(" / ") || `Element ${parts.length + 1}`));
+    parts.push(...imported);
   });
   root.traverse(object => { const mesh = object as THREE.Mesh; if (mesh.geometry) mesh.geometry.dispose(); if (mesh.material) (Array.isArray(mesh.material) ? mesh.material : [mesh.material]).forEach(material => { for (const value of Object.values(material)) if (value instanceof THREE.Texture) value.dispose(); material.dispose(); }); });
   if (!parts.length) throw new Error("No mesh geometry found in this model.");
@@ -52,25 +65,41 @@ async function importIfc(data: Uint8Array, report: (message: string) => void) {
   const library = await ifcLibrary(), api = new library.IfcAPI(); api.SetWasmPath("/construction-assets/", true);
   await api.Init(undefined, true); const model = api.OpenModel(data, { COORDINATE_TO_ORIGIN: true, CIRCLE_SEGMENTS: 12 });
   if (model < 0) { api.Dispose(); throw new Error("The IFC reader could not open this file. Check its IFC export and schema."); }
+  const spatial = readIfcSpatialMetadata(api, model, library);
   const parts: ModelPart[] = []; let count = 0;
   try {
     api.StreamAllMeshes(model, (mesh, index, total) => {
       if (index % 100 === 0) report(`Reading IFC elements: ${index + 1} / ${total}`);
       const type = api.GetNameFromTypeCode(api.GetLineType(model, mesh.expressID));
       const entity = api.GetLine(model, mesh.expressID, false), name = `${type} ${entity?.Name?.value ?? ""} #${mesh.expressID}`.trim();
+      const elementId = String(entity?.GlobalId?.value ?? mesh.expressID), storey = spatial.primary.get(mesh.expressID);
       for (let n = 0; n < mesh.geometries.size(); n++) {
         const placed = mesh.geometries.get(n), geometry = api.GetGeometry(model, placed.geometryExpressID);
         const raw = api.GetVertexArray(geometry.GetVertexData(), geometry.GetVertexDataSize()), positions: number[] = [];
         for (let offset = 0; offset < raw.length; offset += 6) positions.push(raw[offset], raw[offset + 1], raw[offset + 2]);
         count += positions.length / 3;
         if (count > LIMIT || parts.length >= 10000) { geometry.delete(); throw new Error("IFC model too detailed. Export a lighter coordination model below 1.5 million vertices."); }
-        parts.push({ id: `ifc-${mesh.expressID}-${n}`, name, stage: suggestProjectStage(type + " " + name), positions, indices: Array.from(api.GetIndexArray(geometry.GetIndexData(), geometry.GetIndexDataSize())), matrix: [...placed.flatTransformation] });
+        parts.push({ id: `ifc-${elementId}-${n}`, name, stage: suggestProjectStage(type + " " + name), positions, indices: Array.from(api.GetIndexArray(geometry.GetIndexData(), geometry.GetIndexDataSize())), matrix: [...placed.flatTransformation], color: `#${new THREE.Color().setRGB(placed.color.x, placed.color.y, placed.color.z, THREE.SRGBColorSpace).getHexString()}`, levelId: storey?.id, referenceLevelIds: spatial.references.get(mesh.expressID), source: { elementId, ifcType: type, ...(storey ? { levelName: storey.name } : {}) } });
         geometry.delete();
       }
     }, true);
   } finally { api.CloseModel(model); api.Dispose(); }
   if (!parts.length) throw new Error("This IFC contains no renderable geometry.");
   return parts;
+}
+
+/** Spatial metadata is attached without adding a second transform to IFC geometry. */
+export function readIfcSpatialMetadata(api: import("web-ifc").IfcAPI, model: number, library: Pick<typeof import("web-ifc"), "IFCBUILDINGSTOREY" | "IFCRELAGGREGATES" | "IFCRELCONTAINEDINSPATIALSTRUCTURE" | "IFCRELREFERENCEDINSPATIALSTRUCTURE">) {
+  const storeys = new Map<number, { id: string; name: string }>(), parents = new Map<number, number>();
+  type SpatialLine = { expressID: number; GlobalId?: { value: string }; Name?: { value: string }; LongName?: { value: string }; RelatedObjects?: { value: number }[]; RelatingObject?: { value: number }; RelatedElements?: { value: number }[]; RelatingStructure?: { value: number } };
+  const each = (type: number, visit: (line: SpatialLine) => void) => { const ids = api.GetLineIDsWithType(model, type); for (let i = 0; i < ids.size(); i++) visit(api.GetLine(model, ids.get(i), false)); };
+  each(library.IFCBUILDINGSTOREY, line => storeys.set(line.expressID, { id: `storey-${line.GlobalId?.value ?? line.expressID}`, name: String(line.Name?.value ?? line.LongName?.value ?? `Storey ${line.expressID}`) }));
+  each(library.IFCRELAGGREGATES, line => { for (const child of line.RelatedObjects ?? []) parents.set(child.value, line.RelatingObject!.value); });
+  const level = (id: number) => { const seen = new Set<number>(); while (!storeys.has(id) && parents.has(id) && !seen.has(id)) { seen.add(id); id = parents.get(id)!; } return storeys.get(id); };
+  const primary = new Map<number, { id: string; name: string }>(), references = new Map<number, string[]>();
+  each(library.IFCRELCONTAINEDINSPATIALSTRUCTURE, line => { const storey = level(line.RelatingStructure?.value ?? -1); if (storey) for (const element of line.RelatedElements ?? []) primary.set(element.value, storey); });
+  each(library.IFCRELREFERENCEDINSPATIALSTRUCTURE, line => { const storey = level(line.RelatingStructure?.value ?? -1); if (storey) for (const element of line.RelatedElements ?? []) references.set(element.value, [...new Set([...(references.get(element.value) ?? []), storey.id])]); });
+  return { primary, references };
 }
 
 export async function readPlan(file: File, pageNumber = 1): Promise<{ image: string; width: number; height: number; pages: number }> {
@@ -112,7 +141,7 @@ export function traceToModel(plan: TracePlan): { parts: ModelPart[]; unmatched: 
   if ((plan.outline.length + plan.segments.length) * plan.floors > 2000) throw new Error("This trace is too detailed for a simple generated model. Reduce the wall segments or import a 3D coordination model.");
   const pixels = Math.hypot(plan.calibration[1][0] - plan.calibration[0][0], plan.calibration[1][1] - plan.calibration[0][1]);
   if (pixels < 5) throw new Error("Choose two calibration points farther apart.");
-  const scale = plan.distance / pixels, origin = plan.outline[0], parts: ModelPart[] = [];
+  const scale = plan.distance / pixels, origin = plan.anchor ?? plan.outline[0], parts: ModelPart[] = [];
   const toWorld = (p: PlanPoint): PlanPoint => [(p[0] - origin[0]) * scale, (p[1] - origin[1]) * scale];
   const outline = plan.outline.map(toWorld), walls: PlanSegment[] = [...plan.outline.map((point, index) => ({ a: point, b: plan.outline[(index + 1) % plan.outline.length], type: "wall" as const })), ...plan.segments.filter(segment => segment.type === "wall")].map(segment => ({ ...segment, a: toWorld(segment.a), b: toWorld(segment.b) }));
   const openings = plan.segments.filter(segment => segment.type !== "wall").map(segment => ({ ...segment, a: toWorld(segment.a), b: toWorld(segment.b), matched: false }));

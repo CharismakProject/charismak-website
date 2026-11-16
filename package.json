@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/prepare-construction-assets.mjs && npm run test:public-estimator && npm run test:estimate-finish-level && npm run test:material-estimator && npm run test:estimator-foundation && npm run test:supplier-price-validity && npm run test:release-trust && npm run test:price-freshness && npm run test:rate-bank && npm run test:saved-rate && npm run test:rate-3d && npm run test:enquiry && npm run test:site-pictures && npm run test:construction-walkthrough && npm run test:construction-lighting && npm run test:construction-learning && npm run test:construction-costs && npm run test:construction-studio && npm run test:construction-exports && next build",
+    "build": "node scripts/prepare-construction-assets.mjs && npm run test:public-estimator && npm run test:estimate-finish-level && npm run test:material-estimator && npm run test:estimator-foundation && npm run test:supplier-price-validity && npm run test:release-trust && npm run test:price-freshness && npm run test:rate-bank && npm run test:saved-rate && npm run test:rate-3d && npm run test:enquiry && npm run test:site-pictures && npm run test:construction-walkthrough && npm run test:construction-lighting && npm run test:construction-learning && npm run test:construction-costs && npm run test:construction-studio && npm run test:construction-exports && npm run test:construction-drawings && next build",
     "start": "next start",
     "lint": "eslint",
     "test:fence-boq": "node --import tsx scripts/verify-fence-boq.ts",
@@ -26,7 +26,8 @@
     "test:construction-learning": "node --import tsx scripts/verify-construction-learning.ts",
     "test:construction-costs": "node --import tsx scripts/verify-construction-costs.ts",
     "test:construction-studio": "node --import tsx scripts/verify-construction-studio.ts",
-    "test:construction-exports": "node --import tsx scripts/verify-construction-exports.ts"
+    "test:construction-exports": "node --import tsx scripts/verify-construction-exports.ts",
+    "test:construction-drawings": "node --import tsx scripts/verify-construction-drawings.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.2",
