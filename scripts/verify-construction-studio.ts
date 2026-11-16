@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import * as THREE from "three";
 import * as XLSX from "xlsx";
 import { IfcAPI } from "web-ifc";
-import { detectBoqColumns, parseBoqRows, emptyProject, lineAmount, lineDuration, proposeSchedule, plannedCostAt, workingDate, validateProject, replaceProjectBoq, replaceProjectDrawing } from "../lib/construction/project";
+import { detectBoqColumns, parseBoqRows, emptyProject, projectCostSummary, lineAmount, lineDuration, proposeSchedule, plannedCostAt, workingDate, validateProject, replaceProjectBoq, replaceProjectDrawing } from "../lib/construction/project";
 import { import3D, traceToModel, readDxf } from "../lib/construction/project-import";
 
 async function verify() {
@@ -41,6 +41,18 @@ async function verify() {
   assert.equal(replaceProjectBoq(example, parsed.lines).parts.length, 0, "An uploaded BOQ must not be presented as the demo building’s own bill");
   const missing = parseBoqRows([["Description", "Qty", "Unit", "Rate", "Amount"], ["Wall", 2, "m2", "", 10000], ["Door", 1, "No.", 0, 0], ["Unknown service", 1, "item", "", ""]], { code: -1, description: 0, quantity: 1, unit: 2, rate: 3, amount: 4 }, 0);
   assert.equal(missing.lines[0].rate, 5000); assert.equal(missing.lines[1].rate, 0); assert.equal(missing.lines[2].rate, null);
+  const grouped = [["Code", "Description", "Qty", "Unit", "Rate", "Amount"], ["", "Wall finishing", "", "", "", ""], ["A", "Blockwall area", 2, "m2", 50, 100], ["", "WALL FINISHING TO SUMMARY", "", "", "", 100], ["", "Aluminium work & Doors", "", "", "", 100], ["B", "Pergola", 1, "No.", 200, "N/A"], ["", "SUMMARY", "", "", "", ""], ["A", "Wall finishing", "", "", "", 100], ["", "GENERAL SUMMARY", "", "", "", ""], ["", "GENERAL WORK", "", "", "", 100]];
+  const controls = detectBoqColumns(grouped), detail = parseBoqRows(grouped, controls.map, controls.header);
+  assert.equal(detail.lines.length, 2, "Section subtotals and summary repeats must not become costed work");
+  assert.equal(detail.lines[0].stage, "finishes", "Blockwall area below a plaster heading is a finish, not new masonry");
+  assert.equal(detail.lines[1].excluded, true); assert.equal(lineAmount(detail.lines[1]), null); assert.equal(lineDuration(detail.lines[1]), 0);
+  const allowancesProject = { ...emptyProject(), boq: detail.lines, charges: [{ id: "prelim", label: "Preliminaries", percentage: 0.02, basis: "works" as const }, { id: "contingency", label: "Contingency", percentage: 0.03, basis: "running" as const }, { id: "vat", label: "VAT per bill", percentage: 0.075, basis: "running" as const }] };
+  const reconciled = projectCostSummary(allowancesProject);
+  assert.equal(reconciled.works, 100); assert.equal(reconciled.charges[1].base, 102); assert.equal(reconciled.total, 112.94);
+  assert.equal(projectCostSummary(allowancesProject, 0).total, 0);
+  assert.equal(projectCostSummary({ ...allowancesProject, boq: [{ ...detail.lines[0], quantity: 4 }] }).total, 225.88, "Allowance bases recalculate after BOQ edits");
+  assert.throws(() => validateProject({ ...allowancesProject, charges: [{ ...allowancesProject.charges[0], percentage: Infinity }] }), /allowance/);
+  assert.throws(() => validateProject({ ...project, parts: [{ ...traced.parts[0], color: "url(evil)" }] }), /colour/);
   const obj = "o Blockwork_Wall\nv 0 0 0\nv 1 0 0\nv 0 3 0\nf 1 2 3\n";
   const imported = await import3D(new File([obj], "wall.obj"), () => {}); assert.equal(imported.length, 1); assert.equal(imported[0].stage, "walls");
   const dxfText = "0\nSECTION\n2\nENTITIES\n0\nLINE\n8\nWALLS\n10\n0\n20\n0\n30\n0\n11\n12000\n21\n0\n31\n0\n0\nENDSEC\n0\nEOF\n";
