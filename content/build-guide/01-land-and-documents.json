@@ -1,0 +1,42 @@
+{
+  "slug": "land-and-documents",
+  "order": 1,
+  "kind": "stage",
+  "title": "Land & documents",
+  "headline": "Make sure the land is yours — on paper — before any money goes into the ground.",
+  "seoTitle": "Buying land in Nigeria from abroad: C of O, survey plan and building approval",
+  "seoDescription": "Plain-English guide for Nigerians abroad: how to check title (C of O, R of O), survey plans and building approval in Abuja and Lagos before you build.",
+  "summary": "Title, survey and approval are the foundation under the foundation. Most diaspora losses happen here, not on site.",
+  "duration": "4–12 weeks for searches and survey; building approval commonly 1–3 months in Abuja (AMMC/DRD) or Lagos (LASPPPA/LASBCA) [CHECK current timelines]",
+  "whatHappens": [
+    "Title search: a lawyer checks the land registry (AGIS in Abuja; Lagos Land Registry) that the seller actually owns the plot and it is free of disputes, government acquisition or other claims.",
+    "Documents you should end up with: Certificate of Occupancy (C of O) or Right of Occupancy (R of O) / allocation letter; Deed of Assignment; Governor’s Consent (Lagos) or Minister’s Consent (FCT) where land changes hands; registered survey plan. [CHECK which apply to your plot]",
+    "Survey: a registered surveyor (SURCON) produces or verifies the survey plan and plants beacons at the corners. The beacon numbers on site must match the survey plan.",
+    "Site visit and charting: confirm the plot on the ground is the plot on the paper, and that it is not on a road reserve, drainage channel, setback or government acquisition.",
+    "Building plan approval: architectural, structural and services drawings are submitted to the development control authority for approval before work starts. Lagos also requires stage inspections and certificates. [CHECK current Lagos LASBCA stage-certification rules]",
+    "Soil test (recommended): a geotechnical investigation tells the structural engineer what foundation the ground needs, especially in waterlogged or filled land."
+  ],
+  "problems": [
+    "Same plot sold to several buyers (‘double allocation’). Only an independent lawyer’s registry search protects you.",
+    "Survey plan that belongs to a different plot, or beacons moved. Ask for beacon numbers and check them against the plan with your own surveyor.",
+    "Land under government acquisition or on a planned road — cheap for a reason, and can be demolished later.",
+    "‘Omo onile’ / community levies in Lagos and parts of the South West: extra demands to start work. Get any community agreement in writing. [CHECK local practice for your area]",
+    "Starting construction without approval because ‘everybody does it’. Unapproved buildings can be sealed or demolished, and it hurts resale and mortgage value.",
+    "Relatives or agents holding the original documents in their own name. Documents should be in your name and the originals kept by you or your lawyer."
+  ],
+  "questions": [
+    "Who did the title search, and can I have the written search report from the registry?",
+    "Is the C of O / R of O in my name? If not, when will consent and registration be completed?",
+    "Who is the surveyor, are they SURCON-registered, and what are the beacon numbers?",
+    "Has the building plan been submitted? Can I see the approval letter and approved stamped drawings?",
+    "Is a soil test needed for this plot? If not, why not?",
+    "Are there any community or ‘development’ levies, and who will pay them?"
+  ],
+  "photoCheckpoints": [
+    "Clear photos/scans of the C of O or R of O, Deed of Assignment and consent — all pages.",
+    "Photos of each corner beacon with its number readable, plus a wide shot showing the plot.",
+    "Short video walking the boundary, with a phone GPS/map pin shown on screen.",
+    "Photo of the building approval letter and the approval stamp on the drawings.",
+    "Registry search report on the lawyer’s letterhead."
+  ]
+}

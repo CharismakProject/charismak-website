@@ -1,0 +1,39 @@
+{
+  "slug": "plumbing-and-electrical",
+  "order": 7,
+  "kind": "stage",
+  "title": "Plumbing & electrical rough-in",
+  "headline": "Pipes and conduits go into walls and floors before plastering hides them for good.",
+  "seoTitle": "Plumbing and electrical rough-in for Nigerian homes: what to check before plastering",
+  "seoDescription": "How pipes, drainage, conduits and wiring are installed before plaster, common shortcuts, what to ask and the photos you need from your contractor.",
+  "summary": "Once plaster goes on, you can’t see what is behind it. Get photos of every wall before it is covered.",
+  "duration": "1–3 weeks for rough-in, with final fixing after finishes [CHECK]",
+  "whatHappens": [
+    "Electrical: conduit pipes chased into walls and laid in slabs, boxes for sockets and switches, route to the distribution board (DB), and earthing (earth rod/pit).",
+    "Wiring pulled through conduits with the right cable sizes for lighting, sockets and heavy loads such as AC units and cookers. [CHECK cable sizes with your electrician]",
+    "Plumbing: cold and hot water pipes (PPR or PVC), connections for each fitting, and pressure testing before closing up.",
+    "Drainage: waste and soil pipes with correct falls to inspection chambers, septic tank and soak-away (or public sewer where available).",
+    "Provision for water storage (overhead tank stand), borehole connection and pump."
+  ],
+  "problems": [
+    "Undersized cables or no earthing — a fire and shock risk.",
+    "Conduits left out and cables buried directly in plaster.",
+    "Pipes not pressure-tested, leaking later behind tiles.",
+    "Drainage with poor falls that blocks; septic tank too small or too close to a borehole. [CHECK required separation distances]",
+    "Cheap fittings substituted for the specified brands."
+  ],
+  "questions": [
+    "What cable sizes are used for lights, sockets and AC/cooker circuits?",
+    "Where is the earth rod and how is it connected?",
+    "What pipe type and brand, and has the system been pressure-tested? Can I see the test?",
+    "What size is the septic tank and how far is it from the borehole and the building?",
+    "Who will certify the electrical installation before connection? [CHECK local DisCo requirements]"
+  ],
+  "photoCheckpoints": [
+    "Every wall photographed after conduits and pipes are in, before plaster — with a tape for position.",
+    "Close-up of cable markings showing size.",
+    "Pressure gauge reading during the pipe test.",
+    "Drainage pipes and chambers before backfilling.",
+    "Septic tank and soak-away during construction, with a tape for size."
+  ]
+}

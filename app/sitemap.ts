@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 
+import { getGuidePages } from "@/lib/build-guide";
 import { blogArticles } from "@/lib/content/blog";
 import { loadPublishedBlogArticles } from "@/lib/content/blog-data";
 import { loadPublishedProjects } from "@/lib/content/website-cms";
@@ -25,6 +26,7 @@ const staticRoutes: Array<{
   { path: "/prices", changeFrequency: "daily", priority: 0.95 },
   { path: "/rates", changeFrequency: "weekly", priority: 0.95 },
   { path: "/construction-explorer", changeFrequency: "monthly", priority: 0.9 },
+  { path: "/build-guide", changeFrequency: "monthly", priority: 0.85 },
   { path: "/construction-studio", changeFrequency: "monthly", priority: 0.9 },
   { path: "/marketplace", changeFrequency: "daily", priority: 0.85 },
   { path: "/marketplace-safety", changeFrequency: "yearly", priority: 0.35 },
@@ -46,6 +48,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: absoluteUrl(route.path),
       changeFrequency: route.changeFrequency,
       priority: route.priority,
+    })),
+    ...getGuidePages().map((page) => ({
+      url: absoluteUrl(`/build-guide/${page.slug}`),
+      changeFrequency: "monthly" as const,
+      priority: 0.75,
     })),
     ...projects
       .filter((project) => project.showOnProjectsPage !== false)

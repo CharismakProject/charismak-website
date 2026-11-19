@@ -1,0 +1,42 @@
+{
+  "slug": "managing-from-abroad",
+  "order": 9,
+  "kind": "guide",
+  "title": "Managing your build from abroad",
+  "headline": "How to keep control of money and quality when you can’t be on site.",
+  "seoTitle": "Building a house in Nigeria from abroad: staged payments, proof and supervision",
+  "seoDescription": "How Nigerians in the diaspora can manage construction back home: staged payments, photo and video proof, avoiding lump-sum transfers and using independent supervision.",
+  "summary": "Most diaspora build problems are not technical — they are about money moving faster than work. These rules keep them in step.",
+  "duration": "Throughout the project",
+  "whatHappens": [
+    "Agree a written contract with drawings, BOQ, specification, programme and a payment schedule linked to stages — not dates.",
+    "Pay in stages, after evidence: e.g. a mobilisation payment, then payments on completion of foundation to DPC, superstructure, roofing, services and finishes. Keep a retention (often 5%) until defects are fixed. [CHECK the split for your project]",
+    "Buy key materials against invoices, or pay suppliers directly for big items (rods, cement, roofing), so you know what was bought.",
+    "Weekly report: photos and short videos from fixed spots, a list of work done, materials delivered and next week’s plan.",
+    "Independent supervision: a quantity surveyor, engineer or project manager who works for you — not the builder — inspects before each payment and before concrete is cast.",
+    "Keep a shared folder (Google Drive/WhatsApp archive) of all drawings, receipts, photos and approvals."
+  ],
+  "problems": [
+    "Sending one large lump sum ‘to start’ — the most common way money disappears.",
+    "Relatives acting as contractor and supervisor at once, with no records.",
+    "Photos reused from other sites. Ask for videos with a date and your name said aloud, or a live video call.",
+    "Materials ‘bought’ twice or diverted to other jobs.",
+    "No written contract, so the scope and price keep changing.",
+    "Contractor demanding money urgently for ‘price increases’ with no supplier quotes."
+  ],
+  "questions": [
+    "Can we agree payments by completed stage, with evidence, and a retention until handover?",
+    "Can you send a weekly report with dated photos/videos from the same positions?",
+    "Can I pay the supplier directly for major materials?",
+    "Who is the independent supervisor, and will they confirm work before each payment?",
+    "How are variations priced and approved in writing?",
+    "Where are all receipts and delivery notes kept?"
+  ],
+  "photoCheckpoints": [
+    "A dated video walk-round each week, starting from the gate.",
+    "Photos of every delivery with the delivery note or invoice in the frame.",
+    "Before-and-after photos for every stage payment request.",
+    "A live video call before you release any payment above an agreed amount.",
+    "The independent supervisor’s signed inspection note for each stage."
+  ]
+}

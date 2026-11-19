@@ -1,0 +1,40 @@
+{
+  "slug": "roofing",
+  "order": 6,
+  "kind": "stage",
+  "title": "Roofing",
+  "headline": "Roof structure, covering, fascia and gutters — the stage that keeps everything else dry.",
+  "seoTitle": "Roofing in Nigeria: timber, long-span aluminium and stone-coated roofs explained",
+  "seoDescription": "A guide to roof trusses, long-span aluminium and stone-coated sheets, gauges, fixings and fascia for Nigerian homes, with checks and photos to ask for.",
+  "summary": "A good roof needs a strong, treated structure, the right sheet gauge and proper fixings. Leaks are expensive to chase later.",
+  "duration": "1–3 weeks depending on size and roof type [CHECK]",
+  "whatHappens": [
+    "Roof structure: treated hardwood timber (commonly 2×4, 2×6 sizes) or steel trusses fixed to the wall plate with straps or bolts.",
+    "Purlins and noggins fixed across the rafters to carry the sheets.",
+    "Covering: long-span aluminium sheets (common gauges 0.45–0.55 mm) or stone-coated steel tiles, laid with the right overlap and roofing screws/nails with washers. [CHECK gauge on your specification]",
+    "Ridge capping, valleys, flashings where the roof meets walls, and fascia board.",
+    "Gutters and downpipes (if specified) leading rainwater away from the foundation."
+  ],
+  "problems": [
+    "Untreated or wet timber — termites and warping later.",
+    "Thinner sheets supplied than paid for. Gauge is printed on many sheets; measure with a micrometer if in doubt.",
+    "Roof not tied down to the wall — risk of wind lifting it.",
+    "Too few purlins or screws, causing sagging sheets and leaks.",
+    "Poor flashing at valleys and parapets — the most common leak point.",
+    "Ceiling joists left out so the ceiling contractor later ‘needs extra timber’."
+  ],
+  "questions": [
+    "What timber species and sizes are you using, and is it treated against termites?",
+    "What sheet gauge and brand, and can I see the label or delivery note?",
+    "How is the roof anchored to the walls?",
+    "What overlap and fixing spacing will you use?",
+    "How are valleys and wall junctions flashed?"
+  ],
+  "photoCheckpoints": [
+    "Timber on delivery and after treatment.",
+    "Roof frame complete before sheeting, showing straps/anchors at the wall plate.",
+    "Close-up of the sheet gauge label or micrometer reading.",
+    "Fixings with washers, and valley/flashing details.",
+    "Video of the finished roof from the ground and from inside the roof space."
+  ]
+}

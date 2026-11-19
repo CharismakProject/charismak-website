@@ -1,0 +1,47 @@
+{
+  "slug": "foundation-to-dpc",
+  "order": 4,
+  "kind": "stage",
+  "title": "Foundation to DPC",
+  "headline": "Everything below the floor: trenches, footings, foundation walls and the ground slab up to damp-proof level.",
+  "seoTitle": "Foundation to DPC in Nigeria: trenches, footings, blockwork and German floor explained",
+  "seoDescription": "Plain-English guide to strip and pad foundations, blinding, foundation blockwork, filling, DPM and the ground floor slab, with tricks to watch for and photos to request.",
+  "summary": "This is the stage you cannot easily inspect later. Insist on photos and measurements before anything is covered.",
+  "duration": "2–5 weeks for a bungalow; longer for storey buildings or difficult soil [CHECK]",
+  "whatHappens": [
+    "Excavation of trenches (for strip foundations) or pits (for column bases) to the depth and width on the structural drawing — often around 0.9 m deep for bungalows on firm soil. [CHECK against your drawings]",
+    "Blinding: a thin layer of weak concrete (about 50 mm) at the bottom of the trench to give a clean, level base.",
+    "Footing: reinforced or mass concrete strip, or reinforced column bases, cast to the drawing (e.g. 675 × 225 mm strip for a 9-inch wall — your engineer decides). [CHECK]",
+    "Foundation blockwork: usually 9-inch blocks filled solid with concrete from footing to just above ground (DPC level). Column starters are cast here for framed buildings.",
+    "Backfilling and compacting the inside with laterite in layers, then hardcore (broken stone).",
+    "Anti-termite treatment of the ground, then a damp-proof membrane (polythene, DPM) and the ground floor slab (often called ‘German floor’), commonly 100–150 mm thick, sometimes with BRC mesh."
+  ],
+  "problems": [
+    "Trenches dug shallower or narrower than the drawing.",
+    "No blinding, or blinding done after rain with mud in the trench.",
+    "Weak concrete: too little cement, too much water, or dirty sand. Ask how many bags per mix.",
+    "Rods smaller than specified (Y10 instead of Y12) or fewer of them; or the right rods bought but resold.",
+    "Foundation blocks not filled solid, or hollow 6-inch blocks used instead of 9-inch.",
+    "Laterite dumped in one go without compaction — the floor settles and cracks later.",
+    "DPM skipped or torn, causing damp and peeling paint inside.",
+    "Slab poured thinner than agreed, or not cured with water for at least 7 days."
+  ],
+  "questions": [
+    "What depth and width are the trenches, and do they match the structural drawing?",
+    "What concrete mix are you using for blinding, footing and slab, and how many bags per mix?",
+    "What rod sizes and spacing are in the footings and column bases?",
+    "Are the foundation blocks 9-inch and filled solid with concrete?",
+    "How is the fill compacted, and in what layer thickness?",
+    "Has anti-termite treatment and DPM been done before the slab?",
+    "How long will the slab be cured (kept wet)?"
+  ],
+  "photoCheckpoints": [
+    "Trench with a tape measure showing depth and width at several points, before blinding.",
+    "Reinforcement in the trench/bases before concrete, with a tape showing rod spacing and a close-up of the rod size marking.",
+    "Concrete being mixed, showing cement bags counted per mix.",
+    "Foundation blockwork being filled, and finished level at DPC.",
+    "Compaction in progress (plate compactor or rammer).",
+    "DPM laid over the hardcore before the slab, with laps visible.",
+    "Slab after casting, and photos of it being kept wet over following days."
+  ]
+}

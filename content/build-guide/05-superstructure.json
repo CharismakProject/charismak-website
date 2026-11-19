@@ -1,0 +1,44 @@
+{
+  "slug": "superstructure",
+  "order": 5,
+  "kind": "stage",
+  "title": "Superstructure",
+  "headline": "The building rises: blockwork, columns, lintels, beams and (for storey buildings) suspended slabs.",
+  "seoTitle": "Blockwork, columns, lintels and slabs in Nigeria: superstructure guide",
+  "seoDescription": "How blockwork, columns, lintels, beams and suspended slabs are built on Nigerian sites, what goes wrong, what to ask and what photos to request.",
+  "summary": "Most of the cost and most of the structural risk sit here. Concrete and rods must match the engineer’s design.",
+  "duration": "4–10 weeks for a bungalow; each additional floor adds roughly 4–8 weeks [CHECK]",
+  "whatHappens": [
+    "Blockwork: sandcrete blocks (9-inch external, 6-inch internal is common) laid in cement-sand mortar, typically 6–8 courses per day per gang so mortar can set. [CHECK local productivity]",
+    "Columns: reinforced concrete columns at corners and junctions in framed buildings, cast in formwork.",
+    "Lintels: reinforced concrete beams above doors and windows, or a continuous lintel band round the building.",
+    "Beams and suspended slabs (storey buildings): formwork and props, reinforcement fixed and checked, concrete poured and vibrated, props left in for the time the engineer specifies (often 14–21 days or more). [CHECK]",
+    "Staircase cast with its reinforcement.",
+    "Wall plate / ring beam at the top of walls ready for the roof."
+  ],
+  "problems": [
+    "Low-quality blocks (too much sand, not cured) that crumble — ask for block strength or test a sample.",
+    "Blockwork raised too fast in one day, causing walls to bulge or crack.",
+    "Columns cast with rods out of position, honeycombed concrete, or without vibration.",
+    "Props removed too early to reuse them elsewhere — slabs sag or crack.",
+    "Rods in slabs fewer or smaller than the drawing; inadequate cover (rods too close to the surface).",
+    "Concrete ‘ready-mix’ that is actually site-mixed at a weaker ratio, or water added to make it easier to place.",
+    "No engineer inspection before casting slabs."
+  ],
+  "questions": [
+    "Where are the blocks from, and can I see a strength test or a sample block?",
+    "How many courses per day are you laying?",
+    "Has the engineer inspected the reinforcement before each casting? Can I have the inspection note?",
+    "What concrete grade or mix are you using for columns, beams and slabs, and is it vibrated?",
+    "When will the props be removed, and on whose instruction?",
+    "Are the lintels continuous or only over openings?"
+  ],
+  "photoCheckpoints": [
+    "Blocks on site, and a close-up of a broken block to see its quality.",
+    "Blockwork progress photos from the same spots every few days.",
+    "Column and beam reinforcement before casting, with a tape showing stirrup spacing.",
+    "Slab reinforcement before casting, with spacers/chairs visible and tape showing spacing; rod size close-up.",
+    "Video of concrete pour with vibrator in use.",
+    "Props under the slab, and the date they were removed."
+  ]
+}

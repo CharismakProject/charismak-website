@@ -1,0 +1,41 @@
+{
+  "slug": "design-drawings-and-boq",
+  "order": 2,
+  "kind": "stage",
+  "title": "Design, drawings & BOQ",
+  "headline": "Decide exactly what you are building — and what it should cost — before anyone mixes concrete.",
+  "seoTitle": "House design, structural drawings and Bill of Quantities (BOQ) in Nigeria explained",
+  "seoDescription": "What architectural, structural and services drawings you need, how a Bill of Quantities works, and how to use it to control your contractor in Nigeria.",
+  "summary": "Good drawings and a proper Bill of Quantities (BOQ) are your contract with the builder. Without them, every change becomes a negotiation.",
+  "duration": "4–10 weeks for design and drawings; 1–3 weeks for a BOQ, depending on size [CHECK]",
+  "whatHappens": [
+    "Architectural drawings: floor plans, elevations, sections and a site plan showing setbacks. These show rooms, sizes, doors, windows and heights.",
+    "Structural drawings by a registered engineer (COREN): foundation type, column and beam sizes, slab details and reinforcement (rod sizes and spacing). Needed for any storey building and strongly advised for bungalows.",
+    "Services drawings: plumbing, drainage, septic/soak-away, and electrical layouts (sockets, lights, DB board, earthing).",
+    "Bill of Quantities (BOQ): a quantity surveyor measures every item from the drawings (m³ of concrete, m² of blockwork, tonnes of rods, number of doors…) and prices it. It lets you compare contractors line by line and pay for work actually done.",
+    "Specification: what grade of materials — block size and strength, cement brand, concrete mix, roofing gauge, tile quality, sanitary fittings.",
+    "Programme: the order and expected duration of the stages, which becomes the basis for staged payments."
+  ],
+  "problems": [
+    "Building from a ‘sketch’ only. Sizes change on site, rooms shrink and costs grow.",
+    "No structural design — columns and beams sized ‘by experience’. This is how buildings crack or collapse.",
+    "A quotation that is one lump sum with no quantities. You cannot check it or compare it.",
+    "BOQ quantities inflated (more concrete, rods or blocks than the drawings need), or prices hidden in ‘sundries’ and ‘provisional sums’.",
+    "Cheap specification slipped in: 6-inch blocks where 9-inch were drawn, thinner roofing sheets, lower-grade rods.",
+    "Design changes made by phone with no written variation and price — the final bill becomes a surprise."
+  ],
+  "questions": [
+    "Who prepared the architectural and structural drawings, and are they registered (ARCON / COREN)?",
+    "Can I have the BOQ with quantities and rates for every item, not just a total?",
+    "Which items are ‘provisional sums’ or ‘prime cost sums’, and how will they be adjusted?",
+    "What is the specification for blocks, concrete mix, reinforcement, roofing and finishes?",
+    "What is the programme, and how do payments line up with completed stages?",
+    "How will changes be agreed and priced before they are done?"
+  ],
+  "photoCheckpoints": [
+    "PDF copies of all drawings with the professionals’ names, seals and dates.",
+    "The full BOQ in Excel or PDF with quantities, units and rates.",
+    "A one-page specification sheet you have signed off.",
+    "The agreed payment schedule tied to stages."
+  ]
+}
