@@ -23,9 +23,16 @@ const LINTEL_WALL = 2.1;
 const BARE = "library:concrete-stucco";
 const BARE_FLOOR = "library:concrete-polished";
 
-/** The scene as it stands at the end of `stage` (0 … LAST_STAGE). */
-export function stageNodes<N extends Node>(nodes: Record<string, N>, stage: number, half: { width: number; length: number }): Record<string, N> {
-  if (stage >= LAST_STAGE) return nodes;
+/**
+ * The scene part-way through `stage` (0 … LAST_STAGE); `progress` (0–1) moves within the stage, so
+ * walls rise course by course, the upper floor follows the ground floor, and fittings arrive one by one.
+ */
+export function stageNodes<N extends Node>(nodes: Record<string, N>, stage: number, half: { width: number; length: number }, progress = 1): Record<string, N> {
+  const p = Math.min(1, Math.max(0, progress));
+  if (stage >= LAST_STAGE && p >= 1) return nodes;
+  const lerp = (a: number, b: number) => a + (b - a) * p;
+  const items = Object.values(nodes).filter((node) => node.type === "item");
+  const itemOrder = new Map(items.map((node, i) => [node.id, i / Math.max(1, items.length)]));
   const levelOf = (node: N | undefined): number => {
     for (let guard = 0; node && guard < 12; guard += 1) {
       if (node.type === "level") return Number(node.level ?? 0);
@@ -33,7 +40,7 @@ export function stageNodes<N extends Node>(nodes: Record<string, N>, stage: numb
     }
     return 0;
   };
-  const finished = stage >= 5;
+  const finished = stage > 5 || (stage === 5 && p >= 0.5);
   const out: Record<string, N> = {};
   for (const [id, node] of Object.entries(nodes)) {
     const level = levelOf(node);
@@ -43,10 +50,15 @@ export function stageNodes<N extends Node>(nodes: Record<string, N>, stage: numb
       case "wall": {
         if (node.wallType === "railing") { next = finished ? node : hide(); break; }
         const height = Number(node.height ?? 3);
-        if (level > 0) { next = stage >= 3 ? node : hide(); }
+        if (level > 0) {
+          // The upper floor goes up in the second half of stage 4.
+          if (stage < 3 || (stage === 3 && p < 0.5)) next = hide();
+          else if (stage === 3) next = { ...node, height: Math.max(0.3, height * (p - 0.5) * 2) };
+        }
         else if (stage === 0) next = hide();
-        else if (stage === 1) next = { ...node, height: Math.min(height, LOW_WALL) };
-        else if (stage === 2) next = { ...node, height: Math.min(height, LINTEL_WALL) };
+        else if (stage === 1) next = { ...node, height: Math.max(0.2, Math.min(height, LOW_WALL * p)) };
+        else if (stage === 2) next = { ...node, height: Math.min(height, lerp(LOW_WALL, LINTEL_WALL)) };
+        else if (stage === 3) next = { ...node, height: Math.min(height, LINTEL_WALL + (height - LINTEL_WALL) * Math.min(1, p * 2)) };
         if (!finished && next.visible !== false) {
           next = { ...next, ...(node.exteriorMaterialPreset ? { exteriorMaterialPreset: BARE, interiorMaterialPreset: BARE } : {}), ...(node.materialPreset ? { materialPreset: BARE } : {}) };
         }
@@ -54,35 +66,38 @@ export function stageNodes<N extends Node>(nodes: Record<string, N>, stage: numb
       }
       case "door":
       case "window":
-        next = finished ? node : hide();
+        next = stage > 5 || (stage === 5 && p >= 0.25) ? node : hide();
         break;
       case "slab": {
         const meta = (node.metadata ?? {}) as { external?: boolean; name?: string };
         if (meta.external) {
           const early = /septic|soakaway|porch|steps|terrace/i.test(String(meta.name));
-          next = (early ? stage >= 1 : false) ? node : hide();
+          next = (early ? stage >= 1 : stage >= LAST_STAGE && p >= 0.3) ? node : hide();
         } else {
           next = stage >= (level > 0 ? 3 : 1) ? (finished ? node : { ...node, materialPreset: BARE_FLOOR }) : hide();
         }
         break;
       }
       case "stair":
-        next = stage >= 3 ? node : hide();
+        next = stage > 3 || (stage === 3 && p >= 0.4) ? node : hide();
         break;
       case "roof":
       case "roof-segment":
-        next = stage >= 4 ? node : hide();
+        next = stage > 4 || (stage === 4 && p >= 0.35) ? node : hide();
         break;
       case "ceiling":
+        next = stage > 5 || (stage === 5 && p >= 0.75) ? node : hide();
+        break;
       case "zone":
-        next = hide(); // ceilings and room overlays appear with the finished building
+        next = stage >= LAST_STAGE && p >= 1 ? node : hide();
         break;
       case "item": {
         const [x = 0, , z = 0] = (node.position as number[] | undefined) ?? [];
         const outdoor = Math.abs(x) > half.width || Math.abs(z) > half.length;
         const asset = String((node.asset as { id?: string } | undefined)?.id ?? "");
         const existingPlanting = outdoor && /palm|tree|bush/.test(asset);
-        next = existingPlanting ? node : hide();
+        // In the last stage fittings, furniture and the car arrive one after another.
+        next = existingPlanting || (stage >= LAST_STAGE && (itemOrder.get(id) ?? 0) < p) ? node : hide();
         break;
       }
       default:

@@ -16,6 +16,8 @@ export const TAKEOFF_ASSUMPTIONS = {
   wallThickness: 0.2,
   slabThickness: 0.15,
   trench: { width: 0.675, depth: 0.9 },
+  partitionTrench: { width: 0.45, depth: 0.9 }, // under 150 mm internal walls
+  partitionFootingDepth: 0.15,
   footingDepth: 0.225,
   blindingDepth: 0.05,
   foundationWallHeight: 0.825,
@@ -37,7 +39,8 @@ export type TakeoffLine = {
 export type Takeoff = {
   lines: TakeoffLine[];
   total: number;
-  floorArea: number;
+  floorArea: number; // inside the external walls (slab area)
+  grossFloorArea: number; // to the outside face of the external walls — the usual basis for cost per m²
   counts: { walls: number; slabs: number; ceilings: number; roofs: number; doors: number; windows: number; levels: number };
   warnings: string[];
 };
@@ -88,6 +91,7 @@ export function measureScene(nodes: Record<string, Node>) {
   let thickWall = 0;
   let thinWall = 0;
   let groundWallLength = 0;
+  let groundThinLength = 0;
   // Railing walls (open guards) are not blockwork.
   const walls = byType("wall").filter((wall) => wall.wallType !== "railing");
   for (const wall of walls) {
@@ -98,7 +102,10 @@ export function measureScene(nodes: Record<string, Node>) {
     const area = Math.max(0, length * height - (openingsByWall.get(wall.id) ?? 0));
     if (num(wall.thickness, TAKEOFF_ASSUMPTIONS.wallThickness) >= 0.18) thickWall += area;
     else thinWall += area;
-    if (levelIndex(wall) === 0) groundWallLength += length;
+    if (levelIndex(wall) === 0) {
+      groundWallLength += length;
+      if (num(wall.thickness, TAKEOFF_ASSUMPTIONS.wallThickness) < 0.18) groundThinLength += length;
+    }
   }
 
   // Floors: drawn slabs; on a level with no slab, the room zones stand in for the floor area.
@@ -124,6 +131,14 @@ export function measureScene(nodes: Record<string, Node>) {
     if (level === 0) groundSlab += area;
     else upperSlab += area;
   }
+  // Gross floor area: each building slab grown out to the outside face of a 230 mm external wall.
+  let grossFloorArea = 0;
+  for (const slab of slabs) {
+    const pts = Array.isArray(slab.polygon) ? (slab.polygon as Point[]) : [];
+    let perimeter = 0;
+    for (let i = 0; i < pts.length; i += 1) { const [x1, z1] = pts[i]; const [x2, z2] = pts[(i + 1) % pts.length]; perimeter += Math.hypot(x2 - x1, z2 - z1); }
+    grossFloorArea += surfaceArea(slab) + perimeter * 0.23 + 4 * 0.23 * 0.23;
+  }
   const ceilings = byType("ceiling").reduce((total, ceiling) => total + surfaceArea(ceiling), 0);
 
   let roofSlope = 0;
@@ -140,6 +155,8 @@ export function measureScene(nodes: Record<string, Node>) {
     thickWall: r2(thickWall),
     thinWall: r2(thinWall),
     groundWallLength: r2(groundWallLength),
+    groundThinLength: r2(groundThinLength),
+    grossFloorArea: r2(grossFloorArea),
     groundSlab: r2(groundSlab),
     upperSlab: r2(upperSlab),
     ceilings: r2(ceilings),
@@ -175,11 +192,15 @@ export function priceDesign(nodes: Record<string, Node>, location: RateLocation)
   };
 
   // Substructure, estimated from ground-floor walls (the editor does not draw foundations).
-  const L = m.groundWallLength;
-  add("Substructure (estimated)", "mechanical-excavation-wall-trenches", L * A.trench.width * A.trench.depth, `${L} m of ground-floor wall × 0.675 × 0.9 m`, true);
-  add("Substructure (estimated)", "c15-blinding-1-3-6", L * A.trench.width * A.blindingDepth, "50 mm blinding under the footing", true);
-  add("Substructure (estimated)", "c20-nominal-concrete-1-2-4", L * A.trench.width * A.footingDepth, "675 × 225 mm strip footing", true);
-  add("Substructure (estimated)", "230mm-hollow-sandcrete-blockwork", L * A.foundationWallHeight, "Foundation blockwork to DPC (0.825 m)", true);
+  // External/load-bearing walls on 675 × 225 mm footings with 230 mm blockwork to DPC; 150 mm partitions on 450 × 150 mm footings with 150 mm blockwork.
+  const L = r2(m.groundWallLength - m.groundThinLength);
+  const P = m.groundThinLength;
+  const T = A.partitionTrench;
+  add("Substructure (estimated)", "mechanical-excavation-wall-trenches", L * A.trench.width * A.trench.depth + P * T.width * T.depth, `${L} m of main wall × 0.675 × 0.9 m + ${P} m of partitions × 0.45 × 0.9 m`, true);
+  add("Substructure (estimated)", "c15-blinding-1-3-6", (L * A.trench.width + P * T.width) * A.blindingDepth, "50 mm blinding under the footings", true);
+  add("Substructure (estimated)", "c20-nominal-concrete-1-2-4", L * A.trench.width * A.footingDepth + P * T.width * A.partitionFootingDepth, "675 × 225 mm strip footing (main walls), 450 × 150 mm (partitions)", true);
+  add("Substructure (estimated)", "230mm-hollow-sandcrete-blockwork", L * A.foundationWallHeight, "Foundation blockwork to DPC (0.825 m), main walls", true);
+  add("Substructure (estimated)", "150mm-hollow-sandcrete-blockwork", P * A.foundationWallHeight, "Foundation blockwork to DPC (0.825 m), partitions", true);
   add("Substructure (estimated)", "hardcore-fill-compacted", m.groundSlab * A.hardcoreDepth, "225 mm hardcore under the ground slab", true);
   add("Substructure (estimated)", "dpm-1000-gauge", m.groundSlab, "DPM under the ground slab", true);
 
@@ -213,6 +234,7 @@ export function priceDesign(nodes: Record<string, Node>, location: RateLocation)
     lines,
     total: lines.reduce((sum, line) => sum + line.amount, 0),
     floorArea: r2(m.groundSlab + m.upperSlab),
+    grossFloorArea: m.grossFloorArea,
     counts: m.counts,
     warnings,
   };

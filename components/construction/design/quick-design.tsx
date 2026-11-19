@@ -6,10 +6,11 @@ import { acquireSceneReadOnlyLease, useScene } from "@pascal-app/core";
 import { useViewer, Viewer } from "@pascal-app/viewer";
 import { Html, OrbitControls } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
-import { ArrowRight, Download, Eye, Film, FileText, Footprints, Image as ImageIcon, LayoutGrid, Pause, Play, Home, MapPin, Moon, PencilRuler, RotateCcw, Shuffle, Sofa, Sun, Sunset, Trees, X } from "lucide-react";
+import { ArrowRight, Download, Eye, Film, FileText, FileUp, Footprints, Image as ImageIcon, LayoutGrid, Pause, Play, Home, MapPin, Moon, PencilRuler, RotateCcw, Shuffle, Sofa, Sun, Sunset, Trees, X } from "lucide-react";
 
 import { priceDesign } from "@/lib/construction/design-takeoff";
 import PlanDrawing from "./plan-drawing";
+import PlanImport from "./plan-import";
 import CaptureBridge, { type CaptureFn } from "./capture-bridge";
 import { brandedImage, buildPdf, isBlankFrame, buildVideo, download, fileName, planPng, type ExportInfo, type StageFrame } from "@/lib/construction/design-export";
 import { BUILD_STAGES, costToStage, LAST_STAGE, stageNodes } from "@/lib/construction/build-stages";
@@ -138,20 +139,21 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
   const [walking, setWalking] = useState(false);
   const [view, setView] = useState<"split" | "3d" | "plan">("split");
   const [planFloor, setPlanFloor] = useState(0);
+  const [importing, setImporting] = useState(false);
   const [stage, setStage] = useState<number | null>(null);
+  const [progress, setProgress] = useState(1);
   const [playing, setPlaying] = useState(false);
-  // Play construction: one stage every 2.8 s, then hold the finished building.
+  const [stageSeconds, setStageSeconds] = useState(6);
+  // Play construction: each stage builds up in five steps over the chosen time, then the next begins.
   useEffect(() => {
-    if (!playing) return;
-    const timer = window.setInterval(() => {
-      setStage((current) => {
-        const next = (current ?? -1) + 1;
-        if (next >= LAST_STAGE) { setPlaying(false); return LAST_STAGE; }
-        return next;
-      });
-    }, 2800);
-    return () => window.clearInterval(timer);
-  }, [playing]);
+    if (!playing || stage === null) return;
+    const timer = window.setTimeout(() => {
+      if (progress < 1) setProgress((value) => Math.min(1, Math.round((value + 0.2) * 10) / 10));
+      else if (stage < LAST_STAGE) { setStage(stage + 1); setProgress(0.2); }
+      else setPlaying(false);
+    }, (stageSeconds * 1000) / 5);
+    return () => window.clearTimeout(timer);
+  }, [playing, stage, progress, stageSeconds]);
 
   // Branded downloads, all made in the browser.
   const captureRef = useRef<CaptureFn | null>(null);
@@ -181,7 +183,7 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
 
   // What the viewer shows: "see inside" lifts the roof and ceilings and hides floors above the chosen one.
   const shown = useMemo(() => {
-    const base = stage === null ? scene.nodes : stageNodes(scene.nodes, stage, { width: deferredHouse.width / 2, length: deferredHouse.length / 2 });
+    const base = stage === null ? scene.nodes : stageNodes(scene.nodes, stage, { width: deferredHouse.width / 2, length: deferredHouse.length / 2 }, progress);
     if (!inside && !walking) {
       // Roof on: indoor furniture is hidden (some models draw through the roof otherwise; it is covered anyway).
       const halfW = deferredHouse.width / 2;
@@ -209,7 +211,7 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
       copy[id] = hide ? { ...node, visible: false } : node;
     }
     return copy;
-  }, [scene, inside, viewFloor, walking, deferredHouse.width, deferredHouse.length, stage]);
+  }, [scene, inside, viewFloor, walking, deferredHouse.width, deferredHouse.length, stage, progress]);
 
   useEffect(() => {
     const release = acquireSceneReadOnlyLease();
@@ -267,7 +269,7 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
     title: currentPreset?.label ?? "Charismak design",
     size: `${house.width} × ${house.length} m · ${house.floors} floor${house.floors > 1 ? "s" : ""}`,
     summary: currentPreset?.summary ?? "",
-    floorArea: takeoff.floorArea,
+    floorArea: takeoff.grossFloorArea,
     total: takeoff.total,
     location: location.name,
     groups,
@@ -284,6 +286,7 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
     const frames: StageFrame[] = [];
     for (let i = 0; i < BUILD_STAGES.length; i += 1) {
       setStage(i);
+      setProgress(1);
       setBusy(`Filming stage ${i + 1} of ${BUILD_STAGES.length}…`);
       await wait(i === 0 ? 2500 : 1800);
       // A frame caught mid-rebuild comes out blank (a tiny PNG): give it more time and try again.
@@ -361,6 +364,11 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
 
         {currentPreset ? <p className="mt-2 text-[11px] leading-5 text-white/55"><strong className="text-white/80">{currentPreset.label}:</strong> {currentPreset.summary}. Every room, toilet and the compound are drawn; tap “See inside” to look around.</p> : null}
 
+        <button type="button" onClick={() => setImporting(true)} className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-[#D9B26A]/60 bg-[#D9B26A]/10 px-3 py-2.5 text-xs font-bold text-[#F2C879] hover:bg-[#D9B26A]/20">
+          <FileUp className="h-4 w-4" /> Import your own plan (DXF, PDF or photo)
+        </button>
+        {importing ? <PlanImport onClose={() => setImporting(false)} onOpen={(imported) => { setImporting(false); onAdvanced(imported as unknown as Scene); }} /> : null}
+
         <p className="mt-5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#D9B26A]">Step 2 · Shape it</p>
         <div className="mt-2 space-y-3">
           <Slider label="Width" value={house.width} unit=" m" min={limits.width[0]} max={limits.width[1]} step={0.5} onChange={(width) => change({ width })} />
@@ -408,7 +416,7 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
         <div className="mt-3 rounded-lg border border-[#D9B26A]/40 bg-gradient-to-br from-[#D9B26A]/15 to-transparent p-3">
           <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/55">Estimated building cost</p>
           <p className="text-3xl font-bold text-[#F2C879]">{money(takeoff.total)}</p>
-          <p className="text-xs text-white/60">{takeoff.floorArea} m² · ≈ {money(takeoff.total / Math.max(1, takeoff.floorArea))}/m² · {bedrooms} bedroom{bedrooms === 1 ? "" : "s"} · {furniture} items placed</p>
+          <p className="text-xs text-white/60">{takeoff.grossFloorArea} m² gross · ≈ {money(takeoff.total / Math.max(1, takeoff.grossFloorArea))}/m² · {bedrooms} bedroom{bedrooms === 1 ? "" : "s"} · {furniture} items placed</p>
           <button type="button" onClick={() => setShowBreakdown((value) => !value)} className="mt-2 text-xs font-bold text-[#F2C879] underline">
             {showBreakdown ? "Hide what’s included" : "Show what’s included"}
           </button>
@@ -451,7 +459,7 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
           <CaptureBridge onReady={onCaptureReady} />
           {walking ? null : (
             <>
-              <OrbitControls makeDefault target={[0, 2, 0]} enableDamping maxPolarAngle={Math.PI * 0.49} />
+              <OrbitControls makeDefault target={[0, 2, 0]} enableDamping maxPolarAngle={Math.PI * 0.49} autoRotate={playing} autoRotateSpeed={0.7} />
               {inside ? <RoomLabels nodes={scene.nodes} floor={viewFloor} /> : null}
               <FitCamera width={deferredHouse.width} length={deferredHouse.length} floors={inside ? viewFloor + 1 : deferredHouse.floors} inside={inside} />
             </>
@@ -471,7 +479,7 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
               <button key={id} type="button" onClick={() => setView(id)} aria-pressed={view === id} className={`rounded-full px-2.5 py-1 text-xs font-bold ${view === id ? "bg-white text-[#02080F]" : "text-white/80"}`}>{label}</button>
             ))}
           </div>
-          <button type="button" onClick={() => { setInside(false); setStage(0); setPlaying(true); }} className="inline-flex items-center gap-1.5 rounded-full bg-[#0E7C66] px-3 py-1.5 text-xs font-bold text-white shadow-lg hover:brightness-110">
+          <button type="button" onClick={() => { setInside(false); setStage(0); setProgress(0.2); setPlaying(true); }} className="inline-flex items-center gap-1.5 rounded-full bg-[#0E7C66] px-3 py-1.5 text-xs font-bold text-white shadow-lg hover:brightness-110">
             <Play className="h-3.5 w-3.5" /> {stage !== null && stage < LAST_STAGE ? "Restart build" : "Play construction"}
           </button>
           <button type="button" onClick={() => setWalking(true)} className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#D9B26A] to-[#F29644] px-3 py-1.5 text-xs font-bold text-[#02080F] shadow-lg">
@@ -492,15 +500,18 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
           <div className="absolute inset-x-3 bottom-14 mx-auto max-w-xl rounded-xl bg-black/75 p-3 text-white shadow-xl backdrop-blur">
             <div className="flex items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-[#F2C879]">
               <span>Stage {stage + 1} of {BUILD_STAGES.length}</span>
-              <span className="font-mono text-xs normal-case tracking-normal text-white">{money(costToStage(takeoff.lines, stage))} spent</span>
+              <span className="font-mono text-xs normal-case tracking-normal text-white">{money((stage > 0 ? costToStage(takeoff.lines, stage - 1) : 0) + (costToStage(takeoff.lines, stage) - (stage > 0 ? costToStage(takeoff.lines, stage - 1) : 0)) * progress)} spent</span>
             </div>
             <p className="mt-1 text-sm font-bold">{BUILD_STAGES[stage].title}</p>
             <p className="text-xs text-white/70">{BUILD_STAGES[stage].note}</p>
             <div className="mt-2 flex items-center gap-1">
               {BUILD_STAGES.map((item, i) => (
-                <button key={item.title} type="button" title={item.title} aria-label={item.title} onClick={() => { setPlaying(false); setStage(i); }} className={`h-1.5 flex-1 rounded-full ${i <= stage ? "bg-[#F2C879]" : "bg-white/20"}`} />
+                <button key={item.title} type="button" title={item.title} aria-label={item.title} onClick={() => { setPlaying(false); setStage(i); setProgress(1); }} className={`h-1.5 flex-1 rounded-full ${i <= stage ? "bg-[#F2C879]" : "bg-white/20"}`} />
               ))}
-              <button type="button" onClick={() => setPlaying((p) => !p)} className="ml-2 rounded-full bg-white/15 p-1" aria-label={playing ? "Pause" : "Play"}>{playing ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}</button>
+              <select value={stageSeconds} onChange={(event) => setStageSeconds(Number(event.target.value))} aria-label="Time per stage" className="ml-2 rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-bold text-white [&_option]:bg-[#0D3352]">
+                {[3, 6, 10, 15, 20, 30].map((seconds) => <option key={seconds} value={seconds}>{seconds} s / stage</option>)}
+              </select>
+              <button type="button" onClick={() => { if (!playing && stage === LAST_STAGE && progress >= 1) { setStage(0); setProgress(0.2); } setPlaying((p) => !p); }} className="ml-2 rounded-full bg-white/15 p-1" aria-label={playing ? "Pause" : "Play"}>{playing ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}</button>
               <button type="button" onClick={() => { setPlaying(false); setStage(null); }} className="rounded-full bg-white/15 p-1" aria-label="Close"><X className="h-3.5 w-3.5" /></button>
             </div>
           </div>

@@ -60,7 +60,7 @@ for (const preset of QUICK_PRESETS) {
   const scene = generateHouseScene(preset.house);
   const r = check(preset.id, scene, preset.id !== "shop");
   if (preset.id === "duplex") assert.ok(Object.values(scene.nodes).some((n) => n.type === "stair"), "duplex: staircase");
-  console.log(`  ${preset.label}: ${r.nodes} nodes, ${r.zones} spaces, ${r.items} items, ${r.t.floorArea} m², ₦${Math.round(r.t.total).toLocaleString()} (₦${Math.round(r.t.total / r.t.floorArea).toLocaleString()}/m²)`);
+  console.log(`  ${preset.label}: ${r.nodes} nodes, ${r.zones} spaces, ${r.items} items, ${r.t.grossFloorArea} m² gross, ₦${Math.round(r.t.total).toLocaleString()} (₦${Math.round(r.t.total / r.t.grossFloorArea).toLocaleString()}/m²)`);
 }
 
 // Play construction: walls rise in order, the roof comes at stage 5, and the cost climbs to the full total.
@@ -87,6 +87,9 @@ for (const preset of QUICK_PRESETS) {
 // The 2-bed follows the drawing: 11.0 × 6.0 m overall, 10 named spaces inside.
 const twoBed = generateHouseScene(QUICK_PRESETS.find((p) => p.id === "2bed")!.house);
 assert.deepEqual([twoBed.house.width, twoBed.house.length], [11, 6]);
+// Cost per m² uses gross floor area: 11 × 6 m less the open terrace (about 2.2 × 1.1 m).
+const gross = priceDesign(twoBed.nodes as never, getLocation("fct")).grossFloorArea;
+assert.ok(gross > 62 && gross < 64.5, `2-bed gross floor area ${gross}`);
 const n = normaliseHouse({ plan: "nonsense" as never, width: 99, length: 1, roofPitch: 90, walls: "nonsense" });
 const lim = sizeLimits("2bed");
 assert.deepEqual([n.plan, n.width, n.length, n.roofPitch, n.walls], ["2bed", lim.width[1], lim.length[0], 45, "preset-white"]);

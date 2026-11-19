@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { brandedImage, buildPdf, buildVideo, captureCanvas, download, fileName, isBlankFrame, type ExportInfo, type StageFrame } from "@/lib/construction/design-export";
+import { getLocation } from "@/lib/rates/locations";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowDown, ArrowRight, BookOpen, Box, Building2, Check, ChevronLeft, ChevronRight, Droplets, ExternalLink, Focus, GraduationCap, Layers3, LoaderCircle, Maximize2, MousePointer2, Pause, Play, RotateCcw, Route, ScanLine, Wrench, X, Zap } from "lucide-react";
+import { ArrowDown, ArrowRight, Download, FileText, Film, Image as ImageIcon, BookOpen, Box, Building2, Check, ChevronLeft, ChevronRight, Droplets, ExternalLink, Focus, GraduationCap, Layers3, LoaderCircle, Maximize2, MousePointer2, Pause, Play, RotateCcw, Route, ScanLine, Wrench, X, Zap } from "lucide-react";
 import { LEARNING_MODELS, LEARNING_REFERENCES, LEARNING_TRACKS, LESSON_COUNT, getLearningModel, type LearningModel, type ModelId } from "@/lib/construction/learning";
 import type { TeachingSceneHandle, TeachingSceneState, ViewMode } from "./teaching-scene";
 import styles from "./construction-explorer.module.css";
@@ -66,7 +68,7 @@ function initialSection(id: ModelId, step: number) { return id === "plumbing" ||
 export default function ConstructionExplorer() {
   const [modelId, setModelId] = useState<ModelId>("bungalow");
   const [step, setStep] = useState(13), [section, setSection] = useState(false), [exploded, setExploded] = useState(false), [paths, setPaths] = useState(false);
-  const [selected, setSelected] = useState<string | null>(null), [tab, setTab] = useState<"lesson" | "parts" | "costs">("costs"), [playing, setPlaying] = useState(false), [linked, setLinked] = useState(false);
+  const [selected, setSelected] = useState<string | null>(null), [tab, setTab] = useState<"lesson" | "parts" | "costs">("costs"), [playing, setPlaying] = useState(false), [linked, setLinked] = useState(false), [stageSeconds, setStageSeconds] = useState(10), [busy, setBusy] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("iso");
   const controller = useRef<ViewerHandle | null>(null), viewer = useRef<HTMLDivElement>(null);
   const onControllerReady = useCallback((handle: ViewerHandle | null) => { controller.current = handle; }, []);
@@ -93,9 +95,9 @@ export default function ConstructionExplorer() {
       setStep(next);
       if (model.id === "bungalow") setSection(initialSection(model.id, next));
       if (next === model.lessons.length - 1) setPlaying(false);
-    }, 10000);
+    }, stageSeconds * 1000);
     return () => window.clearTimeout(timer);
-  }, [playing, step, model]);
+  }, [playing, step, model, stageSeconds]);
   const chooseStep = useCallback((index: number) => {
     setPlaying(false); setSelected(null); setStep(Math.max(0, Math.min(model.lessons.length - 1, index)));
     if (model.id === "bungalow") setSection(initialSection(model.id, index));
@@ -113,6 +115,56 @@ export default function ConstructionExplorer() {
   const costs = useConstructionCosts(modelId);
   const pauseForCosts = useCallback(() => setPlaying(false), []);
   const sceneState: TeachingSceneState = { step, section, exploded, paths, selected };
+
+  // Charismak-branded downloads of this model: picture, PDF report and construction video.
+  const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+  const snap = async () => {
+    const canvas = viewer.current?.querySelector("canvas");
+    let shot = await captureCanvas(canvas);
+    for (let attempt = 0; attempt < 4 && (!shot || await isBlankFrame(shot)); attempt += 1) { await wait(800); shot = await captureCanvas(canvas); }
+    return shot && !(await isBlankFrame(shot)) ? shot : null;
+  };
+  const exportInfo = (): ExportInfo => {
+    const total = costs.priced.reduce((sum, stage) => sum + stage.total, 0);
+    return { product: "Construction Explorer", title: model.title, size: model.subtitle, summary: model.note, floorArea: 0, total, location: getLocation(costs.locationId).name, groups: costs.priced.map((stage, i) => [`${i + 1}. ${model.lessons[i]?.title ?? ""}`, stage.total] as [string, number]), rooms: [] };
+  };
+  const filmStages = async (): Promise<StageFrame[]> => {
+    const frames: StageFrame[] = [], keep = step;
+    setPlaying(false); setSelected(null);
+    let spent = 0;
+    for (let i = 0; i < model.lessons.length; i += 1) {
+      setBusy(`Filming stage ${i + 1} of ${model.lessons.length}…`);
+      setStep(i); if (model.id === "bungalow") setSection(initialSection(model.id, i));
+      await wait(i === 0 ? 2000 : 1500);
+      spent += costs.priced[i]?.total ?? 0;
+      const image = await snap();
+      if (image) frames.push({ image, title: model.lessons[i].title, note: model.lessons[i].short, spent });
+    }
+    setStep(keep);
+    return frames;
+  };
+  const runExport = async (label: string, job: () => Promise<void>) => {
+    if (busy) return;
+    setBusy(label);
+    try { await job(); } catch (error) { window.alert(error instanceof Error ? error.message : "Download failed. Please try again."); } finally { setBusy(null); }
+  };
+  const downloadImage = () => runExport("Preparing image…", async () => {
+    const shot = await snap();
+    if (!shot) throw new Error("The 3D model is still loading. Try again in a moment.");
+    download(await brandedImage(shot, exportInfo()), fileName(model.title, "png"));
+  });
+  const downloadPdf = () => runExport("Preparing PDF…", async () => {
+    const info = exportInfo(), hero = await snap(), frames = await filmStages();
+    setBusy("Writing PDF…");
+    download(await buildPdf(info, hero, [], frames), fileName(model.title, "pdf"));
+  });
+  const downloadVideo = () => runExport("Preparing video…", async () => {
+    const info = exportInfo(), frames = await filmStages();
+    if (!frames.length) throw new Error("The 3D model is still loading. Try again in a moment.");
+    setBusy("Recording video…");
+    const video = await buildVideo(info, frames);
+    download(video.blob, fileName(`${model.title}-construction`, video.ext));
+  });
 
   return <main className={styles.page}>
     <div className={styles.container}>
@@ -146,6 +198,15 @@ export default function ConstructionExplorer() {
             {part && <div className={styles.inspector} aria-live="polite"><div><span className={styles.miniLabel}>SELECTED COMPONENT</span><button type="button" onClick={() => setSelected(null)} aria-label="Clear selected component"><X size={15} /></button></div><h4>{part.title}</h4><p>{part.detail}</p><button type="button" className={styles.focusButton} onClick={() => { setExploded(false); controller.current?.focus(part.id); }}><Focus size={15} />{modelId === "bungalow" ? "Show overall view" : "Focus on this part"}</button></div>}
           </div>
           <div className={styles.playback}><button type="button" onClick={() => chooseStep(step - 1)} disabled={step === 0} aria-label="Previous lesson"><ChevronLeft size={19} /></button><button type="button" className={styles.play} onClick={() => { setSelected(null); if (!playing && step === model.lessons.length - 1) setStep(0); setPlaying(value => !value); }}>{playing ? <Pause size={15} /> : <Play size={15} />}{playing ? "Pause tour" : "Play guided tour"}</button><button type="button" onClick={() => chooseStep(step + 1)} disabled={step === model.lessons.length - 1} aria-label="Next lesson"><ChevronRight size={19} /></button></div>
+        <div className={styles.exportRow}>
+            <label className={styles.speed}>Time per stage<select value={stageSeconds} onChange={event => setStageSeconds(Number(event.target.value))} aria-label="Time per stage">{[3, 5, 10, 15, 20, 30].map(seconds => <option key={seconds} value={seconds}>{seconds} s</option>)}</select></label>
+            <div className={styles.exportButtons}>
+              <button type="button" disabled={Boolean(busy)} onClick={() => void downloadPdf()}><FileText size={14} /> PDF</button>
+              <button type="button" disabled={Boolean(busy)} onClick={() => void downloadImage()}><ImageIcon size={14} /> Image</button>
+              <button type="button" disabled={Boolean(busy)} onClick={() => void downloadVideo()}><Film size={14} /> Video</button>
+            </div>
+            {busy ? <p className={styles.exportBusy}><Download size={13} /> {busy}</p> : <p className={styles.exportNote}>Charismak-branded · made on your device</p>}
+          </div>
         </aside>
         <div className={styles.timeline}><div className={styles.timelineHeading}><span><span className={styles.miniLabel}>CONSTRUCTION SEQUENCE</span><small>{step + 1} of {model.lessons.length}</small></span><button type="button" onClick={() => { chooseStep(model.lessons.length - 1); setSection(modelId === "plumbing" || modelId === "electrical"); setExploded(false); }}>Explore complete model <ArrowRight size={14} /></button></div><div className={styles.steps}>{model.lessons.map((item, index) => <button type="button" key={item.title} aria-current={step === index ? "step" : undefined} onClick={() => chooseStep(index)}><span>{index < step ? <Check size={14} /> : String(index + 1).padStart(2, "0")}</span><small>{item.short}</small></button>)}</div><label className={styles.srOnly} htmlFor="construction-step">Construction stage</label><input id="construction-step" className={styles.stageRange} type="range" min={0} max={model.lessons.length - 1} value={step} onChange={event => chooseStep(Number(event.target.value))} aria-valuetext={lesson.title} /></div>
       </section>
