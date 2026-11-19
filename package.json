@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/typecheck.mjs && node scripts/prepare-construction-assets.mjs && npm run test:public-estimator && npm run test:estimate-finish-level && npm run test:material-estimator && npm run test:estimator-foundation && npm run test:supplier-price-validity && npm run test:release-trust && npm run test:price-freshness && npm run test:rate-bank && npm run test:saved-rate && npm run test:rate-3d && npm run test:walkthrough && npm run test:enquiry && npm run test:site-pictures && npm run test:construction-walkthrough && npm run test:construction-lighting && npm run test:construction-learning && npm run test:construction-costs && npm run test:construction-studio && npm run test:construction-exports && npm run test:construction-drawings && NODE_OPTIONS=--max-old-space-size=6144 next build",
+    "build": "node scripts/typecheck.mjs && node scripts/prepare-construction-assets.mjs && npm run test:public-estimator && npm run test:estimate-finish-level && npm run test:material-estimator && npm run test:estimator-foundation && npm run test:supplier-price-validity && npm run test:release-trust && npm run test:price-freshness && npm run test:rate-bank && npm run test:saved-rate && npm run test:rate-3d && npm run test:walkthrough && npm run test:design-takeoff && npm run test:enquiry && npm run test:site-pictures && npm run test:construction-walkthrough && npm run test:construction-lighting && npm run test:construction-learning && npm run test:construction-costs && npm run test:construction-studio && npm run test:construction-exports && npm run test:construction-drawings && NODE_OPTIONS=--max-old-space-size=6144 next build",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "node scripts/typecheck.mjs",
@@ -23,6 +23,7 @@
     "test:estimate-finish-level": "node --import tsx scripts/verify-estimate-finish-level.ts",
     "test:saved-rate": "node --import tsx scripts/verify-saved-rate.ts",
     "test:walkthrough": "node --import tsx scripts/verify-walkthrough.ts",
+    "test:design-takeoff": "node --import tsx scripts/verify-design-takeoff.ts",
     "test:construction-walkthrough": "node --import tsx scripts/verify-construction-walkthrough.ts",
     "test:construction-lighting": "node --import tsx scripts/verify-construction-lighting.ts",
     "test:construction-learning": "node --import tsx scripts/verify-construction-learning.ts",

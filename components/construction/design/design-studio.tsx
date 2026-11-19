@@ -10,6 +10,7 @@ import type { ComponentProps } from "react";
 
 import { BuildTab } from "./pascal/build-tab";
 import { PaintPanel } from "./pascal/paint-panel";
+import PriceDesignButton from "./price-design-panel";
 
 type SceneGraph = NonNullable<Awaited<ReturnType<NonNullable<ComponentProps<typeof Editor>["onLoad"]>>>>;
 
@@ -49,8 +50,11 @@ export default function DesignStudio() {
   return (
     <main className="dark flex h-screen flex-col bg-[#02080F] pt-20">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 px-4 py-2 text-xs text-white/60">
-        <span>
-          <strong className="text-white">Design Studio</strong> · free · your design is saved in this browser only
+        <span className="flex flex-wrap items-center gap-3">
+          <span>
+            <strong className="text-white">Design Studio</strong> · free · your design is saved in this browser only
+          </span>
+          <PriceDesignButton />
         </span>
         <span>
           Built on{" "}
