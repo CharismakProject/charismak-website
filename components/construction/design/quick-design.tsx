@@ -6,10 +6,11 @@ import { acquireSceneReadOnlyLease, useScene } from "@pascal-app/core";
 import { useViewer, Viewer } from "@pascal-app/viewer";
 import { Html, OrbitControls } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
-import { ArrowRight, Eye, Footprints, Home, MapPin, Moon, PencilRuler, RotateCcw, Shuffle, Sofa, Sun, Sunset, Trees, X } from "lucide-react";
+import { ArrowRight, Eye, Footprints, Pause, Play, Home, MapPin, Moon, PencilRuler, RotateCcw, Shuffle, Sofa, Sun, Sunset, Trees, X } from "lucide-react";
 
 import { priceDesign } from "@/lib/construction/design-takeoff";
 import PlanDrawing from "./plan-drawing";
+import { BUILD_STAGES, costToStage, LAST_STAGE, stageNodes } from "@/lib/construction/build-stages";
 import {
   FLOOR_FINISHES,
   generateHouseScene,
@@ -135,6 +136,20 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
   const [walking, setWalking] = useState(false);
   const [view, setView] = useState<"split" | "3d" | "plan">("split");
   const [planFloor, setPlanFloor] = useState(0);
+  const [stage, setStage] = useState<number | null>(null);
+  const [playing, setPlaying] = useState(false);
+  // Play construction: one stage every 2.8 s, then hold the finished building.
+  useEffect(() => {
+    if (!playing) return;
+    const timer = window.setInterval(() => {
+      setStage((current) => {
+        const next = (current ?? -1) + 1;
+        if (next >= LAST_STAGE) { setPlaying(false); return LAST_STAGE; }
+        return next;
+      });
+    }, 2800);
+    return () => window.clearInterval(timer);
+  }, [playing]);
   const [location, chooseLocation] = useRateLocation();
   const [showBreakdown, setShowBreakdown] = useState(false);
 
@@ -157,19 +172,20 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
 
   // What the viewer shows: "see inside" lifts the roof and ceilings and hides floors above the chosen one.
   const shown = useMemo(() => {
+    const base = stage === null ? scene.nodes : stageNodes(scene.nodes, stage, { width: deferredHouse.width / 2, length: deferredHouse.length / 2 });
     if (!inside && !walking) {
       // Roof on: indoor furniture is hidden (some models draw through the roof otherwise; it is covered anyway).
       const halfW = deferredHouse.width / 2;
       const halfL = deferredHouse.length / 2;
       const copy: typeof scene.nodes = {};
-      for (const [id, node] of Object.entries(scene.nodes)) {
+      for (const [id, node] of Object.entries(base)) {
         const [x = 0, , z = 0] = (node.position as number[] | undefined) ?? [];
         const indoor = node.type === "item" && Math.abs(x) < halfW && Math.abs(z) < halfL;
-        copy[id] = indoor ? { ...node, visible: false } : node;
+        copy[id] = indoor && (stage === null || stage >= LAST_STAGE) ? { ...node, visible: false } : node;
       }
       return copy;
     }
-    if (!inside) return scene.nodes;
+    if (!inside) return base;
     const levelOf = (id: string | null): number => {
       let node = id ? scene.nodes[id] : undefined;
       for (let guard = 0; node && guard < 10; guard += 1) {
@@ -179,12 +195,12 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
       return 0;
     };
     const copy: typeof scene.nodes = {};
-    for (const [id, node] of Object.entries(scene.nodes)) {
+    for (const [id, node] of Object.entries(base)) {
       const hide = node.type === "roof" || node.type === "ceiling" || (node.type === "level" && Number(node.level) > viewFloor) || (node.type !== "level" && levelOf(node.parentId) > viewFloor);
       copy[id] = hide ? { ...node, visible: false } : node;
     }
     return copy;
-  }, [scene, inside, viewFloor, walking, deferredHouse.width, deferredHouse.length]);
+  }, [scene, inside, viewFloor, walking, deferredHouse.width, deferredHouse.length, stage]);
 
   useEffect(() => {
     const release = acquireSceneReadOnlyLease();
@@ -360,6 +376,9 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
               <button key={id} type="button" onClick={() => setView(id)} aria-pressed={view === id} className={`rounded-full px-2.5 py-1 text-xs font-bold ${view === id ? "bg-white text-[#02080F]" : "text-white/80"}`}>{label}</button>
             ))}
           </div>
+          <button type="button" onClick={() => { setInside(false); setStage(0); setPlaying(true); }} className="inline-flex items-center gap-1.5 rounded-full bg-[#0E7C66] px-3 py-1.5 text-xs font-bold text-white shadow-lg hover:brightness-110">
+            <Play className="h-3.5 w-3.5" /> {stage !== null && stage < LAST_STAGE ? "Restart build" : "Play construction"}
+          </button>
           <button type="button" onClick={() => setWalking(true)} className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#D9B26A] to-[#F29644] px-3 py-1.5 text-xs font-bold text-[#02080F] shadow-lg">
             <Footprints className="h-3.5 w-3.5" /> Walk inside
           </button>
@@ -374,6 +393,23 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
             </div>
           ) : null}
         </div>
+        {stage !== null && !walking ? (
+          <div className="absolute inset-x-3 bottom-14 mx-auto max-w-xl rounded-xl bg-black/75 p-3 text-white shadow-xl backdrop-blur">
+            <div className="flex items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-[#F2C879]">
+              <span>Stage {stage + 1} of {BUILD_STAGES.length}</span>
+              <span className="font-mono text-xs normal-case tracking-normal text-white">{money(costToStage(takeoff.lines, stage))} spent</span>
+            </div>
+            <p className="mt-1 text-sm font-bold">{BUILD_STAGES[stage].title}</p>
+            <p className="text-xs text-white/70">{BUILD_STAGES[stage].note}</p>
+            <div className="mt-2 flex items-center gap-1">
+              {BUILD_STAGES.map((item, i) => (
+                <button key={item.title} type="button" title={item.title} aria-label={item.title} onClick={() => { setPlaying(false); setStage(i); }} className={`h-1.5 flex-1 rounded-full ${i <= stage ? "bg-[#F2C879]" : "bg-white/20"}`} />
+              ))}
+              <button type="button" onClick={() => setPlaying((p) => !p)} className="ml-2 rounded-full bg-white/15 p-1" aria-label={playing ? "Pause" : "Play"}>{playing ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}</button>
+              <button type="button" onClick={() => { setPlaying(false); setStage(null); }} className="rounded-full bg-white/15 p-1" aria-label="Close"><X className="h-3.5 w-3.5" /></button>
+            </div>
+          </div>
+        ) : null}
         <div className={`absolute bottom-3 right-3 flex rounded-full bg-black/60 p-0.5 backdrop-blur ${walking ? "hidden" : ""}`} role="group" aria-label="Time of day">
           {([["midday", "Day", Sun], ["golden", "Sunset", Sunset], ["night", "Night", Moon]] as const).map(([id, label, Icon]) => (
             <button key={id} type="button" onClick={() => setTimeOfDay(id)} aria-pressed={timeOfDay === id} className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${timeOfDay === id ? "bg-white text-[#02080F]" : "text-white/80"}`}>
