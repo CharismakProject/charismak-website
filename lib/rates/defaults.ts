@@ -255,7 +255,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "region": "Abuja / Nasarawa",
     "city": "Abuja–Keffi market",
     "currency": "NGN",
-    "lastReviewed": "2026-09-26",
+    "lastReviewed": "2026-11-19",
     "slug": "imported-laterite-fill",
     "code": "RB-EW-004",
     "title": "Imported laterite filling, spread and compact",
@@ -273,7 +273,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 1.1,
         "unit": "m³",
-        "unitRate": 8000,
+        "unitRate": 9600,
         "note": "Working conversion from bulk tipper benchmark."
       },
       {
@@ -495,7 +495,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "region": "Abuja / Nasarawa",
     "city": "Abuja–Keffi market",
     "currency": "NGN",
-    "lastReviewed": "2026-09-26",
+    "lastReviewed": "2026-11-19",
     "slug": "c15-blinding-1-3-6",
     "code": "RB-CO-002",
     "title": "C15 / nominal 1:3:6 concrete blinding",
@@ -513,7 +513,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 4.568,
         "unit": "bag",
-        "unitRate": 12500,
+        "unitRate": 12000,
         "note": "1.54 dry factor for 1:3:6 mix. Sep 2026 Abuja working bulk reference: ₦12,500/50kg bag; editable."
       },
       {
@@ -565,7 +565,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "region": "Abuja / Nasarawa",
     "city": "Abuja–Keffi market",
     "currency": "NGN",
-    "lastReviewed": "2026-09-26",
+    "lastReviewed": "2026-11-19",
     "slug": "c20-nominal-concrete-1-2-4",
     "code": "RB-CO-003",
     "title": "C20 nominal 1:2:4 site-mixed concrete",
@@ -583,7 +583,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 6.525,
         "unit": "bag",
-        "unitRate": 12500,
+        "unitRate": 12000,
         "note": "Sep 2026 Abuja working bulk reference: ₦12,500/50kg bag; editable."
       },
       {
@@ -635,7 +635,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "region": "Abuja / Nasarawa",
     "city": "Abuja–Keffi market",
     "currency": "NGN",
-    "lastReviewed": "2026-09-26",
+    "lastReviewed": "2026-11-19",
     "slug": "c25-structural-concrete-310kg",
     "code": "RB-CO-001",
     "title": "C25 structural concrete — site mixed",
@@ -653,7 +653,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 6.386,
         "unit": "bag",
-        "unitRate": 12500,
+        "unitRate": 12000,
         "note": "6.2 bags theoretical minimum × 1.03. Sep 2026 Abuja working bulk reference: ₦12,500/50kg bag; editable."
       },
       {
@@ -759,7 +759,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "region": "Abuja / Nasarawa",
     "city": "Abuja–Keffi market",
     "currency": "NGN",
-    "lastReviewed": "2026-09-26",
+    "lastReviewed": "2026-11-19",
     "slug": "230mm-hollow-sandcrete-blockwork",
     "code": "RB-MA-001",
     "title": "230 mm hollow sandcrete blockwork in 1:6 mortar",
@@ -786,7 +786,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.08205,
         "unit": "bag",
-        "unitRate": 12500,
+        "unitRate": 12000,
         "note": "Sep 2026 Abuja working bulk reference: ₦12,500/50kg bag; editable."
       },
       {
@@ -822,7 +822,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "region": "Abuja / Nasarawa",
     "city": "Abuja–Keffi market",
     "currency": "NGN",
-    "lastReviewed": "2026-09-26",
+    "lastReviewed": "2026-11-19",
     "slug": "150mm-hollow-sandcrete-blockwork",
     "code": "RB-MA-002",
     "title": "150 mm hollow sandcrete blockwork in mortar",
@@ -849,7 +849,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.0656,
         "unit": "bag",
-        "unitRate": 12500,
+        "unitRate": 12000,
         "note": "Sep 2026 Abuja working bulk reference: ₦12,500/50kg bag; editable."
       },
       {
@@ -885,7 +885,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "region": "Abuja / Nasarawa",
     "city": "Abuja–Keffi market",
     "currency": "NGN",
-    "lastReviewed": "2026-09-26",
+    "lastReviewed": "2026-11-19",
     "slug": "15mm-cement-sand-plaster",
     "code": "RB-FN-001",
     "title": "15 mm cement-sand plaster/render to blockwork",
@@ -903,7 +903,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.15,
         "unit": "bag",
-        "unitRate": 12500,
+        "unitRate": 12000,
         "note": "Sep 2026 Abuja working bulk reference: ₦12,500/50kg bag; editable."
       },
       {
@@ -938,7 +938,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "region": "Abuja / Nasarawa",
     "city": "Abuja–Keffi market",
     "currency": "NGN",
-    "lastReviewed": "2026-11-08",
+    "lastReviewed": "2026-11-19",
     "slug": "20mm-wall-tile-backing",
     "code": "RB-FN-002",
     "title": "20 mm cement-sand backing to receive wall tiles",
@@ -956,7 +956,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.185,
         "unit": "bag",
-        "unitRate": 12500,
+        "unitRate": 12000,
         "note": "Sep 2026 Abuja working bulk reference: ₦12,500/50kg bag; editable."
       },
       {
@@ -991,7 +991,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "region": "Abuja / Nasarawa",
     "city": "Abuja–Keffi market",
     "currency": "NGN",
-    "lastReviewed": "2026-09-26",
+    "lastReviewed": "2026-11-19",
     "slug": "30mm-floor-screed",
     "code": "RB-FN-003",
     "title": "30 mm cement-sand floor screed",
@@ -1009,7 +1009,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.37,
         "unit": "bag",
-        "unitRate": 12500,
+        "unitRate": 12000,
         "note": "Sep 2026 Abuja working bulk reference: ₦12,500/50kg bag; editable."
       },
       {
@@ -1217,7 +1217,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "region": "Abuja / Nasarawa",
     "city": "Abuja–Keffi market",
     "currency": "NGN",
-    "lastReviewed": "2026-11-08",
+    "lastReviewed": "2026-11-19",
     "slug": "timber-formwork-foundation-sides",
     "code": "RB-FW-001",
     "title": "Traditional well-sawn plank formwork to below-ground concrete",
@@ -1244,7 +1244,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.23152777777777778,
         "unit": "3.6m length",
-        "unitRate": 1300,
+        "unitRate": 1800,
         "note": "Working geometry: about 1.667m vertical + 1.667m horizontal timber per m², then four reuses."
       },
       {
@@ -1262,7 +1262,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "consumable",
         "quantity": 0.006,
         "unit": "bag",
-        "unitRate": 27000
+        "unitRate": 31000
       },
       {
         "id": "fwf-release",
@@ -1304,7 +1304,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "region": "Abuja / Nasarawa",
     "city": "Abuja–Keffi market",
     "currency": "NGN",
-    "lastReviewed": "2026-09-26",
+    "lastReviewed": "2026-11-19",
     "slug": "plywood-formwork-columns",
     "code": "RB-FW-002",
     "title": "Economical marine-plywood formwork to RC columns",
@@ -1322,7 +1322,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.11197706709665863,
         "unit": "sheet",
-        "unitRate": 27500,
+        "unitRate": 33000,
         "note": "4×8 sheet = 2.9768m²; charged over 3 casting cycles. Abuja construction-board working reference ₦27,500/sheet; editable."
       },
       {
@@ -1331,7 +1331,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.3,
         "unit": "length",
-        "unitRate": 1300
+        "unitRate": 1800
       },
       {
         "id": "fwc-2x2",
@@ -1356,7 +1356,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "consumable",
         "quantity": 0.008,
         "unit": "bag",
-        "unitRate": 27000
+        "unitRate": 31000
       },
       {
         "id": "fwc-release",
@@ -1398,7 +1398,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "region": "Abuja / Nasarawa",
     "city": "Abuja–Keffi market",
     "currency": "NGN",
-    "lastReviewed": "2026-09-26",
+    "lastReviewed": "2026-11-19",
     "slug": "plywood-formwork-beams-lintels",
     "code": "RB-FW-003",
     "title": "Economical marine-plywood formwork to beams and lintels",
@@ -1416,7 +1416,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.11197706709665863,
         "unit": "sheet",
-        "unitRate": 27500,
+        "unitRate": 33000,
         "note": "4×8 sheet = 2.9768m²; charged over 3 casting cycles. Abuja construction-board working reference ₦27,500/sheet; editable."
       },
       {
@@ -1425,7 +1425,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.35,
         "unit": "length",
-        "unitRate": 1300
+        "unitRate": 1800
       },
       {
         "id": "fwb-2x2",
@@ -1458,7 +1458,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "consumable",
         "quantity": 0.008,
         "unit": "bag",
-        "unitRate": 27000
+        "unitRate": 31000
       },
       {
         "id": "fwb-release",
@@ -1500,7 +1500,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "region": "Abuja / Nasarawa",
     "city": "Abuja–Keffi market",
     "currency": "NGN",
-    "lastReviewed": "2026-09-26",
+    "lastReviewed": "2026-11-19",
     "slug": "plywood-formwork-slab-soffit",
     "code": "RB-FW-004",
     "title": "Economical marine-plywood formwork to suspended slab soffit",
@@ -1518,7 +1518,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.11197706709665863,
         "unit": "sheet",
-        "unitRate": 27500,
+        "unitRate": 33000,
         "note": "4×8 sheet = 2.9768m²; charged over 3 casting cycles. Abuja construction-board working reference ₦27,500/sheet; editable."
       },
       {
@@ -1527,7 +1527,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.3,
         "unit": "length",
-        "unitRate": 1300
+        "unitRate": 1800
       },
       {
         "id": "fws-2x2",
@@ -1569,7 +1569,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "consumable",
         "quantity": 0.01,
         "unit": "bag",
-        "unitRate": 27000
+        "unitRate": 31000
       },
       {
         "id": "fws-release",
@@ -1611,7 +1611,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "region": "Abuja / Nasarawa",
     "city": "Abuja–Keffi market",
     "currency": "NGN",
-    "lastReviewed": "2026-09-26",
+    "lastReviewed": "2026-11-19",
     "slug": "plywood-formwork-staircase",
     "code": "RB-FW-005",
     "title": "Economical marine-plywood formwork to reinforced concrete staircase",
@@ -1629,7 +1629,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.11197706709665863,
         "unit": "sheet",
-        "unitRate": 27500,
+        "unitRate": 33000,
         "note": "4×8 sheet = 2.9768m²; charged over 3 casting cycles. Abuja construction-board working reference ₦27,500/sheet; editable."
       },
       {
@@ -1638,7 +1638,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.35,
         "unit": "length",
-        "unitRate": 1300
+        "unitRate": 1800
       },
       {
         "id": "fwst-2x2",
@@ -1671,7 +1671,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "consumable",
         "quantity": 0.012,
         "unit": "bag",
-        "unitRate": 27000
+        "unitRate": 31000
       },
       {
         "id": "fwst-release",
@@ -2021,7 +2021,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "region": "Abuja / Nasarawa",
     "city": "Abuja–Keffi market",
     "currency": "NGN",
-    "lastReviewed": "2026-09-26",
+    "lastReviewed": "2026-11-19",
     "status": "review",
     "allowances": {
       "materialFluctuation": 0.05,
@@ -2046,7 +2046,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.11197706709665863,
         "unit": "sheet",
-        "unitRate": 27500
+        "unitRate": 33000
       },
       {
         "id": "fww-2x3",
@@ -2054,7 +2054,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.3,
         "unit": "3.6m length",
-        "unitRate": 1300
+        "unitRate": 1800
       },
       {
         "id": "fww-2x6",
@@ -2078,7 +2078,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "consumable",
         "quantity": 0.008,
         "unit": "bag",
-        "unitRate": 27000
+        "unitRate": 31000
       },
       {
         "id": "fww-release",
@@ -2113,7 +2113,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "region": "Abuja / Nasarawa",
     "city": "Abuja–Keffi market",
     "currency": "NGN",
-    "lastReviewed": "2026-09-26",
+    "lastReviewed": "2026-11-19",
     "status": "review",
     "allowances": {
       "materialFluctuation": 0.05,
@@ -2146,7 +2146,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.28,
         "unit": "3.6m length",
-        "unitRate": 1300
+        "unitRate": 1800
       },
       {
         "id": "fwcp-2x6",
@@ -2170,7 +2170,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "consumable",
         "quantity": 0.008,
         "unit": "bag",
-        "unitRate": 27000
+        "unitRate": 31000
       },
       {
         "id": "fwcp-release",
@@ -2205,7 +2205,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "region": "Abuja / Nasarawa",
     "city": "Abuja–Keffi market",
     "currency": "NGN",
-    "lastReviewed": "2026-09-26",
+    "lastReviewed": "2026-11-19",
     "status": "review",
     "allowances": {
       "materialFluctuation": 0.05,
@@ -2238,7 +2238,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.3,
         "unit": "3.6m length",
-        "unitRate": 1300
+        "unitRate": 1800
       },
       {
         "id": "fwbp-2x6",
@@ -2262,7 +2262,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "consumable",
         "quantity": 0.008,
         "unit": "bag",
-        "unitRate": 27000
+        "unitRate": 31000
       },
       {
         "id": "fwbp-release",
@@ -2297,7 +2297,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "region": "Abuja / Nasarawa",
     "city": "Abuja–Keffi market",
     "currency": "NGN",
-    "lastReviewed": "2026-09-26",
+    "lastReviewed": "2026-11-19",
     "status": "review",
     "allowances": {
       "materialFluctuation": 0.05,
@@ -2330,7 +2330,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.18,
         "unit": "3.6m length",
-        "unitRate": 1300
+        "unitRate": 1800
       },
       {
         "id": "fwup-2x2",
@@ -2346,7 +2346,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "consumable",
         "quantity": 0.006,
         "unit": "bag",
-        "unitRate": 27000
+        "unitRate": 31000
       },
       {
         "id": "fwup-release",
@@ -2381,7 +2381,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "region": "Abuja / Nasarawa",
     "city": "Abuja–Keffi market",
     "currency": "NGN",
-    "lastReviewed": "2026-09-26",
+    "lastReviewed": "2026-11-19",
     "status": "review",
     "allowances": {
       "materialFluctuation": 0.05,
@@ -2414,7 +2414,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.25,
         "unit": "3.6m length",
-        "unitRate": 1300
+        "unitRate": 1800
       },
       {
         "id": "fwp-2x6",
@@ -2446,7 +2446,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "consumable",
         "quantity": 0.01,
         "unit": "bag",
-        "unitRate": 27000
+        "unitRate": 31000
       },
       {
         "id": "fwp-release",
@@ -2481,7 +2481,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "region": "Abuja / Nasarawa",
     "city": "Abuja–Keffi market",
     "currency": "NGN",
-    "lastReviewed": "2026-09-26",
+    "lastReviewed": "2026-11-19",
     "status": "review",
     "allowances": {
       "materialFluctuation": 0.05,
@@ -2506,7 +2506,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.08043840000000001,
         "unit": "50kg bag",
-        "unitRate": 12500,
+        "unitRate": 12000,
         "note": "Per 1m² at 10mm: wet volume 0.010m³ × 1.33 dry factor × 1/5 cement share × 5% physical waste."
       },
       {
@@ -2544,7 +2544,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "region": "Abuja / Nasarawa",
     "city": "Abuja–Keffi market",
     "currency": "NGN",
-    "lastReviewed": "2026-09-26",
+    "lastReviewed": "2026-11-19",
     "status": "review",
     "allowances": {
       "materialFluctuation": 0.05,
@@ -2569,7 +2569,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.16087680000000001,
         "unit": "50kg bag",
-        "unitRate": 12500,
+        "unitRate": 12000,
         "note": "Per 1m² at 20mm: wet volume 0.020m³ × 1.33 dry factor × 1/5 cement share × 5% physical waste."
       },
       {
@@ -2607,7 +2607,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "region": "Abuja / Nasarawa",
     "city": "Abuja–Keffi market",
     "currency": "NGN",
-    "lastReviewed": "2026-09-26",
+    "lastReviewed": "2026-11-19",
     "status": "review",
     "allowances": {
       "materialFluctuation": 0.05,
@@ -2632,7 +2632,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.18500832000000003,
         "unit": "50kg bag",
-        "unitRate": 12500,
+        "unitRate": 12000,
         "note": "Per 1m² at 23mm: wet volume 0.023m³ × 1.33 dry factor × 1/5 cement share × 5% physical waste."
       },
       {
@@ -2670,7 +2670,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "region": "Abuja / Nasarawa",
     "city": "Abuja–Keffi market",
     "currency": "NGN",
-    "lastReviewed": "2026-09-26",
+    "lastReviewed": "2026-11-19",
     "status": "review",
     "allowances": {
       "materialFluctuation": 0.05,
@@ -2695,7 +2695,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "material",
         "quantity": 0.25740288000000006,
         "unit": "50kg bag",
-        "unitRate": 12500,
+        "unitRate": 12000,
         "note": "Per 1m² at 32mm: wet volume 0.032m³ × 1.33 dry factor × 1/5 cement share × 5% physical waste."
       },
       {
