@@ -11,7 +11,7 @@ import { ArrowRight, Download, Eye, Film, FileText, Footprints, Image as ImageIc
 import { priceDesign } from "@/lib/construction/design-takeoff";
 import PlanDrawing from "./plan-drawing";
 import CaptureBridge, { type CaptureFn } from "./capture-bridge";
-import { brandedImage, buildPdf, buildVideo, download, fileName, planPng, type ExportInfo, type StageFrame } from "@/lib/construction/design-export";
+import { brandedImage, buildPdf, isBlankFrame, buildVideo, download, fileName, planPng, type ExportInfo, type StageFrame } from "@/lib/construction/design-export";
 import { BUILD_STAGES, costToStage, LAST_STAGE, stageNodes } from "@/lib/construction/build-stages";
 import {
   FLOOR_FINISHES,
@@ -288,11 +288,11 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
       await wait(i === 0 ? 2500 : 1800);
       // A frame caught mid-rebuild comes out blank (a tiny PNG): give it more time and try again.
       let image = await capture();
-      for (let attempt = 0; attempt < 4 && (!image || image.size < 60_000); attempt += 1) {
+      for (let attempt = 0; attempt < 5 && (!image || (await isBlankFrame(image))); attempt += 1) {
         await wait(1500);
         image = await capture();
       }
-      if (image) frames.push({ image, title: BUILD_STAGES[i].title, note: BUILD_STAGES[i].note, spent: costToStage(takeoff.lines, i) });
+      if (image && !(await isBlankFrame(image))) frames.push({ image, title: BUILD_STAGES[i].title, note: BUILD_STAGES[i].note, spent: costToStage(takeoff.lines, i) });
     }
     setStage(null);
     return frames;
@@ -313,7 +313,8 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
     }
   };
   const downloadImage = () => run("Preparing image…", async () => {
-    const shot = await captureRef.current?.();
+    let shot = await captureRef.current?.();
+    if (shot && (await isBlankFrame(shot))) { await wait(1500); shot = await captureRef.current?.(); }
     if (!shot) throw new Error("Could not capture the 3D view. Switch to the 3D view and try again.");
     download(await brandedImage(shot, exportInfo()), fileName(exportInfo().title, "png"));
   });
@@ -423,8 +424,8 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
 
         <p className="mt-5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#D9B26A]">Step 5 · Download (Charismak branded)</p>
         <div className="mt-2 grid grid-cols-2 gap-2">
-          {([["PDF report", FileText, downloadPdf], ["3D image", ImageIcon, downloadImage], ["Floor plan", LayoutGrid, downloadPlan], ["Build video", Film, downloadVideo]] as const).map(([label, Icon, action]) => (
-            <button key={label} type="button" disabled={Boolean(busy)} onClick={() => void action()} className="inline-flex items-center justify-center gap-1.5 rounded-md border border-white/15 bg-white/5 px-2 py-2 text-xs font-bold text-white hover:border-[#D9B26A] disabled:opacity-50">
+          {([["PDF report", FileText], ["3D image", ImageIcon], ["Floor plan", LayoutGrid], ["Build video", Film]] as const).map(([label, Icon]) => (
+            <button key={label} type="button" disabled={Boolean(busy)} onClick={() => void (label === "PDF report" ? downloadPdf() : label === "3D image" ? downloadImage() : label === "Floor plan" ? downloadPlan() : downloadVideo())} className="inline-flex items-center justify-center gap-1.5 rounded-md border border-white/15 bg-white/5 px-2 py-2 text-xs font-bold text-white hover:border-[#D9B26A] disabled:opacity-50">
               <Icon className="h-3.5 w-3.5 text-[#D9B26A]" /> {label}
             </button>
           ))}

@@ -111,6 +111,26 @@ async function brand(ctx: CanvasRenderingContext2D, w: number, h: number, info: 
   ctx.textAlign = "left";
 }
 
+/** True when a captured frame is (nearly) one flat colour — the 3D view had not finished drawing. */
+export async function isBlankFrame(blob: Blob) {
+  try {
+    const image = await blobImage(blob);
+    const canvas = document.createElement("canvas");
+    canvas.width = 32;
+    canvas.height = 20;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
+    ctx.drawImage(image, 0, 0, 32, 20);
+    const data = ctx.getImageData(0, 0, 32, 20).data;
+    let sum = 0, sq = 0;
+    const n = data.length / 4;
+    for (let i = 0; i < data.length; i += 4) { const l = 0.3 * data[i] + 0.59 * data[i + 1] + 0.11 * data[i + 2]; sum += l; sq += l * l; }
+    const mean = sum / n;
+    return Math.sqrt(Math.max(0, sq / n - mean * mean)) < 6;
+  } catch {
+    return true;
+  }
+}
+
 export async function brandedImage(shot: Blob, info: ExportInfo) {
   const image = await blobImage(shot);
   const canvas = document.createElement("canvas");
