@@ -1,15 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { acquireSceneReadOnlyLease, useScene } from "@pascal-app/core";
 import { useViewer, Viewer } from "@pascal-app/viewer";
 import { Html, OrbitControls } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
-import { ArrowRight, Eye, Footprints, Pause, Play, Home, MapPin, Moon, PencilRuler, RotateCcw, Shuffle, Sofa, Sun, Sunset, Trees, X } from "lucide-react";
+import { ArrowRight, Download, Eye, Film, FileText, Footprints, Image as ImageIcon, LayoutGrid, Pause, Play, Home, MapPin, Moon, PencilRuler, RotateCcw, Shuffle, Sofa, Sun, Sunset, Trees, X } from "lucide-react";
 
 import { priceDesign } from "@/lib/construction/design-takeoff";
 import PlanDrawing from "./plan-drawing";
+import CaptureBridge, { type CaptureFn } from "./capture-bridge";
+import { brandedImage, buildPdf, buildVideo, download, fileName, planPng, type ExportInfo, type StageFrame } from "@/lib/construction/design-export";
 import { BUILD_STAGES, costToStage, LAST_STAGE, stageNodes } from "@/lib/construction/build-stages";
 import {
   FLOOR_FINISHES,
@@ -150,6 +152,13 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
     }, 2800);
     return () => window.clearInterval(timer);
   }, [playing]);
+
+  // Branded downloads, all made in the browser.
+  const captureRef = useRef<CaptureFn | null>(null);
+  const onCaptureReady = useCallback((capture: CaptureFn | null) => { captureRef.current = capture; }, []);
+  const planRefs = useRef<(SVGSVGElement | null)[]>([]);
+  const [busy, setBusy] = useState<string | null>(null);
+  const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
   const [location, chooseLocation] = useRateLocation();
   const [showBreakdown, setShowBreakdown] = useState(false);
 
@@ -254,6 +263,80 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
   const furniture = Object.values(scene.nodes).filter((node) => node.type === "item").length;
   const bedrooms = Object.values(scene.nodes).filter((node) => node.type === "zone" && /bedroom/i.test(String(node.name))).length;
   const limits = sizeLimits(house.plan);
+  const exportInfo = (): ExportInfo => ({
+    title: currentPreset?.label ?? "Charismak design",
+    size: `${house.width} × ${house.length} m · ${house.floors} floor${house.floors > 1 ? "s" : ""}`,
+    summary: currentPreset?.summary ?? "",
+    floorArea: takeoff.floorArea,
+    total: takeoff.total,
+    location: location.name,
+    groups,
+    rooms: scene.plan.floors.flatMap((floor) => floor.rooms.map((room) => {
+      const poly = room.poly.map(([x, y]) => [x * (house.width / (scene.plan.W + 0.23)), y * (house.length / (scene.plan.L + 0.23))]);
+      return { name: room.name, area: Math.abs(poly.reduce((acc, [x1, y1], i) => { const [x2, y2] = poly[(i + 1) % poly.length]; return acc + x1 * y2 - x2 * y1; }, 0)) / 2 };
+    })),
+  });
+  const plansAsPng = async () => (await Promise.all(planRefs.current.slice(0, house.floors).map((svg) => (svg ? planPng(svg) : null)))).filter(Boolean) as Blob[];
+  const captureStages = async (): Promise<StageFrame[]> => {
+    const capture = captureRef.current;
+    if (!capture) return [];
+    setInside(false); setWalking(false); setPlaying(false);
+    const frames: StageFrame[] = [];
+    for (let i = 0; i < BUILD_STAGES.length; i += 1) {
+      setStage(i);
+      setBusy(`Filming stage ${i + 1} of ${BUILD_STAGES.length}…`);
+      await wait(i === 0 ? 2500 : 1800);
+      // A frame caught mid-rebuild comes out blank (a tiny PNG): give it more time and try again.
+      let image = await capture();
+      for (let attempt = 0; attempt < 4 && (!image || image.size < 60_000); attempt += 1) {
+        await wait(1500);
+        image = await capture();
+      }
+      if (image) frames.push({ image, title: BUILD_STAGES[i].title, note: BUILD_STAGES[i].note, spent: costToStage(takeoff.lines, i) });
+    }
+    setStage(null);
+    return frames;
+  };
+  const run = async (label: string, job: () => Promise<void>, wide = true) => {
+    if (busy) return;
+    setBusy(label);
+    const before = view;
+    try {
+      // Photograph the full-width 3D view, then put the screen back as it was.
+      if (wide && view !== "3d") { setView("3d"); await wait(1500); }
+      await job();
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Download failed. Please try again.");
+    } finally {
+      setView(before);
+      setBusy(null);
+    }
+  };
+  const downloadImage = () => run("Preparing image…", async () => {
+    const shot = await captureRef.current?.();
+    if (!shot) throw new Error("Could not capture the 3D view. Switch to the 3D view and try again.");
+    download(await brandedImage(shot, exportInfo()), fileName(exportInfo().title, "png"));
+  });
+  const downloadPlan = () => run("Preparing plan…", async () => {
+    const plans = await plansAsPng();
+    plans.forEach((plan, i) => download(plan, fileName(`${exportInfo().title}-plan${plans.length > 1 ? `-floor-${i + 1}` : ""}`, "png")));
+  }, false);
+  const downloadPdf = () => run("Preparing PDF…", async () => {
+    const info = exportInfo();
+    const hero = await captureRef.current?.() ?? null;
+    const plans = await plansAsPng();
+    const stages = await captureStages();
+    setBusy("Writing PDF…");
+    download(await buildPdf(info, hero, plans, stages), fileName(info.title, "pdf"));
+  });
+  const downloadVideo = () => run("Preparing video…", async () => {
+    const info = exportInfo();
+    const frames = await captureStages();
+    if (!frames.length) throw new Error("Could not capture the 3D view. Switch to the 3D view and try again.");
+    setBusy("Recording video (about 20 s)…");
+    const video = await buildVideo(info, frames);
+    download(video.blob, fileName(`${info.title}-construction`, video.ext));
+  });
   const currentPreset = QUICK_PRESETS.find((preset) => preset.id === house.plan);
 
   return (
@@ -338,6 +421,16 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
           Quick budget from Charismak Rate Bank rates: foundations, floors (and tiles if chosen), walls, plaster, paint, roof, ceilings and fitting doors/windows. Furniture, columns, beams, stairs, electrical, plumbing, external works and contractor margin are not included.
         </p>
 
+        <p className="mt-5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#D9B26A]">Step 5 · Download (Charismak branded)</p>
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          {([["PDF report", FileText, downloadPdf], ["3D image", ImageIcon, downloadImage], ["Floor plan", LayoutGrid, downloadPlan], ["Build video", Film, downloadVideo]] as const).map(([label, Icon, action]) => (
+            <button key={label} type="button" disabled={Boolean(busy)} onClick={() => void action()} className="inline-flex items-center justify-center gap-1.5 rounded-md border border-white/15 bg-white/5 px-2 py-2 text-xs font-bold text-white hover:border-[#D9B26A] disabled:opacity-50">
+              <Icon className="h-3.5 w-3.5 text-[#D9B26A]" /> {label}
+            </button>
+          ))}
+        </div>
+        {busy ? <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-[#F2C879]"><Download className="h-3.5 w-3.5 animate-bounce" /> {busy}</p> : null}
+
         <div className="mt-4 grid gap-2">
           <Link href="/quote" className="inline-flex items-center justify-center gap-2 rounded-md bg-[#D9B26A] px-3 py-2.5 text-sm font-bold text-[#02080F] hover:bg-[#F2C879]">
             Get a proper quote <ArrowRight className="h-4 w-4" />
@@ -354,6 +447,7 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
       <div className="order-1 flex w-full shrink-0 flex-col lg:order-2 lg:h-auto lg:min-h-0 lg:flex-1 lg:flex-row">
       <div className={`relative h-[46vh] min-h-[280px] w-full lg:h-auto ${view === "plan" ? "hidden" : "lg:flex-1"}`}>
         <Viewer>
+          <CaptureBridge onReady={onCaptureReady} />
           {walking ? null : (
             <>
               <OrbitControls makeDefault target={[0, 2, 0]} enableDamping maxPolarAngle={Math.PI * 0.49} />
@@ -418,6 +512,9 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
           ))}
         </div>
         <p className={`pointer-events-none absolute bottom-3 left-3 rounded-full bg-black/50 px-3 py-1 text-[11px] text-white/70 ${walking ? "hidden" : ""}`}>Drag to turn · pinch or scroll to zoom</p>
+      </div>
+      <div aria-hidden className="pointer-events-none fixed left-[-10000px] top-0 w-[1200px]">
+        {Array.from({ length: house.floors }, (_, f) => <PlanDrawing key={f} ref={(el) => { planRefs.current[f] = el; }} house={deferredHouse} floor={f} />)}
       </div>
       {view !== "3d" && !walking ? (
         <div className={`relative flex min-h-[320px] flex-col border-l border-white/10 bg-white ${view === "plan" ? "flex-1" : "lg:w-[42%]"}`}>
