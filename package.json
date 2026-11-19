@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/prepare-construction-assets.mjs && npm run test:public-estimator && npm run test:estimate-finish-level && npm run test:material-estimator && npm run test:estimator-foundation && npm run test:supplier-price-validity && npm run test:release-trust && npm run test:price-freshness && npm run test:rate-bank && npm run test:saved-rate && npm run test:rate-3d && npm run test:walkthrough && npm run test:enquiry && npm run test:site-pictures && npm run test:construction-walkthrough && npm run test:construction-lighting && npm run test:construction-learning && npm run test:construction-costs && npm run test:construction-studio && npm run test:construction-exports && npm run test:construction-drawings && next build",
+    "build": "node scripts/typecheck.mjs && node scripts/prepare-construction-assets.mjs && npm run test:public-estimator && npm run test:estimate-finish-level && npm run test:material-estimator && npm run test:estimator-foundation && npm run test:supplier-price-validity && npm run test:release-trust && npm run test:price-freshness && npm run test:rate-bank && npm run test:saved-rate && npm run test:rate-3d && npm run test:walkthrough && npm run test:enquiry && npm run test:site-pictures && npm run test:construction-walkthrough && npm run test:construction-lighting && npm run test:construction-learning && npm run test:construction-costs && npm run test:construction-studio && npm run test:construction-exports && npm run test:construction-drawings && NODE_OPTIONS=--max-old-space-size=6144 next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "node scripts/typecheck.mjs",
     "test:fence-boq": "node --import tsx scripts/verify-fence-boq.ts",
     "test:bill-lifecycle": "node --import tsx scripts/verify-bill-lifecycle.ts",
     "test:public-estimator": "node --import tsx scripts/verify-public-estimator.ts",
@@ -31,6 +32,12 @@
     "test:construction-drawings": "node --import tsx scripts/verify-construction-drawings.ts"
   },
   "dependencies": {
+    "@pascal-app/core": "^1.1.6",
+    "@pascal-app/editor": "^1.1.6",
+    "@pascal-app/nodes": "^1.1.6",
+    "@pascal-app/viewer": "^1.1.6",
+    "@react-three/drei": "^10.7.9",
+    "@react-three/fiber": "^9.8.2",
     "@supabase/supabase-js": "^2.112.2",
     "@svg-maps/nigeria": "^2.0.0",
     "@vercel/analytics": "^2.0.1",
