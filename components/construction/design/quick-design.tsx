@@ -6,10 +6,11 @@ import { acquireSceneReadOnlyLease, useScene } from "@pascal-app/core";
 import { useViewer, Viewer } from "@pascal-app/viewer";
 import { Html, OrbitControls } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
-import { ArrowRight, Download, Eye, Film, FileText, Footprints, Image as ImageIcon, LayoutGrid, Pause, Play, Home, MapPin, Moon, PencilRuler, RotateCcw, Shuffle, Sofa, Sun, Sunset, Trees, X } from "lucide-react";
+import { ArrowRight, Download, Eye, Film, FileText, FileUp, Footprints, Image as ImageIcon, LayoutGrid, Pause, Play, Home, MapPin, Moon, PencilRuler, RotateCcw, Shuffle, Sofa, Sun, Sunset, Trees, X } from "lucide-react";
 
 import { priceDesign } from "@/lib/construction/design-takeoff";
 import PlanDrawing from "./plan-drawing";
+import PlanImport from "./plan-import";
 import CaptureBridge, { type CaptureFn } from "./capture-bridge";
 import { brandedImage, buildPdf, isBlankFrame, buildVideo, download, fileName, planPng, type ExportInfo, type StageFrame } from "@/lib/construction/design-export";
 import { BUILD_STAGES, costToStage, LAST_STAGE, stageNodes } from "@/lib/construction/build-stages";
@@ -138,6 +139,7 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
   const [walking, setWalking] = useState(false);
   const [view, setView] = useState<"split" | "3d" | "plan">("split");
   const [planFloor, setPlanFloor] = useState(0);
+  const [importing, setImporting] = useState(false);
   const [stage, setStage] = useState<number | null>(null);
   const [progress, setProgress] = useState(1);
   const [playing, setPlaying] = useState(false);
@@ -361,6 +363,11 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
         </div>
 
         {currentPreset ? <p className="mt-2 text-[11px] leading-5 text-white/55"><strong className="text-white/80">{currentPreset.label}:</strong> {currentPreset.summary}. Every room, toilet and the compound are drawn; tap “See inside” to look around.</p> : null}
+
+        <button type="button" onClick={() => setImporting(true)} className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-[#D9B26A]/60 bg-[#D9B26A]/10 px-3 py-2.5 text-xs font-bold text-[#F2C879] hover:bg-[#D9B26A]/20">
+          <FileUp className="h-4 w-4" /> Import your own plan (DXF, PDF or photo)
+        </button>
+        {importing ? <PlanImport onClose={() => setImporting(false)} onOpen={(imported) => { setImporting(false); onAdvanced(imported as unknown as Scene); }} /> : null}
 
         <p className="mt-5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#D9B26A]">Step 2 · Shape it</p>
         <div className="mt-2 space-y-3">

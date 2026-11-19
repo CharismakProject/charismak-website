@@ -377,3 +377,48 @@ export function planGeometry(input: Partial<QuickHouse>) {
     })),
   };
 }
+
+/** Shared shell for imported plans: site, building and one level. */
+function importShell(margin: number) {
+  const nodes: Record<string, AnyNode> = {};
+  const put = (node: AnyNode) => {
+    nodes[node.id] = node;
+    if (node.parentId && nodes[node.parentId]) nodes[node.parentId].children = [...(nodes[node.parentId].children ?? []), node.id];
+    return node;
+  };
+  put({ ...clone(T.site), id: "site_import", parentId: null, children: [], polygon: { type: "polygon", points: [[-margin, -margin], [margin, -margin], [margin, margin], [-margin, margin]] } });
+  put({ ...clone(T.building), id: "building_import", parentId: "site_import", children: [] });
+  put({ ...clone(T.level), id: "level_import0", parentId: "building_import", children: [], level: 0, baseElevation: 0, height: 3 });
+  return { nodes, put };
+}
+const sceneResult = (nodes: Record<string, AnyNode>) => ({ nodes, rootNodeIds: ["site_import"], materials: clone(templatesFile.materials), collections: {}, installedPlugins: [] as string[] });
+
+/** Editable 3D walls from a DXF plan (plan metres, y down the sheet), with a floor slab, ceiling and roof over the outline. */
+export function buildImportedScene(input: { walls: { a: P; b: P; thickness: number }[]; width: number; length: number }, finishes: { walls?: string; roof?: string; floor?: string } = {}) {
+  const { walls, width: W, length: L } = input;
+  const H = 3;
+  const { nodes, put } = importShell(Math.max(W, L) / 2 + 12);
+  const world = ([x, y]: P): [number, number] => [Math.round((W / 2 - x) * 1000) / 1000, Math.round((L / 2 - y) * 1000) / 1000];
+  walls.forEach((wall, i) => {
+    const exterior = wall.thickness >= 0.2;
+    put({
+      ...clone(T.wall), id: `wall_import${i}`, parentId: "level_import0", children: [], start: world(wall.a), end: world(wall.b), thickness: wall.thickness, height: H,
+      ...(exterior ? { exteriorMaterialPreset: lib(finishes.walls ?? "preset-white"), interiorMaterialPreset: lib("concrete-plaster") } : { materialPreset: lib("concrete-plaster") }),
+    });
+  });
+  const box: P[] = [[0.115, 0.115], [W - 0.115, 0.115], [W - 0.115, L - 0.115], [0.115, L - 0.115]];
+  put({ object: "node", id: "slab_import", type: "slab", parentId: "level_import0", visible: true, metadata: {}, polygon: box.map(world), holes: [], materialPreset: lib(finishes.floor ?? "flooring-tile20") });
+  put({ ...clone(T.ceiling), id: "ceiling_import", parentId: "level_import0", children: [], polygon: box.map(world), height: H - 0.05 });
+  put({ ...clone(T.roof), id: "roof_import", parentId: "level_import0", children: [], position: [0, H, 0] });
+  put({ ...clone(T.roofSegment), id: "rseg_import", parentId: "roof_import", roofType: "gable", width: W + OUTER, depth: L + OUTER, pitch: 25, overhang: 0.6, topMaterialPreset: lib(finishes.roof ?? "preset-brickred"), edgeMaterialPreset: lib(finishes.roof ?? "preset-brickred") });
+  put({ object: "node", id: "spawn_import", type: "spawn", parentId: "level_import0", visible: true, metadata: {}, position: [0, 0, 0], rotation: 0 });
+  return sceneResult(nodes);
+}
+
+/** An empty level with the plan image laid underneath at its real size, ready to trace walls over. */
+export function buildTraceScene(input: { guideUrl: string; widthMeters: number; name: string }) {
+  const { nodes, put } = importShell(Math.max(30, input.widthMeters));
+  put({ object: "node", id: "guide_import", type: "guide", parentId: "level_import0", visible: true, metadata: {}, name: input.name, url: input.guideUrl, position: [0, 0, 0], rotation: [0, 0, 0], scale: Math.max(0.1, input.widthMeters / 10), opacity: 60, scaleReference: null });
+  put({ object: "node", id: "spawn_import", type: "spawn", parentId: "level_import0", visible: true, metadata: {}, position: [0, 0, 0], rotation: 0 });
+  return sceneResult(nodes);
+}
