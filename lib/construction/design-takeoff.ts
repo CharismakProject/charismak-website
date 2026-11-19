@@ -1,0 +1,219 @@
+import { calculateRate, getRateBankItem } from "@/lib/rates/defaults";
+import { localiseLines, type RateLocation } from "@/lib/rates/locations";
+
+/**
+ * Quantity takeoff from a Pascal Editor scene graph, priced with the Charismak Rate Bank.
+ * Measurement is simplified for early budgeting: walls are length × height less openings,
+ * slabs/ceilings are polygon areas, roofs are plan area with overhang ÷ cos(pitch), and
+ * foundations (which the editor does not draw) are estimated from ground-floor wall lengths.
+ */
+
+type Point = [number, number];
+type Node = { id: string; type: string; parentId?: string | null; [key: string]: unknown };
+
+export const TAKEOFF_ASSUMPTIONS = {
+  storeyHeight: 2.5, // used when neither the wall nor its level states a height
+  wallThickness: 0.2,
+  slabThickness: 0.15,
+  trench: { width: 0.675, depth: 0.9 },
+  footingDepth: 0.225,
+  blindingDepth: 0.05,
+  foundationWallHeight: 0.825,
+  hardcoreDepth: 0.225,
+} as const;
+
+export type TakeoffLine = {
+  group: string;
+  slug: string;
+  title: string;
+  unit: string;
+  quantity: number;
+  rate: number;
+  amount: number;
+  basis: string;
+  estimated?: boolean;
+};
+
+export type Takeoff = {
+  lines: TakeoffLine[];
+  total: number;
+  floorArea: number;
+  counts: { walls: number; slabs: number; ceilings: number; roofs: number; doors: number; windows: number; levels: number };
+  warnings: string[];
+};
+
+const num = (value: unknown, fallback: number) => (typeof value === "number" && Number.isFinite(value) ? value : fallback);
+const r2 = (value: number) => Math.round(value * 100) / 100;
+
+const polygonArea = (points: unknown): number => {
+  if (!Array.isArray(points) || points.length < 3) return 0;
+  let sum = 0;
+  for (let i = 0; i < points.length; i += 1) {
+    const [x1, z1] = points[i] as Point;
+    const [x2, z2] = points[(i + 1) % points.length] as Point;
+    sum += x1 * z2 - x2 * z1;
+  }
+  return Math.abs(sum) / 2;
+};
+
+const surfaceArea = (node: Node) => {
+  const holes = Array.isArray(node.holes) ? (node.holes as unknown[]).reduce<number>((total, hole) => total + polygonArea(hole), 0) : 0;
+  return Math.max(0, polygonArea(node.polygon) - holes);
+};
+
+/** Measures the scene. Pure function: no pricing, easy to test. */
+export function measureScene(nodes: Record<string, Node>) {
+  const all = Object.values(nodes).filter((node) => node && typeof node === "object" && typeof node.type === "string");
+  const byType = (type: string) => all.filter((node) => node.type === type);
+  const levelOf = (node: Node): Node | undefined => {
+    let current: Node | undefined = node;
+    for (let guard = 0; current && guard < 20; guard += 1) {
+      if (current.type === "level") return current;
+      current = current.parentId ? nodes[current.parentId] : undefined;
+    }
+    return undefined;
+  };
+  const levelIndex = (node: Node) => num(levelOf(node)?.level, 0);
+
+  const openingsByWall = new Map<string, number>();
+  const doors = byType("door");
+  const windows = byType("window");
+  for (const opening of [...doors, ...windows]) {
+    const wallId = typeof opening.wallId === "string" ? opening.wallId : null;
+    if (!wallId) continue;
+    const area = num(opening.width, opening.type === "door" ? 0.9 : 1.5) * num(opening.height, opening.type === "door" ? 2.1 : 1.5);
+    openingsByWall.set(wallId, (openingsByWall.get(wallId) ?? 0) + area);
+  }
+
+  let thickWall = 0;
+  let thinWall = 0;
+  let groundWallLength = 0;
+  // Railing walls (open guards) are not blockwork.
+  const walls = byType("wall").filter((wall) => wall.wallType !== "railing");
+  for (const wall of walls) {
+    const [sx, sz] = (Array.isArray(wall.start) ? wall.start : [0, 0]) as Point;
+    const [ex, ez] = (Array.isArray(wall.end) ? wall.end : [0, 0]) as Point;
+    const length = Math.hypot(ex - sx, ez - sz);
+    const height = num(wall.height, num(levelOf(wall)?.height, TAKEOFF_ASSUMPTIONS.storeyHeight));
+    const area = Math.max(0, length * height - (openingsByWall.get(wall.id) ?? 0));
+    if (num(wall.thickness, TAKEOFF_ASSUMPTIONS.wallThickness) >= 0.18) thickWall += area;
+    else thinWall += area;
+    if (levelIndex(wall) === 0) groundWallLength += length;
+  }
+
+  // Floors: drawn slabs; on a level with no slab, the room zones stand in for the floor area.
+  const slabByLevel = new Map<number, number>();
+  let tiledFloor = 0;
+  // Paving, porches and steps marked external are site works, not building floor.
+  const slabs = byType("slab").filter((slab) => !(slab.metadata && typeof slab.metadata === "object" && (slab.metadata as { external?: unknown }).external === true));
+  for (const slab of slabs) {
+    slabByLevel.set(levelIndex(slab), (slabByLevel.get(levelIndex(slab)) ?? 0) + surfaceArea(slab));
+    if (typeof slab.materialPreset === "string" && /^(library:)?flooring-(tile|ceramic|lightceramic|darkceramic)/.test(slab.materialPreset)) tiledFloor += surfaceArea(slab);
+  }
+  const zoneByLevel = new Map<number, number>();
+  for (const zone of byType("zone")) zoneByLevel.set(levelIndex(zone), (zoneByLevel.get(levelIndex(zone)) ?? 0) + surfaceArea(zone));
+  let groundSlab = 0;
+  let upperSlab = 0;
+  let floorsFromZones = false;
+  for (const level of new Set([...slabByLevel.keys(), ...zoneByLevel.keys()])) {
+    let area = slabByLevel.get(level) ?? 0;
+    if (!area && zoneByLevel.get(level)) {
+      area = zoneByLevel.get(level)!;
+      floorsFromZones = true;
+    }
+    if (level === 0) groundSlab += area;
+    else upperSlab += area;
+  }
+  const ceilings = byType("ceiling").reduce((total, ceiling) => total + surfaceArea(ceiling), 0);
+
+  let roofSlope = 0;
+  const roofSegments = byType("roof-segment");
+  for (const segment of roofSegments) {
+    const overhang = num(segment.overhang, 0.3);
+    const plan = (num(segment.width, 8) + 2 * overhang) * (num(segment.depth, 6) + 2 * overhang);
+    const pitch = Math.min(80, Math.max(0, num(segment.pitch, 40)));
+    roofSlope += plan / Math.cos((pitch * Math.PI) / 180);
+  }
+
+  const levels = new Set(all.filter((node) => node.type === "level").map((node) => node.id)).size;
+  return {
+    thickWall: r2(thickWall),
+    thinWall: r2(thinWall),
+    groundWallLength: r2(groundWallLength),
+    groundSlab: r2(groundSlab),
+    upperSlab: r2(upperSlab),
+    ceilings: r2(ceilings),
+    roofSlope: r2(roofSlope),
+    doors: doors.length,
+    windows: windows.length,
+    floorsFromZones,
+    tiledFloor: r2(tiledFloor),
+    counts: {
+      walls: walls.length,
+      slabs: slabs.length,
+      ceilings: byType("ceiling").length,
+      roofs: roofSegments.length,
+      doors: doors.length,
+      windows: windows.length,
+      levels,
+    },
+  };
+}
+
+/** Measures and prices the scene for the chosen state. */
+export function priceDesign(nodes: Record<string, Node>, location: RateLocation): Takeoff {
+  const m = measureScene(nodes);
+  const A = TAKEOFF_ASSUMPTIONS;
+  const lines: TakeoffLine[] = [];
+  const add = (group: string, slug: string, quantity: number, basis: string, estimated = false) => {
+    if (!(quantity > 0)) return;
+    const item = getRateBankItem(slug);
+    if (!item) return;
+    const rate = calculateRate(localiseLines(item.lines, location), item.allowances).total;
+    const q = r2(quantity);
+    lines.push({ group, slug, title: item.shortTitle, unit: item.unit, quantity: q, rate, amount: rate * q, basis, estimated });
+  };
+
+  // Substructure, estimated from ground-floor walls (the editor does not draw foundations).
+  const L = m.groundWallLength;
+  add("Substructure (estimated)", "mechanical-excavation-wall-trenches", L * A.trench.width * A.trench.depth, `${L} m of ground-floor wall × 0.675 × 0.9 m`, true);
+  add("Substructure (estimated)", "c15-blinding-1-3-6", L * A.trench.width * A.blindingDepth, "50 mm blinding under the footing", true);
+  add("Substructure (estimated)", "c20-nominal-concrete-1-2-4", L * A.trench.width * A.footingDepth, "675 × 225 mm strip footing", true);
+  add("Substructure (estimated)", "230mm-hollow-sandcrete-blockwork", L * A.foundationWallHeight, "Foundation blockwork to DPC (0.825 m)", true);
+  add("Substructure (estimated)", "hardcore-fill-compacted", m.groundSlab * A.hardcoreDepth, "225 mm hardcore under the ground slab", true);
+  add("Substructure (estimated)", "dpm-1000-gauge", m.groundSlab, "DPM under the ground slab", true);
+
+  // Floors
+  add("Floors", "brc-mesh-a142-laid", m.groundSlab, "Ground slab mesh");
+  add("Floors", "c20-nominal-concrete-1-2-4", m.groundSlab * A.slabThickness, `Ground slab ${m.groundSlab} m² × 0.15 m`);
+  add("Floors", "c25-structural-concrete-310kg", m.upperSlab * A.slabThickness, `Suspended slabs ${m.upperSlab} m² × 0.15 m`);
+  add("Floors", "plywood-formwork-slab-soffit", m.upperSlab, "Soffit formwork to suspended slabs");
+  add("Floors", "30mm-floor-screed", m.groundSlab + m.upperSlab, "All drawn floor areas");
+  add("Floors", "600x600-floor-tiling", m.tiledFloor, "Floors finished in ceramic tiles");
+
+  // Walls
+  add("Walls", "230mm-hollow-sandcrete-blockwork", m.thickWall, "Walls ≥ 200 mm thick, less openings");
+  add("Walls", "150mm-hollow-sandcrete-blockwork", m.thinWall, "Walls under 200 mm thick, less openings");
+  add("Walls", "15mm-cement-sand-plaster", (m.thickWall + m.thinWall) * 2, "Both faces of all walls");
+  add("Walls", "three-coat-emulsion-paint", (m.thickWall + m.thinWall) * 2, "Both faces of all walls");
+
+  // Roof, ceilings, openings
+  add("Roof", "055mm-aluminium-roof-covering", m.roofSlope, "Plan area with overhang ÷ cos(pitch)");
+  add("Ceilings", "standard-pop-ceiling", m.ceilings, "Drawn ceiling areas");
+  add("Doors & windows", "door-installation-dressing", m.doors, "Installation only; doors supplied separately");
+  add("Doors & windows", "aluminium-window-installation", m.windows, "Installation only; windows supplied separately");
+
+  const warnings: string[] = [];
+  if (m.counts.walls === 0) warnings.push("No walls drawn yet. Use Build → Rectangle or Walls.");
+  if (m.counts.roofs === 0 && m.counts.walls > 0) warnings.push("No roof drawn, so roofing is not priced.");
+  if (m.groundSlab + m.upperSlab === 0 && m.counts.walls > 0) warnings.push("No floors or rooms found; floors are not priced.");
+  if (m.floorsFromZones) warnings.push("Floor areas are taken from the room outlines (no slab drawn).");
+
+  return {
+    lines,
+    total: lines.reduce((sum, line) => sum + line.amount, 0),
+    floorArea: r2(m.groundSlab + m.upperSlab),
+    counts: m.counts,
+    warnings,
+  };
+}

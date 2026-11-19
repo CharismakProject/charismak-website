@@ -6,10 +6,12 @@ import Link from "next/link";
 import { get, set } from "idb-keyval";
 import { Editor, ItemsPanel, type SidebarTab } from "@pascal-app/editor";
 import { Hammer, Layers, Package, Palette, Settings } from "lucide-react";
-import type { ComponentProps } from "react";
+import { useState, type ComponentProps } from "react";
 
 import { BuildTab } from "./pascal/build-tab";
 import { PaintPanel } from "./pascal/paint-panel";
+import PriceDesignButton from "./price-design-panel";
+import QuickDesign from "./quick-design";
 
 type SceneGraph = NonNullable<Awaited<ReturnType<NonNullable<ComponentProps<typeof Editor>["onLoad"]>>>>;
 
@@ -46,11 +48,24 @@ const SIDEBAR_TABS: (SidebarTab & { component: React.ComponentType })[] = [
 ];
 
 export default function DesignStudio() {
+  // Quick design (simple sliders) is the default; the full editor is one click away.
+  const [mode, setMode] = useState<"quick" | "advanced">("quick");
+
+  const openAdvanced = async (scene?: { nodes: unknown; rootNodeIds: unknown; materials: unknown; collections: unknown; installedPlugins: unknown }) => {
+    if (scene) await saveScene(scene as unknown as SceneGraph);
+    setMode("advanced");
+  };
+
   return (
-    <main className="dark flex h-screen flex-col bg-[#02080F] pt-20">
+    <main className="dark flex h-[100dvh] flex-col bg-[#02080F] pt-20">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 px-4 py-2 text-xs text-white/60">
-        <span>
-          <strong className="text-white">Design Studio</strong> · free · your design is saved in this browser only
+        <span className="flex flex-wrap items-center gap-3">
+          <strong className="text-white">Design Studio</strong>
+          <span className="flex rounded-md bg-white/5 p-0.5" role="tablist" aria-label="Design mode">
+            <button type="button" role="tab" aria-selected={mode === "quick"} onClick={() => setMode("quick")} className={`rounded px-2.5 py-1 font-bold ${mode === "quick" ? "bg-white/15 text-white" : "text-white/60"}`}>Quick design</button>
+            <button type="button" role="tab" aria-selected={mode === "advanced"} onClick={() => void openAdvanced()} className={`rounded px-2.5 py-1 font-bold ${mode === "advanced" ? "bg-white/15 text-white" : "text-white/60"}`}>Advanced editor</button>
+          </span>
+          {mode === "advanced" ? <PriceDesignButton /> : <span className="hidden sm:inline">free · saved in this browser only</span>}
         </span>
         <span>
           Built on{" "}
@@ -59,13 +74,17 @@ export default function DesignStudio() {
           </a>{" "}
           (MIT) ·{" "}
           <Link href="/construction-studio" className="underline hover:text-white">
-            Back to Construction Studio
+            Construction Studio
           </Link>
         </span>
       </div>
-      <div className="relative min-h-0 flex-1">
-        <Editor layoutVersion="v2" projectId="charismak-local" onLoad={loadScene} onSave={saveScene} actionMenuPlacement="top" sidebarTabs={SIDEBAR_TABS} />
-      </div>
+      {mode === "quick" ? (
+        <QuickDesign onAdvanced={(scene) => void openAdvanced(scene)} />
+      ) : (
+        <div className="relative min-h-0 flex-1">
+          <Editor layoutVersion="v2" projectId="charismak-local" onLoad={loadScene} onSave={saveScene} actionMenuPlacement="top" sidebarTabs={SIDEBAR_TABS} />
+        </div>
+      )}
     </main>
   );
 }
