@@ -125,7 +125,7 @@ export default function PriceDesignButton() {
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/45">Measured work</p>
                   <p className="text-2xl font-bold text-[#F2C879]">{money(takeoff.total)}</p>
-                  {takeoff.floorArea > 0 ? <p className="text-[11px] text-white/50">≈ {money(takeoff.total / takeoff.floorArea)}/m² over {takeoff.floorArea} m² of floor</p> : null}
+                  {takeoff.grossFloorArea > 0 ? <p className="text-[11px] text-white/50">≈ {money(takeoff.total / takeoff.grossFloorArea)}/m² over {takeoff.grossFloorArea} m² gross floor area</p> : null}
                 </div>
                 <Link href="/quote" className="rounded-md bg-[#D9B26A] px-3 py-2 text-xs font-bold text-[#02080F] hover:bg-[#F2C879]">
                   Get a proper quote

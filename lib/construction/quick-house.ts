@@ -219,7 +219,7 @@ export function generateHouseScene(input: Partial<QuickHouse>) {
     }
 
     slab(levelId, footprint, house.floor);
-    put({ ...clone(T.ceiling), id: `ceiling_q${f}`, parentId: levelId, children: [], polygon: footprint.map(world), height: H - 0.3 });
+    put({ ...clone(T.ceiling), id: `ceiling_q${f}`, parentId: levelId, children: [], polygon: footprint.map(world), height: H - 0.05 });
 
     for (const room of floor.rooms) {
       const poly = room.poly.map(sp);

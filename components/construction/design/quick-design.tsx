@@ -267,7 +267,7 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
     title: currentPreset?.label ?? "Charismak design",
     size: `${house.width} × ${house.length} m · ${house.floors} floor${house.floors > 1 ? "s" : ""}`,
     summary: currentPreset?.summary ?? "",
-    floorArea: takeoff.floorArea,
+    floorArea: takeoff.grossFloorArea,
     total: takeoff.total,
     location: location.name,
     groups,
@@ -409,7 +409,7 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
         <div className="mt-3 rounded-lg border border-[#D9B26A]/40 bg-gradient-to-br from-[#D9B26A]/15 to-transparent p-3">
           <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/55">Estimated building cost</p>
           <p className="text-3xl font-bold text-[#F2C879]">{money(takeoff.total)}</p>
-          <p className="text-xs text-white/60">{takeoff.floorArea} m² · ≈ {money(takeoff.total / Math.max(1, takeoff.floorArea))}/m² · {bedrooms} bedroom{bedrooms === 1 ? "" : "s"} · {furniture} items placed</p>
+          <p className="text-xs text-white/60">{takeoff.grossFloorArea} m² gross · ≈ {money(takeoff.total / Math.max(1, takeoff.grossFloorArea))}/m² · {bedrooms} bedroom{bedrooms === 1 ? "" : "s"} · {furniture} items placed</p>
           <button type="button" onClick={() => setShowBreakdown((value) => !value)} className="mt-2 text-xs font-bold text-[#F2C879] underline">
             {showBreakdown ? "Hide what’s included" : "Show what’s included"}
           </button>
