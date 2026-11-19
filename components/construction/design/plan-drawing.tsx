@@ -1,10 +1,17 @@
 "use client";
 
-import { forwardRef } from "react";
+import { forwardRef, useEffect, useState } from "react";
 
 import { planGeometry, type QuickHouse } from "@/lib/construction/quick-house";
 
 type P = [number, number];
+// The logo is embedded as a data URL so it survives when the SVG is turned into a PNG/PDF.
+let logoData: Promise<string | null> | null = null;
+const loadLogo = () => (logoData ??= fetch("/branding/charismak-logo-wide.jpg")
+  .then((r) => r.blob())
+  .then((blob) => new Promise<string>((resolve) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result)); reader.readAsDataURL(blob); }))
+  .catch(() => null));
+
 const fmt = (m: number) => (Math.round(m * 1000)).toLocaleString("en-NG");
 
 /**
@@ -12,10 +19,12 @@ const fmt = (m: number) => (Math.round(m * 1000)).toLocaleString("en-NG");
  * areas, overall dimensions, Charismak title block) drawn from the same plan as the 3D model.
  */
 const PlanDrawing = forwardRef<SVGSVGElement, { house: QuickHouse; floor: number; className?: string }>(function PlanDrawing({ house, floor, className }, ref) {
+  const [logo, setLogo] = useState<string | null>(null);
+  useEffect(() => { void loadLogo().then(setLogo); }, []);
   const g = planGeometry(house);
   const f = g.floors[Math.min(floor, g.floors.length - 1)];
   const pad = 1.6;
-  const titleH = 1.5;
+  const titleH = 1.9;
   const minX = -pad, minY = -pad;
   const width = g.W + pad * 2;
   const tbY = g.L + (floor === 0 ? 1.7 : 0.9);
@@ -127,13 +136,15 @@ const PlanDrawing = forwardRef<SVGSVGElement, { house: QuickHouse; floor: number
       {dim(-ext, -0.8, g.W + ext, -0.8, fmt(g.W + 2 * ext))}
       {dim(g.W + 0.9, -ext, g.W + 0.9, g.L + ext, fmt(g.L + 2 * ext), true)}
       {floor === 0 ? <text x={g.frontDoorX} y={g.L + 1.25} fontSize={0.22} textAnchor="middle" fill="#b45309">▲ ENTRANCE</text> : null}
-      {/* Title block */}
+      {/* Title block: Charismak logo on white, navy frame, maroon accent */}
       <g transform={`translate(${minX + 0.2} ${tbY})`}>
-        <rect width={width - 0.4} height={titleH - 0.2} fill="#02080F" />
-        <text x={0.3} y={0.5} fontSize={0.36} fontWeight={700} fill="#F2C879">CHARISMAK PROJECT NIGERIA LIMITED</text>
-        <text x={0.3} y={0.95} fontSize={0.22} fill="#ffffff">{g.plan.label.toUpperCase()} · {floorName} · {fmt(g.W + 2 * ext)} × {fmt(g.L + 2 * ext)} mm · NOT TO SCALE</text>
-        <text x={width - 0.7} y={0.5} fontSize={0.2} textAnchor="end" fill="#ffffff">charismakproject.com</text>
-        <text x={width - 0.7} y={0.95} fontSize={0.16} textAnchor="end" fill="#cbd5e1">Indicative design · verify on site · dimensions in mm</text>
+        <rect width={width - 0.4} height={titleH - 0.2} fill="#fff" stroke="#0D3352" strokeWidth={0.04} />
+        <rect width={0.09} height={titleH - 0.2} fill="#6A1400" />
+        {logo ? <image href={logo} x={0.3} y={0.15} height={1.4} width={4.17} preserveAspectRatio="xMinYMid meet" /> : <text x={0.3} y={0.9} fontSize={0.36} fontWeight={700} fill="#0D3352">CHARISMAK PROJECT NIGERIA LIMITED</text>}
+        <line x1={4.75} y1={0.2} x2={4.75} y2={titleH - 0.4} stroke="#d6dce5" strokeWidth={0.03} />
+        <text x={5.0} y={0.6} fontSize={0.3} fontWeight={700} fill="#0D3352">{g.plan.label.toUpperCase()} · {floorName}</text>
+        <text x={5.0} y={1.0} fontSize={0.17} fill="#3a4653">{fmt(g.W + 2 * ext)} × {fmt(g.L + 2 * ext)} mm overall · not to scale · dimensions in mm</text>
+        <text x={5.0} y={1.36} fontSize={0.15} fill="#6A1400">Indicative design — verify on site · charismakproject.com</text>
       </g>
     </svg>
   );
