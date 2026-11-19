@@ -337,3 +337,43 @@ export function generateHouseScene(input: Partial<QuickHouse>) {
     plan,
   };
 }
+
+/** The chosen plan at the chosen size, in plan metres (x across, y from the back), for 2D drawings. */
+export function planGeometry(input: Partial<QuickHouse>) {
+  const house = normaliseHouse(input);
+  const plan = getPlan(house.plan);
+  const sx = house.width / (plan.W + OUTER);
+  const sy = house.length / (plan.L + OUTER);
+  const sp = ([x, y]: P): P => [x * sx, y * sy];
+  return {
+    house,
+    plan,
+    W: plan.W * sx,
+    L: plan.L * sy,
+    frontDoorX: plan.frontDoorX * sx,
+    slabs: (plan.slabs ?? []).map((slab) => ({ name: slab.name, poly: slab.poly.map(sp) })),
+    stair: plan.stair ? { x: plan.stair.x * sx, y: plan.stair.y * sy, length: plan.stair.length, width: plan.stair.width } : undefined,
+    floors: plan.floors.map((floor) => ({
+      walls: floor.walls.map((spec) => {
+        const a = sp(spec.a);
+        const b = sp(spec.b);
+        const length = Math.hypot(b[0] - a[0], b[1] - a[1]);
+        const scale = length / Math.hypot(spec.b[0] - spec.a[0], spec.b[1] - spec.a[1]);
+        return {
+          a,
+          b,
+          length,
+          thickness: spec.railing ? 0.08 : spec.ext ? OUTER : INNER,
+          railing: Boolean(spec.railing),
+          open: (spec.open ?? []).map((o) => ({ ...o, at: clamp(o.at * scale, [o.w / 2 + 0.12, length - o.w / 2 - 0.12]) })),
+        };
+      }),
+      rooms: floor.rooms.map((room) => {
+        const poly = room.poly.map(sp);
+        const box = polygonBox(poly);
+        const area = Math.abs(poly.reduce((s, [x1, y1], i) => { const [x2, y2] = poly[(i + 1) % poly.length]; return s + x1 * y2 - x2 * y1; }, 0)) / 2;
+        return { name: room.name, poly, area, box, rect: poly.length === 4 };
+      }),
+    })),
+  };
+}

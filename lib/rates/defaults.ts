@@ -405,7 +405,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "region": "Abuja / Nasarawa",
     "city": "Abuja–Keffi market",
     "currency": "NGN",
-    "lastReviewed": "2026-09-26",
+    "lastReviewed": "2026-11-19",
     "slug": "dpm-1000-gauge",
     "code": "RB-EW-007",
     "title": "1000 gauge damp-proof membrane laid to floor",
@@ -421,7 +421,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "id": "dpm-mat",
         "label": "DPM material allowance",
         "category": "material",
-        "quantity": 0.2,
+        "quantity": 0.265,
         "unit": "kg",
         "unitRate": 2000,
         "note": "Approx. 0.20 kg/m² working allowance."
@@ -432,7 +432,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "labour",
         "quantity": 1,
         "unit": "m²",
-        "unitRate": 100
+        "unitRate": 300
       }
     ],
     "allowances": {
@@ -920,7 +920,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "labour",
         "quantity": 1,
         "unit": "m²",
-        "unitRate": 2500
+        "unitRate": 3500
       }
     ],
     "allowances": {
@@ -1164,7 +1164,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "region": "Abuja / Nasarawa",
     "city": "Abuja–Keffi market",
     "currency": "NGN",
-    "lastReviewed": "2026-09-26",
+    "lastReviewed": "2026-11-19",
     "slug": "three-coat-emulsion-paint",
     "code": "RB-FN-006",
     "title": "Three-coat emulsion paint to prepared wall",
@@ -1191,7 +1191,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "consumable",
         "quantity": 1,
         "unit": "m²",
-        "unitRate": 150
+        "unitRate": 300
       },
       {
         "id": "paint-lab",
@@ -1199,7 +1199,7 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
         "category": "labour",
         "quantity": 1,
         "unit": "m²",
-        "unitRate": 650
+        "unitRate": 1000
       }
     ],
     "allowances": {
