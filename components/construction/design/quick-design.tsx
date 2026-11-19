@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { acquireSceneReadOnlyLease, useScene } from "@pascal-app/core";
 import { useViewer, Viewer } from "@pascal-app/viewer";
-import { OrbitControls } from "@react-three/drei";
+import { Html, OrbitControls } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import { ArrowRight, Eye, Footprints, Home, MapPin, Moon, PencilRuler, RotateCcw, Shuffle, Sofa, Sun, Sunset, Trees, X } from "lucide-react";
 
@@ -17,6 +17,7 @@ import {
   QUICK_PRESETS,
   randomHouse,
   ROOF_FINISHES,
+  sizeLimits,
   WALL_FINISHES,
   type QuickHouse,
 } from "@/lib/construction/quick-house";
@@ -24,7 +25,7 @@ import { RATE_LOCATIONS, ZONES } from "@/lib/rates/locations";
 import { useRateLocation } from "@/lib/rates/use-rate-location";
 
 const money = (value: number) => new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(value);
-const PARAMS_KEY = "charismak-quick-house-v2";
+const PARAMS_KEY = "charismak-quick-house-v3";
 
 type Scene = ReturnType<typeof generateHouseScene>;
 
@@ -75,16 +76,52 @@ function Toggle({ on, label, icon, onChange }: { on: boolean; label: string; ico
 }
 
 /** Frames the whole house whenever its size changes. */
-function FitCamera({ width, length, floors }: { width: number; length: number; floors: number }) {
+function FitCamera({ width, length, floors, inside = false }: { width: number; length: number; floors: number; inside?: boolean }) {
   const camera = useThree((state) => state.camera);
   const controls = useThree((state) => state.controls) as { target?: { set: (x: number, y: number, z: number) => void }; update?: () => void } | null;
   useEffect(() => {
-    const d = Math.max(width, length) * 1.1 + floors * 2 + 8;
-    camera.position.set(d * 0.8, d * 0.7 + floors * 1.5, -d * 0.95);
-    controls?.target?.set(0, (floors * 3) / 2, 0);
+    if (inside) {
+      // Close, steep view straight into the rooms.
+      const d = Math.max(width, length) * 0.75 + 3;
+      camera.position.set(d * 0.25, d * 1.05 + floors * 3, -d * 0.55);
+      controls?.target?.set(0, (floors - 1) * 3.3, 0);
+    } else {
+      const d = Math.max(width, length) * 1.1 + floors * 2 + 8;
+      camera.position.set(d * 0.8, d * 0.7 + floors * 1.5, -d * 0.95);
+      controls?.target?.set(0, (floors * 3) / 2, 0);
+    }
     controls?.update?.();
-  }, [camera, controls, width, length, floors]);
+  }, [camera, controls, width, length, floors, inside]);
   return null;
+}
+
+/** Room names floating over each space of the floor being viewed. */
+function RoomLabels({ nodes, floor }: { nodes: Scene["nodes"]; floor: number }) {
+  const labels = useMemo(() => {
+    return Object.values(nodes)
+      .filter((node) => node.type === "zone" && node.parentId && Number(nodes[node.parentId]?.level ?? 0) === floor)
+      .map((node) => {
+        const points = node.polygon as [number, number][];
+        let a = 0, cx = 0, cz = 0;
+        points.forEach(([x1, z1], i) => {
+          const [x2, z2] = points[(i + 1) % points.length];
+          const cross = x1 * z2 - x2 * z1;
+          a += cross;
+          cx += (x1 + x2) * cross;
+          cz += (z1 + z2) * cross;
+        });
+        return { id: node.id, name: String(node.name), x: cx / (3 * a), z: cz / (3 * a) };
+      });
+  }, [nodes, floor]);
+  return (
+    <>
+      {labels.map((label) => (
+        <Html key={label.id} position={[label.x, floor * 3.3 + 1.2, label.z]} center zIndexRange={[20, 0]} style={{ pointerEvents: "none" }}>
+          <span className="whitespace-nowrap rounded bg-black/65 px-1.5 py-0.5 text-[10px] font-semibold text-white shadow">{label.name}</span>
+        </Html>
+      ))}
+    </>
+  );
 }
 
 /** Simple mode: pick a house, style it, see inside, and watch the price change. */
@@ -117,6 +154,18 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
 
   // What the viewer shows: "see inside" lifts the roof and ceilings and hides floors above the chosen one.
   const shown = useMemo(() => {
+    if (!inside && !walking) {
+      // Roof on: indoor furniture is hidden (some models draw through the roof otherwise; it is covered anyway).
+      const halfW = deferredHouse.width / 2;
+      const halfL = deferredHouse.length / 2;
+      const copy: typeof scene.nodes = {};
+      for (const [id, node] of Object.entries(scene.nodes)) {
+        const [x = 0, , z = 0] = (node.position as number[] | undefined) ?? [];
+        const indoor = node.type === "item" && Math.abs(x) < halfW && Math.abs(z) < halfL;
+        copy[id] = indoor ? { ...node, visible: false } : node;
+      }
+      return copy;
+    }
     if (!inside) return scene.nodes;
     const levelOf = (id: string | null): number => {
       let node = id ? scene.nodes[id] : undefined;
@@ -132,7 +181,7 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
       copy[id] = hide ? { ...node, visible: false } : node;
     }
     return copy;
-  }, [scene, inside, viewFloor]);
+  }, [scene, inside, viewFloor, walking, deferredHouse.width, deferredHouse.length]);
 
   useEffect(() => {
     const release = acquireSceneReadOnlyLease();
@@ -183,7 +232,9 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
     return Array.from(map.entries());
   }, [takeoff]);
   const furniture = Object.values(scene.nodes).filter((node) => node.type === "item").length;
-  const bedrooms = Object.values(scene.nodes).filter((node) => node.type === "zone" && node.name === "Bedroom").length;
+  const bedrooms = Object.values(scene.nodes).filter((node) => node.type === "zone" && /bedroom/i.test(String(node.name))).length;
+  const limits = sizeLimits(house.plan);
+  const currentPreset = QUICK_PRESETS.find((preset) => preset.id === house.plan);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
@@ -196,7 +247,7 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
         </div>
         <div className="mt-2 grid grid-cols-2 gap-2">
           {QUICK_PRESETS.map((preset) => (
-            <button key={preset.id} type="button" onClick={() => { setPresetId(preset.id); setHouse(preset.house); }} aria-pressed={presetId === preset.id} className={`rounded-lg border p-2.5 text-left transition ${presetId === preset.id ? "border-[#D9B26A] bg-[#D9B26A]/15" : "border-white/10 bg-white/[0.03] hover:border-white/30"}`}>
+            <button key={preset.id} type="button" onClick={() => { setPresetId(preset.id); setHouse(preset.house); setViewFloor(0); }} aria-pressed={house.plan === preset.id} className={`rounded-lg border p-2.5 text-left transition ${house.plan === preset.id ? "border-[#D9B26A] bg-[#D9B26A]/15" : "border-white/10 bg-white/[0.03] hover:border-white/30"}`}>
               <Home className="h-4 w-4 text-[#D9B26A]" />
               <strong className="mt-1 block text-sm">{preset.label}</strong>
               <span className="text-[11px] text-white/50">{preset.note}</span>
@@ -204,20 +255,17 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
           ))}
         </div>
 
+        {currentPreset ? <p className="mt-2 text-[11px] leading-5 text-white/55"><strong className="text-white/80">{currentPreset.label}:</strong> {currentPreset.summary}. Every room, toilet and the compound are drawn; tap “See inside” to look around.</p> : null}
+
         <p className="mt-5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#D9B26A]">Step 2 · Shape it</p>
         <div className="mt-2 space-y-3">
-          <Slider label="Width" value={house.width} unit=" m" min={QUICK_LIMITS.width[0]} max={QUICK_LIMITS.width[1]} step={0.5} onChange={(width) => change({ width })} />
-          <Slider label="Length" value={house.length} unit=" m" min={QUICK_LIMITS.length[0]} max={QUICK_LIMITS.length[1]} step={0.5} onChange={(length) => change({ length })} />
-          <Slider label="Rooms per floor" value={house.rooms} min={QUICK_LIMITS.rooms[0]} max={QUICK_LIMITS.rooms[1]} onChange={(rooms) => change({ rooms })} />
+          <Slider label="Width" value={house.width} unit=" m" min={limits.width[0]} max={limits.width[1]} step={0.5} onChange={(width) => change({ width })} />
+          <Slider label="Length" value={house.length} unit=" m" min={limits.length[0]} max={limits.length[1]} step={0.5} onChange={(length) => change({ length })} />
           <Slider label="Roof steepness" value={house.roofPitch} unit="°" min={QUICK_LIMITS.roofPitch[0]} max={QUICK_LIMITS.roofPitch[1]} onChange={(roofPitch) => change({ roofPitch })} />
           <div className="grid grid-cols-2 gap-2">
             <div>
               <span className="text-xs text-white/70">Floors</span>
-              <div className="mt-1 flex rounded-md bg-white/5 p-0.5">
-                {[1, 2, 3].map((floors) => (
-                  <button key={floors} type="button" onClick={() => { change({ floors }); setViewFloor((f) => Math.min(f, floors - 1)); }} aria-pressed={house.floors === floors} className={`flex-1 rounded px-2 py-1.5 text-xs font-bold ${house.floors === floors ? "bg-[#D9B26A] text-[#02080F]" : "text-white/70"}`}>{floors}</button>
-                ))}
-              </div>
+              <p className="mt-1 rounded-md bg-white/5 px-2 py-1.5 text-xs font-bold text-white/80">{house.floors} (set by the plan)</p>
             </div>
             <div>
               <span className="text-xs text-white/70">Roof</span>
@@ -288,7 +336,8 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
           {walking ? null : (
             <>
               <OrbitControls makeDefault target={[0, 2, 0]} enableDamping maxPolarAngle={Math.PI * 0.49} />
-              <FitCamera width={deferredHouse.width} length={deferredHouse.length} floors={inside ? viewFloor + 1 : deferredHouse.floors} />
+              {inside ? <RoomLabels nodes={scene.nodes} floor={viewFloor} /> : null}
+              <FitCamera width={deferredHouse.width} length={deferredHouse.length} floors={inside ? viewFloor + 1 : deferredHouse.floors} inside={inside} />
             </>
           )}
         </Viewer>

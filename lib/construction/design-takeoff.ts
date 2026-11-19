@@ -88,7 +88,9 @@ export function measureScene(nodes: Record<string, Node>) {
   let thickWall = 0;
   let thinWall = 0;
   let groundWallLength = 0;
-  for (const wall of byType("wall")) {
+  // Railing walls (open guards) are not blockwork.
+  const walls = byType("wall").filter((wall) => wall.wallType !== "railing");
+  for (const wall of walls) {
     const [sx, sz] = (Array.isArray(wall.start) ? wall.start : [0, 0]) as Point;
     const [ex, ez] = (Array.isArray(wall.end) ? wall.end : [0, 0]) as Point;
     const length = Math.hypot(ex - sx, ez - sz);
@@ -102,7 +104,9 @@ export function measureScene(nodes: Record<string, Node>) {
   // Floors: drawn slabs; on a level with no slab, the room zones stand in for the floor area.
   const slabByLevel = new Map<number, number>();
   let tiledFloor = 0;
-  for (const slab of byType("slab")) {
+  // Paving, porches and steps marked external are site works, not building floor.
+  const slabs = byType("slab").filter((slab) => !(slab.metadata && typeof slab.metadata === "object" && (slab.metadata as { external?: unknown }).external === true));
+  for (const slab of slabs) {
     slabByLevel.set(levelIndex(slab), (slabByLevel.get(levelIndex(slab)) ?? 0) + surfaceArea(slab));
     if (typeof slab.materialPreset === "string" && /^(library:)?flooring-(tile|ceramic|lightceramic|darkceramic)/.test(slab.materialPreset)) tiledFloor += surfaceArea(slab);
   }
@@ -145,8 +149,8 @@ export function measureScene(nodes: Record<string, Node>) {
     floorsFromZones,
     tiledFloor: r2(tiledFloor),
     counts: {
-      walls: byType("wall").length,
-      slabs: byType("slab").length,
+      walls: walls.length,
+      slabs: slabs.length,
       ceilings: byType("ceiling").length,
       roofs: roofSegments.length,
       doors: doors.length,
