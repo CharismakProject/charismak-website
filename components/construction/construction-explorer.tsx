@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import StudioHubTabs from "./studio-hub-tabs";
 import { brandedImage, buildPdf, buildVideo, captureCanvas, download, fileName, isBlankFrame, type ExportInfo, type StageFrame } from "@/lib/construction/design-export";
 import { getLocation } from "@/lib/rates/locations";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -168,6 +169,7 @@ export default function ConstructionExplorer() {
 
   return <main className={styles.page}>
     <div className={styles.container}>
+      <StudioHubTabs active="learn" />
       <header className={styles.intro}>
         <div><p className={styles.eyebrow}><GraduationCap size={16} /> CHARISMAK LEARNING SPACE</p><h1>See how <span>it’s built.</span></h1><p className={styles.lead}>Explore construction in 3D. Peel back the layers, follow the systems,<br className={styles.desktopBreak} /> and understand what makes a building work.</p></div>
         <div className={styles.introAside}><span><strong>{String(LEARNING_MODELS.length).padStart(2, "0")}</strong> interactive models</span><span><strong>{LESSON_COUNT}</strong> guided lessons</span><Link href="/construction-studio">Build your own project <ArrowRight size={15} /></Link></div>
