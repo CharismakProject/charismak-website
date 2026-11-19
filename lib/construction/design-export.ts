@@ -19,8 +19,11 @@ export type ExportInfo = {
 };
 export type StageFrame = { image: Blob; title: string; note: string; spent: number };
 
-const GOLD = "#F2C879";
-const NAVY = "#02080F";
+// Charismak brand: logo navy and maroon on white, with the website's gold as the accent.
+const NAVY = "#0D3352";
+const MAROON = "#6A1400";
+const GOLD = "#C8A45D";
+const GOLD_SOFT = "#E8C77F";
 const money = (value: number) => new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(value);
 const plain = (text: string) => text.replace(/₦/g, "NGN ").replace(/²/g, "2").replace(/[–—→]/g, " - ").replace(/[×]/g, "x").replace(/[‘’]/g, "'").replace(/[^\x20-\x7e\n]/g, " ");
 
@@ -35,7 +38,8 @@ const blobImage = async (blob: Blob) => {
   try { return await loadImage(url); } finally { setTimeout(() => URL.revokeObjectURL(url), 1000); }
 };
 let logoPromise: Promise<HTMLImageElement | null> | null = null;
-const logo = () => (logoPromise ??= loadImage("/branding/charismak-logo.png").catch(() => null));
+/** The full Charismak logo (mark + "Charismak Project Nigeria Limited · Design, Cost & Build"), on white. */
+const logo = () => (logoPromise ??= loadImage("/branding/charismak-logo-wide.jpg").catch(() => null));
 
 export function download(blob: Blob, name: string) {
   const url = URL.createObjectURL(blob);
@@ -51,38 +55,59 @@ export const fileName = (title: string, ext: string) => `charismak-${title.toLow
 
 const toBlob = (canvas: HTMLCanvasElement, type = "image/png", quality?: number) => new Promise<Blob>((resolve, reject) => canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("canvas"))), type, quality));
 
-/** Header and footer bands with the Charismak name, logo and the design's key numbers. */
+/** White header with the Charismak logo, a maroon rule, and a navy footer with the design's key numbers. */
 async function brand(ctx: CanvasRenderingContext2D, w: number, h: number, info: ExportInfo, caption?: { title: string; note: string; spent?: number }) {
-  const band = Math.round(Math.min(h * 0.085, w * 0.075));
-  ctx.fillStyle = "rgba(2,8,15,0.92)";
-  ctx.fillRect(0, 0, w, band);
-  ctx.fillRect(0, h - band, w, band);
-  const mark = await logo();
-  const pad = Math.round(band * 0.22);
-  let x = pad;
-  if (mark) { const s = band - pad * 2; ctx.drawImage(mark, x, pad, s, s); x += s + pad; }
-  ctx.fillStyle = GOLD;
+  const head = Math.round(Math.min(h * 0.11, w * 0.085));
+  const foot = Math.round(head * 0.9);
+  const pad = Math.round(head * 0.18);
   ctx.textBaseline = "middle";
-  // Shrink the name until it fits beside the web address.
-  let size = Math.round(band * 0.36);
-  ctx.font = `400 ${Math.round(band * 0.28)}px Arial, sans-serif`;
-  const urlWidth = ctx.measureText("charismakproject.com").width;
-  do { ctx.font = `700 ${size}px Arial, sans-serif`; size -= 1; } while (size > 8 && ctx.measureText("CHARISMAK PROJECT NIGERIA LIMITED").width > w - x - urlWidth - pad * 3);
-  ctx.fillText("CHARISMAK PROJECT NIGERIA LIMITED", x, band / 2);
-  ctx.fillStyle = "#fff";
-  ctx.font = `400 ${Math.round(band * 0.28)}px Arial, sans-serif`;
+  // Header
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, w, head);
+  const mark = await logo();
+  if (mark) {
+    const lh = head - pad * 1.4;
+    ctx.drawImage(mark, pad, (head - lh) / 2, (lh * mark.naturalWidth) / mark.naturalHeight, lh);
+  } else {
+    ctx.fillStyle = NAVY;
+    ctx.font = `700 ${Math.round(head * 0.34)}px Arial, sans-serif`;
+    ctx.fillText("CHARISMAK PROJECT NIGERIA LIMITED", pad, head / 2);
+  }
   ctx.textAlign = "right";
-  ctx.fillText("charismakproject.com", w - pad, band / 2);
+  ctx.fillStyle = NAVY;
+  ctx.font = `700 ${Math.round(head * 0.2)}px Arial, sans-serif`;
+  ctx.fillText(caption ? "CONSTRUCTION SEQUENCE" : "DESIGN STUDIO", w - pad, head / 2 - head * 0.13);
+  ctx.fillStyle = MAROON;
+  ctx.font = `400 ${Math.round(head * 0.17)}px Arial, sans-serif`;
+  ctx.fillText("charismakproject.com", w - pad, head / 2 + head * 0.15);
   ctx.textAlign = "left";
-  ctx.font = `700 ${Math.round(band * 0.3)}px Arial, sans-serif`;
-  ctx.fillText(caption ? caption.title : `${info.title} · ${info.size}`, pad, h - band / 2 - band * 0.14);
-  ctx.font = `400 ${Math.round(band * 0.22)}px Arial, sans-serif`;
-  ctx.fillStyle = "rgba(255,255,255,0.75)";
-  ctx.fillText(caption ? caption.note.slice(0, 120) : `${info.floorArea} m² · ${info.location} · indicative design and budget`, pad, h - band / 2 + band * 0.22);
-  ctx.textAlign = "right";
+  ctx.fillStyle = MAROON;
+  ctx.fillRect(0, head, w, Math.max(3, Math.round(head * 0.05)));
+  // Footer
+  ctx.fillStyle = NAVY;
+  ctx.fillRect(0, h - foot, w, foot);
   ctx.fillStyle = GOLD;
-  ctx.font = `700 ${Math.round(band * 0.34)}px Arial, sans-serif`;
-  ctx.fillText(caption?.spent !== undefined ? `${money(caption.spent)} spent` : money(info.total), w - pad, h - band / 2);
+  ctx.fillRect(0, h - foot, w, Math.max(2, Math.round(foot * 0.04)));
+  const priceText = caption?.spent !== undefined ? `${money(caption.spent)} spent` : money(info.total);
+  ctx.font = `700 ${Math.round(foot * 0.36)}px Arial, sans-serif`;
+  const priceW = ctx.measureText(priceText).width;
+  const room = w - priceW - pad * 3;
+  const fit = (text: string, weight: number, size: number) => {
+    let s = size;
+    do { ctx.font = `${weight} ${s}px Arial, sans-serif`; s -= 1; } while (s > 8 && ctx.measureText(text).width > room);
+  };
+  const title = caption ? caption.title : `${info.title} · ${info.size}`;
+  const sub = caption ? caption.note : `${info.floorArea} m² of floor · prices for ${info.location} · indicative design and budget`;
+  ctx.fillStyle = "#ffffff";
+  fit(title, 700, Math.round(foot * 0.3));
+  ctx.fillText(title, pad, h - foot / 2 - foot * 0.15);
+  ctx.fillStyle = "rgba(255,255,255,0.75)";
+  fit(sub, 400, Math.round(foot * 0.2));
+  ctx.fillText(sub, pad, h - foot / 2 + foot * 0.22);
+  ctx.textAlign = "right";
+  ctx.fillStyle = GOLD_SOFT;
+  ctx.font = `700 ${Math.round(foot * 0.36)}px Arial, sans-serif`;
+  ctx.fillText(priceText, w - pad, h - foot / 2);
   ctx.textAlign = "left";
 }
 
@@ -128,15 +153,20 @@ export async function buildPdf(info: ExportInfo, hero: Blob | null, plans: Blob[
   const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4", compress: true });
   const mark = await logo();
   const header = (title: string) => {
-    doc.setFillColor(NAVY);
-    doc.rect(0, 0, 297, 22, "F");
-    if (mark) doc.addImage(mark, "PNG", 10, 4, 14, 14);
-    doc.setFont("helvetica", "bold"); doc.setFontSize(12); doc.setTextColor(GOLD);
-    doc.text("CHARISMAK PROJECT NIGERIA LIMITED", 28, 10);
-    doc.setFontSize(10); doc.setTextColor("#ffffff"); doc.text(plain(title), 28, 17);
-    doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.text("charismakproject.com", 287, 13, { align: "right" });
-    doc.setTextColor("#6b7280"); doc.setFontSize(7);
-    doc.text(plain("Indicative design and early budget from Charismak Rate Bank rates. Not a quotation; verify on site and with drawings."), 10, 204);
+    if (mark) doc.addImage(mark, "JPEG", 10, 6, 45, 15.1);
+    else { doc.setFont("helvetica", "bold"); doc.setFontSize(12); doc.setTextColor(NAVY); doc.text("CHARISMAK PROJECT NIGERIA LIMITED", 10, 15); }
+    doc.setFont("helvetica", "bold"); doc.setFontSize(13); doc.setTextColor(NAVY);
+    doc.text(plain(title), 287, 13, { align: "right" });
+    doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(MAROON);
+    doc.text("Design Studio  |  charismakproject.com", 287, 19, { align: "right" });
+    doc.setFillColor(NAVY); doc.rect(10, 23.5, 277, 0.9, "F");
+    doc.setFillColor(MAROON); doc.rect(10, 24.6, 277, 0.4, "F");
+    // Footer
+    doc.setFillColor(NAVY); doc.rect(0, 201, 297, 9, "F");
+    doc.setTextColor("#ffffff"); doc.setFontSize(7.5);
+    doc.text("Charismak Project Nigeria Limited  -  Design, Cost & Build  -  Abuja, Nigeria", 10, 206.5);
+    doc.setTextColor(GOLD_SOFT);
+    doc.text(plain("Indicative design and early budget from Charismak Rate Bank rates. Not a quotation."), 287, 206.5, { align: "right" });
   };
   const fit = async (blob: Blob, x: number, y: number, w: number, h: number) => {
     const s = await sizeOf(blob);
@@ -145,33 +175,33 @@ export async function buildPdf(info: ExportInfo, hero: Blob | null, plans: Blob[
   };
 
   header(`${info.title} - design and budget`);
-  if (hero) await fit(hero, 10, 28, 180, 112);
-  doc.setTextColor("#0f172a"); doc.setFont("helvetica", "bold"); doc.setFontSize(18);
-  doc.text(plain(info.title), 198, 36);
+  if (hero) { doc.setDrawColor("#d6dce5"); doc.rect(10, 30, 180, 112); await fit(hero, 10.3, 30.3, 179.4, 111.4); }
+  doc.setTextColor(NAVY); doc.setFont("helvetica", "bold"); doc.setFontSize(18);
+  doc.text(plain(info.title), 198, 37);
   doc.setFont("helvetica", "normal"); doc.setFontSize(10);
   doc.text(doc.splitTextToSize(plain(`${info.size} · ${info.floorArea} m2 of floor · prices for ${info.location}`), 89), 198, 43);
   doc.setFontSize(9); doc.setTextColor("#374151");
   doc.text(doc.splitTextToSize(plain(info.summary), 89), 198, 56);
-  doc.setFillColor("#f8f1e1"); doc.rect(198, 84, 89, 26, "F");
-  doc.setTextColor("#7c5a16"); doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.text("ESTIMATED BUILDING COST", 202, 91);
-  doc.setTextColor("#0f172a"); doc.setFontSize(18); doc.text(plain(money(info.total)), 202, 102);
+  doc.setFillColor(NAVY); doc.rect(198, 84, 89, 26, "F"); doc.setFillColor(GOLD); doc.rect(198, 84, 1.6, 26, "F");
+  doc.setTextColor(GOLD_SOFT); doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.text("ESTIMATED BUILDING COST", 202, 91);
+  doc.setTextColor("#ffffff"); doc.setFontSize(18); doc.text(plain(money(info.total)), 202, 102);
   doc.setFontSize(8); doc.setFont("helvetica", "normal"); doc.text(plain(`about ${money(info.total / Math.max(1, info.floorArea))} per m2`), 202, 107);
   let y = 118;
-  doc.setFont("helvetica", "bold"); doc.setFontSize(9); doc.text("ROOMS", 198, y); y += 5;
+  doc.setTextColor(MAROON); doc.setFont("helvetica", "bold"); doc.setFontSize(9); doc.text("ROOMS", 198, y); y += 5; doc.setTextColor(NAVY);
   doc.setFont("helvetica", "normal"); doc.setFontSize(8);
   for (const room of info.rooms.slice(0, 16)) { doc.text(plain(room.name), 198, y); doc.text(`${room.area.toFixed(1)} m2`, 287, y, { align: "right" }); y += 4.2; }
-  y = 148;
-  doc.setFont("helvetica", "bold"); doc.setFontSize(9); doc.text("COST SUMMARY", 10, y); y += 6;
+  y = 152;
+  doc.setTextColor(MAROON); doc.setFont("helvetica", "bold"); doc.setFontSize(9); doc.text("COST SUMMARY", 10, y); y += 6; doc.setTextColor(NAVY);
   doc.setFont("helvetica", "normal");
   for (const [group, amount] of info.groups) { doc.text(plain(group), 10, y); doc.text(plain(money(amount)), 120, y, { align: "right" }); y += 5; }
-  doc.setFont("helvetica", "bold"); doc.text("Total", 10, y + 1); doc.text(plain(money(info.total)), 120, y + 1, { align: "right" });
+  doc.setDrawColor(NAVY); doc.line(10, y - 2.5, 120, y - 2.5); doc.setFont("helvetica", "bold"); doc.text("Total", 10, y + 1); doc.text(plain(money(info.total)), 120, y + 1, { align: "right" });
   doc.setFont("helvetica", "normal"); doc.setFontSize(7); doc.setTextColor("#6b7280");
   doc.text(doc.splitTextToSize("Includes foundations (estimated), floors, walls, plaster, paint, roof, ceilings and fixing doors/windows. Excludes reinforcement design, electrical, plumbing, supply of doors/windows/fittings, external works, preliminaries, contractor margin and VAT.", 180), 10, y + 8);
 
   for (const [i, plan] of plans.entries()) {
     doc.addPage();
     header(`${info.title} - ${plans.length > 1 ? (i === 0 ? "ground floor plan" : "first floor plan") : "floor plan"}`);
-    await fit(plan, 10, 26, 277, 172);
+    await fit(plan, 10, 28, 277, 170);
   }
 
   if (stages.length) {
@@ -179,13 +209,13 @@ export async function buildPdf(info: ExportInfo, hero: Blob | null, plans: Blob[
     header(`${info.title} - construction sequence`);
     const cols = 4, w = 66, h = 41;
     for (const [i, stage] of stages.entries()) {
-      const x = 10 + (i % cols) * (w + 4.3), top = 28 + Math.floor(i / cols) * (h + 46);
+      const x = 10 + (i % cols) * (w + 4.3), top = 30 + Math.floor(i / cols) * (h + 42);
       await fit(stage.image, x, top, w, h);
-      doc.setTextColor("#0f172a"); doc.setFont("helvetica", "bold"); doc.setFontSize(8);
+      doc.setTextColor(NAVY); doc.setFont("helvetica", "bold"); doc.setFontSize(8);
       doc.text(doc.splitTextToSize(plain(`${i + 1}. ${stage.title}`), w), x, top + h + 5);
       doc.setFont("helvetica", "normal"); doc.setFontSize(7); doc.setTextColor("#374151");
       doc.text(doc.splitTextToSize(plain(stage.note), w).slice(0, 4), x, top + h + 13);
-      doc.setTextColor("#7c5a16"); doc.text(plain(`${money(stage.spent)} spent`), x, top + h + 31);
+      doc.setTextColor(MAROON); doc.text(plain(`${money(stage.spent)} spent`), x, top + h + 31);
     }
   }
   return doc.output("blob");
@@ -220,7 +250,7 @@ export async function buildVideo(info: ExportInfo, frames: StageFrame[], width =
       const t = performance.now() - start;
       const i = Math.min(frames.length - 1, Math.floor(t / hold));
       const into = t - i * hold;
-      ctx.fillStyle = NAVY;
+      ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, width, height);
       if (i > 0 && into < fade) cover(images[i - 1], 1);
       cover(images[i], i > 0 && into < fade ? into / fade : 1);
