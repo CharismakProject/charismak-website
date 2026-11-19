@@ -101,7 +101,11 @@ export function measureScene(nodes: Record<string, Node>) {
 
   // Floors: drawn slabs; on a level with no slab, the room zones stand in for the floor area.
   const slabByLevel = new Map<number, number>();
-  for (const slab of byType("slab")) slabByLevel.set(levelIndex(slab), (slabByLevel.get(levelIndex(slab)) ?? 0) + surfaceArea(slab));
+  let tiledFloor = 0;
+  for (const slab of byType("slab")) {
+    slabByLevel.set(levelIndex(slab), (slabByLevel.get(levelIndex(slab)) ?? 0) + surfaceArea(slab));
+    if (typeof slab.materialPreset === "string" && /^(library:)?flooring-(tile|ceramic|lightceramic|darkceramic)/.test(slab.materialPreset)) tiledFloor += surfaceArea(slab);
+  }
   const zoneByLevel = new Map<number, number>();
   for (const zone of byType("zone")) zoneByLevel.set(levelIndex(zone), (zoneByLevel.get(levelIndex(zone)) ?? 0) + surfaceArea(zone));
   let groundSlab = 0;
@@ -139,6 +143,7 @@ export function measureScene(nodes: Record<string, Node>) {
     doors: doors.length,
     windows: windows.length,
     floorsFromZones,
+    tiledFloor: r2(tiledFloor),
     counts: {
       walls: byType("wall").length,
       slabs: byType("slab").length,
@@ -180,6 +185,7 @@ export function priceDesign(nodes: Record<string, Node>, location: RateLocation)
   add("Floors", "c25-structural-concrete-310kg", m.upperSlab * A.slabThickness, `Suspended slabs ${m.upperSlab} m² × 0.15 m`);
   add("Floors", "plywood-formwork-slab-soffit", m.upperSlab, "Soffit formwork to suspended slabs");
   add("Floors", "30mm-floor-screed", m.groundSlab + m.upperSlab, "All drawn floor areas");
+  add("Floors", "600x600-floor-tiling", m.tiledFloor, "Floors finished in ceramic tiles");
 
   // Walls
   add("Walls", "230mm-hollow-sandcrete-blockwork", m.thickWall, "Walls ≥ 200 mm thick, less openings");
