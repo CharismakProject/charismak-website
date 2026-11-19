@@ -5,6 +5,7 @@ import { AnyNode } from "@pascal-app/core";
 import { priceDesign } from "../lib/construction/design-takeoff";
 import { generateHouseScene, normaliseHouse, QUICK_PRESETS, randomHouse, sizeLimits } from "../lib/construction/quick-house";
 import { getLocation } from "../lib/rates/locations";
+import { costToStage, LAST_STAGE, stageNodes } from "../lib/construction/build-stages";
 
 const area = (poly: [number, number][]) => Math.abs(poly.reduce((s, [x1, y1], i) => { const [x2, y2] = poly[(i + 1) % poly.length]; return s + x1 * y2 - x2 * y1; }, 0)) / 2;
 const inside = ([x, z]: number[], poly: [number, number][]) => {
@@ -60,6 +61,27 @@ for (const preset of QUICK_PRESETS) {
   const r = check(preset.id, scene, preset.id !== "shop");
   if (preset.id === "duplex") assert.ok(Object.values(scene.nodes).some((n) => n.type === "stair"), "duplex: staircase");
   console.log(`  ${preset.label}: ${r.nodes} nodes, ${r.zones} spaces, ${r.items} items, ${r.t.floorArea} m², ₦${Math.round(r.t.total).toLocaleString()} (₦${Math.round(r.t.total / r.t.floorArea).toLocaleString()}/m²)`);
+}
+
+// Play construction: walls rise in order, the roof comes at stage 5, and the cost climbs to the full total.
+for (const preset of QUICK_PRESETS) {
+  const scene = generateHouseScene(preset.house);
+  const half = { width: scene.house.width / 2, length: scene.house.length / 2 };
+  const t = priceDesign(scene.nodes as never, getLocation("fct"));
+  let last = -1;
+  for (let stage = 0; stage <= LAST_STAGE; stage += 1) {
+    const staged = Object.values(stageNodes(scene.nodes, stage, half));
+    for (const node of staged) assert.ok(AnyNode.safeParse(node).success, `${preset.id} stage ${stage}: ${node.id} invalid`);
+    const walls = staged.filter((n) => n.type === "wall" && n.visible !== false && n.wallType !== "railing");
+    const roofOn = staged.some((n) => n.type === "roof" && n.visible !== false);
+    if (stage === 0) assert.equal(walls.length, 0, `${preset.id}: no walls at stage 1`);
+    if (stage === 1) assert.ok(walls.length > 0 && walls.every((w) => Number(w.height) <= 0.9), `${preset.id}: foundation walls low`);
+    assert.equal(roofOn, stage >= 4, `${preset.id}: roof at stage ${stage + 1}`);
+    const cost = costToStage(t.lines, stage);
+    assert.ok(cost >= last, `${preset.id}: cost never falls`);
+    last = cost;
+  }
+  assert.ok(Math.abs(last - t.total) < 1, `${preset.id}: build ends at the full total`);
 }
 
 // The 2-bed follows the drawing: 11.0 × 6.0 m overall, 10 named spaces inside.
