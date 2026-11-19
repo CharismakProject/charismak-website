@@ -8,6 +8,7 @@ import { jsPDF } from "jspdf";
  */
 
 export type ExportInfo = {
+  product?: string; // "Design Studio" (default) or "Construction Explorer"
   title: string; // e.g. "2-bed bungalow"
   size: string; // e.g. "11.0 × 6.0 m · 1 floor"
   summary: string;
@@ -76,7 +77,7 @@ async function brand(ctx: CanvasRenderingContext2D, w: number, h: number, info: 
   ctx.textAlign = "right";
   ctx.fillStyle = NAVY;
   ctx.font = `700 ${Math.round(head * 0.2)}px Arial, sans-serif`;
-  ctx.fillText(caption ? "CONSTRUCTION SEQUENCE" : "DESIGN STUDIO", w - pad, head / 2 - head * 0.13);
+  ctx.fillText(caption ? "CONSTRUCTION SEQUENCE" : (info.product ?? "Design Studio").toUpperCase(), w - pad, head / 2 - head * 0.13);
   ctx.fillStyle = MAROON;
   ctx.font = `400 ${Math.round(head * 0.17)}px Arial, sans-serif`;
   ctx.fillText("charismakproject.com", w - pad, head / 2 + head * 0.15);
@@ -97,7 +98,7 @@ async function brand(ctx: CanvasRenderingContext2D, w: number, h: number, info: 
     do { ctx.font = `${weight} ${s}px Arial, sans-serif`; s -= 1; } while (s > 8 && ctx.measureText(text).width > room);
   };
   const title = caption ? caption.title : `${info.title} · ${info.size}`;
-  const sub = caption ? caption.note : `${info.floorArea} m² of floor · prices for ${info.location} · indicative design and budget`;
+  const sub = caption ? caption.note : `${info.floorArea ? `${info.floorArea} m² of floor · ` : ""}prices for ${info.location} · indicative design and budget`;
   ctx.fillStyle = "#ffffff";
   fit(title, 700, Math.round(foot * 0.3));
   ctx.fillText(title, pad, h - foot / 2 - foot * 0.15);
@@ -109,6 +110,16 @@ async function brand(ctx: CanvasRenderingContext2D, w: number, h: number, info: 
   ctx.font = `700 ${Math.round(foot * 0.36)}px Arial, sans-serif`;
   ctx.fillText(priceText, w - pad, h - foot / 2);
   ctx.textAlign = "left";
+}
+
+/** Photographs a plain WebGL/WebGPU canvas: read inside an animation frame, after the scene has drawn. */
+export function captureCanvas(canvas: HTMLCanvasElement | null | undefined) {
+  return new Promise<Blob | null>((resolve) => {
+    if (!canvas) return resolve(null);
+    requestAnimationFrame(() => {
+      try { canvas.toBlob((blob) => resolve(blob), "image/png"); } catch { resolve(null); }
+    });
+  });
 }
 
 /** True when a captured frame is (nearly) one flat colour — the 3D view had not finished drawing. */
@@ -178,7 +189,7 @@ export async function buildPdf(info: ExportInfo, hero: Blob | null, plans: Blob[
     doc.setFont("helvetica", "bold"); doc.setFontSize(13); doc.setTextColor(NAVY);
     doc.text(plain(title), 287, 13, { align: "right" });
     doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(MAROON);
-    doc.text("Design Studio  |  charismakproject.com", 287, 19, { align: "right" });
+    doc.text(`${info.product ?? "Design Studio"}  |  charismakproject.com`, 287, 19, { align: "right" });
     doc.setFillColor(NAVY); doc.rect(10, 23.5, 277, 0.9, "F");
     doc.setFillColor(MAROON); doc.rect(10, 24.6, 277, 0.4, "F");
     // Footer
@@ -199,24 +210,27 @@ export async function buildPdf(info: ExportInfo, hero: Blob | null, plans: Blob[
   doc.setTextColor(NAVY); doc.setFont("helvetica", "bold"); doc.setFontSize(18);
   doc.text(plain(info.title), 198, 37);
   doc.setFont("helvetica", "normal"); doc.setFontSize(10);
-  doc.text(doc.splitTextToSize(plain(`${info.size} · ${info.floorArea} m2 of floor · prices for ${info.location}`), 89), 198, 43);
+  doc.text(doc.splitTextToSize(plain(`${info.size}${info.floorArea ? ` · ${info.floorArea} m2 of floor` : ""} · prices for ${info.location}`), 89), 198, 43);
   doc.setFontSize(9); doc.setTextColor("#374151");
   doc.text(doc.splitTextToSize(plain(info.summary), 89), 198, 56);
   doc.setFillColor(NAVY); doc.rect(198, 84, 89, 26, "F"); doc.setFillColor(GOLD); doc.rect(198, 84, 1.6, 26, "F");
   doc.setTextColor(GOLD_SOFT); doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.text("ESTIMATED BUILDING COST", 202, 91);
   doc.setTextColor("#ffffff"); doc.setFontSize(18); doc.text(plain(money(info.total)), 202, 102);
-  doc.setFontSize(8); doc.setFont("helvetica", "normal"); doc.text(plain(`about ${money(info.total / Math.max(1, info.floorArea))} per m2`), 202, 107);
+  doc.setFontSize(8); doc.setFont("helvetica", "normal"); if (info.floorArea) doc.text(plain(`about ${money(info.total / info.floorArea)} per m2`), 202, 107);
   let y = 118;
-  doc.setTextColor(MAROON); doc.setFont("helvetica", "bold"); doc.setFontSize(9); doc.text("ROOMS", 198, y); y += 5; doc.setTextColor(NAVY);
+  if (info.rooms.length) { doc.setTextColor(MAROON); doc.setFont("helvetica", "bold"); doc.setFontSize(9); doc.text("ROOMS", 198, y); } y += 5; doc.setTextColor(NAVY);
   doc.setFont("helvetica", "normal"); doc.setFontSize(8);
   for (const room of info.rooms.slice(0, 16)) { doc.text(plain(room.name), 198, y); doc.text(`${room.area.toFixed(1)} m2`, 287, y, { align: "right" }); y += 4.2; }
   y = 152;
-  doc.setTextColor(MAROON); doc.setFont("helvetica", "bold"); doc.setFontSize(9); doc.text("COST SUMMARY", 10, y); y += 6; doc.setTextColor(NAVY);
+  // Long stage lists (the Construction Explorer models) get their own page.
+  if (info.groups.length > 7) { doc.addPage(); header(`${info.title} - cost by stage`); y = 36; }
+  doc.setTextColor(MAROON); doc.setFont("helvetica", "bold"); doc.setFontSize(9); doc.text(info.groups.length > 7 ? "COST BY STAGE" : "COST SUMMARY", 10, y); y += 6; doc.setTextColor(NAVY);
   doc.setFont("helvetica", "normal");
-  for (const [group, amount] of info.groups) { doc.text(plain(group), 10, y); doc.text(plain(money(amount)), 120, y, { align: "right" }); y += 5; }
-  doc.setDrawColor(NAVY); doc.line(10, y - 2.5, 120, y - 2.5); doc.setFont("helvetica", "bold"); doc.text("Total", 10, y + 1); doc.text(plain(money(info.total)), 120, y + 1, { align: "right" });
+  for (const [group, amount] of info.groups.slice(0, 30)) { doc.text(plain(group).slice(0, 70), 10, y); doc.text(plain(money(amount)), info.groups.length > 7 ? 200 : 120, y, { align: "right" }); y += 5; }
+  const right = info.groups.length > 7 ? 200 : 120;
+  doc.setDrawColor(NAVY); doc.line(10, y - 2.5, right, y - 2.5); doc.setFont("helvetica", "bold"); doc.text("Total", 10, y + 1); doc.text(plain(money(info.total)), right, y + 1, { align: "right" });
   doc.setFont("helvetica", "normal"); doc.setFontSize(7); doc.setTextColor("#6b7280");
-  doc.text(doc.splitTextToSize("Includes foundations (estimated), floors, walls, plaster, paint, roof, ceilings and fixing doors/windows. Excludes reinforcement design, electrical, plumbing, supply of doors/windows/fittings, external works, preliminaries, contractor margin and VAT.", 180), 10, y + 8);
+  if (!info.product || info.product === "Design Studio") doc.text(doc.splitTextToSize("Includes foundations (estimated), floors, walls, plaster, paint, roof, ceilings and fixing doors/windows. Excludes reinforcement design, electrical, plumbing, supply of doors/windows/fittings, external works, preliminaries, contractor margin and VAT.", 180), 10, y + 8);
 
   for (const [i, plan] of plans.entries()) {
     doc.addPage();
@@ -225,11 +239,11 @@ export async function buildPdf(info: ExportInfo, hero: Blob | null, plans: Blob[
   }
 
   if (stages.length) {
-    doc.addPage();
-    header(`${info.title} - construction sequence`);
     const cols = 4, w = 66, h = 41;
     for (const [i, stage] of stages.entries()) {
-      const x = 10 + (i % cols) * (w + 4.3), top = 30 + Math.floor(i / cols) * (h + 42);
+      if (i % 8 === 0) { doc.addPage(); header(`${info.title} - construction sequence${stages.length > 8 ? ` (${Math.floor(i / 8) + 1}/${Math.ceil(stages.length / 8)})` : ""}`); }
+      const k = i % 8;
+      const x = 10 + (k % cols) * (w + 4.3), top = 30 + Math.floor(k / cols) * (h + 42);
       await fit(stage.image, x, top, w, h);
       doc.setTextColor(NAVY); doc.setFont("helvetica", "bold"); doc.setFontSize(8);
       doc.text(doc.splitTextToSize(plain(`${i + 1}. ${stage.title}`), w), x, top + h + 5);
