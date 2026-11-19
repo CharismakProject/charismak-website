@@ -9,6 +9,7 @@ import { useThree } from "@react-three/fiber";
 import { ArrowRight, Eye, Footprints, Home, MapPin, Moon, PencilRuler, RotateCcw, Shuffle, Sofa, Sun, Sunset, Trees, X } from "lucide-react";
 
 import { priceDesign } from "@/lib/construction/design-takeoff";
+import PlanDrawing from "./plan-drawing";
 import {
   FLOOR_FINISHES,
   generateHouseScene,
@@ -132,6 +133,8 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
   const [viewFloor, setViewFloor] = useState(0);
   const [timeOfDay, setTimeOfDay] = useState<"midday" | "golden" | "night">("midday");
   const [walking, setWalking] = useState(false);
+  const [view, setView] = useState<"split" | "3d" | "plan">("split");
+  const [planFloor, setPlanFloor] = useState(0);
   const [location, chooseLocation] = useRateLocation();
   const [showBreakdown, setShowBreakdown] = useState(false);
 
@@ -192,7 +195,8 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
   }, []);
   // Viewer modes: cut the walls down to see inside, light, and the first-person walk.
   useEffect(() => {
-    useViewer.getState().setWallMode(inside ? "cutaway" : "up");
+    // Walls always stand full height; "see inside" lifts the roof and ceilings instead of cutting walls.
+    useViewer.getState().setWallMode("up");
   }, [inside]);
   useEffect(() => {
     useViewer.getState().setTimeOfDay(timeOfDay as never);
@@ -331,7 +335,8 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
         </div>
       </aside>
 
-      <div className="relative order-1 h-[46vh] min-h-[280px] w-full shrink-0 lg:order-2 lg:h-auto lg:flex-1">
+      <div className="order-1 flex w-full shrink-0 flex-col lg:order-2 lg:h-auto lg:min-h-0 lg:flex-1 lg:flex-row">
+      <div className={`relative h-[46vh] min-h-[280px] w-full lg:h-auto ${view === "plan" ? "hidden" : "lg:flex-1"}`}>
         <Viewer>
           {walking ? null : (
             <>
@@ -350,6 +355,11 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
           </div>
         ) : null}
         <div className={`absolute left-3 top-3 flex flex-wrap gap-2 ${walking ? "hidden" : ""}`}>
+          <div className="flex rounded-full bg-black/60 p-0.5 backdrop-blur" role="group" aria-label="View">
+            {([["split", "3D + plan"], ["3d", "3D"], ["plan", "Plan"]] as const).map(([id, label]) => (
+              <button key={id} type="button" onClick={() => setView(id)} aria-pressed={view === id} className={`rounded-full px-2.5 py-1 text-xs font-bold ${view === id ? "bg-white text-[#02080F]" : "text-white/80"}`}>{label}</button>
+            ))}
+          </div>
           <button type="button" onClick={() => setWalking(true)} className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#D9B26A] to-[#F29644] px-3 py-1.5 text-xs font-bold text-[#02080F] shadow-lg">
             <Footprints className="h-3.5 w-3.5" /> Walk inside
           </button>
@@ -372,6 +382,20 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
           ))}
         </div>
         <p className={`pointer-events-none absolute bottom-3 left-3 rounded-full bg-black/50 px-3 py-1 text-[11px] text-white/70 ${walking ? "hidden" : ""}`}>Drag to turn · pinch or scroll to zoom</p>
+      </div>
+      {view !== "3d" && !walking ? (
+        <div className={`relative flex min-h-[320px] flex-col border-l border-white/10 bg-white ${view === "plan" ? "flex-1" : "lg:w-[42%]"}`}>
+          {house.floors > 1 ? (
+            <div className="absolute left-2 top-2 z-10 flex rounded-full bg-[#02080F]/80 p-0.5">
+              {Array.from({ length: house.floors }, (_, f) => (
+                <button key={f} type="button" onClick={() => setPlanFloor(f)} aria-pressed={planFloor === f} className={`rounded-full px-3 py-1 text-xs font-bold ${planFloor === f ? "bg-white text-[#02080F]" : "text-white/80"}`}>{f === 0 ? "Ground" : `Floor ${f + 1}`}</button>
+              ))}
+            </div>
+          ) : null}
+          {view === "plan" ? <button type="button" onClick={() => setView("split")} className="absolute right-2 top-2 z-10 rounded-full bg-[#D9B26A] px-3 py-1 text-xs font-bold text-[#02080F]">Show 3D</button> : null}
+          <PlanDrawing house={deferredHouse} floor={Math.min(planFloor, house.floors - 1)} className="h-full max-h-[80vh] w-full lg:max-h-none" />
+        </div>
+      ) : null}
       </div>
     </div>
   );
