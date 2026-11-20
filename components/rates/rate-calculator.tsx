@@ -22,7 +22,7 @@ import {
   type RateCostLine,
 } from "@/lib/rates/defaults";
 import { downloadRatePdf } from "@/lib/rates/rate-pdf";
-import { getMaterial, toBuy } from "@/lib/rates/materials";
+import { getMaterial, isStale, PRICE_STALE_DAYS, toBuy } from "@/lib/rates/materials";
 import { applySavedRate, clearSavedRate, loadSavedRate, saveRate } from "@/lib/rates/saved-rate";
 
 const money = (value: number, currency = "NGN") =>
@@ -358,7 +358,7 @@ export default function RateCalculator({ item, storageKey }: { item: RateBankIte
                   const shown = mode === "small" ? row.buy : row.needed;
                   return (
                     <tr key={row.line.id} className="border-t border-[#EEF2F6] align-top">
-                      <td className="py-2.5 pr-3 font-bold text-[#071E33]">{row.line.label}{row.material ? <span className="block text-[11px] font-normal text-[#8A99A8]">Price from the shared material list · checked {row.material.checked}</span> : null}</td>
+                      <td className="py-2.5 pr-3 font-bold text-[#071E33]">{row.line.label}{row.material ? <span className="block text-[11px] font-normal text-[#8A99A8]">Price from the shared material list · checked {row.material.checked}{isStale(row.material) ? <span className="ml-1 rounded bg-[#FFF4D6] px-1 font-bold text-[#8A5A00]">over {PRICE_STALE_DAYS} days old — re-check</span> : null}</span> : null}</td>
                       <td className="py-2.5 pr-3 text-right font-mono">{number(row.needed)} {row.line.unit}</td>
                       <td className="py-2.5 pr-3 text-right font-mono font-bold">{number(shown)} {row.line.unit}{mode === "small" && row.leftover > 0.0001 ? <span className="block text-[11px] font-normal text-[#8A6200]">{number(row.leftover)} left over</span> : null}</td>
                       <td className="py-2.5 pr-3 text-xs text-[#617286]">{row.material ? row.material.buyNote : "—"}{row.material?.assumption ? <span className="ml-1 rounded bg-[#FFF4D6] px-1 text-[10px] font-bold text-[#8A5A00]">to confirm</span> : null}</td>
