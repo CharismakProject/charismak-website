@@ -210,6 +210,9 @@ export type PublicEstimateResult = {
   assumptions: string[];
 };
 
+const LIFT_BASE = 80_000_000; // NGN per lift
+const LIFT_PER_STOP = 6_200_000; // NGN per stop (6 stops ≈ ₦117m, Molti Apartments BOQ 2025)
+
 const buildingUseRates: Record<BuildingUse, [number, number]> = {
   residential: [300_000, 430_000],
   apartments: [330_000, 470_000],
@@ -425,7 +428,8 @@ export function calculatePublicEstimate(input: PublicEstimateInput): PublicEstim
   const siteFactor = { good: 0.94, normal: 1, weak: 1.16, waterlogged: 1.28, unknown: 1.08 }[input.siteCondition];
   const foundationFactor = { recommend: 1, "strip-pad": 0.98, raft: 1.14, pile: 1.34 }[input.foundationType];
   const frameFactor = { masonry: 0.92, "reinforced-concrete": 1, steel: 1.12, composite: 1.18 }[resolvedFrame];
-  const floorFactor = 1 + Math.max(0, totalFloors - 1) * 0.025 + input.lifts * 0.025;
+  // Lifts are priced as their own item below (not as a frame uplift).
+  const floorFactor = 1 + Math.max(0, totalFloors - 1) * 0.025;
   const roofFactor = { "pitched-aluminium": 1, "stone-coated": 1.2, "flat-concrete": 1.3, "steel-roof": 1.08, combination: 1.22 }[input.roofType] * { simple: 0.96, moderate: 1.06, complex: 1.22 }[input.roofComplexity];
   const openingFactor = { "standard-aluminium": 0.96, "premium-aluminium": 1.12, upvc: 1.16, "double-glazed": 1.38, "curtain-wall": 1.62 }[input.windowSpec] * { basic: 0.92, standard: 1, premium: 1.18, "security-premium": 1.32 }[input.doorSpec];
   const facadeFactor = { "paint-render": 0.94, "mixed-cladding": 1.08, "stone-tile": 1.18, alucobond: 1.22, "curtain-wall": 1.42 }[input.facadeSpec];
@@ -506,8 +510,16 @@ export function calculatePublicEstimate(input: PublicEstimateInput): PublicEstim
   const furnitureLow = input.includeFurniture ? area * furnitureBase[0] : 0;
   const furnitureHigh = input.includeFurniture ? area * furnitureBase[1] : 0;
 
+  // Passenger lifts: benchmark Molti Apartments, Asokoro (BOQ 2025) — 8-person 1,050 kg MRL lift, 6 stops,
+  // ₦97.5m supply + ₦19.5m installation ≈ ₦117m each. Scaled by stops; UPS/standby power excluded.
+  const lifts = Math.max(0, Math.round(input.lifts || 0));
+  const stops = totalFloors; // the estimator has no basement input yet
+  const perLift = LIFT_BASE + LIFT_PER_STOP * Math.max(2, stops);
+  const liftSection: GuidedEstimateSection[] = lifts ? [{ id: "lifts", label: lifts === 1 ? "Passenger lift" : `Passenger lifts (${lifts})`, low: lifts * perLift * 0.9 * loc, high: lifts * perLift * 1.15 * loc, explanation: `${lifts} × 8-person machine-roomless passenger lift serving ${Math.max(2, stops)} stops, supplied and installed (benchmark: Charismak-reviewed Abuja BOQ, ≈ ₦117m for 6 stops). Standby power/UPS for the lift is not included.` }] : [];
+
   const sections: GuidedEstimateSection[] = [
     ...core,
+    ...liftSection,
     prelim,
     ...(externalLow || externalHigh ? [{ id: "external", label: "External works", low: externalLow, high: externalHigh, explanation: `Includes selected external items: ${externalItems.join(", ")}.` }] : []),
     ...(input.includeFurniture ? [{ id: "furniture", label: "Furniture, equipment & loose fittings", low: furnitureLow, high: furnitureHigh, explanation: `${input.furnitureLevel} furnishing allowance based on the estimated building area.` }] : []),

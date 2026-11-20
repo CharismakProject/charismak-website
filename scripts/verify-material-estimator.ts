@@ -1,3 +1,6 @@
+import { priceEstimate } from "../lib/projects/material-estimate-pricing";
+import { createMaterialEstimateInput as make, calculateMaterialEstimate as calc } from "../lib/projects/material-estimate-engine";
+import { getMaterial } from "../lib/rates/materials";
 import assert from "node:assert/strict";
 import { calculateMaterialEstimate, createMaterialEstimateInput } from "../lib/projects/material-estimate-engine";
 import { calculateSpecialistMaterialEstimate, createSpecialistMaterialInput } from "../lib/projects/specialist-material-estimate-engine";
@@ -174,3 +177,21 @@ const approx = (actual: number, expected: number, tolerance = 0.02) => {
 }
 
 console.log("Material estimator verification passed: concrete, reinforcement, blockwork, partitions, curtain wall, finishes, roofing, electrical, plumbing, ceiling, paving, waterproofing, structural steel, doors/windows and glass partitions.");
+
+// Pricing from the shared material list: project = what is used, small job = what you must buy.
+{
+  const input = { ...make(), category: "screed" as const, screedAreaM2: 1, wastePercent: 0 };
+  const result = calc(input);
+  const project = priceEstimate(input, result, "project");
+  const small = priceEstimate(input, result, "small");
+  const cement = project.lines.find((l) => l.id === "cement")!;
+  const cementSmall = small.lines.find((l) => l.id === "cement")!;
+  if (!(cement.quantity > 0 && cement.quantity < 1)) throw new Error(`1 m² screed should use part of a bag (got ${cement.quantity})`);
+  if (cementSmall.quantity !== 1) throw new Error(`a small job buys 1 whole bag (got ${cementSmall.quantity})`);
+  if (Math.abs(cement.cost! - cement.quantity * getMaterial("cement-50kg")!.price) > 0.01) throw new Error("cement priced from the shared list");
+  if (!(small.total > project.total)) throw new Error("small job costs more than project basis for 1 m²");
+  const steel = priceEstimate({ ...make(), category: "reinforcement", rebarBarCount: 10, rebarBarLengthM: 12, rebarDiameterMm: 12 }, calc({ ...make(), category: "reinforcement", rebarBarCount: 10, rebarBarLengthM: 12, rebarDiameterMm: 12 }), "project");
+  const rebar = steel.lines.find((l) => l.id === "rebar")!;
+  if (!(rebar.cost! > 1_000_000 * 0.1 && rebar.cost! < 1_200_000 * 0.15)) throw new Error(`10 Y12 × 12 m ≈ 107 kg ≈ ₦118k (got ${rebar.cost})`);
+  console.log(`Material pricing verification passed: 1 m² screed project ₦${Math.round(project.total).toLocaleString()} vs small job ₦${Math.round(small.total).toLocaleString()}; 10 Y12 bars ₦${Math.round(rebar.cost!).toLocaleString()}.`);
+}

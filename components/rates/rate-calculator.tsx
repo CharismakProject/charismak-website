@@ -22,6 +22,7 @@ import {
   type RateCostLine,
 } from "@/lib/rates/defaults";
 import { downloadRatePdf } from "@/lib/rates/rate-pdf";
+import { getMaterial, isStale, PRICE_STALE_DAYS, toBuy } from "@/lib/rates/materials";
 import { applySavedRate, clearSavedRate, loadSavedRate, saveRate } from "@/lib/rates/saved-rate";
 
 const money = (value: number, currency = "NGN") =>
@@ -65,6 +66,8 @@ export default function RateCalculator({ item, storageKey }: { item: RateBankIte
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
   const [pdfBusy, setPdfBusy] = useState(false);
+  // Project / contract work is costed on what is used; a small job pays for whole bags, lengths and sheets.
+  const [mode, setMode] = useState<"project" | "small">("project");
 
   // Restore this visitor's saved copy (kept only on their device) after mount.
   useEffect(() => {
@@ -93,6 +96,23 @@ export default function RateCalculator({ item, storageKey }: { item: RateBankIte
 
   const safeWorkQuantity =
     Number.isFinite(workQuantity) && workQuantity > 0 ? workQuantity : 1;
+
+  // Shopping list: what the work needs, and (for a small job) what you actually have to buy.
+  const shopping = useMemo(() => lines
+    .filter((line) => line.category === "material" || line.category === "consumable")
+    .map((line) => {
+      const material = getMaterial(line.materialId);
+      const needed = line.quantity * safeWorkQuantity;
+      const wholeUnits = /^(bag|bags|no\.?|nr|pcs|piece|length|3\.6m length|sheet|pail|roll|drum|gallon)/i.test(line.unit.trim());
+      const rule = material ?? (wholeUnits ? { buyStep: 1, smallestBuy: 1 } : undefined);
+      const buy = toBuy(needed, rule);
+      return { line, material, needed, buy, leftover: Math.max(0, buy - needed), cost: buy * line.unitRate };
+    }), [lines, safeWorkQuantity]);
+  const jobCalculation = useMemo(() => {
+    if (mode === "project") return personalCalculation;
+    const bought = new Map(shopping.map((row) => [row.line.id, row.buy / safeWorkQuantity]));
+    return calculateRate(lines.map((line) => (bought.has(line.id) ? { ...line, quantity: bought.get(line.id)! } : line)), allowances);
+  }, [mode, personalCalculation, shopping, lines, allowances, safeWorkQuantity]);
 
   const hasBundledResource = useMemo(
     () =>
@@ -258,10 +278,10 @@ export default function RateCalculator({ item, storageKey }: { item: RateBankIte
             Total for your quantity
           </span>
           <strong className="mt-2 block text-2xl text-[#071E33]">
-            {money(personalCalculation.total * safeWorkQuantity, item.currency)}
+            {money(jobCalculation.total * safeWorkQuantity, item.currency)}
           </strong>
           <span className="mt-1 block text-xs text-[#617286]">
-            {number(safeWorkQuantity)} {item.unit} × your current rate
+            {number(safeWorkQuantity)} {item.unit} · {mode === "project" ? "project basis (cost of what is used)" : "small job (cost of what you must buy)"}
           </span>
         </div>
       </section>
@@ -310,7 +330,52 @@ export default function RateCalculator({ item, storageKey }: { item: RateBankIte
             Rate basis: 1 {item.unit}
           </span>
         </div>
+
+        <div className="mt-5 grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Costing basis">
+          {([
+            ["project", "Project / contract", "Cost of what the work uses — leftovers carry on to the next item. Use for BOQs and whole buildings."],
+            ["small", "Small job", "Cost of what you must buy — whole bags, lengths and sheets, with the leftover shown. Use for a one-off repair or a small area."],
+          ] as const).map(([id, title, text]) => (
+            <button key={id} type="button" role="radio" aria-checked={mode === id} onClick={() => setMode(id)} className={"rounded-xl border p-4 text-left transition " + (mode === id ? "border-[#C8A45D] bg-[#FFF9ED]" : "border-[#D6E0E9] bg-white hover:border-[#C8A45D]")}>
+              <span className="block text-sm font-black text-[#071E33]">{title}</span>
+              <span className="mt-1 block text-xs leading-5 text-[#617286]">{text}</span>
+            </button>
+          ))}
+        </div>
       </section>
+
+      {shopping.length ? (
+        <section className="rounded-2xl border border-[#DCE4EC] bg-white p-5 md:p-6">
+          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#A82B05]">Shopping list</p>
+          <h2 className="mt-1 text-xl font-black text-[#071E33]">What {number(safeWorkQuantity)} {item.unit} needs — and what you will buy</h2>
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full min-w-[640px] text-left text-sm">
+              <thead className="text-[11px] uppercase tracking-[0.08em] text-[#617286]">
+                <tr><th className="py-2 pr-3">Material</th><th className="py-2 pr-3 text-right">Needed</th><th className="py-2 pr-3 text-right">{mode === "small" ? "You buy" : "Costed"}</th><th className="py-2 pr-3">How it is sold</th><th className="py-2 text-right">Cost</th></tr>
+              </thead>
+              <tbody>
+                {shopping.map((row) => {
+                  const shown = mode === "small" ? row.buy : row.needed;
+                  return (
+                    <tr key={row.line.id} className="border-t border-[#EEF2F6] align-top">
+                      <td className="py-2.5 pr-3 font-bold text-[#071E33]">{row.line.label}{row.material ? <span className="block text-[11px] font-normal text-[#8A99A8]">Price from the shared material list · checked {row.material.checked}{isStale(row.material) ? <span className="ml-1 rounded bg-[#FFF4D6] px-1 font-bold text-[#8A5A00]">over {PRICE_STALE_DAYS} days old — re-check</span> : null}</span> : null}</td>
+                      <td className="py-2.5 pr-3 text-right font-mono">{number(row.needed)} {row.line.unit}</td>
+                      <td className="py-2.5 pr-3 text-right font-mono font-bold">{number(shown)} {row.line.unit}{mode === "small" && row.leftover > 0.0001 ? <span className="block text-[11px] font-normal text-[#8A6200]">{number(row.leftover)} left over</span> : null}</td>
+                      <td className="py-2.5 pr-3 text-xs text-[#617286]">{row.material ? row.material.buyNote : "—"}{row.material?.assumption ? <span className="ml-1 rounded bg-[#FFF4D6] px-1 text-[10px] font-bold text-[#8A5A00]">to confirm</span> : null}</td>
+                      <td className="py-2.5 text-right font-mono">{money(shown * row.line.unitRate, item.currency)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-3 text-xs leading-5 text-[#617286]">
+            {mode === "small"
+              ? "Small job: materials are costed on whole purchase units, so a little work can cost more per unit. Labour and plant are still per unit of work — a tradesman may also charge a minimum day for a very small job."
+              : "Project basis: materials are costed on the exact quantity used (e.g. 0.2 bag of cement per m²), because on a whole project the rest of the bag goes into the next item."}
+          </p>
+        </section>
+      ) : null}
 
       {hasBundledResource ? (
         <section className="rounded-2xl border border-[#E7C75D] bg-[#FFF9E7] p-5 text-sm leading-6 text-[#6B5310]">

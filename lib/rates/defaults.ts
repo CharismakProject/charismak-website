@@ -1,3 +1,5 @@
+import { getMaterial, materialForLine } from "./materials";
+
 export type RateCostCategory =
   | "material"
   | "consumable"
@@ -13,6 +15,7 @@ export type RateCostLine = {
   unit: string;
   unitRate: number;
   note?: string;
+  materialId?: string; // priced from the shared material list (lib/rates/materials.ts)
 };
 
 export type RateBankItem = {
@@ -101,7 +104,7 @@ export function calculateRate(
   };
 }
 
-export const RATE_BANK_ITEMS: RateBankItem[] = [
+const RAW_RATE_BANK_ITEMS: RateBankItem[] = [
   {
     "countryCode": "NG",
     "country": "Nigeria",
@@ -4213,6 +4216,16 @@ export const RATE_BANK_ITEMS: RateBankItem[] = [
     "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
   }
 ];
+
+/** Published build-ups, with every common material priced from the one shared material list. */
+export const RATE_BANK_ITEMS: RateBankItem[] = RAW_RATE_BANK_ITEMS.map((item) => ({
+  ...item,
+  lines: item.lines.map((line) => {
+    const materialId = line.materialId ?? materialForLine(line);
+    const material = getMaterial(materialId);
+    return material ? { ...line, materialId, unitRate: material.price } : line;
+  }),
+}));
 
 export function getRateBankItem(slug: string) {
   if (slug === "reusable-plywood-formwork") {

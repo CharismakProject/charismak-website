@@ -226,7 +226,7 @@ export default function QuickEstimateHome() {
                       <button type="button" onClick={continueDetailed} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-white/15 px-3 text-xs font-bold text-white hover:border-[#F2B544]">Go detailed <ArrowRight className="h-4 w-4" /></button>
                     </div>
                   </div>
-                  <p className="mt-3 text-[10px] leading-5 text-white/40">Planning estimate only — drawings, measured quantities and current quotations are needed before procurement or contract.</p>
+                  <p className="mt-3 text-[10px] leading-5 text-white/40">Planning estimate only — checked against Abuja Bills of Quantities (middle figure within about 3% on our apartment-block benchmark). Drawings, measured quantities and current quotations are still needed before procurement or contract.</p>
                 </div>
               ) : null}
             </div>
