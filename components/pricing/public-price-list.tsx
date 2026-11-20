@@ -596,7 +596,7 @@ export default function PublicPriceList() {
           </div>
 
           <Link
-            href="/marketplace"
+            href="/prices#suppliers"
             className="hidden items-center gap-2 text-sm font-bold text-[#0D3B66] sm:inline-flex"
           >
             Find suppliers <ArrowRight className="h-4 w-4" />
@@ -825,7 +825,7 @@ export default function PublicPriceList() {
 
                   <div className="mt-5 grid grid-cols-[1fr_auto] gap-2">
                     <Link
-                      href={`/marketplace?search=${encodeURIComponent(item.description)}`}
+                      href={`/prices?search=${encodeURIComponent(item.description)}#suppliers`}
                       className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#0D3B66] px-4 text-xs font-black text-white transition hover:bg-[#071E33]"
                     >
                       Compare suppliers <Truck className="h-4 w-4" />
@@ -871,7 +871,7 @@ export default function PublicPriceList() {
           </p>
         </div>
         <Link
-          href="/marketplace"
+          href="/prices#suppliers"
           className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#C8A45D] px-6 text-sm font-black text-[#071E33] transition hover:bg-[#F2B544]"
         >
           Open marketplace <ArrowRight className="h-4 w-4" />

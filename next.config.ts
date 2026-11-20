@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   // The walkthroughs now live inside the Construction Explorer (temporary while it settles).
   async redirects() {
     return [
+      { source: "/marketplace", destination: "/prices#suppliers", permanent: true },
       { source: "/rates/walkthrough", destination: "/construction-explorer?model=bungalow", permanent: false },
       { source: "/rates/build-walkthrough", destination: "/construction-explorer?model=storey-building", permanent: false },
     ];
