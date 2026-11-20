@@ -284,22 +284,6 @@ export default async function HomePage() {
         </div>
       </CxSection>
 
-      {/* ===== SITE UPDATES ===== */}
-      {siteSlides.length > 0 ? (
-        <CxSection alt>
-          <div className="cx-reveal">
-            <div className="mb-10 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-              <div>
-                <Eyebrow>{hasSiteUpdates ? "Site Progress & Project Updates" : "Project Portfolio"}</Eyebrow>
-                <h2 className="cx-title text-4xl md:text-5xl">{hasSiteUpdates ? "Latest photographs from our sites." : "Photos from Charismak projects."}</h2>
-              </div>
-              <Link href="/projects" className="cx-link">All projects <ArrowRight className="h-4 w-4" /></Link>
-            </div>
-            <SiteUpdatesSlider slides={siteSlides} />
-          </div>
-        </CxSection>
-      ) : null}
-
       {/* ===== SELECTED PROJECTS ===== */}
       <CxSection>
         <div className="cx-reveal">
@@ -503,6 +487,22 @@ export default async function HomePage() {
           </a>
         </div>
       </section>
+
+      {/* ===== SITE UPDATES ===== */}
+      {siteSlides.length > 0 ? (
+        <CxSection alt>
+          <div className="cx-reveal">
+            <div className="mb-10 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+              <div>
+                <Eyebrow>{hasSiteUpdates ? "Site Progress & Project Updates" : "Project Portfolio"}</Eyebrow>
+                <h2 className="cx-title text-4xl md:text-5xl">{hasSiteUpdates ? "Latest photographs from our sites." : "Photos from Charismak projects."}</h2>
+              </div>
+              <Link href="/projects" className="cx-link">All projects <ArrowRight className="h-4 w-4" /></Link>
+            </div>
+            <SiteUpdatesSlider slides={siteSlides} />
+          </div>
+        </CxSection>
+      ) : null}
     </main>
   );
 }
