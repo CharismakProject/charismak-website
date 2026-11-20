@@ -1,5 +1,6 @@
 import { calculateRate, getRateBankItem } from "@/lib/rates/defaults";
 import { localiseLines, type RateLocation } from "@/lib/rates/locations";
+import { AFRICA_PRICE_ITEMS } from "@/lib/pricing/africa-catalog";
 
 /**
  * Quantity takeoff from a Pascal Editor scene graph, priced with the Charismak Rate Bank.
@@ -24,6 +25,10 @@ export const TAKEOFF_ASSUMPTIONS = {
   hardcoreDepth: 0.225,
 } as const;
 
+/** Starter references from the price library (lib/pricing/africa-catalog.ts) — to be replaced with verified supplier prices. */
+const starter = (id: string, fallback: number) => AFRICA_PRICE_ITEMS.find((item) => item.id === id)?.defaultRate ?? fallback;
+export const PROVISIONAL_SUPPLY = { securityDoor: starter("security-door", 450_000), flushDoor: starter("flush-door", 85_000), windowPerM2: starter("aluminium-window", 125_000) } as const;
+
 export type TakeoffLine = {
   group: string;
   slug: string;
@@ -34,6 +39,7 @@ export type TakeoffLine = {
   amount: number;
   basis: string;
   estimated?: boolean;
+  provisional?: boolean; // price-library starter reference, not a Rate Bank build-up
 };
 
 export type Takeoff = {
@@ -79,6 +85,7 @@ export function measureScene(nodes: Record<string, Node>) {
   const levelIndex = (node: Node) => num(levelOf(node)?.level, 0);
 
   const openingsByWall = new Map<string, number>();
+  const wallThickness = new Map(byType("wall").map((wall) => [wall.id, num(wall.thickness, TAKEOFF_ASSUMPTIONS.wallThickness)]));
   const doors = byType("door");
   const windows = byType("window");
   for (const opening of [...doors, ...windows]) {
@@ -142,13 +149,27 @@ export function measureScene(nodes: Record<string, Node>) {
   const ceilings = byType("ceiling").reduce((total, ceiling) => total + surfaceArea(ceiling), 0);
 
   let roofSlope = 0;
+  // Roof carcass (estimated): rafters at 600 mm centres, a tie with struts every 1.2 m, purlins at 900 mm up the slope, wall plate round the building.
+  const roofTimber = { wallPlate: 0, rafters: 0, tiesStruts: 0, purlins: 0 };
   const roofSegments = byType("roof-segment");
   for (const segment of roofSegments) {
     const overhang = num(segment.overhang, 0.3);
-    const plan = (num(segment.width, 8) + 2 * overhang) * (num(segment.depth, 6) + 2 * overhang);
+    const w = num(segment.width, 8), d = num(segment.depth, 6);
+    const plan = (w + 2 * overhang) * (d + 2 * overhang);
     const pitch = Math.min(80, Math.max(0, num(segment.pitch, 40)));
-    roofSlope += plan / Math.cos((pitch * Math.PI) / 180);
+    const cos = Math.cos((pitch * Math.PI) / 180);
+    roofSlope += plan / cos;
+    const run = Math.max(w, d), span = Math.min(w, d);
+    const rafter = (span / 2 + overhang) / Math.max(0.2, cos);
+    roofTimber.wallPlate += 2 * (run + span);
+    roofTimber.rafters += (Math.ceil((run + 2 * overhang) / 0.6) + 1) * 2 * rafter;
+    roofTimber.tiesStruts += (Math.ceil(run / 1.2) + 1) * span * 1.5;
+    roofTimber.purlins += 2 * (Math.ceil(rafter / 0.9) + 1) * (run + 2 * overhang);
   }
+  // Openings for supply allowances: external doors (in walls ≥ 180 mm) get a security door set.
+  let externalDoors = 0, internalDoors = 0, windowArea = 0;
+  for (const door of doors) (wallThickness.get(String(door.wallId)) ?? 0) >= 0.18 ? (externalDoors += 1) : (internalDoors += 1);
+  for (const window of windows) windowArea += num(window.width, 1.2) * num(window.height, 1.2);
 
   const levels = new Set(all.filter((node) => node.type === "level").map((node) => node.id)).size;
   return {
@@ -161,6 +182,10 @@ export function measureScene(nodes: Record<string, Node>) {
     upperSlab: r2(upperSlab),
     ceilings: r2(ceilings),
     roofSlope: r2(roofSlope),
+    roofTimber: { wallPlate: r2(roofTimber.wallPlate), rafters: r2(roofTimber.rafters), tiesStruts: r2(roofTimber.tiesStruts), purlins: r2(roofTimber.purlins) },
+    externalDoors,
+    internalDoors,
+    windowArea: r2(windowArea),
     doors: doors.length,
     windows: windows.length,
     floorsFromZones,
@@ -219,10 +244,23 @@ export function priceDesign(nodes: Record<string, Node>, location: RateLocation)
   add("Walls", "three-coat-emulsion-paint", (m.thickWall + m.thinWall) * 2, "Both faces of all walls");
 
   // Roof, ceilings, openings
+  add("Roof", "50x150-wall-plate-tie-beam", m.roofTimber.wallPlate, "Round the external walls", true);
+  add("Roof", "50x100-rafter", m.roofTimber.rafters, "Rafters at 600 mm centres, with overhang", true);
+  add("Roof", "50x100-strut-tie", m.roofTimber.tiesStruts, "A tie with struts every 1.2 m (≈ 1.5 × span)", true);
+  add("Roof", "50x75-purlin", m.roofTimber.purlins, "Purlins at 900 mm up each slope", true);
   add("Roof", "055mm-aluminium-roof-covering", m.roofSlope, "Plan area with overhang ÷ cos(pitch)");
   add("Ceilings", "standard-pop-ceiling", m.ceilings, "Drawn ceiling areas");
   add("Doors & windows", "door-installation-dressing", m.doors, "Installation only; doors supplied separately");
   add("Doors & windows", "aluminium-window-installation", m.windows, "Installation only; windows supplied separately");
+  // Supply of doors and windows: provisional allowances from the price library's starter references (not verified quotations).
+  const allowance = (slug: string, title: string, unit: string, quantity: number, rate: number, basis: string) => {
+    if (!(quantity > 0)) return;
+    const q = r2(quantity);
+    lines.push({ group: "Doors & windows (supply, provisional)", slug, title, unit, quantity: q, rate, amount: rate * q, basis, provisional: true });
+  };
+  allowance("security-door", "Steel security entrance door set", "nr", m.externalDoors, PROVISIONAL_SUPPLY.securityDoor, "External doors · provisional allowance");
+  allowance("flush-door", "Internal flush door leaf", "nr", m.internalDoors, PROVISIONAL_SUPPLY.flushDoor, "Internal doors (leaf only; frame and ironmongery extra) · provisional allowance");
+  allowance("aluminium-window", "Powder-coated aluminium glazed window", "m²", m.windowArea, PROVISIONAL_SUPPLY.windowPerM2, "Window area drawn · provisional allowance");
 
   const warnings: string[] = [];
   if (m.counts.walls === 0) warnings.push("No walls drawn yet. Use Build → Rectangle or Walls.");
