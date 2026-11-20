@@ -11,6 +11,7 @@ import { useState, type ComponentProps } from "react";
 import { BuildTab } from "./pascal/build-tab";
 import { PaintPanel } from "./pascal/paint-panel";
 import PriceDesignButton from "./price-design-panel";
+import StudioHubTabs from "../studio-hub-tabs";
 import QuickDesign from "./quick-design";
 
 type SceneGraph = NonNullable<Awaited<ReturnType<NonNullable<ComponentProps<typeof Editor>["onLoad"]>>>>;
@@ -60,7 +61,7 @@ export default function DesignStudio() {
     <main className="dark flex h-[100dvh] flex-col bg-[#02080F] pt-20">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 px-4 py-2 text-xs text-white/60">
         <span className="flex flex-wrap items-center gap-3">
-          <strong className="text-white">Design Studio</strong>
+          <StudioHubTabs active="design" compact />
           <span className="flex rounded-md bg-white/5 p-0.5" role="tablist" aria-label="Design mode">
             <button type="button" role="tab" aria-selected={mode === "quick"} onClick={() => setMode("quick")} className={`rounded px-2.5 py-1 font-bold ${mode === "quick" ? "bg-white/15 text-white" : "text-white/60"}`}>Quick design</button>
             <button type="button" role="tab" aria-selected={mode === "advanced"} onClick={() => void openAdvanced()} className={`rounded px-2.5 py-1 font-bold ${mode === "advanced" ? "bg-white/15 text-white" : "text-white/60"}`}>Advanced editor</button>
