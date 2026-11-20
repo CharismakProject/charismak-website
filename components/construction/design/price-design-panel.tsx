@@ -100,9 +100,13 @@ export default function PriceDesignButton() {
                     {lines.map((line, i) => (
                       <div key={`${line.slug}-${i}`} className="rounded-md bg-black/25 p-2.5">
                         <div className="flex items-start justify-between gap-2">
-                          <Link href={`/rates/${line.slug}${location.id !== "fct" ? `?state=${location.id}` : ""}`} target="_blank" className="text-sm font-semibold hover:text-[#F2C879]">
-                            {line.title}
-                          </Link>
+                          {line.provisional ? (
+                            <span className="text-sm font-semibold">{line.title} <span className="ml-1 rounded bg-[#3A2A0B] px-1.5 py-0.5 text-[10px] font-bold uppercase text-[#F7D58C]">Provisional</span></span>
+                          ) : (
+                            <Link href={`/rates/${line.slug}${location.id !== "fct" ? `?state=${location.id}` : ""}`} target="_blank" className="text-sm font-semibold hover:text-[#F2C879]">
+                              {line.title}
+                            </Link>
+                          )}
                           <strong className="shrink-0 text-sm">{money(line.amount)}</strong>
                         </div>
                         <p className="mt-0.5 font-mono text-[11px] text-white/60">
@@ -116,7 +120,7 @@ export default function PriceDesignButton() {
               ))}
 
               <p className="rounded-md border border-white/10 p-3 text-[11px] leading-5 text-white/50">
-                Early budget from Charismak Rate Bank rates ({location.status === "base" ? "Abuja base" : `adjusted for ${location.name}, provisional`}). Foundations are estimated from your ground-floor walls. Excludes reinforcement and frame design, electrical, plumbing, tiling, supply of doors/windows/fittings, external works, preliminaries, contractor margin and VAT. Not a quotation.
+                Early budget from Charismak Rate Bank rates ({location.status === "base" ? "Abuja base" : `adjusted for ${location.name}, provisional`}). Foundations and the roof carcass are estimated from your walls and roof. Door and window supply are provisional allowances from starter prices, not supplier quotes. Excludes reinforcement and frame design, electrical, plumbing, sanitary fittings, external works, preliminaries, contractor margin and VAT. Not a quotation.
               </p>
             </div>
 

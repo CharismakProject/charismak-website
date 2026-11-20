@@ -52,7 +52,7 @@ export const ROOF_FINISHES = [
 export const FLOOR_FINISHES = [
   { id: "flooring-tile20", label: "Porcelain tiles", swatch: "#d8d2c6", tiled: true },
   { id: "flooring-terrazzo19", label: "Terrazzo", swatch: "#cfc8bd", tiled: false },
-  { id: "wood-floorplank1", label: "Wood", swatch: "#a8763f", tiled: false },
+  { id: "wood-woodplank48", label: "Wood", swatch: "#a8763f", tiled: false },
   { id: "concrete-polished", label: "Polished concrete", swatch: "#9a9a97", tiled: false },
 ] as const;
 

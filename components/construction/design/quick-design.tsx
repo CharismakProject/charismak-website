@@ -427,7 +427,7 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
           ) : null}
         </div>
         <p className="mt-2 text-[11px] leading-5 text-white/45">
-          Quick budget from Charismak Rate Bank rates: foundations, floors (and tiles if chosen), walls, plaster, paint, roof, ceilings and fitting doors/windows. Furniture, columns, beams, stairs, electrical, plumbing, external works and contractor margin are not included.
+          Quick budget from Charismak Rate Bank rates: foundations, floors (and tiles if chosen), walls, plaster, paint, roof timbers and covering, ceilings, and doors/windows (supply is a provisional allowance). Furniture, columns, beams, stairs, electrical, plumbing, sanitary fittings, external works and contractor margin are not included.
         </p>
 
         <p className="mt-5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#D9B26A]">Step 5 · Download (Charismak branded)</p>

@@ -47,6 +47,8 @@ function check(label: string, scene: ReturnType<typeof generateHouseScene>, stri
   const expected = slabs.reduce((s, n) => s + area(n.polygon as [number, number][]), 0);
   assert.ok(Math.abs(t.floorArea - expected) < 0.05, `${label}: floor area ${t.floorArea} vs ${expected}`);
   assert.ok(t.counts.roofs === 1 && t.total > 0, `${label}: priced with a roof`);
+  for (const slug of ["50x100-rafter", "50x75-purlin", "50x150-wall-plate-tie-beam"]) assert.ok(t.lines.some((line) => line.slug === slug && line.quantity > 0), `${label}: roof timber ${slug}`);
+  assert.ok(t.lines.some((line) => line.provisional && line.slug === "aluminium-window"), `${label}: window supply allowance`);
   if (strict) {
     assert.ok(all.some((n) => n.type === "fence"), `${label}: boundary fence`);
     assert.ok(items.some((n) => assetOf(n) === "tesla"), `${label}: car on the driveway`);

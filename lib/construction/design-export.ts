@@ -230,7 +230,7 @@ export async function buildPdf(info: ExportInfo, hero: Blob | null, plans: Blob[
   const right = info.groups.length > 7 ? 200 : 120;
   doc.setDrawColor(NAVY); doc.line(10, y - 2.5, right, y - 2.5); doc.setFont("helvetica", "bold"); doc.text("Total", 10, y + 1); doc.text(plain(money(info.total)), right, y + 1, { align: "right" });
   doc.setFont("helvetica", "normal"); doc.setFontSize(7); doc.setTextColor("#6b7280");
-  if (!info.product || info.product === "Design Studio") doc.text(doc.splitTextToSize("Includes foundations (estimated), floors, walls, plaster, paint, roof, ceilings and fixing doors/windows. Excludes reinforcement design, electrical, plumbing, supply of doors/windows/fittings, external works, preliminaries, contractor margin and VAT.", 180), 10, y + 8);
+  if (!info.product || info.product === "Design Studio") doc.text(doc.splitTextToSize("Includes foundations and roof carcass (estimated), floors, walls, plaster, paint, roof covering, ceilings, and doors/windows (supply as provisional allowances). Excludes reinforcement design, electrical, plumbing, sanitary fittings, external works, preliminaries, contractor margin and VAT.", 180), 10, y + 8);
 
   for (const [i, plan] of plans.entries()) {
     doc.addPage();
