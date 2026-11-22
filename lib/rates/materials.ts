@@ -23,7 +23,7 @@ const NOV = "2026-11-19";
 const RECEIPTS = "Charismak purchase records & supplier quotes, Abuja";
 
 export const MATERIALS: Material[] = [
-  { id: "cement-50kg", name: "Cement, 50 kg bag", unit: "bag", price: 12_000, buyStep: 1, smallestBuy: 1, buyNote: "Sold by the 50 kg bag", source: RECEIPTS, checked: NOV },
+  { id: "cement-50kg", name: "Cement, 50 kg bag", unit: "bag", price: 12_800, buyStep: 1, smallestBuy: 1, buyNote: "Sold by the 50 kg bag; Abuja dealers ₦12,600–13,100 (Oct 2026)", source: "Abuja dealer price survey, Oct 2026", checked: "2026-11-22" },
   { id: "sharp-sand", name: "Sharp / plaster sand", unit: "m³", price: 11_200, buyStep: 0.5, smallestBuy: 1, buyNote: "₦70,000 per 10-tonne tipper (≈ 6.25 m³); small yards sell from about 1 m³", source: RECEIPTS, checked: NOV, assumption: true },
   { id: "granite", name: "Granite (coarse aggregate), delivered", unit: "m³", price: 27_000, buyStep: 0.5, smallestBuy: 1, buyNote: "About ₦16,000–18,000 per tonne delivered (≈ 1.5 t per m³)", source: RECEIPTS, checked: NOV, assumption: true },
   { id: "laterite", name: "Laterite, imported fill", unit: "m³", price: 9_600, buyStep: 6.25, smallestBuy: 6.25, buyNote: "₦60,000 per 10-tonne tipper (≈ 6.25 m³)", source: RECEIPTS, checked: NOV },
@@ -48,10 +48,11 @@ export const MATERIALS: Material[] = [
   { id: "timber-2x4", name: "2×4 (50×100) hardwood timber, 3.6 m length", unit: "length", price: 2_400, buyStep: 1, smallestBuy: 1, buyNote: "Sold per 12 ft length; same timber as roof and formwork, priced pro rata to 2×3 [CHECK]", source: RECEIPTS, checked: "2026-11-22", assumption: true },
   { id: "timber-2x6", name: "2×6 (50×150) hardwood timber, 3.6 m length", unit: "length", price: 3_600, buyStep: 1, smallestBuy: 1, buyNote: "Sold per 12 ft length; priced pro rata to 2×3 [CHECK]", source: RECEIPTS, checked: "2026-11-22", assumption: true },
   { id: "wood-preservative", name: "Wood preservative (Solignum type)", unit: "litre", price: 5_000, buyStep: 5, smallestBuy: 5, buyNote: "Sold in 5 L tins (about ₦25,000)", source: "Jiji.ng listing, Nov 2026", checked: "2026-11-22" },
-  { id: "pop-bag", name: "POP powder (plaster of Paris), bag", unit: "bag", price: 9_000, buyStep: 1, smallestBuy: 1, buyNote: "About ₦8,100–9,500 per bag on Jiji; confirm bag size", source: "Jiji.ng listings, Nov 2026", checked: "2026-11-22", assumption: true },
+  { id: "pop-bag", name: "POP powder (plaster of Paris), 40 kg bag", unit: "bag", price: 9_000, buyStep: 1, smallestBuy: 1, buyNote: "About ₦8,100–9,500 per 40 kg bag (Jiji)", source: "Jiji.ng listings, Nov 2026", checked: "2026-11-22", assumption: true },
   { id: "tile-grout", name: "Tile / stone grout", unit: "kg", price: 1_700, buyStep: 5, smallestBuy: 5, buyNote: "Sold in 5 kg packs (about ₦7,000–10,000)", source: "Jiji.ng listings, Nov 2026", checked: "2026-11-22" },
   { id: "wood-floor-adhesive", name: "Wood flooring adhesive", unit: "kg", price: 3_300, buyStep: 5, smallestBuy: 5, buyNote: "5–10 kg tins (about ₦3,000–3,600/kg)", source: "Jiji.ng listings, Nov 2026", checked: "2026-11-22" },
   { id: "sandpaper", name: "Sandpaper / abrasive sheet", unit: "sheet", price: 300, buyStep: 1, smallestBuy: 1, buyNote: "Packs of 50 about ₦12,000; single sheets about ₦500", source: "Jiji.ng listings, Nov 2026", checked: "2026-11-22" },
+  { id: "sisal-fibre", name: "Sisal fibre (POP filler)", unit: "kg", price: 4_000, buyStep: 1, smallestBuy: 1, buyNote: "₦350,000–495,000 per 100 kg bale; about ₦4,400/kg loose", source: "Nigerian supplier listings, Nov 2026", checked: "2026-11-22" },
   { id: "floor-trim", name: "Flooring trim / beading", unit: "m", price: 3_000, buyStep: 1, smallestBuy: 1, buyNote: "₦1,500–4,500 per m depending on quality (mid price used)", source: "Charismak, Nov 2026", checked: "2026-11-22" },
   { id: "dpm-1000g", name: "DPM polythene, 1000 gauge", unit: "kg", price: 2_000, buyStep: 1, smallestBuy: 1, buyNote: "Sold by roll or cut length; priced per kg", source: "Charismak Rate Bank reference", checked: NOV, assumption: true },
 ];
