@@ -40,7 +40,7 @@ export default function PriceDesignButton() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 rounded-md bg-[#D9B26A] px-3 py-1.5 text-xs font-bold text-[#0F1923] hover:bg-[#F2C879]"
+        className="inline-flex items-center gap-1.5 rounded-md bg-[#D9B26A] px-3 py-1.5 text-xs font-bold text-[#0A1A2F] hover:bg-[#F2C879]"
       >
         <Calculator className="h-3.5 w-3.5" /> Price this design
       </button>
@@ -50,7 +50,7 @@ export default function PriceDesignButton() {
           <aside
             role="dialog"
             aria-label="Price this design"
-            className="flex h-full w-full max-w-md flex-col overflow-hidden border-l border-white/10 bg-[#1A2A3B] text-white shadow-2xl"
+            className="flex h-full w-full max-w-md flex-col overflow-hidden border-l border-white/10 bg-[#16304F] text-white shadow-2xl"
             onClick={(event) => event.stopPropagation()}
           >
             <header className="flex items-start justify-between gap-3 border-b border-white/10 p-4">
@@ -73,7 +73,7 @@ export default function PriceDesignButton() {
                 <select
                   value={location.id}
                   onChange={(event) => chooseLocation(event.target.value)}
-                  className="h-10 w-full rounded-md border border-white/15 bg-white/10 pl-9 pr-3 text-sm text-white outline-none focus:border-[#D9B26A] [&_optgroup]:bg-[#1A2A3B] [&_option]:bg-[#1A2A3B]"
+                  className="h-10 w-full rounded-md border border-white/15 bg-white/10 pl-9 pr-3 text-sm text-white outline-none focus:border-[#D9B26A] [&_optgroup]:bg-[#16304F] [&_option]:bg-[#16304F]"
                 >
                   {ZONES.map((zone) => (
                     <optgroup key={zone} label={zone}>
@@ -131,7 +131,7 @@ export default function PriceDesignButton() {
                   <p className="text-2xl font-bold text-[#F2C879]">{money(takeoff.total)}</p>
                   {takeoff.grossFloorArea > 0 ? <p className="text-[11px] text-white/50">≈ {money(takeoff.total / takeoff.grossFloorArea)}/m² over {takeoff.grossFloorArea} m² gross floor area</p> : null}
                 </div>
-                <Link href="/quote" className="rounded-md bg-[#D9B26A] px-3 py-2 text-xs font-bold text-[#0F1923] hover:bg-[#F2C879]">
+                <Link href="/quote" className="rounded-md bg-[#D9B26A] px-3 py-2 text-xs font-bold text-[#0A1A2F] hover:bg-[#F2C879]">
                   Get a proper quote
                 </Link>
               </div>

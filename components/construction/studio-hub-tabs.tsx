@@ -21,7 +21,7 @@ export default function StudioHubTabs({ active, compact = false }: { active: Stu
             href={href}
             aria-current={active === id ? "page" : undefined}
             title={hint}
-            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-bold transition ${active === id ? "bg-[#D9B26A] text-[#0F1923]" : "text-white/70 hover:bg-white/10 hover:text-white"}`}
+            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-bold transition ${active === id ? "bg-[#D9B26A] text-[#0A1A2F]" : "text-white/70 hover:bg-white/10 hover:text-white"}`}
           >
             <Icon className="h-3.5 w-3.5" /> {label}
           </Link>
