@@ -38,13 +38,13 @@ export default function SiteUpdatesSlider({ slides }: { slides: SiteUpdateSlide[
 
   return (
     <div
-      className="relative overflow-hidden rounded-2xl bg-[#071E33]"
+      className="overflow-hidden rounded-2xl border border-black/10 bg-white"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       aria-roledescription="carousel"
       aria-label="Ongoing project photos"
     >
-      <div className="relative h-[420px] md:h-[540px]">
+      <div className="relative h-[340px] bg-[#EEF2F6] md:h-[520px]">
         {slides.map((item, index) => (
           <Image
             key={item.id}
@@ -54,60 +54,37 @@ export default function SiteUpdatesSlider({ slides }: { slides: SiteUpdateSlide[
             sizes="(max-width: 1280px) 100vw, 1280px"
             priority={index === 0}
             loading={index === 0 ? undefined : "lazy"}
-            quality={95}
+            quality={90}
             className={`object-contain transition-opacity duration-700 ${index === active ? "opacity-100" : "opacity-0"}`}
           />
         ))}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#071E33]/90 via-[#071E33]/20 to-transparent" />
       </div>
 
-      <div className="absolute inset-x-0 bottom-0 p-5 text-white md:p-8">
-        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#F2B544]">
-          {slide.projectTitle}
-          {slide.location ? <span className="text-white/60"> · {slide.location}</span> : null}
-          {slide.date ? <span className="text-white/60"> · {slide.date}</span> : null}
-        </p>
-        <h3 className="mt-2 max-w-2xl text-xl font-semibold leading-snug md:text-2xl">{slide.title}</h3>
-        {slide.summary ? <p className="mt-2 line-clamp-2 max-w-2xl text-sm leading-6 text-white/75">{slide.summary}</p> : null}
-
-        <div className="mt-5 flex flex-wrap items-center justify-between gap-4">
-          <Link href={slide.href} className="inline-flex items-center gap-2 text-sm font-bold text-white hover:text-[#F2B544]">
-            View project <ArrowRight className="h-4 w-4" />
-          </Link>
-
-          {count > 1 ? (
-            <div className="flex items-center gap-3">
-              <div className="hidden gap-1.5 sm:flex">
-                {slides.map((item, index) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => setActive(index)}
-                    aria-label={`Show photo ${index + 1} of ${count}`}
-                    aria-current={index === active}
-                    className={`h-1.5 rounded-full transition-all ${index === active ? "w-6 bg-[#F2B544]" : "w-1.5 bg-white/45 hover:bg-white"}`}
-                  />
-                ))}
-              </div>
-              <span className="text-xs text-white/60 sm:hidden">{active + 1} / {count}</span>
-              {[
-                { label: paused ? "Play slideshow" : "Pause slideshow", icon: paused ? Play : Pause, onClick: () => setPaused((value) => !value) },
-                { label: "Previous photo", icon: ArrowLeft, onClick: () => go(-1) },
-                { label: "Next photo", icon: ArrowRight, onClick: () => go(1) },
-              ].map(({ label, icon: Icon, onClick }) => (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={onClick}
-                  aria-label={label}
-                  className="grid h-9 w-9 place-items-center rounded-full border border-white/30 text-white transition hover:border-[#F2B544] hover:text-[#F2B544]"
-                >
-                  <Icon className="h-4 w-4" />
-                </button>
-              ))}
-            </div>
-          ) : null}
-        </div>
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 md:px-6">
+        <Link href={slide.href} className="min-w-0 flex-1 text-[#071E33] hover:text-[#A82B05]">
+          <p className="truncate text-[11px] font-bold uppercase tracking-[0.14em] text-[#A82B05]">{slide.projectTitle}</p>
+          <p className="truncate text-sm font-semibold md:text-base">{slide.title}</p>
+        </Link>
+        {count > 1 ? (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-[#617286]">{active + 1} / {count}</span>
+            {[
+              { label: paused ? "Play slideshow" : "Pause slideshow", icon: paused ? Play : Pause, onClick: () => setPaused((value) => !value) },
+              { label: "Previous photo", icon: ArrowLeft, onClick: () => go(-1) },
+              { label: "Next photo", icon: ArrowRight, onClick: () => go(1) },
+            ].map(({ label, icon: Icon, onClick }) => (
+              <button
+                key={label}
+                type="button"
+                onClick={onClick}
+                aria-label={label}
+                className="grid h-8 w-8 place-items-center rounded-full border border-black/15 text-[#071E33] transition hover:border-[#A82B05] hover:text-[#A82B05]"
+              >
+                <Icon className="h-3.5 w-3.5" />
+              </button>
+            ))}
+          </div>
+        ) : null}
       </div>
     </div>
   );

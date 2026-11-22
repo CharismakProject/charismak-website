@@ -103,7 +103,7 @@ export default async function BlogArticlePage({ params }: Props) {
           articleJsonLd,
           breadcrumbJsonLd([
             { name: "Home", path: "/" },
-            { name: "News & Learning", path: "/blog" },
+            { name: "Constru News Channel", path: "/blog" },
             { name: article.title, path: "/blog/" + article.slug },
           ]),
         ]}
@@ -113,7 +113,7 @@ export default async function BlogArticlePage({ params }: Props) {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_82%_18%,rgba(200,164,93,0.15),transparent_28rem)]" />
           <div className="relative mx-auto max-w-7xl px-5 py-12 md:px-8 md:py-16">
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-5">
-              <Link href="/blog" className="inline-flex items-center gap-2 text-sm font-semibold text-white/68 transition hover:text-[#F2B544]"><ArrowLeft className="h-4 w-4" />News & Learning</Link>
+              <Link href="/blog" className="inline-flex items-center gap-2 text-sm font-semibold text-white/68 transition hover:text-[#F2B544]"><ArrowLeft className="h-4 w-4" />Constru News Channel</Link>
               <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.15em] text-white/45"><span>{author}</span><span>•</span><span>Nigeria</span></div>
             </div>
 
@@ -143,7 +143,7 @@ export default async function BlogArticlePage({ params }: Props) {
           </div>
 
           <aside className="space-y-6 lg:sticky lg:top-28 lg:self-start">
-            <section className="border border-[#0D3B66]/10 bg-white p-6"><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#C8320A]">About this desk</p><h2 className="mt-3 text-xl font-semibold text-[#071E33]">Charismak News & Learning</h2><p className="mt-3 text-sm leading-7 text-[#3A4653]">Practical Nigerian construction information covering market developments, cost planning, materials, procurement, BOQs and project delivery.</p></section>
+            <section className="border border-[#0D3B66]/10 bg-white p-6"><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#C8320A]">About this desk</p><h2 className="mt-3 text-xl font-semibold text-[#071E33]">Constru News Channel</h2><p className="mt-3 text-sm leading-7 text-[#3A4653]">Practical Nigerian construction information covering market developments, cost planning, materials, procurement, BOQs and project delivery.</p></section>
             {related.length ? <section className="border border-[#0D3B66]/10 bg-white p-6"><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#C8A45D]">Continue reading</p><div className="mt-3 divide-y divide-[#0D3B66]/10">{related.map((item) => <Link key={item.slug} href={`/blog/${item.slug}`} className="group grid grid-cols-[64px_1fr] gap-3 py-4"><div className="h-14 overflow-hidden bg-[#EEF2F6]">{item.imageUrl ? <img src={item.imageUrl} alt="" className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center"><ImageIcon className="h-4 w-4 text-[#9AA8B6]" /></div>}</div><div><p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#3A4653]/50">{item.category}</p><h3 className="mt-1 text-sm font-semibold leading-5 text-[#071E33] transition group-hover:text-[#0D3B66]">{item.title}</h3><span className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold text-[#0D3B66]">Read <ArrowRight className="h-3 w-3" /></span></div></Link>)}</div></section> : null}
           </aside>
         </div>

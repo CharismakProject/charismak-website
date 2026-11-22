@@ -2752,20 +2752,39 @@ const RAW_RATE_BANK_ITEMS: RateBankItem[] = [
     "section": "Finishes",
     "unit": "m²",
     "specification": "Lay employer-supplied 20 mm marble on 10 mm cement/sand/admix bed including setting out, grouting, protection and cleaning.",
-    "methodologyNote": "Sora guide rate had commercial content. This working no-profit build-up strips a provisional 15% source O/P and separates bedding/consumables from specialist laying labour.",
+    "methodologyNote": "Itemised build-up (Nov 2026): materials priced from the shared material list; labour from the 2-bedroom BOQ guide. Consumption rates are standard site practice [CHECK].",
     "sourceNote": "Sora Restaurant laid-down field marble rate ₦8,000/m² used as a guide only.",
     "lines": [
       {
-        "id": "marble-field-mat",
-        "label": "10mm bedding, grout, protection consumables",
+        "id": "marble-field-1",
+        "label": "Cement for 1:3 bed",
         "category": "material",
-        "quantity": 1,
-        "unit": "m²",
-        "unitRate": 1200
+        "quantity": 0.094,
+        "unit": "bag",
+        "unitRate": 12000,
+        "materialId": "cement-50kg"
       },
       {
-        "id": "marble-field-lab",
-        "label": "Specialist marble laying labour",
+        "id": "marble-field-2",
+        "label": "Sharp sand for bed",
+        "category": "material",
+        "quantity": 0.0098,
+        "unit": "m³",
+        "unitRate": 11200,
+        "materialId": "sharp-sand"
+      },
+      {
+        "id": "marble-field-3",
+        "label": "Grout",
+        "category": "material",
+        "quantity": 0.3,
+        "unit": "kg",
+        "unitRate": 1700,
+        "materialId": "tile-grout"
+      },
+      {
+        "id": "marble-field-4",
+        "label": "Laying labour",
         "category": "labour",
         "quantity": 1,
         "unit": "m²",
@@ -2796,20 +2815,47 @@ const RAW_RATE_BANK_ITEMS: RateBankItem[] = [
     "section": "Finishes",
     "unit": "m²",
     "specification": "Lay employer-supplied narrow marble border strips to string lines with multiple cuts, 10 mm bedding, grouting, protection and cleaning.",
-    "methodologyNote": "Derived from Sora premium narrow-strip guide after provisional 15% O/P removal; narrow work has materially lower productivity.",
+    "methodologyNote": "Itemised build-up (Nov 2026): materials priced from the shared material list; labour from the 2-bedroom BOQ guide. Consumption rates are standard site practice [CHECK].",
     "sourceNote": "Sora Restaurant premium narrow border guide ₦15,500/m².",
     "lines": [
       {
-        "id": "marble-border-mat",
-        "label": "Bedding, grout, cutting/protection consumables",
+        "id": "marble-narro-1",
+        "label": "Cement for 1:3 bed",
         "category": "material",
-        "quantity": 1,
-        "unit": "m²",
-        "unitRate": 2700
+        "quantity": 0.094,
+        "unit": "bag",
+        "unitRate": 12000,
+        "materialId": "cement-50kg"
       },
       {
-        "id": "marble-border-lab",
-        "label": "Precision narrow-strip laying labour",
+        "id": "marble-narro-2",
+        "label": "Sharp sand for bed",
+        "category": "material",
+        "quantity": 0.0098,
+        "unit": "m³",
+        "unitRate": 11200,
+        "materialId": "sharp-sand"
+      },
+      {
+        "id": "marble-narro-3",
+        "label": "Grout",
+        "category": "material",
+        "quantity": 0.5,
+        "unit": "kg",
+        "unitRate": 1700,
+        "materialId": "tile-grout"
+      },
+      {
+        "id": "marble-narro-4",
+        "label": "Cutting blades / protection",
+        "category": "consumable",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 800
+      },
+      {
+        "id": "marble-narro-5",
+        "label": "Laying labour",
         "category": "labour",
         "quantity": 1,
         "unit": "m²",
@@ -2840,20 +2886,47 @@ const RAW_RATE_BANK_ITEMS: RateBankItem[] = [
     "section": "Finishes",
     "unit": "m²",
     "specification": "Template, cut and lay employer-supplied marble to shaped tops with mitred exposed edges, bedding, grout, protection and cleaning.",
-    "methodologyNote": "Derived from Sora shaped/mitred marble guide after provisional 15% O/P removal.",
+    "methodologyNote": "Itemised build-up (Nov 2026): materials priced from the shared material list; labour from the 2-bedroom BOQ guide. Consumption rates are standard site practice [CHECK].",
     "sourceNote": "Sora Restaurant flower-bed top guide ₦20,000/m².",
     "lines": [
       {
-        "id": "marble-mitre-mat",
-        "label": "Bedding, grout, blades/protection consumables",
+        "id": "marble-mitre-1",
+        "label": "Cement for 1:3 bed",
         "category": "material",
-        "quantity": 1,
-        "unit": "m²",
-        "unitRate": 4350
+        "quantity": 0.112,
+        "unit": "bag",
+        "unitRate": 12000,
+        "materialId": "cement-50kg"
       },
       {
-        "id": "marble-mitre-lab",
-        "label": "Templating, precision cutting and laying labour",
+        "id": "marble-mitre-2",
+        "label": "Sharp sand for bed",
+        "category": "material",
+        "quantity": 0.0117,
+        "unit": "m³",
+        "unitRate": 11200,
+        "materialId": "sharp-sand"
+      },
+      {
+        "id": "marble-mitre-3",
+        "label": "Grout",
+        "category": "material",
+        "quantity": 0.5,
+        "unit": "kg",
+        "unitRate": 1700,
+        "materialId": "tile-grout"
+      },
+      {
+        "id": "marble-mitre-4",
+        "label": "Cutting blades / protection",
+        "category": "consumable",
+        "quantity": 1,
+        "unit": "m²",
+        "unitRate": 1500
+      },
+      {
+        "id": "marble-mitre-5",
+        "label": "Laying labour",
         "category": "labour",
         "quantity": 1,
         "unit": "m²",
@@ -2884,20 +2957,39 @@ const RAW_RATE_BANK_ITEMS: RateBankItem[] = [
     "section": "Finishes",
     "unit": "m²",
     "specification": "Set out and lay employer-supplied patterned stone modules to design, including grouting and normal protection. Specialist adhesive measured separately.",
-    "methodologyNote": "Derived from Sora patterned-stone guide after provisional 15% O/P removal.",
+    "methodologyNote": "Itemised build-up (Nov 2026): materials priced from the shared material list; labour from the 2-bedroom BOQ guide. Consumption rates are standard site practice [CHECK].",
     "sourceNote": "Sora Restaurant patterned stone laying guide ₦10,000/m².",
     "lines": [
       {
-        "id": "stone-pattern-cons",
-        "label": "Grout, spacers, protection and cutting consumables",
+        "id": "patterned-st-1",
+        "label": "Cement for 1:3 bed",
         "category": "material",
-        "quantity": 1,
-        "unit": "m²",
-        "unitRate": 1750
+        "quantity": 0.094,
+        "unit": "bag",
+        "unitRate": 12000,
+        "materialId": "cement-50kg"
       },
       {
-        "id": "stone-pattern-lab",
-        "label": "Pattern setting-out and laying labour",
+        "id": "patterned-st-2",
+        "label": "Sharp sand for bed",
+        "category": "material",
+        "quantity": 0.0098,
+        "unit": "m³",
+        "unitRate": 11200,
+        "materialId": "sharp-sand"
+      },
+      {
+        "id": "patterned-st-3",
+        "label": "Grout",
+        "category": "material",
+        "quantity": 0.4,
+        "unit": "kg",
+        "unitRate": 1700,
+        "materialId": "tile-grout"
+      },
+      {
+        "id": "patterned-st-4",
+        "label": "Laying labour",
         "category": "labour",
         "quantity": 1,
         "unit": "m²",
@@ -2964,20 +3056,30 @@ const RAW_RATE_BANK_ITEMS: RateBankItem[] = [
     "section": "Finishes",
     "unit": "m²",
     "specification": "Lay employer-supplied engineered oak boards in straight strip layout including adhesive where required, cutting, edge trims and protection. Underlay separate.",
-    "methodologyNote": "Guide rate normalized by provisionally stripping 15% source O/P. Consumables and labour remain editable.",
+    "methodologyNote": "Itemised build-up (Nov 2026): materials priced from the shared material list; labour from the 2-bedroom BOQ guide. Consumption rates are standard site practice [CHECK].",
     "sourceNote": "Sora Restaurant straight-layout engineered oak guide ₦8,500/m².",
     "lines": [
       {
-        "id": "oak-straight-cons",
-        "label": "Adhesive, trims, cutting and protection consumables",
+        "id": "engineered-o-1",
+        "label": "Wood flooring adhesive",
         "category": "material",
         "quantity": 1,
-        "unit": "m²",
-        "unitRate": 2600
+        "unit": "kg",
+        "unitRate": 3300,
+        "materialId": "wood-floor-adhesive"
       },
       {
-        "id": "oak-straight-lab",
-        "label": "Flooring installation labour",
+        "id": "engineered-o-2",
+        "label": "Trims / beading",
+        "category": "material",
+        "quantity": 0.4,
+        "unit": "m",
+        "unitRate": 3000,
+        "materialId": "floor-trim"
+      },
+      {
+        "id": "engineered-o-3",
+        "label": "Installation labour",
         "category": "labour",
         "quantity": 1,
         "unit": "m²",
@@ -3008,20 +3110,30 @@ const RAW_RATE_BANK_ITEMS: RateBankItem[] = [
     "section": "Finishes",
     "unit": "m²",
     "specification": "Lay employer-supplied engineered oak boards in chevron pattern including detailed setting out, angled cutting, adhesive, edge trims and protection.",
-    "methodologyNote": "Chevron productivity is lower than straight layout. Guide rate normalized by stripping a provisional 15% source O/P.",
+    "methodologyNote": "Itemised build-up (Nov 2026): materials priced from the shared material list; labour from the 2-bedroom BOQ guide. Consumption rates are standard site practice [CHECK].",
     "sourceNote": "Sora Restaurant chevron guide ₦13,500/m².",
     "lines": [
       {
-        "id": "oak-chev-cons",
-        "label": "Adhesive, trims, cutting and protection consumables",
+        "id": "engineered-o-1",
+        "label": "Wood flooring adhesive",
         "category": "material",
-        "quantity": 1,
-        "unit": "m²",
-        "unitRate": 3000
+        "quantity": 1.2,
+        "unit": "kg",
+        "unitRate": 3300,
+        "materialId": "wood-floor-adhesive"
       },
       {
-        "id": "oak-chev-lab",
-        "label": "Chevron setting-out and installation labour",
+        "id": "engineered-o-2",
+        "label": "Trims / beading",
+        "category": "material",
+        "quantity": 0.4,
+        "unit": "m",
+        "unitRate": 3000,
+        "materialId": "floor-trim"
+      },
+      {
+        "id": "engineered-o-3",
+        "label": "Installation labour",
         "category": "labour",
         "quantity": 1,
         "unit": "m²",
@@ -3052,20 +3164,30 @@ const RAW_RATE_BANK_ITEMS: RateBankItem[] = [
     "section": "Finishes",
     "unit": "m²",
     "specification": "Lay employer-supplied decorative wood tiles including pattern alignment, adhesive, cutting, trims and protection.",
-    "methodologyNote": "Guide rate normalized by stripping provisional 15% source O/P.",
+    "methodologyNote": "Itemised build-up (Nov 2026): materials priced from the shared material list; labour from the 2-bedroom BOQ guide. Consumption rates are standard site practice [CHECK].",
     "sourceNote": "Sora Restaurant decorative wood-tile guide ₦11,000/m².",
     "lines": [
       {
-        "id": "woodtile-cons",
-        "label": "Adhesive, trims, cutting and protection consumables",
+        "id": "decorative-w-1",
+        "label": "Wood flooring adhesive",
         "category": "material",
-        "quantity": 1,
-        "unit": "m²",
-        "unitRate": 2700
+        "quantity": 1.1,
+        "unit": "kg",
+        "unitRate": 3300,
+        "materialId": "wood-floor-adhesive"
       },
       {
-        "id": "woodtile-lab",
-        "label": "Patterned wood-tile installation labour",
+        "id": "decorative-w-2",
+        "label": "Trims / beading",
+        "category": "material",
+        "quantity": 0.4,
+        "unit": "m",
+        "unitRate": 3000,
+        "materialId": "floor-trim"
+      },
+      {
+        "id": "decorative-w-3",
+        "label": "Installation labour",
         "category": "labour",
         "quantity": 1,
         "unit": "m²",
@@ -3696,19 +3818,29 @@ const RAW_RATE_BANK_ITEMS: RateBankItem[] = [
     "section": "Ceilings",
     "unit": "m²",
     "specification": "Prepare and apply POP skim coat to soffit, floated smooth ready for painting.",
-    "methodologyNote": "2-bedroom guide normalized by provisional 15% O/P removal.",
+    "methodologyNote": "Itemised build-up (Nov 2026): materials priced from the shared material list; labour from the 2-bedroom BOQ guide. Consumption rates are standard site practice [CHECK].",
     "sourceNote": "2-bedroom Abuja BOQ guide ₦2,000/m².",
     "lines": [
       {
-        "id": "popskim-mat",
-        "label": "POP skim material / sandpaper",
+        "id": "pop-skim-coa-1",
+        "label": "POP powder",
         "category": "material",
-        "quantity": 1,
-        "unit": "m²",
-        "unitRate": 500
+        "quantity": 0.05,
+        "unit": "bag",
+        "unitRate": 9000,
+        "materialId": "pop-bag"
       },
       {
-        "id": "popskim-lab",
+        "id": "pop-skim-coa-2",
+        "label": "Sandpaper",
+        "category": "consumable",
+        "quantity": 0.1,
+        "unit": "sheet",
+        "unitRate": 300,
+        "materialId": "sandpaper"
+      },
+      {
+        "id": "pop-skim-coa-3",
         "label": "Skimming labour",
         "category": "labour",
         "quantity": 1,
@@ -3924,24 +4056,43 @@ const RAW_RATE_BANK_ITEMS: RateBankItem[] = [
     "section": "Roofing",
     "unit": "m",
     "specification": "50×150 mm wall plate / tie beam in tanalised sawn hardwood/timber, supplied, cut and fixed to roof framing.",
-    "methodologyNote": "Historical residential guide normalized by provisional 15% O/P removal; timber species, section accuracy, treatment and current length price need validation.",
+    "methodologyNote": "Itemised build-up (Nov 2026): materials priced from the shared material list; labour from the 2-bedroom BOQ guide. Consumption rates are standard site practice [CHECK].",
     "sourceNote": "2-bedroom Abuja BOQ guide ₦1,500/m.",
     "lines": [
       {
-        "id": "50x150-wall-plate-tie-beam-mat",
-        "label": "Treated timber material",
+        "id": "50x150-wall--1",
+        "label": "Treated hardwood 50×150, 3.6 m length",
         "category": "material",
-        "quantity": 1,
-        "unit": "m",
-        "unitRate": 1000
+        "quantity": 0.2917,
+        "unit": "length",
+        "unitRate": 3600,
+        "materialId": "timber-2x6"
       },
       {
-        "id": "50x150-wall-plate-tie-beam-lab",
-        "label": "Cutting/fixing labour",
+        "id": "50x150-wall--2",
+        "label": "Wood preservative (2 coats)",
+        "category": "consumable",
+        "quantity": 0.04,
+        "unit": "litre",
+        "unitRate": 5000,
+        "materialId": "wood-preservative"
+      },
+      {
+        "id": "50x150-wall--3",
+        "label": "Nails / roofing clips",
+        "category": "consumable",
+        "quantity": 0.002,
+        "unit": "bag",
+        "unitRate": 31000,
+        "materialId": "nails"
+      },
+      {
+        "id": "50x150-wall--4",
+        "label": "Carpenter cutting & fixing",
         "category": "labour",
         "quantity": 1,
         "unit": "m",
-        "unitRate": 304.34782608695673
+        "unitRate": 304.35
       }
     ],
     "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
@@ -3968,24 +4119,43 @@ const RAW_RATE_BANK_ITEMS: RateBankItem[] = [
     "section": "Roofing",
     "unit": "m",
     "specification": "50×100 mm timber rafter in tanalised sawn hardwood/timber, supplied, cut and fixed to roof framing.",
-    "methodologyNote": "Historical residential guide normalized by provisional 15% O/P removal; timber species, section accuracy, treatment and current length price need validation.",
+    "methodologyNote": "Itemised build-up (Nov 2026): materials priced from the shared material list; labour from the 2-bedroom BOQ guide. Consumption rates are standard site practice [CHECK].",
     "sourceNote": "2-bedroom Abuja BOQ guide ₦1,200/m.",
     "lines": [
       {
-        "id": "50x100-rafter-mat",
-        "label": "Treated timber material",
+        "id": "50x100-rafte-1",
+        "label": "Treated hardwood 50×100, 3.6 m length",
         "category": "material",
-        "quantity": 1,
-        "unit": "m",
-        "unitRate": 800
+        "quantity": 0.2917,
+        "unit": "length",
+        "unitRate": 2400,
+        "materialId": "timber-2x4"
       },
       {
-        "id": "50x100-rafter-lab",
-        "label": "Cutting/fixing labour",
+        "id": "50x100-rafte-2",
+        "label": "Wood preservative (2 coats)",
+        "category": "consumable",
+        "quantity": 0.04,
+        "unit": "litre",
+        "unitRate": 5000,
+        "materialId": "wood-preservative"
+      },
+      {
+        "id": "50x100-rafte-3",
+        "label": "Nails / roofing clips",
+        "category": "consumable",
+        "quantity": 0.002,
+        "unit": "bag",
+        "unitRate": 31000,
+        "materialId": "nails"
+      },
+      {
+        "id": "50x100-rafte-4",
+        "label": "Carpenter cutting & fixing",
         "category": "labour",
         "quantity": 1,
         "unit": "m",
-        "unitRate": 243.47826086956525
+        "unitRate": 243.48
       }
     ],
     "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
@@ -4012,24 +4182,43 @@ const RAW_RATE_BANK_ITEMS: RateBankItem[] = [
     "section": "Roofing",
     "unit": "m",
     "specification": "50×100 mm roof strut / tie in tanalised sawn hardwood/timber, supplied, cut and fixed to roof framing.",
-    "methodologyNote": "Historical residential guide normalized by provisional 15% O/P removal; timber species, section accuracy, treatment and current length price need validation.",
+    "methodologyNote": "Itemised build-up (Nov 2026): materials priced from the shared material list; labour from the 2-bedroom BOQ guide. Consumption rates are standard site practice [CHECK].",
     "sourceNote": "2-bedroom Abuja BOQ guide ₦1,200/m.",
     "lines": [
       {
-        "id": "50x100-strut-tie-mat",
-        "label": "Treated timber material",
+        "id": "50x100-strut-1",
+        "label": "Treated hardwood 50×100, 3.6 m length",
         "category": "material",
-        "quantity": 1,
-        "unit": "m",
-        "unitRate": 800
+        "quantity": 0.2917,
+        "unit": "length",
+        "unitRate": 2400,
+        "materialId": "timber-2x4"
       },
       {
-        "id": "50x100-strut-tie-lab",
-        "label": "Cutting/fixing labour",
+        "id": "50x100-strut-2",
+        "label": "Wood preservative (2 coats)",
+        "category": "consumable",
+        "quantity": 0.04,
+        "unit": "litre",
+        "unitRate": 5000,
+        "materialId": "wood-preservative"
+      },
+      {
+        "id": "50x100-strut-3",
+        "label": "Nails / roofing clips",
+        "category": "consumable",
+        "quantity": 0.002,
+        "unit": "bag",
+        "unitRate": 31000,
+        "materialId": "nails"
+      },
+      {
+        "id": "50x100-strut-4",
+        "label": "Carpenter cutting & fixing",
         "category": "labour",
         "quantity": 1,
         "unit": "m",
-        "unitRate": 243.47826086956525
+        "unitRate": 243.48
       }
     ],
     "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
@@ -4056,24 +4245,43 @@ const RAW_RATE_BANK_ITEMS: RateBankItem[] = [
     "section": "Roofing",
     "unit": "m",
     "specification": "50×75 mm timber purlin in tanalised sawn hardwood/timber, supplied, cut and fixed to roof framing.",
-    "methodologyNote": "Historical residential guide normalized by provisional 15% O/P removal; timber species, section accuracy, treatment and current length price need validation.",
+    "methodologyNote": "Itemised build-up (Nov 2026): materials priced from the shared material list; labour from the 2-bedroom BOQ guide. Consumption rates are standard site practice [CHECK].",
     "sourceNote": "2-bedroom Abuja BOQ guide ₦800/m.",
     "lines": [
       {
-        "id": "50x75-purlin-mat",
-        "label": "Treated timber material",
+        "id": "50x75-purlin-1",
+        "label": "Treated hardwood 50×75, 3.6 m length",
         "category": "material",
-        "quantity": 1,
-        "unit": "m",
-        "unitRate": 550
+        "quantity": 0.2917,
+        "unit": "length",
+        "unitRate": 1800,
+        "materialId": "timber-2x3"
       },
       {
-        "id": "50x75-purlin-lab",
-        "label": "Cutting/fixing labour",
+        "id": "50x75-purlin-2",
+        "label": "Wood preservative (2 coats)",
+        "category": "consumable",
+        "quantity": 0.04,
+        "unit": "litre",
+        "unitRate": 5000,
+        "materialId": "wood-preservative"
+      },
+      {
+        "id": "50x75-purlin-3",
+        "label": "Nails / roofing clips",
+        "category": "consumable",
+        "quantity": 0.002,
+        "unit": "bag",
+        "unitRate": 31000,
+        "materialId": "nails"
+      },
+      {
+        "id": "50x75-purlin-4",
+        "label": "Carpenter cutting & fixing",
         "category": "labour",
         "quantity": 1,
         "unit": "m",
-        "unitRate": 145.6521739130435
+        "unitRate": 145.65
       }
     ],
     "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
@@ -4100,24 +4308,43 @@ const RAW_RATE_BANK_ITEMS: RateBankItem[] = [
     "section": "Roofing",
     "unit": "m",
     "specification": "50×75 mm roof noggin in tanalised sawn hardwood/timber, supplied, cut and fixed to roof framing.",
-    "methodologyNote": "Historical residential guide normalized by provisional 15% O/P removal; timber species, section accuracy, treatment and current length price need validation.",
+    "methodologyNote": "Itemised build-up (Nov 2026): materials priced from the shared material list; labour from the 2-bedroom BOQ guide. Consumption rates are standard site practice [CHECK].",
     "sourceNote": "2-bedroom Abuja BOQ guide ₦800/m.",
     "lines": [
       {
-        "id": "50x75-noggin-mat",
-        "label": "Treated timber material",
+        "id": "50x75-noggin-1",
+        "label": "Treated hardwood 50×75, 3.6 m length",
         "category": "material",
-        "quantity": 1,
-        "unit": "m",
-        "unitRate": 550
+        "quantity": 0.2917,
+        "unit": "length",
+        "unitRate": 1800,
+        "materialId": "timber-2x3"
       },
       {
-        "id": "50x75-noggin-lab",
-        "label": "Cutting/fixing labour",
+        "id": "50x75-noggin-2",
+        "label": "Wood preservative (2 coats)",
+        "category": "consumable",
+        "quantity": 0.04,
+        "unit": "litre",
+        "unitRate": 5000,
+        "materialId": "wood-preservative"
+      },
+      {
+        "id": "50x75-noggin-3",
+        "label": "Nails / roofing clips",
+        "category": "consumable",
+        "quantity": 0.002,
+        "unit": "bag",
+        "unitRate": 31000,
+        "materialId": "nails"
+      },
+      {
+        "id": "50x75-noggin-4",
+        "label": "Carpenter cutting & fixing",
         "category": "labour",
         "quantity": 1,
         "unit": "m",
-        "unitRate": 145.6521739130435
+        "unitRate": 145.65
       }
     ],
     "validationNote": "Under validation. This working rate is editable and is being checked against current Abuja market inputs, project evidence and trade productivity before verification."
