@@ -27,7 +27,7 @@ const rows: CatalogRow[] = [
   ["block-100", "MAT-111", "100 mm sandcrete block", "material", "nr", 650],
   ["clay-brick", "MAT-112", "Burnt clay facing brick", "material", "nr", 650],
   ["interlocking-paver", "MAT-113", "60 mm concrete interlocking paving block", "material", "m²", 14500],
-  ["concrete-kerb", "MAT-114", "Precast concrete kerb, 230 mm high (2 units per m)", "material", "m", 1300],
+  ["concrete-kerb", "MAT-114", "Precast concrete kerb, 230 mm high (₦1,300 per 500 mm unit, 2 per m; price varies by size)", "material", "m", 2600],
   ["ready-mix-25", "MAT-115", "Ready-mixed concrete, grade 25", "material", "m³", 145000],
   ["ready-mix-30", "MAT-116", "Ready-mixed concrete, grade 30", "material", "m³", 158000],
   ["bamboo", "MAT-117", "Construction bamboo support", "material", "nr", 2500],

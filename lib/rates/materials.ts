@@ -35,7 +35,7 @@ export const MATERIALS: Material[] = [
   { id: "plank-1x12", name: "1×12 plank, 3.6 m length", unit: "length", price: 3_000, buyStep: 1, smallestBuy: 1, buyNote: "Sold per 12 ft length", source: RECEIPTS, checked: NOV },
   { id: "marine-18-economy", name: "18 mm marine board, economy", unit: "sheet", price: 33_000, buyStep: 1, smallestBuy: 1, buyNote: "Sold per 1.2 × 2.4 m sheet", source: RECEIPTS, checked: NOV },
   { id: "marine-18-premium", name: "18 mm marine board, premium", unit: "sheet", price: 40_000, buyStep: 1, smallestBuy: 1, buyNote: "Sold per 1.2 × 2.4 m sheet", source: RECEIPTS, checked: NOV },
-  { id: "nails", name: "Nails, 2–3 inch (bag)", unit: "bag", price: 31_000, buyStep: 0.04, smallestBuy: 0.04, buyNote: "₦31,000 per bag; also sold loose by the kg (≈ 1/25 bag)", source: RECEIPTS, checked: NOV, assumption: true },
+  { id: "nails", name: "Nails, 2–3 inch (bag)", unit: "bag", price: 34_000, buyStep: 0.04, smallestBuy: 0.04, buyNote: "₦34,000 per bag (Charismak, 22 Nov 2026); also sold loose by the kg (≈ 1/25 bag)", source: RECEIPTS, checked: NOV, assumption: true },
   { id: "rebar-tmt", name: "High-yield TMT reinforcement", unit: "t", price: 1_100_000, buyStep: 0.0074, smallestBuy: 0.0074, buyNote: "≈ ₦1.1m/t; sold per 12 m length (Y10 ≈ 7.4 kg, Y12 ≈ 10.7 kg, Y20 ≈ 29.6 kg)", source: RECEIPTS, checked: NOV },
   { id: "brc-a142", name: "A142 BRC mesh, 2.4 × 4.8 m sheet", unit: "sheet", price: 44_000, buyStep: 1, smallestBuy: 1, buyNote: "Sold per sheet", source: RECEIPTS, checked: NOV },
   { id: "binding-wire", name: "Binding wire (25 kg roll)", unit: "kg", price: 1_400, buyStep: 1, smallestBuy: 1, buyNote: "₦35,000 per 25 kg roll; shops also sell by the kg", source: RECEIPTS, checked: NOV, assumption: true },
