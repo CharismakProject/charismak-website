@@ -110,14 +110,14 @@ main article[class*="border-[#0D3B66]/10"]:hover { border-color: rgba(13, 59, 10
   --cx-line: rgba(255, 255, 255, 0.10);
   --cx-line-strong: rgba(255, 255, 255, 0.20);
   --cx-text: #E6ECF1;
-  --cx-muted: rgba(230, 236, 241, 0.68);
+  --cx-muted: rgba(230, 236, 241, 0.80);
   --cx-gold: #CFA864;
   --cx-gold-bright: #E8C27C;
 }
 .cx-page { background: var(--cx-void); color: var(--cx-text); }
 .cx-page ::selection { background: var(--cx-gold); color: var(--cx-void); }
-.cx-section { position: relative; padding: 6rem 1.25rem; }
-@media (min-width: 768px) { .cx-section { padding: 8rem 2rem; } }
+.cx-section { position: relative; padding: 4rem 1.25rem; }
+@media (min-width: 768px) { .cx-section { padding: 5.5rem 2rem; } }
 .cx-alt { background: var(--cx-deep); }
 /* Fine engineering grid with a soft glow – the signature texture. */
 .cx-grid-bg {
@@ -128,7 +128,7 @@ main article[class*="border-[#0D3B66]/10"]:hover { border-color: rgba(13, 59, 10
     linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
   background-size: auto, auto, 56px 56px, 56px 56px;
 }
-.cx-eyebrow { font-family: var(--font-geist-mono), ui-monospace, monospace; font-size: 11px; font-weight: 600; letter-spacing: 0.32em; text-transform: uppercase; color: var(--cx-gold); }
+.cx-eyebrow { font-family: var(--font-geist-mono), ui-monospace, monospace; font-size: 14px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--cx-gold); }
 .cx-eyebrow::before { content: ""; display: inline-block; width: 28px; height: 1px; background: currentColor; vertical-align: middle; margin-right: 12px; opacity: .8; }
 .cx-title { font-weight: 600; letter-spacing: -0.045em; line-height: 1.02; color: #fff; }
 .cx-lead { color: var(--cx-muted); line-height: 1.85; }
