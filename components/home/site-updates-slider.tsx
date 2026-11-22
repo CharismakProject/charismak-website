@@ -38,13 +38,13 @@ export default function SiteUpdatesSlider({ slides }: { slides: SiteUpdateSlide[
 
   return (
     <div
-      className="overflow-hidden rounded-2xl border border-black/10 bg-white"
+      className="overflow-hidden rounded-2xl border border-[var(--cx-line)] bg-[var(--cx-panel)]"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       aria-roledescription="carousel"
       aria-label="Ongoing project photos"
     >
-      <div className="relative h-[340px] bg-[#EEF2F6] md:h-[520px]">
+      <div className="relative h-[340px] bg-[var(--cx-deep)] md:h-[520px]">
         {slides.map((item, index) => (
           <Image
             key={item.id}
@@ -61,13 +61,13 @@ export default function SiteUpdatesSlider({ slides }: { slides: SiteUpdateSlide[
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 md:px-6">
-        <Link href={slide.href} className="min-w-0 flex-1 text-[#071E33] hover:text-[#A82B05]">
-          <p className="truncate text-[11px] font-bold uppercase tracking-[0.14em] text-[#A82B05]">{slide.projectTitle}</p>
+        <Link href={slide.href} className="min-w-0 flex-1 text-[var(--cx-text)] hover:text-[var(--cx-gold)]">
+          <p className="truncate text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--cx-gold)]">{slide.projectTitle}</p>
           <p className="truncate text-sm font-semibold md:text-base">{slide.title}</p>
         </Link>
         {count > 1 ? (
           <div className="flex items-center gap-2">
-            <span className="text-xs text-[#617286]">{active + 1} / {count}</span>
+            <span className="text-xs text-[var(--cx-muted)]">{active + 1} / {count}</span>
             {[
               { label: paused ? "Play slideshow" : "Pause slideshow", icon: paused ? Play : Pause, onClick: () => setPaused((value) => !value) },
               { label: "Previous photo", icon: ArrowLeft, onClick: () => go(-1) },
@@ -78,7 +78,7 @@ export default function SiteUpdatesSlider({ slides }: { slides: SiteUpdateSlide[
                 type="button"
                 onClick={onClick}
                 aria-label={label}
-                className="grid h-8 w-8 place-items-center rounded-full border border-black/15 text-[#071E33] transition hover:border-[#A82B05] hover:text-[#A82B05]"
+                className="grid h-8 w-8 place-items-center rounded-full border border-[var(--cx-line-strong)] text-[var(--cx-text)] transition hover:border-[var(--cx-gold)] hover:text-[var(--cx-gold)]"
               >
                 <Icon className="h-3.5 w-3.5" />
               </button>
