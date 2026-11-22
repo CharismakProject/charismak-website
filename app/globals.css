@@ -104,15 +104,15 @@ main article[class*="border-[#0D3B66]/10"]:hover { border-color: rgba(13, 59, 10
 
 /* ===== Charismak "CX" design system: dark, technical, premium (rolled out page by page) ===== */
 :root {
-  --cx-void: #02080F;      /* deepest background */
-  --cx-deep: #040F1C;      /* section background */
-  --cx-panel: #071A2E;     /* raised panel */
-  --cx-line: rgba(255, 255, 255, 0.09);
-  --cx-line-strong: rgba(255, 255, 255, 0.18);
-  --cx-text: #EAF0F6;
-  --cx-muted: rgba(234, 240, 246, 0.62);
-  --cx-gold: #D9B26A;
-  --cx-gold-bright: #F2C879;
+  --cx-void: #0F1923;      /* page background: calm deep slate, softer than black */
+  --cx-deep: #142130;      /* section background */
+  --cx-panel: #1A2A3B;     /* raised panel */
+  --cx-line: rgba(255, 255, 255, 0.10);
+  --cx-line-strong: rgba(255, 255, 255, 0.20);
+  --cx-text: #E6ECF1;
+  --cx-muted: rgba(230, 236, 241, 0.68);
+  --cx-gold: #CFA864;
+  --cx-gold-bright: #E8C27C;
 }
 .cx-page { background: var(--cx-void); color: var(--cx-text); }
 .cx-page ::selection { background: var(--cx-gold); color: var(--cx-void); }

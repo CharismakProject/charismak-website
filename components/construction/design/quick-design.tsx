@@ -74,7 +74,7 @@ function Swatches<V extends string>({ label, value, options, onChange }: { label
 
 function Toggle({ on, label, icon, onChange }: { on: boolean; label: string; icon: React.ReactNode; onChange: (on: boolean) => void }) {
   return (
-    <button type="button" aria-pressed={on} onClick={() => onChange(!on)} className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-2 text-xs font-bold transition ${on ? "bg-[#D9B26A] text-[#02080F]" : "bg-white/5 text-white/70 hover:bg-white/10"}`}>
+    <button type="button" aria-pressed={on} onClick={() => onChange(!on)} className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-2 text-xs font-bold transition ${on ? "bg-[#D9B26A] text-[#0F1923]" : "bg-white/5 text-white/70 hover:bg-white/10"}`}>
       {icon} {label}
     </button>
   );
@@ -220,6 +220,27 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
       release();
     };
   }, []);
+  // Speed: phones and low-power machines skip the heavy lighting effects and shadows and draw fewer frames;
+  // every device stops drawing while the 3D view is scrolled off screen.
+  const [lowPower, setLowPower] = useState(false);
+  const [offscreen, setOffscreen] = useState(false);
+  const viewerBox = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const low = window.matchMedia?.("(pointer: coarse)").matches || window.innerWidth < 1024 || (navigator.hardwareConcurrency ?? 8) <= 4;
+    setLowPower(low);
+    if (low) {
+      const viewer = useViewer.getState();
+      viewer.setShadows(false);
+      viewer.setRenderQuality("low");
+    }
+  }, []);
+  useEffect(() => {
+    const el = viewerBox.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(([entry]) => setOffscreen(!entry.isIntersecting), { rootMargin: "100px" });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
   // Viewer modes: cut the walls down to see inside, light, and the first-person walk.
   useEffect(() => {
     // Walls always stand full height; "see inside" lifts the roof and ceilings instead of cutting walls.
@@ -345,10 +366,10 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
 
   return (
     <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-      <aside className="order-2 min-h-0 w-full flex-1 overflow-y-auto border-t border-white/10 bg-[#071A2E] p-4 text-white lg:order-1 lg:w-[380px] lg:flex-none lg:border-r lg:border-t-0">
+      <aside className="order-2 min-h-0 w-full flex-1 overflow-y-auto border-t border-white/10 bg-[#1A2A3B] p-4 text-white lg:order-1 lg:w-[380px] lg:flex-none lg:border-r lg:border-t-0">
         <div className="flex items-center justify-between">
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#D9B26A]">Step 1 · Pick a building</p>
-          <button type="button" onClick={() => { setPresetId(null); setHouse(randomHouse()); }} className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-[#D9B26A] to-[#F29644] px-3 py-1 text-[11px] font-bold text-[#02080F] shadow hover:brightness-110">
+          <button type="button" onClick={() => { setPresetId(null); setHouse(randomHouse()); }} className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-[#D9B26A] to-[#F29644] px-3 py-1 text-[11px] font-bold text-[#0F1923] shadow hover:brightness-110">
             <Shuffle className="h-3.5 w-3.5" /> Surprise me
           </button>
         </div>
@@ -383,7 +404,7 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
               <span className="text-xs text-white/70">Roof</span>
               <div className="mt-1 flex rounded-md bg-white/5 p-0.5">
                 {(["gable", "hip"] as const).map((roofType) => (
-                  <button key={roofType} type="button" onClick={() => change({ roofType })} aria-pressed={house.roofType === roofType} className={`flex-1 rounded px-2 py-1.5 text-xs font-bold capitalize ${house.roofType === roofType ? "bg-[#D9B26A] text-[#02080F]" : "text-white/70"}`}>{roofType}</button>
+                  <button key={roofType} type="button" onClick={() => change({ roofType })} aria-pressed={house.roofType === roofType} className={`flex-1 rounded px-2 py-1.5 text-xs font-bold capitalize ${house.roofType === roofType ? "bg-[#D9B26A] text-[#0F1923]" : "text-white/70"}`}>{roofType}</button>
                 ))}
               </div>
             </div>
@@ -405,7 +426,7 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
         <label className="relative mt-2 block">
           <span className="sr-only">State for prices</span>
           <MapPin className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-[#D9B26A]" />
-          <select value={location.id} onChange={(event) => chooseLocation(event.target.value)} className="h-9 w-full rounded-md border border-white/15 bg-white/10 pl-9 pr-3 text-sm text-white outline-none [&_optgroup]:bg-[#071A2E] [&_option]:bg-[#071A2E]">
+          <select value={location.id} onChange={(event) => chooseLocation(event.target.value)} className="h-9 w-full rounded-md border border-white/15 bg-white/10 pl-9 pr-3 text-sm text-white outline-none [&_optgroup]:bg-[#1A2A3B] [&_option]:bg-[#1A2A3B]">
             {ZONES.map((zone) => (
               <optgroup key={zone} label={zone}>
                 {RATE_LOCATIONS.filter((loc) => loc.zone === zone).map((loc) => <option key={loc.id} value={loc.id}>{loc.name}{loc.status === "provisional" ? " (provisional)" : ""}</option>)}
@@ -441,7 +462,7 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
         {busy ? <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-[#F2C879]"><Download className="h-3.5 w-3.5 animate-bounce" /> {busy}</p> : null}
 
         <div className="mt-4 grid gap-2">
-          <Link href="/quote" className="inline-flex items-center justify-center gap-2 rounded-md bg-[#D9B26A] px-3 py-2.5 text-sm font-bold text-[#02080F] hover:bg-[#F2C879]">
+          <Link href="/quote" className="inline-flex items-center justify-center gap-2 rounded-md bg-[#D9B26A] px-3 py-2.5 text-sm font-bold text-[#0F1923] hover:bg-[#F2C879]">
             Get a proper quote <ArrowRight className="h-4 w-4" />
           </Link>
           <button type="button" onClick={() => onAdvanced(scene)} className="inline-flex items-center justify-center gap-2 rounded-md border border-white/20 px-3 py-2.5 text-sm font-bold text-white hover:border-white/50">
@@ -454,8 +475,8 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
       </aside>
 
       <div className="order-1 flex w-full shrink-0 flex-col lg:order-2 lg:h-auto lg:min-h-0 lg:flex-1 lg:flex-row">
-      <div className={`relative h-[46vh] min-h-[280px] w-full lg:h-auto ${view === "plan" ? "hidden" : "lg:flex-1"}`}>
-        <Viewer>
+      <div ref={viewerBox} className={`relative h-[46vh] min-h-[280px] w-full lg:h-auto ${view === "plan" ? "hidden" : "lg:flex-1"}`}>
+        <Viewer disablePostFx={lowPower} maxFps={lowPower ? 30 : 45} renderPaused={offscreen && !busy}>
           <CaptureBridge onReady={onCaptureReady} />
           {walking ? null : (
             <>
@@ -468,7 +489,7 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
         {walking ? (
           <div className="absolute inset-x-3 top-3 flex flex-wrap items-center justify-between gap-2">
             <span className="rounded-full bg-black/60 px-3 py-1.5 text-xs text-white backdrop-blur">Walking inside · arrow keys / WASD to move, mouse to look (on phones use the on-screen controls)</span>
-            <button type="button" onClick={() => setWalking(false)} className="inline-flex items-center gap-1.5 rounded-full bg-[#D9B26A] px-3 py-1.5 text-xs font-bold text-[#02080F]">
+            <button type="button" onClick={() => setWalking(false)} className="inline-flex items-center gap-1.5 rounded-full bg-[#D9B26A] px-3 py-1.5 text-xs font-bold text-[#0F1923]">
               <X className="h-3.5 w-3.5" /> Stop walking
             </button>
           </div>
@@ -476,22 +497,22 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
         <div className={`absolute left-3 top-3 flex flex-wrap gap-2 ${walking ? "hidden" : ""}`}>
           <div className="flex rounded-full bg-black/60 p-0.5 backdrop-blur" role="group" aria-label="View">
             {([["split", "3D + plan"], ["3d", "3D"], ["plan", "Plan"]] as const).map(([id, label]) => (
-              <button key={id} type="button" onClick={() => setView(id)} aria-pressed={view === id} className={`rounded-full px-2.5 py-1 text-xs font-bold ${view === id ? "bg-white text-[#02080F]" : "text-white/80"}`}>{label}</button>
+              <button key={id} type="button" onClick={() => setView(id)} aria-pressed={view === id} className={`rounded-full px-2.5 py-1 text-xs font-bold ${view === id ? "bg-white text-[#0F1923]" : "text-white/80"}`}>{label}</button>
             ))}
           </div>
           <button type="button" onClick={() => { setInside(false); setStage(0); setProgress(0.2); setPlaying(true); }} className="inline-flex items-center gap-1.5 rounded-full bg-[#0E7C66] px-3 py-1.5 text-xs font-bold text-white shadow-lg hover:brightness-110">
             <Play className="h-3.5 w-3.5" /> {stage !== null && stage < LAST_STAGE ? "Restart build" : "Play construction"}
           </button>
-          <button type="button" onClick={() => setWalking(true)} className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#D9B26A] to-[#F29644] px-3 py-1.5 text-xs font-bold text-[#02080F] shadow-lg">
+          <button type="button" onClick={() => setWalking(true)} className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#D9B26A] to-[#F29644] px-3 py-1.5 text-xs font-bold text-[#0F1923] shadow-lg">
             <Footprints className="h-3.5 w-3.5" /> Walk inside
           </button>
-          <button type="button" onClick={() => setInside((value) => !value)} aria-pressed={inside} className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold shadow-lg backdrop-blur ${inside ? "bg-[#D9B26A] text-[#02080F]" : "bg-black/60 text-white hover:bg-black/75"}`}>
+          <button type="button" onClick={() => setInside((value) => !value)} aria-pressed={inside} className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold shadow-lg backdrop-blur ${inside ? "bg-[#D9B26A] text-[#0F1923]" : "bg-black/60 text-white hover:bg-black/75"}`}>
             <Eye className="h-3.5 w-3.5" /> {inside ? "Put the roof back" : "See inside"}
           </button>
           {inside && house.floors > 1 ? (
             <div className="flex rounded-full bg-black/60 p-0.5 backdrop-blur">
               {Array.from({ length: house.floors }, (_, f) => (
-                <button key={f} type="button" onClick={() => setViewFloor(f)} aria-pressed={viewFloor === f} className={`rounded-full px-3 py-1 text-xs font-bold ${viewFloor === f ? "bg-white text-[#02080F]" : "text-white/80"}`}>{f === 0 ? "Ground" : `Floor ${f + 1}`}</button>
+                <button key={f} type="button" onClick={() => setViewFloor(f)} aria-pressed={viewFloor === f} className={`rounded-full px-3 py-1 text-xs font-bold ${viewFloor === f ? "bg-white text-[#0F1923]" : "text-white/80"}`}>{f === 0 ? "Ground" : `Floor ${f + 1}`}</button>
               ))}
             </div>
           ) : null}
@@ -518,7 +539,7 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
         ) : null}
         <div className={`absolute bottom-3 right-3 flex rounded-full bg-black/60 p-0.5 backdrop-blur ${walking ? "hidden" : ""}`} role="group" aria-label="Time of day">
           {([["midday", "Day", Sun], ["golden", "Sunset", Sunset], ["night", "Night", Moon]] as const).map(([id, label, Icon]) => (
-            <button key={id} type="button" onClick={() => setTimeOfDay(id)} aria-pressed={timeOfDay === id} className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${timeOfDay === id ? "bg-white text-[#02080F]" : "text-white/80"}`}>
+            <button key={id} type="button" onClick={() => setTimeOfDay(id)} aria-pressed={timeOfDay === id} className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${timeOfDay === id ? "bg-white text-[#0F1923]" : "text-white/80"}`}>
               <Icon className="h-3.5 w-3.5" /> {label}
             </button>
           ))}
@@ -531,13 +552,13 @@ export default function QuickDesign({ onAdvanced }: { onAdvanced: (scene: Scene)
       {view !== "3d" && !walking ? (
         <div className={`relative flex min-h-[320px] flex-col border-l border-white/10 bg-white ${view === "plan" ? "flex-1" : "lg:w-[42%]"}`}>
           {house.floors > 1 ? (
-            <div className="absolute left-2 top-2 z-10 flex rounded-full bg-[#02080F]/80 p-0.5">
+            <div className="absolute left-2 top-2 z-10 flex rounded-full bg-[#0F1923]/80 p-0.5">
               {Array.from({ length: house.floors }, (_, f) => (
-                <button key={f} type="button" onClick={() => setPlanFloor(f)} aria-pressed={planFloor === f} className={`rounded-full px-3 py-1 text-xs font-bold ${planFloor === f ? "bg-white text-[#02080F]" : "text-white/80"}`}>{f === 0 ? "Ground" : `Floor ${f + 1}`}</button>
+                <button key={f} type="button" onClick={() => setPlanFloor(f)} aria-pressed={planFloor === f} className={`rounded-full px-3 py-1 text-xs font-bold ${planFloor === f ? "bg-white text-[#0F1923]" : "text-white/80"}`}>{f === 0 ? "Ground" : `Floor ${f + 1}`}</button>
               ))}
             </div>
           ) : null}
-          {view === "plan" ? <button type="button" onClick={() => setView("split")} className="absolute right-2 top-2 z-10 rounded-full bg-[#D9B26A] px-3 py-1 text-xs font-bold text-[#02080F]">Show 3D</button> : null}
+          {view === "plan" ? <button type="button" onClick={() => setView("split")} className="absolute right-2 top-2 z-10 rounded-full bg-[#D9B26A] px-3 py-1 text-xs font-bold text-[#0F1923]">Show 3D</button> : null}
           <PlanDrawing house={deferredHouse} floor={Math.min(planFloor, house.floors - 1)} className="h-full max-h-[80vh] w-full lg:max-h-none" />
         </div>
       ) : null}

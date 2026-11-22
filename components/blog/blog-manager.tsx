@@ -244,7 +244,7 @@ export default function BlogManager() {
       return;
     }
     setEditor(emptyEditor());
-    setMessage(status === "published" ? "Article published on News & Learning." : "Draft saved.");
+    setMessage(status === "published" ? "Published. News shows on the Constru News Channel; learning articles show under Courses & study guides." : "Draft saved.");
     await loadPosts();
   };
 

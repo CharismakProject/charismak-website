@@ -58,7 +58,7 @@ export default function DesignStudio() {
   };
 
   return (
-    <main className="dark flex h-[100dvh] flex-col bg-[#02080F] pt-20">
+    <main className="dark flex h-[100dvh] flex-col bg-[#0F1923] pt-20">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 px-4 py-2 text-xs text-white/60">
         <span className="flex flex-wrap items-center gap-3">
           <StudioHubTabs active="design" compact />

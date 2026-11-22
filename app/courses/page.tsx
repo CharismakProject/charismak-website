@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { ArrowRight, BookOpen, FileDown, GraduationCap } from "lucide-react";
 
+import { blogArticles } from "@/lib/content/blog";
+import { loadPublishedBlogArticles } from "@/lib/content/blog-data";
 import { LEVEL_LABEL, loadPublishedCourses } from "@/lib/content/courses-data";
+import { isNewsArticle } from "@/lib/content/news";
 import { createSeoMetadata } from "@/lib/seo";
 
 export const revalidate = 300;
@@ -13,7 +16,8 @@ export const metadata = createSeoMetadata({
 });
 
 export default async function CoursesPage() {
-  const courses = await loadPublishedCourses();
+  const [courses, articles] = await Promise.all([loadPublishedCourses(), loadPublishedBlogArticles()]);
+  const guides = (articles ?? blogArticles).filter((article) => !isNewsArticle(article));
   return (
     <main className="cx-skin overflow-hidden bg-white pt-20">
       <section className="relative overflow-hidden bg-[#071E33] px-5 py-20 text-white md:px-8 lg:py-24">
@@ -23,7 +27,7 @@ export default async function CoursesPage() {
           <h1 className="max-w-4xl text-5xl font-semibold leading-[1.02] tracking-[-0.04em] sm:text-6xl">Courses & study guides</h1>
           <p className="mt-6 max-w-3xl text-base leading-8 text-white/72 md:text-lg">Step-by-step lessons and downloadable study guides on quantity surveying, building technology and site practice — written for students and early-career professionals in Nigeria.</p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/blog" className="inline-flex items-center gap-2 border border-white/25 px-5 py-3 text-sm font-bold text-white hover:border-white">News & articles <ArrowRight className="h-4 w-4" /></Link>
+            <Link href="/blog" className="inline-flex items-center gap-2 border border-white/25 px-5 py-3 text-sm font-bold text-white hover:border-white">Constru News Channel <ArrowRight className="h-4 w-4" /></Link>
             <Link href="/construction-explorer" className="inline-flex items-center gap-2 border border-white/25 px-5 py-3 text-sm font-bold text-white hover:border-white">Learn construction in 3D <ArrowRight className="h-4 w-4" /></Link>
           </div>
         </div>
@@ -32,7 +36,13 @@ export default async function CoursesPage() {
       <section className="bg-[#F7F8FA] px-5 py-16 md:px-8">
         <div className="mx-auto max-w-7xl">
           {courses === null ? <p className="text-[#3A4653]">Courses could not be loaded right now. Please try again shortly.</p> : null}
-          {courses && !courses.length ? <p className="text-[#3A4653]">The first courses are being prepared. Check back soon.</p> : null}
+          {courses && !courses.length ? (
+            <div className="rounded-2xl border border-dashed border-black/15 bg-white p-10 text-center">
+              <span className="inline-block rounded-full border border-[#C8A45D] px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-[#C8A45D]">Coming soon</span>
+              <h2 className="mt-4 text-2xl font-semibold text-[#071E33]">Courses and study guides are being prepared.</h2>
+              <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-[#3A4653]">Lessons and downloadable PDF guides will appear here as soon as they are published.</p>
+            </div>
+          ) : null}
           {courses?.length ? (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {courses.map((course) => (
@@ -53,6 +63,24 @@ export default async function CoursesPage() {
           ) : null}
         </div>
       </section>
+
+      {guides.length ? (
+        <section className="bg-white px-5 py-16 md:px-8">
+          <div className="mx-auto max-w-7xl">
+            <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.25em] text-[#C8A45D]"><BookOpen className="h-4 w-4" /> Free guides</p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-[#071E33]">Practical construction guides</h2>
+            <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {guides.map((article) => (
+                <Link key={article.slug} href={`/blog/${article.slug}`} className="group rounded-xl border border-black/10 bg-[#F7F8FA] p-5 transition hover:bg-white hover:shadow-[0_10px_35px_rgba(7,30,51,0.06)]">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#C8A45D]">{article.category}</p>
+                  <h3 className="mt-2 text-lg font-semibold leading-7 text-[#071E33] group-hover:text-[#0D3B66]">{article.title}</h3>
+                  <p className="mt-2 line-clamp-2 text-sm leading-6 text-[#3A4653]">{article.excerpt}</p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
     </main>
   );
 }
