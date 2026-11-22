@@ -41,7 +41,7 @@ export function cleanTheme(value: unknown): ThemeColors {
 /** CSS that applies the theme. Values are validated hex codes, so this is safe to inline. */
 export function themeCss(colors: ThemeColors): string {
   const vars = THEME_FIELDS.map((f) => `${f.cssVar}:${colors[f.key]}`).join(";");
-  return `:root{${vars};--cx-muted:color-mix(in srgb,${colors.ink} 68%,transparent)}`;
+  return `:root{${vars};--cx-muted:color-mix(in srgb,${colors.ink} 80%,transparent)}`;
 }
 
 export const isDefaultTheme = (c: ThemeColors) => THEME_FIELDS.every((f) => c[f.key].toUpperCase() === f.default.toUpperCase());
