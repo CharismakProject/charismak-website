@@ -79,8 +79,9 @@ export default async function Footer() {
               <Link className="hover:text-white" href="/rates">Construction Rate Bank</Link>
               <Link className="hover:text-white" href="/construction-studio/design">Construction Studio</Link>
               <Link className="hover:text-white" href="/construction-explorer">Learn construction in 3D</Link>
-              <Link className="hover:text-white" href="/marketplace">Supplier Directory</Link>
+              <Link className="hover:text-white" href="/prices#suppliers">Supplier register</Link>
               <Link className="hover:text-white" href="/blog">News &amp; Learning</Link>
+              <Link className="hover:text-white" href="/courses">Courses &amp; Study Guides</Link>
             </div>
           </div>
           <div>

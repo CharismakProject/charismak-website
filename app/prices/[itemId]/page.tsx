@@ -1,5 +1,6 @@
 import MaterialPriceDetailRuntime from "@/components/pricing/material-price-detail-runtime";
 import JsonLd from "@/components/seo/json-ld";
+import MaterialSuppliers from "@/components/pricing/material-suppliers";
 import { DEFAULT_PRICE_ITEMS } from "@/lib/pricing/defaults";
 import { breadcrumbJsonLd, createSeoMetadata } from "@/lib/seo";
 import { MarketplaceSafetyNotice, MarketplaceTransactionGuard } from "@/components/marketplace/transaction-safety";
@@ -67,6 +68,9 @@ export default async function MaterialSupplierPage({
           <MarketplaceSafetyNotice compact />
         </div>
         <MaterialPriceDetailRuntime itemId={decodedItemId} />
+        <div className="mt-6">
+          <MaterialSuppliers itemId={decodedItemId} itemName={DEFAULT_PRICE_ITEMS.find((entry) => entry.id === decodedItemId)?.description ?? "this material"} />
+        </div>
       </div>
     </main>
   );

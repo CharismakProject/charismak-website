@@ -15,10 +15,10 @@ const navItems = [
 const toolItems = [
   { label: "Construction Studio", href: "/construction-studio/design", description: "Learn in 3D · design & price a house · upload your drawing & BOQ" },
   { label: "Cost Estimator", href: "/estimator", description: "Early budget range for your project" },
-  { label: "Material Prices", href: "/prices", description: "Abuja prices with source and date" },
+  { label: "Material Prices", href: "/prices", description: "Abuja prices with source, date and suppliers" },
   { label: "Rate Bank", href: "/rates", description: "Build-ups for common construction work" },
-  { label: "Supplier Directory", href: "/marketplace", description: "Suppliers and artisans" },
   { label: "News & Learning", href: "/blog", description: "Guides and company updates" },
+  { label: "Courses & Study Guides", href: "/courses", description: "Free lessons and PDF guides for students" },
 ];
 
 export default function Navbar() {

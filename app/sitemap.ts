@@ -26,9 +26,9 @@ const staticRoutes: Array<{
   { path: "/rates", changeFrequency: "weekly", priority: 0.95 },
   { path: "/construction-explorer", changeFrequency: "monthly", priority: 0.9 },
   { path: "/construction-studio", changeFrequency: "monthly", priority: 0.9 },
-  { path: "/marketplace", changeFrequency: "daily", priority: 0.85 },
   { path: "/marketplace-safety", changeFrequency: "yearly", priority: 0.35 },
   { path: "/blog", changeFrequency: "daily", priority: 0.9 },
+  { path: "/courses", changeFrequency: "weekly", priority: 0.8 },
   { path: "/contact", changeFrequency: "monthly", priority: 0.7 },
   { path: "/quote", changeFrequency: "monthly", priority: 0.7 },
 ];
