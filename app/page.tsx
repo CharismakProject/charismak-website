@@ -200,7 +200,7 @@ export default async function HomePage() {
               </p>
               <div className="mt-10 flex flex-wrap gap-3">
                 <Link href="/quote" className="cx-btn cx-btn-primary">Start Your Project <ArrowRight className="h-4 w-4" /></Link>
-                <Link href="/projects" className="cx-btn cx-btn-ghost backdrop-blur-sm">View Our Projects <ArrowRight className="h-4 w-4" /></Link>
+                <Link href="/projects" className="cx-btn cx-btn-ghost">View Our Projects <ArrowRight className="h-4 w-4" /></Link>
               </div>
               {heroProject ? (
                 <Link href={`/projects/${heroProject.slug}`} className="mt-10 inline-flex items-center gap-3 border-l border-[var(--cx-gold)] pl-4 text-sm text-white/65 hover:text-white">
@@ -249,10 +249,9 @@ export default async function HomePage() {
       </section>
 
       {/* ===== CHARISMAK ONE ===== */}
-      <CxSection id="charismak-one" grid>
-        <div className="cx-reveal grid gap-14 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
+      <CxSection id="charismak-one">
+        <div className="grid gap-14 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
           <a href="/charismak-one/charismak-one-flyer.pdf" target="_blank" rel="noreferrer" className="group relative block">
-            <div className="absolute -inset-4 bg-[radial-gradient(circle,rgba(217,178,106,0.18),transparent_70%)] blur-2xl" />
             <Image
               src="/charismak-one/charismak-one-flyer.jpg"
               alt="Charismak One flyer: construction management app, call for beta testers, book a free demo"
@@ -286,7 +285,7 @@ export default async function HomePage() {
 
       {/* ===== SELECTED PROJECTS ===== */}
       <CxSection>
-        <div className="cx-reveal">
+        <div>
           <div className="mb-12 flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
             <div className="max-w-2xl">
               <Eyebrow>Selected Projects</Eyebrow>
@@ -294,7 +293,7 @@ export default async function HomePage() {
             </div>
             <Link href="/projects" className="cx-link">View Project Portfolio <ArrowRight className="h-4 w-4" /></Link>
           </div>
-          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+          <div className={`grid gap-5 sm:grid-cols-2 ${featuredProjects.length === 3 ? "xl:grid-cols-3" : "xl:grid-cols-4"}`}>
             {featuredProjects.map((project, index) => (
               <Link key={project.slug} href={`/projects/${project.slug}`} className="cx-card group overflow-hidden hover:-translate-y-1">
                 <div className="relative h-64 overflow-hidden bg-[var(--cx-panel)]">
@@ -305,9 +304,8 @@ export default async function HomePage() {
                     sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
                     className="object-cover transition duration-700 group-hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[var(--cx-void)] via-[var(--cx-void)]/20 to-transparent" />
-                  <span className="cx-mono absolute right-4 top-4 text-xs text-white/70">{String(index + 1).padStart(2, "0")}</span>
-                  <span className="absolute left-4 top-4 border border-white/20 bg-[var(--cx-void)]/70 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-white backdrop-blur">
+                  <span className="cx-mono absolute right-4 top-4 rounded bg-[var(--cx-void)] px-2 py-1 text-xs text-white">{String(index + 1).padStart(2, "0")}</span>
+                  <span className="absolute left-4 top-4 bg-[var(--cx-void)] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-white">
                     {project.engagementTag}
                   </span>
                 </div>
@@ -325,8 +323,8 @@ export default async function HomePage() {
       </CxSection>
 
       {/* ===== ABOUT ===== */}
-      <CxSection alt grid>
-        <div className="cx-reveal grid gap-14 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
+      <CxSection alt>
+        <div className="grid gap-14 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
           <div>
             <Eyebrow>About Charismak</Eyebrow>
             <h2 className="cx-title max-w-xl text-4xl md:text-5xl">Construction experience with cost and project management built in.</h2>
@@ -345,9 +343,25 @@ export default async function HomePage() {
         </div>
       </CxSection>
 
+      {/* ===== SITE UPDATES ===== */}
+      {siteSlides.length > 0 ? (
+        <CxSection alt>
+          <div>
+            <div className="mb-10 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+              <div>
+                <Eyebrow>{hasSiteUpdates ? "Site Progress & Project Updates" : "Project Portfolio"}</Eyebrow>
+                <h2 className="cx-title text-4xl md:text-5xl">{hasSiteUpdates ? "Latest photographs from our sites." : "Photos from Charismak projects."}</h2>
+              </div>
+              <Link href="/projects" className="cx-link">All projects <ArrowRight className="h-4 w-4" /></Link>
+            </div>
+            <SiteUpdatesSlider slides={siteSlides} />
+          </div>
+        </CxSection>
+      ) : null}
+
       {/* ===== SERVICES ===== */}
       <CxSection>
-        <div className="cx-reveal">
+        <div>
           <div className="mb-14 grid gap-8 lg:grid-cols-[1fr_0.9fr] lg:items-end">
             <div>
               <Eyebrow>What We Do</Eyebrow>
@@ -379,7 +393,7 @@ export default async function HomePage() {
 
       {/* ===== PROCESS ===== */}
       <CxSection alt>
-        <div className="cx-reveal">
+        <div>
           <div className="grid gap-8 lg:grid-cols-[1fr_0.9fr] lg:items-end">
             <div>
               <Eyebrow>Project Delivery</Eyebrow>
@@ -407,17 +421,15 @@ export default async function HomePage() {
 
       {/* ===== PLAN BEFORE YOU BUILD ===== */}
       <CxSection>
-        <div className="cx-reveal grid overflow-hidden border border-white/10 lg:grid-cols-[0.9fr_1.1fr]">
+        <div className="grid overflow-hidden border border-white/10 lg:grid-cols-[0.9fr_1.1fr]">
           <div className="relative min-h-[360px] bg-[var(--cx-panel)]">
             <Image
               src={featuredProjects[1]?.heroImages?.[0] || featuredProjects[1]?.cover || heroImage}
               alt="Charismak construction and digital tools"
               fill
               sizes="(max-width: 1024px) 100vw, 45vw"
-              className="object-cover opacity-60"
+              className="object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-[var(--cx-void)]/40 to-[var(--cx-void)]/90" />
-            <div className="cx-grid-bg absolute inset-0" />
           </div>
           <div className="flex flex-col justify-center bg-[var(--cx-deep)] p-8 md:p-14">
             <Eyebrow>Plan Before You Build</Eyebrow>
@@ -435,7 +447,7 @@ export default async function HomePage() {
 
       {/* ===== CEO APP (small banner) ===== */}
       <section id="ceo-app" className="bg-[var(--cx-void)] px-5 pb-20 md:px-8">
-        <div className="cx-card cx-reveal mx-auto grid max-w-5xl items-center gap-8 p-6 md:grid-cols-[1fr_220px] md:p-8">
+        <div className="cx-card mx-auto grid max-w-5xl items-center gap-8 p-6 md:grid-cols-[1fr_220px] md:p-8">
           <div>
             <p className="cx-eyebrow">Also from Charismak · Free app</p>
             <h3 className="mt-3 text-xl font-semibold leading-snug text-white md:text-2xl">CEO – Shop Manager for traders</h3>
@@ -488,21 +500,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ===== SITE UPDATES ===== */}
-      {siteSlides.length > 0 ? (
-        <CxSection alt>
-          <div>
-            <div className="mb-10 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-              <div>
-                <Eyebrow>{hasSiteUpdates ? "Site Progress & Project Updates" : "Project Portfolio"}</Eyebrow>
-                <h2 className="cx-title text-4xl md:text-5xl">{hasSiteUpdates ? "Latest photographs from our sites." : "Photos from Charismak projects."}</h2>
-              </div>
-              <Link href="/projects" className="cx-link">All projects <ArrowRight className="h-4 w-4" /></Link>
-            </div>
-            <SiteUpdatesSlider slides={siteSlides} />
-          </div>
-        </CxSection>
-      ) : null}
     </main>
   );
 }

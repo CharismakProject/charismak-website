@@ -23,7 +23,7 @@ export default async function Footer() {
   const whatsappLink = `https://wa.me/${whatsappDigits}?text=Hello%20Charismak%20Project%2C%20I%20would%20like%20to%20discuss%20a%20construction%20project.`;
 
   return (
-    <footer className="cx-grid-bg border-t border-white/10 bg-[var(--cx-void)] text-white">
+    <footer className="border-t border-white/10 bg-[var(--cx-void)] text-white">
       <section className="border-b border-white/10 px-5 py-16 md:px-8 lg:py-20">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1fr_auto] lg:items-end">
           <div>
