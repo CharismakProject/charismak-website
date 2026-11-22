@@ -18,6 +18,7 @@ const toolItems = [
   { label: "Material Prices", href: "/prices", description: "Abuja prices with source, date and suppliers" },
   { label: "Rate Bank", href: "/rates", description: "Build-ups for common construction work" },
   { label: "News & Learning", href: "/blog", description: "Guides and company updates" },
+  { label: "Courses & Study Guides", href: "/courses", description: "Free lessons and PDF guides for students" },
 ];
 
 export default function Navbar() {

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, Boxes, Building2, Camera, CircleDollarSign, LayoutDashboard, Palette, Settings2, Store, UserRoundCog, Users, Wrench } from "lucide-react";
+import { BookOpen, Boxes, Building2, Camera, CircleDollarSign, GraduationCap, LayoutDashboard, Palette, Settings2, Store, UserRoundCog, Users, Wrench } from "lucide-react";
 
 const links = [
   { href: "/admin", label: "Control Centre", icon: LayoutDashboard },
@@ -11,6 +11,7 @@ const links = [
   { href: "/admin/leadership", label: "Leadership", icon: Users },
   { href: "/admin/services", label: "Services", icon: Wrench },
   { href: "/blog/manage", label: "News & Learning", icon: BookOpen },
+  { href: "/courses/manage", label: "Courses", icon: GraduationCap },
   { href: "/catalogue-admin", label: "Catalogue", icon: Boxes },
   { href: "/price-admin", label: "Market Prices", icon: CircleDollarSign },
   { href: "/admin/suppliers", label: "Supplier Profiles", icon: UserRoundCog },
