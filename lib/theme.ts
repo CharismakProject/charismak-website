@@ -2,12 +2,12 @@
 // Stored in website_content as content_key "theme.colors" (section "theme").
 
 export const THEME_FIELDS = [
-  { key: "void", cssVar: "--cx-void", label: "Page background", hint: "Main dark background behind every page", default: "#0F1923" },
-  { key: "deep", cssVar: "--cx-deep", label: "Section background", hint: "Alternating sections, cards and form areas", default: "#142130" },
-  { key: "panel", cssVar: "--cx-panel", label: "Panels", hint: "Raised boxes and image backgrounds", default: "#1A2A3B" },
-  { key: "gold", cssVar: "--cx-gold", label: "Accent colour", hint: "Buttons, labels, icons and highlights", default: "#CFA864" },
-  { key: "goldBright", cssVar: "--cx-gold-bright", label: "Accent hover", hint: "Button hover and bright highlights", default: "#E8C27C" },
-  { key: "ink", cssVar: "--cx-text", label: "Main text", hint: "Body text colour", default: "#E6ECF1" },
+  { key: "void", cssVar: "--cx-void", label: "Page background", hint: "Main dark background behind every page", default: "#0A1A2F" },
+  { key: "deep", cssVar: "--cx-deep", label: "Section background", hint: "Alternating sections, cards and form areas", default: "#0F2440" },
+  { key: "panel", cssVar: "--cx-panel", label: "Panels", hint: "Raised boxes and image backgrounds", default: "#16304F" },
+  { key: "gold", cssVar: "--cx-gold", label: "Accent colour", hint: "Buttons, labels, icons and highlights", default: "#E3B95F" },
+  { key: "goldBright", cssVar: "--cx-gold-bright", label: "Accent hover", hint: "Button hover and bright highlights", default: "#F5CF7A" },
+  { key: "ink", cssVar: "--cx-text", label: "Main text", hint: "Body text colour", default: "#F4F7FA" },
 ] as const;
 
 export type ThemeKey = (typeof THEME_FIELDS)[number]["key"];
@@ -16,7 +16,8 @@ export type ThemeColors = Record<ThemeKey, string>;
 export const DEFAULT_THEME: ThemeColors = Object.fromEntries(THEME_FIELDS.map((f) => [f.key, f.default])) as ThemeColors;
 
 export const THEME_PRESETS: { name: string; colors: ThemeColors }[] = [
-  { name: "Charismak Slate (default)", colors: DEFAULT_THEME },
+  { name: "Charismak Navy (default)", colors: DEFAULT_THEME },
+  { name: "Charismak Slate", colors: { void: "#0F1923", deep: "#142130", panel: "#1A2A3B", gold: "#CFA864", goldBright: "#E8C27C", ink: "#E6ECF1" } },
   { name: "Charismak Night (previous)", colors: { void: "#02080F", deep: "#040F1C", panel: "#071A2E", gold: "#D9B26A", goldBright: "#F2C879", ink: "#EAF0F6" } },
   { name: "Steel Blue", colors: { void: "#030A12", deep: "#06121F", panel: "#0A1D31", gold: "#5BA4E6", goldBright: "#8CC4F5", ink: "#EAF0F6" } },
   { name: "Emerald", colors: { void: "#020B08", deep: "#05140F", panel: "#0A2219", gold: "#3CC48A", goldBright: "#6FE0AE", ink: "#E9F5EF" } },
@@ -41,7 +42,7 @@ export function cleanTheme(value: unknown): ThemeColors {
 /** CSS that applies the theme. Values are validated hex codes, so this is safe to inline. */
 export function themeCss(colors: ThemeColors): string {
   const vars = THEME_FIELDS.map((f) => `${f.cssVar}:${colors[f.key]}`).join(";");
-  return `:root{${vars};--cx-muted:color-mix(in srgb,${colors.ink} 80%,transparent)}`;
+  return `:root{${vars};--cx-muted:color-mix(in srgb,${colors.ink} 82%,transparent)}`;
 }
 
 export const isDefaultTheme = (c: ThemeColors) => THEME_FIELDS.every((f) => c[f.key].toUpperCase() === f.default.toUpperCase());

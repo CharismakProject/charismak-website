@@ -91,7 +91,7 @@ export default function PlanImport({ onOpen, onClose }: { onOpen: (scene: Scene)
 
   return (
     <div className="fixed inset-0 z-[220] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div role="dialog" aria-label="Import a floor plan" className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-xl border border-white/10 bg-[#1A2A3B] p-5 text-white shadow-2xl" onClick={(event) => event.stopPropagation()}>
+      <div role="dialog" aria-label="Import a floor plan" className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-xl border border-white/10 bg-[#16304F] p-5 text-white shadow-2xl" onClick={(event) => event.stopPropagation()}>
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#D9B26A]">Import your plan</p>
@@ -118,7 +118,7 @@ export default function PlanImport({ onOpen, onClose }: { onOpen: (scene: Scene)
               <p className="text-xs text-white/70">Layers to read walls from</p>
               <div className="mt-1 flex max-h-28 flex-wrap gap-1.5 overflow-y-auto">
                 {dxf.layers.map((layer) => (
-                  <button key={layer} type="button" aria-pressed={layers.has(layer)} onClick={() => setLayers((current) => { const next = new Set(current); if (next.has(layer)) next.delete(layer); else next.add(layer); return next; })} className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${layers.has(layer) ? "bg-[#D9B26A] text-[#0F1923]" : "bg-white/5 text-white/70"}`}>{layer}</button>
+                  <button key={layer} type="button" aria-pressed={layers.has(layer)} onClick={() => setLayers((current) => { const next = new Set(current); if (next.has(layer)) next.delete(layer); else next.add(layer); return next; })} className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${layers.has(layer) ? "bg-[#D9B26A] text-[#0A1A2F]" : "bg-white/5 text-white/70"}`}>{layer}</button>
                 ))}
               </div>
             </div>
@@ -129,7 +129,7 @@ export default function PlanImport({ onOpen, onClose }: { onOpen: (scene: Scene)
                 {detected.paired ? " · thickness read from the double lines" : " · single lines found, so every line is treated as a 230 mm wall — untick layers that aren’t walls"}
               </p>
             ) : <p className="text-xs text-white/50">Pick at least one layer.</p>}
-            <button type="button" disabled={!detected?.walls.length} onClick={buildFromDxf} className="w-full rounded-md bg-[#D9B26A] px-3 py-2.5 text-sm font-bold text-[#0F1923] hover:bg-[#F2C879] disabled:opacity-50">Build editable 3D</button>
+            <button type="button" disabled={!detected?.walls.length} onClick={buildFromDxf} className="w-full rounded-md bg-[#D9B26A] px-3 py-2.5 text-sm font-bold text-[#0A1A2F] hover:bg-[#F2C879] disabled:opacity-50">Build editable 3D</button>
             <p className="text-[11px] text-white/45">Opens in the advanced editor: add doors and windows (Build), rooms, and press “Price this design”. Blocks (INSERT) such as doors and furniture are ignored.</p>
           </div>
         ) : null}
@@ -139,7 +139,7 @@ export default function PlanImport({ onOpen, onClose }: { onOpen: (scene: Scene)
             <img src={picture.image} alt="Imported plan" className="max-h-56 w-full rounded-md bg-white object-contain" />
             {picture.pages > 1 ? (
               <label className="flex items-center justify-between text-xs text-white/70">Page
-                <select value={picture.page} onChange={(event) => void changePage(Number(event.target.value))} className="rounded-md border border-white/15 bg-white/10 px-2 py-1 text-white [&_option]:bg-[#1A2A3B]">
+                <select value={picture.page} onChange={(event) => void changePage(Number(event.target.value))} className="rounded-md border border-white/15 bg-white/10 px-2 py-1 text-white [&_option]:bg-[#16304F]">
                   {Array.from({ length: picture.pages }, (_, i) => <option key={i} value={i + 1}>Page {i + 1}</option>)}
                 </select>
               </label>
@@ -148,7 +148,7 @@ export default function PlanImport({ onOpen, onClose }: { onOpen: (scene: Scene)
               Real width of the whole image, left edge to right edge (metres)
               <input type="number" min={2} max={300} step={0.5} value={widthMeters} onChange={(event) => setWidthMeters(Math.max(2, Number(event.target.value) || 20))} className="mt-1 w-full rounded-md border border-white/15 bg-white/10 px-3 py-2 text-sm text-white" />
             </label>
-            <button type="button" onClick={() => void openToTrace()} disabled={Boolean(busy)} className="w-full rounded-md bg-[#D9B26A] px-3 py-2.5 text-sm font-bold text-[#0F1923] hover:bg-[#F2C879] disabled:opacity-50">Open to trace</button>
+            <button type="button" onClick={() => void openToTrace()} disabled={Boolean(busy)} className="w-full rounded-md bg-[#D9B26A] px-3 py-2.5 text-sm font-bold text-[#0A1A2F] hover:bg-[#F2C879] disabled:opacity-50">Open to trace</button>
             <p className="text-[11px] text-white/45">In the editor: Scene → your plan → “Set scale” and click two ends of a known dimension to make it exact, then Build → Wall to draw over the walls.</p>
           </div>
         ) : null}
