@@ -158,17 +158,20 @@ const CHARISMAK_PURCHASE_RECORDS: Record<string, MarketSnapshot> = {
     specification: "Sold by the roll; confirm roll weight",
     sourceCount: 2,
   }),
-  nails: cpnl({
-    itemId: "nails",
-    marketName: "Wire nails (2–3 inch)",
-    unit: "bag",
-    priceLow: 26000,
-    priceHigh: 32000,
-    reference: 27000,
-    specification: "2-inch and 3-inch nails; confirm bag weight",
-    sourceCount: 2,
-    note: "Concrete nails are sold by the pack at about ₦1,500.",
-  }),
+  nails: {
+    ...cpnl({
+      itemId: "nails",
+      marketName: "Wire nails (2–3 inch)",
+      unit: "bag",
+      priceLow: 27000,
+      priceHigh: 34000,
+      reference: 34000,
+      specification: "2-inch and 3-inch nails; confirm bag weight",
+      sourceCount: 3,
+      note: "Latest Charismak purchase ₦34,000 per bag (22 Nov 2026); earlier ₦27,000 (Oct 2026). Concrete nails are sold by the pack at about ₦1,500.",
+    }),
+    checkedAt: "2026-11-22T12:00:00+01:00",
+  },
 };
 
 export const JIJI_MARKET_SNAPSHOT: Record<string, MarketSnapshot> = {
