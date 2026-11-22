@@ -181,13 +181,13 @@ export default async function HomePage() {
   return (
     <main className="cx-page overflow-hidden pt-20">
       {/* ===== HERO ===== */}
-      <section className="relative min-h-[calc(100svh-5rem)] overflow-hidden bg-[var(--cx-void)] text-white">
-        <Image src={heroImage} alt={heroProject?.title || "Charismak construction project"} fill priority sizes="100vw" className="object-cover opacity-80" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[var(--cx-void)] via-[var(--cx-void)]/80 to-[var(--cx-void)]/10" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[var(--cx-void)] via-transparent to-[var(--cx-void)]/40" />
-        <div className="cx-grid-bg absolute inset-0 opacity-60" />
+      <section className="relative overflow-hidden bg-[var(--cx-void)] text-white">
+        {/* Project photo shown clear, with no dark overlay; the headline sits on the solid background below it. */}
+        <div className="relative h-[44vh] min-h-[260px] w-full md:h-[58vh]">
+          <Image src={heroImage} alt={heroProject?.title || "Charismak construction project"} fill priority sizes="100vw" className="object-cover" />
+        </div>
 
-        <div className="relative mx-auto flex min-h-[calc(100svh-5rem)] max-w-7xl flex-col justify-between px-5 pb-10 pt-20 md:px-8 md:pt-28">
+        <div className="relative mx-auto flex max-w-7xl flex-col justify-between px-5 pb-10 pt-12 md:px-8 md:pt-16">
           <div className="grid items-center gap-12 lg:grid-cols-[1.15fr_0.5fr]">
             <div className="max-w-4xl">
               <Eyebrow>Construction company · Abuja, Nigeria</Eyebrow>
@@ -491,7 +491,7 @@ export default async function HomePage() {
       {/* ===== SITE UPDATES ===== */}
       {siteSlides.length > 0 ? (
         <CxSection alt>
-          <div className="cx-reveal">
+          <div>
             <div className="mb-10 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
               <div>
                 <Eyebrow>{hasSiteUpdates ? "Site Progress & Project Updates" : "Project Portfolio"}</Eyebrow>
