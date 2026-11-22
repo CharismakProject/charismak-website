@@ -3678,20 +3678,39 @@ const RAW_RATE_BANK_ITEMS: RateBankItem[] = [
     "section": "Ceilings",
     "unit": "m",
     "specification": "30 mm thick × 150 mm wide POP edge detail with repeated longitudinal grooves, including forming/carving, sanding and finishing.",
-    "methodologyNote": "Sora guide normalized by provisional 15% O/P removal; material/labour split remains under validation.",
+    "methodologyNote": "Itemised build-up (Nov 2026): materials priced from the shared material list; labour from the 2-bedroom BOQ guide. Consumption rates are standard site practice [CHECK].",
     "sourceNote": "Sora Restaurant grooved POP guide ₦6,500/lm.",
     "lines": [
       {
-        "id": "popgroove-mat",
-        "label": "POP/reinforcement/sundry materials",
+        "id": "grooved-pop--1",
+        "label": "POP powder",
         "category": "material",
-        "quantity": 1,
-        "unit": "m",
-        "unitRate": 1800
+        "quantity": 0.12,
+        "unit": "bag",
+        "unitRate": 9000,
+        "materialId": "pop-bag"
       },
       {
-        "id": "popgroove-lab",
-        "label": "Forming, carving, sanding and finishing labour",
+        "id": "grooved-pop--2",
+        "label": "Sisal fibre",
+        "category": "material",
+        "quantity": 0.1,
+        "unit": "kg",
+        "unitRate": 4000,
+        "materialId": "sisal-fibre"
+      },
+      {
+        "id": "grooved-pop--3",
+        "label": "Sandpaper",
+        "category": "consumable",
+        "quantity": 0.2,
+        "unit": "sheet",
+        "unitRate": 300,
+        "materialId": "sandpaper"
+      },
+      {
+        "id": "grooved-pop--4",
+        "label": "Forming, carving, sanding labour",
         "category": "labour",
         "quantity": 1,
         "unit": "m",
@@ -3774,19 +3793,56 @@ const RAW_RATE_BANK_ITEMS: RateBankItem[] = [
     "section": "Ceilings",
     "unit": "m²",
     "specification": "Conventional POP ceiling to general internal areas including support, POP material, forming, finishing and labour.",
-    "methodologyNote": "2-bedroom BOQ guide normalized by provisional 15% O/P removal. Detailed material take-off still required before verification.",
+    "methodologyNote": "Itemised build-up (Nov 2026): materials priced from the shared material list; labour from the 2-bedroom BOQ guide. Consumption rates are standard site practice [CHECK].",
     "sourceNote": "2-bedroom Abuja BOQ guide ₦13,500/m².",
     "lines": [
       {
-        "id": "popstd-mat",
-        "label": "POP/support materials allowance",
+        "id": "standard-pop-1",
+        "label": "POP powder",
         "category": "material",
-        "quantity": 1,
-        "unit": "m²",
-        "unitRate": 7000
+        "quantity": 0.35,
+        "unit": "bag",
+        "unitRate": 9000,
+        "materialId": "pop-bag"
       },
       {
-        "id": "popstd-lab",
+        "id": "standard-pop-2",
+        "label": "Sisal fibre",
+        "category": "material",
+        "quantity": 0.3,
+        "unit": "kg",
+        "unitRate": 4000,
+        "materialId": "sisal-fibre"
+      },
+      {
+        "id": "standard-pop-3",
+        "label": "2x2 timber hangers/battens",
+        "category": "material",
+        "quantity": 0.5,
+        "unit": "length",
+        "unitRate": 1000,
+        "materialId": "timber-2x2"
+      },
+      {
+        "id": "standard-pop-4",
+        "label": "Binding wire / hanger wire",
+        "category": "consumable",
+        "quantity": 0.05,
+        "unit": "kg",
+        "unitRate": 1400,
+        "materialId": "binding-wire"
+      },
+      {
+        "id": "standard-pop-5",
+        "label": "Nails",
+        "category": "consumable",
+        "quantity": 0.0012,
+        "unit": "bag",
+        "unitRate": 34000,
+        "materialId": "nails"
+      },
+      {
+        "id": "standard-pop-6",
         "label": "POP installer labour",
         "category": "labour",
         "quantity": 1,

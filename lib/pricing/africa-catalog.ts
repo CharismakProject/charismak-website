@@ -14,7 +14,7 @@ type CatalogRow = [
 // Broad Nigeria-first starter catalog. Rates are references for testing the
 // workflow and are never presented as verified live quotations.
 const rows: CatalogRow[] = [
-  ["cement-42-5", "MAT-101", "Cement, 42.5 grade, 50 kg bag", "material", "bag", 12500],
+  ["cement-42-5", "MAT-101", "Cement, 42.5 grade, 50 kg bag", "material", "bag", 12800],
   ["white-cement", "MAT-102", "White cement", "material", "bag", 28000],
   ["hydrated-lime", "MAT-103", "Hydrated lime", "material", "bag", 15000],
   ["concrete-admixture", "MAT-104", "Concrete plasticising admixture", "material", "litre", 4500],
@@ -26,7 +26,7 @@ const rows: CatalogRow[] = [
   ["block-150", "MAT-110", "150 mm sandcrete block", "material", "nr", 800],
   ["block-100", "MAT-111", "100 mm sandcrete block", "material", "nr", 650],
   ["clay-brick", "MAT-112", "Burnt clay facing brick", "material", "nr", 650],
-  ["interlocking-paver", "MAT-113", "60 mm concrete interlocking paving block", "material", "m²", 14500],
+  ["interlocking-paver", "MAT-113", "60 mm concrete interlocking paving block (supply only)", "material", "m²", 8500],
   ["concrete-kerb", "MAT-114", "Precast concrete kerb, 230 mm high (₦1,300 per 500 mm unit, 2 per m; price varies by size)", "material", "m", 2600],
   ["ready-mix-25", "MAT-115", "Ready-mixed concrete, grade 25", "material", "m³", 145000],
   ["ready-mix-30", "MAT-116", "Ready-mixed concrete, grade 30", "material", "m³", 158000],
@@ -58,7 +58,7 @@ const rows: CatalogRow[] = [
   ["tile-grout", "MAT-142", "Tile grout", "material", "kg", 1700],
   ["gypsum-board", "MAT-143", "12.5 mm gypsum plasterboard", "material", "sheet", 18000],
   ["cement-board", "MAT-144", "Fibre-cement board", "material", "sheet", 32000],
-  ["pop-cement", "MAT-145", "Plaster of Paris", "material", "bag", 9000],
+  ["pop-cement", "MAT-145", "Plaster of Paris, 40 kg bag", "material", "bag", 9000],
   ["ceiling-grid", "MAT-146", "Suspended ceiling grid system", "material", "m²", 8000],
   ["paint-primer", "MAT-147", "Wall primer/sealer", "material", "litre", 4200],
   ["satin-paint", "MAT-148", "Satin/emulsion finish paint", "material", "litre", 6500],
