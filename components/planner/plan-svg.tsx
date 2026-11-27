@@ -1,7 +1,7 @@
 import { forwardRef, type ReactNode } from "react";
 
 import { catalogItem, WINDOW_HEIGHT } from "@/lib/planner/catalog";
-import { arcOf, pointOnWall, tangentAt, wallLength, type DetectedRoom, type Item, type Opening, type Plan, type Pt, type Snap, type Wall } from "@/lib/planner/model";
+import { arcOf, endTrims, pointOnWall, tangentAt, wallLength, type DetectedRoom, type Item, type Opening, type Plan, type Pt, type Snap, type Wall } from "@/lib/planner/model";
 
 /** SVG path for a wall centre-line: a straight line or an exact circular arc. */
 export function wallPath(w: Pick<Wall, "a" | "b" | "bulge">): string {
@@ -74,7 +74,11 @@ function opening(o: Opening, w: Wall) {
 }
 
 /** Dimension along a wall, offset to one side, text upright. */
-function dimension(w: Wall, offset: number, size: number) {
+function dimension(w0: Wall, offset: number, size: number, all: Wall[] = []) {
+  // Straight walls are dimensioned face to face (internal), trimmed by the walls they meet at each end.
+  const tr = w0.bulge ? { t0: 0, t1: 0 } : endTrims(w0, all);
+  const L0 = Math.hypot(w0.b.x - w0.a.x, w0.b.y - w0.a.y) || 1, u0 = { x: (w0.b.x - w0.a.x) / L0, y: (w0.b.y - w0.a.y) / L0 };
+  const w: Wall = w0.bulge ? w0 : { ...w0, a: { x: w0.a.x + u0.x * tr.t0, y: w0.a.y + u0.y * tr.t0 }, b: { x: w0.b.x - u0.x * tr.t1, y: w0.b.y - u0.y * tr.t1 } };
   const len = wallLength(w);
   if (len < 50) return null;
   const arc = arcOf(w);
@@ -123,11 +127,17 @@ export type PlanSvgProps = {
   snap?: Snap | null;
   /** Section markers: a lettered circle beside a wall with an arrow showing the direction of view. */
   markers?: { letter: string; at: Pt; look: Pt }[];
+  /** Section (cut) lines with lettered end markers pointing the way of view. */
+  sectionLines?: { id: string; label: string; a: Pt; b: Pt }[];
+  /** Show item names under items (layout plan). */
+  itemLabels?: boolean;
+  /** Chain dimensions along walls (dimensioned plan): positions of doors, windows and items, outside each wall. */
+  wallChains?: { wallId: string; side: number; length: number; edges: number[] }[];
 };
 
 /** The floor plan drawing, shared by the editor and the report/PDF. */
 const PlanSvg = forwardRef<SVGSVGElement, PlanSvgProps & Omit<React.SVGProps<SVGSVGElement>, "viewBox" | "ref">>(function PlanSvg(
-  { plan, box: viewBox, selected, draft, calibration, showBackdrop = true, showDimensions = true, className, pixelWidth, rooms = [], snap, markers = [], ...rest },
+  { plan, box: viewBox, selected, draft, calibration, showBackdrop = true, showDimensions = true, className, pixelWidth, rooms = [], snap, markers = [], sectionLines = [], itemLabels = false, wallChains = [], ...rest },
   ref,
 ) {
   const unit = viewBox.w / 60; // text size relative to the view
@@ -159,7 +169,7 @@ const PlanSvg = forwardRef<SVGSVGElement, PlanSvgProps & Omit<React.SVGProps<SVG
           <text x={r.label.x} y={r.label.y + unit * 1} fontSize={unit * 0.85} fill="#5A6675">{r.area.toFixed(1)} m²</text>
         </g>
       ))}
-      {showDimensions ? every.filter((w) => { const k = [w.a, w.b].map((p) => `${Math.round(p.x)},${Math.round(p.y)}`).sort().join("|") + `|${Math.round(Math.abs(w.bulge ?? 0))}`; if (seen.has(k)) return false; seen.add(k); return true; }).map((w) => dimension(w, w.thickness / 2 + unit * 1.4, unit * 0.9)) : null}
+      {showDimensions ? every.filter((w) => { const k = [w.a, w.b].map((p) => `${Math.round(p.x)},${Math.round(p.y)}`).sort().join("|") + `|${Math.round(Math.abs(w.bulge ?? 0))}`; if (seen.has(k)) return false; seen.add(k); return true; }).map((w) => dimension(w, w.thickness / 2 + unit * 1.4, unit * 0.9, every)) : null}
       {draft ? (() => {
         const dw = { id: "draft", thickness: 150, ...draft }, arc = arcOf(dw), m = pointOnWall(dw, 0.5);
         return <><path d={wallPath(draft)} fill="none" stroke={RED} strokeWidth={150} strokeOpacity={0.5} strokeLinecap="square" /><text x={m.x} y={m.y - unit * 1.2} fontSize={unit * 1.2} textAnchor="middle" fill={RED} fontWeight={700} fontFamily="Arial, sans-serif">{arc ? `R ${Math.round(arc.r)} · L ${Math.round(arc.length)} mm` : `${Math.round(Math.hypot(draft.b.x - draft.a.x, draft.b.y - draft.a.y))} mm`}</text></>;
@@ -171,6 +181,41 @@ const PlanSvg = forwardRef<SVGSVGElement, PlanSvgProps & Omit<React.SVGProps<SVG
           <text x={m.at.x} y={m.at.y} fontSize={r * 1.1} fontWeight={700} textAnchor="middle" dominantBaseline="central" fill={RED}>{m.letter}</text>
         </g>
       ); })}
+      {sectionLines.map((sl) => { const L = Math.hypot(sl.b.x - sl.a.x, sl.b.y - sl.a.y) || 1, n = { x: -(sl.b.y - sl.a.y) / L, y: (sl.b.x - sl.a.x) / L }, r = unit * 0.85; return (
+        <g key={sl.id} data-id={sl.id} fontFamily="Arial, sans-serif">
+          <line x1={sl.a.x} y1={sl.a.y} x2={sl.b.x} y2={sl.b.y} stroke={selected === sl.id ? NAVY : RED} strokeWidth={unit * 0.14} strokeDasharray={`${unit * 1.2} ${unit * 0.4} ${unit * 0.2} ${unit * 0.4}`} />
+          <line x1={sl.a.x} y1={sl.a.y} x2={sl.b.x} y2={sl.b.y} stroke="transparent" strokeWidth={unit * 1.2} />
+          {[sl.a, sl.b].map((p, k) => (
+            <g key={k}>
+              <polygon points={`${p.x + n.x * r * 2.1},${p.y + n.y * r * 2.1} ${p.x - n.y * r * 0.9 + n.x * r * 0.4},${p.y + n.x * r * 0.9 + n.y * r * 0.4} ${p.x + n.y * r * 0.9 + n.x * r * 0.4},${p.y - n.x * r * 0.9 + n.y * r * 0.4}`} fill={RED} />
+              <circle cx={p.x} cy={p.y} r={r} fill="#fff" stroke={RED} strokeWidth={unit * 0.12} />
+              <text x={p.x} y={p.y} fontSize={r * 1.05} fontWeight={700} textAnchor="middle" dominantBaseline="central" fill={RED}>{sl.label}</text>
+            </g>
+          ))}
+        </g>
+      ); })}
+      {wallChains.map((ch) => {
+        const w = walls.get(ch.wallId);
+        if (!w || w.bulge) return null;
+        const L = wallLength(w) || 1, u = { x: (w.b.x - w.a.x) / L, y: (w.b.y - w.a.y) / L }, out = { x: u.y * ch.side, y: -u.x * ch.side };
+        const off = w.thickness / 2 + unit * 3.2, pos = (x: number) => (ch.side > 0 ? x : L - x);
+        const e = [...new Set(ch.edges.map((v) => Math.round(v)))].sort((a, b) => a - b);
+        if (e.length < 3) return null;
+        const P = (x: number, k = 0) => ({ x: w.a.x + u.x * pos(x) + out.x * (off + k), y: w.a.y + u.y * pos(x) + out.y * (off + k) });
+        let angle = (Math.atan2(u.y, u.x) * 180) / Math.PI; if (angle > 90 || angle < -90) angle += 180;
+        return (
+          <g key={`ch-${ch.wallId}`} stroke={RED} strokeWidth={unit * 0.06} fill={RED} fontFamily="Arial, sans-serif" pointerEvents="none">
+            <line x1={P(e[0]).x} y1={P(e[0]).y} x2={P(e[e.length - 1]).x} y2={P(e[e.length - 1]).y} />
+            {e.map((v) => { const a = P(v, -unit * 0.3), b = P(v, unit * 0.3); return <line key={v} x1={a.x} y1={a.y} x2={b.x} y2={b.y} />; })}
+            {e.slice(1).map((v, i) => { const small = v - e[i] < unit * 1.6; const m = P((v + e[i]) / 2, small ? unit * 1.25 : unit * 0.55); return <text key={v} x={m.x} y={m.y} fontSize={small ? unit * 0.5 : unit * 0.65} textAnchor="middle" dominantBaseline="middle" stroke="none" transform={`rotate(${angle} ${m.x} ${m.y})`}>{v - e[i]}</text>; })}
+          </g>
+        );
+      })}
+      {itemLabels ? plan.items.filter((it) => { const c = catalogItem(it.type); return c && !c.point && !c.ceiling && !["hood", "microwave", "worktop"].includes(c.type) && !(overhead(it) && c.symbol !== "cabinet"); }).map((it) => {
+        const over = overhead(it), r = (it.rot * Math.PI) / 180, fx = -Math.sin(r), fy = Math.cos(r); // front direction
+        const k = over ? 0 : it.d / 2 + unit * 0.9;
+        return <text key={`lbl-${it.id}`} x={it.x + fx * k} y={it.y + fy * k} fontSize={unit * 0.68} textAnchor="middle" dominantBaseline="middle" fill={over ? "#5A6675" : NAVY} fontFamily="Arial, sans-serif" pointerEvents="none">{(it.label || catalogItem(it.type)?.name) + (over && !/\bover\b/i.test(it.label || catalogItem(it.type)?.name || "") ? " over" : "")}</text>;
+      }) : null}
       {snap && snap.kind !== "free" ? (
         <g pointerEvents="none" stroke="#0A8A3A" strokeWidth={unit * 0.12} fill="none">
           {snap.kind === "end" ? <rect x={snap.pt.x - unit * 0.5} y={snap.pt.y - unit * 0.5} width={unit} height={unit} /> : null}

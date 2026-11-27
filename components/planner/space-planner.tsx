@@ -2,19 +2,22 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
-import { Check, Lightbulb, Spline, DoorOpen, Download, FileUp, Hand, Minus, MousePointer2, Plus, RotateCw, Ruler, Square, Trash2, Undo2, AppWindow, Maximize, FileText, Image as ImageIcon } from "lucide-react";
+import { Check, Lightbulb, Scissors, Spline, DoorOpen, Download, FileUp, Hand, Minus, MousePointer2, Plus, RotateCw, Ruler, Square, Trash2, Undo2, AppWindow, Maximize, FileText, Image as ImageIcon } from "lucide-react";
 
 import ElevationSvg from "./elevation-svg";
+import SectionSvg from "./section-svg";
+import { crossSection } from "@/lib/planner/section";
+import { defaultSpec, keySizes, servicesProvision, specSchedule } from "@/lib/planner/spec";
 import Viewer3d from "./viewer-3d";
 import PlanSvg from "./plan-svg";
 import { examplePlan } from "@/lib/planner/example";
 import { itemMount, planElevations } from "@/lib/planner/elevation";
 import { CATALOG, CATEGORIES, FINISH_LABEL, catalogItem, itemFinish, marketPrice, DOOR_PRICE_ID, WINDOW_PRICE_ID, WINDOW_HEIGHT } from "@/lib/planner/catalog";
 import { arcOf, bulgeForRadius, bulgeThrough, bounds, CUT_LABELS, defaultCuts, detectRooms, dist, emptyPlan, outlineWalls, pointAtLength, projectOnWall, readSaved, schedule, SHAPE_LABEL, shapeOutline, snapPoint, STORAGE_KEY, uid, wallLength, withLength, type Item, type Plan, type Pt, type RoomShape, type Snap } from "@/lib/planner/model";
-import { buildPlannerPdf, naira } from "@/lib/planner/pdf";
+import { buildDrawingSet, naira } from "@/lib/planner/pdf";
 
 type Step = "start" | "scale" | "build" | "report";
-type Tool = "select" | "pan" | "wall" | "arc" | "door" | "window" | `item:${string}` | `shape:${RoomShape}`;
+type Tool = "select" | "pan" | "wall" | "arc" | "door" | "window" | "section" | `item:${string}` | `shape:${RoomShape}`;
 const SHAPES: RoomShape[] = ["rect", "L", "T", "U"];
 type View = { x: number; y: number; w: number };
 
@@ -62,6 +65,8 @@ export default function SpacePlanner() {
   const svgRef = useRef<SVGSVGElement>(null);
   const reportSvg = useRef<SVGSVGElement>(null);
   const elevationRefs = useRef<(SVGSVGElement | null)[]>([]);
+  const crossRefs = useRef<(SVGSVGElement | null)[]>([]);
+  const layoutSvg = useRef<SVGSVGElement>(null);
 
   const drag = useRef<{ id: string | null; start: Pt; origin: Pt; view: View; moved: boolean } | null>(null);
   const pointers = useRef(new Map<number, { x: number; y: number }>());
@@ -170,6 +175,16 @@ export default function SpacePlanner() {
       addWallTo(sp);
       return;
     }
+    if (tool === "section") {
+      const sp = snapPoint(p, [], tolerance, draftStart, ortho).pt;
+      if (!draftStart) { setDraftStart(sp); setCursor(sp); return; }
+      if (dist(draftStart, sp) < 300) return;
+      const line = { id: uid("s"), label: "", a: draftStart, b: sp };
+      commit((pl) => ({ ...pl, sections: [...(pl.sections ?? []), line] }));
+      setDraftStart(null); setCursor(null); setSelected(line.id); setTool("select");
+      setMessage("Section line added. The cross-section looks towards the arrows; use “Flip view” to look the other way.");
+      return;
+    }
     if (tool === "door" || tool === "window") {
       const near = nearestWall(p);
       if (!near) { setMessage("Tap on a wall to add a " + tool + "."); return; }
@@ -215,6 +230,7 @@ export default function SpacePlanner() {
       setView({ x: c.x - w / 2, y: c.y - w / aspect / 2, w });
       return;
     }
+    if (tool === "section" && draftStart) { setCursor(snapPoint(toWorld(e.clientX, e.clientY), [], tolerance, draftStart, ortho).pt); return; }
     if (tool === "wall" || tool === "arc" || tool.startsWith("shape:")) {
       const raw = toWorld(e.clientX, e.clientY);
       const sn = snapPoint(raw, plan.walls, tolerance, (tool === "wall" || (tool === "arc" && !arcEnd)) ? draftStart : null, ortho);
@@ -283,7 +299,7 @@ export default function SpacePlanner() {
   const removeSelected = () => {
     if (!selected) return;
     if (selRoom) { if (selRoom.tagId) commit((pl) => ({ ...pl, tags: pl.tags.filter((t) => t.id !== selRoom.tagId) })); setSelected(null); return; }
-    commit((pl) => ({ ...pl, walls: pl.walls.filter((w) => w.id !== selected), openings: pl.openings.filter((o) => o.id !== selected && o.wallId !== selected), items: pl.items.filter((i) => i.id !== selected) }));
+    commit((pl) => ({ ...pl, sections: (pl.sections ?? []).filter((x) => x.id !== selected), walls: pl.walls.filter((w) => w.id !== selected), openings: pl.openings.filter((o) => o.id !== selected && o.wallId !== selected), items: pl.items.filter((i) => i.id !== selected) }));
     setSelected(null);
   };
   const rotateSelected = () => commit((pl) => ({ ...pl, items: pl.items.map((i) => (i.id === selected ? { ...i, rot: (i.rot + 90) % 360 } : i)) }));
@@ -348,6 +364,10 @@ export default function SpacePlanner() {
   const selWall = plan.walls.find((w) => w.id === selected);
   const selOpening = plan.openings.find((o) => o.id === selected);
   const selItem = plan.items.find((i) => i.id === selected);
+  const elevAll = useMemo(() => planElevations(plan), [plan]);
+  const LETTERS = "ABCDEFGHJKLMNPQRSTUVW";
+  const sectionLines = (plan.sections ?? []).map((x, i) => ({ ...x, label: LETTERS[elevAll.length + i] ?? `S${i + 1}` }));
+  const selSection = sectionLines.find((x) => x.id === selected);
 
   // ----- Step 1: start -----
   const onUpload = async (file?: File) => {
@@ -391,8 +411,14 @@ export default function SpacePlanner() {
 
   // ----- Step 4: report -----
   const sched = useMemo(() => schedule(plan), [plan]);
-  const elevations = useMemo(() => (step === "report" ? planElevations(plan) : []), [plan, step]);
-  const roomRows = rooms.map((r) => { const xs = r.pts.map((q) => q.x), ys = r.pts.map((q) => q.y); return { name: r.name, size: `${Math.round(Math.max(...xs) - Math.min(...xs))} × ${Math.round(Math.max(...ys) - Math.min(...ys))}`, area: r.area }; });
+  const elevations = step === "report" ? elevAll : [];
+  const crossSections = useMemo(() => (step === "report" ? sectionLines.map((x) => crossSection(plan, x)) : []), [plan, step, sectionLines]);
+  const chains = useMemo(() => (step === "report" ? planElevations(plan, 60).map((e) => ({ wallId: e.wallId, side: e.side, length: e.length, edges: [0, e.length, ...e.parts.filter((q) => q.kind !== "item" || q.y < 1000).flatMap((q) => [Math.max(0, q.x), Math.min(e.length, q.x + q.w)])] })) : []), [plan, step]);
+  const walkway = crossSections.map((c) => c.walkway).find((v) => v) ?? null;
+  const specRows = useMemo(() => (step === "report" ? specSchedule(plan) : []), [plan, step]);
+  const services = useMemo(() => (step === "report" ? servicesProvision(plan) : []), [plan, step]);
+  const sizes = useMemo(() => (step === "report" ? keySizes(plan, rooms, walkway) : []), [plan, step, rooms, walkway]);
+  const roomRows = rooms.map((r) => { const xs = r.inner.map((q) => q.x), ys = r.inner.map((q) => q.y); return { name: r.name, size: `${Math.round(Math.max(...xs) - Math.min(...xs))} × ${Math.round(Math.max(...ys) - Math.min(...ys))}`, area: r.area }; });
   const area = rooms.length ? rooms.reduce((t, r) => t + r.area, 0) : null;
   const b = bounds(plan.walls.length ? { ...plan, items: [], backdrop: null } : plan);
   const sizeText = `${Math.round(b.maxX - b.minX)} × ${Math.round(b.maxY - b.minY)} mm`;
@@ -406,12 +432,27 @@ export default function SpacePlanner() {
   const downloadBlob = (blob: Blob, name: string) => { const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = name; a.click(); window.setTimeout(() => URL.revokeObjectURL(url), 2000); };
   const slug = (plan.title || "space").toLowerCase().replace(/[^a-z0-9]+/g, "-");
   const downloadPdf = async () => {
-    setBusy(true); setMessage("Making your PDF…");
+    setBusy(true); setMessage("Making your drawing set (PDF)… this can take a little while.");
     try {
       const { planPng } = await import("@/lib/construction/design-export");
-      const png = await planPngBlob();
-      const pdf = await buildPlannerPdf({ title: plan.title || "My space", size: sizeText, area, height: plan.height, date: today() }, png, 1.6, sched.lines, sched.total, sched.unpriced, roomRows, await import("@/lib/planner/three-view").then(({ render3dViews }) => render3dViews(plan)).catch(() => []), await Promise.all(elevations.map(async (e, i) => { const svg = elevationRefs.current[i]; const vb = svg?.viewBox.baseVal; return svg && vb ? { title: `Section ${e.letter} — ${Math.round(e.length)} mm wall${e.curved ? " (curved, unrolled)" : ""}`, png: await planPng(svg, 2400), ratio: vb.width / vb.height } : null; })).then((list) => list.filter((x): x is NonNullable<typeof x> => !!x)));
-      downloadBlob(pdf, `charismak-${slug}-report.pdf`); setMessage("");
+      const { render3dViews } = await import("@/lib/planner/three-view");
+      const svgImage = async (svg: SVGSVGElement | null | undefined, title: string) => { const vb = svg?.viewBox.baseVal; return svg && vb ? { title, png: await planPng(svg, 2400), ratio: vb.width / vb.height } : null; };
+      const keep = <T,>(list: (T | null)[]) => list.filter((x): x is T => !!x);
+      const views = await render3dViews(plan).catch(() => []);
+      const layout = await svgImage(layoutSvg.current, "Layout plan"), planImg = await svgImage(reportSvg.current, "Floor plan, dimensioned");
+      if (!layout || !planImg) throw new Error("drawings not ready");
+      const info = plan.info ?? {};
+      const pdf = await buildDrawingSet({
+        title: plan.title || "My space", project: info.project ?? "", location: info.location ?? "", revision: info.revision ?? "", preparedBy: info.preparedBy ?? "", date: today(),
+        spaceLine: roomRows.length ? roomRows.map((r) => `${r.name} ${r.size}`).join("; ") + `, ${plan.height} high` : `${sizeText}, ${plan.height} high`,
+        cover: (views.find((v) => v.name.startsWith("View 6")) ?? views[0])?.blob ?? null,
+        layout, plan: planImg,
+        elevations: keep(await Promise.all(elevations.map((e, i) => svgImage(elevationRefs.current[i], `Section ${e.letter}-${e.letter}: wall elevation${e.curved ? " (curved, unrolled)" : ""}`)))),
+        sections: keep(await Promise.all(crossSections.map((c, i) => svgImage(crossRefs.current[i], `Section ${c.label}-${c.label}: cross-section`)))),
+        views, spec: specRows, services, keySizes: sizes, notes: info.notes ?? "",
+        rooms: roomRows, cost: sched,
+      });
+      downloadBlob(pdf, `charismak-${slug}-drawings.pdf`); setMessage("");
     } catch { setMessage("The PDF could not be made in this browser. Try again, or use a desktop browser."); }
     finally { setBusy(false); }
   };
@@ -539,6 +580,7 @@ export default function SpacePlanner() {
                     {toolBtn("arc", "Curved wall", Spline)}
                     {toolBtn("door", "Door", DoorOpen)}
                     {toolBtn("window", "Window", AppWindow)}
+                    {toolBtn("section", "Section line", Scissors)}
                     {tool === "wall" || (tool === "arc" && !arcEnd) ? <button type="button" onClick={() => setOrtho((o) => !o)} aria-pressed={ortho} title="Ortho: keep walls straight (off = 15° steps)" className={`${btn} ${ortho ? "bg-white/20 text-white" : "bg-white/5 text-white/60"}`}>Ortho {ortho ? "on" : "off"}</button> : null}
                     {(tool === "wall" || tool === "arc") && draftStart ? (
                       <>
@@ -568,6 +610,7 @@ export default function SpacePlanner() {
                   selected={selected}
                   draft={tool === "arc" && draftStart && arcEnd ? { a: draftStart, b: arcEnd, bulge: (typed ? bulgeForRadius(dist(draftStart, arcEnd), Number(typed), chordSide()) : cursor ? bulgeThrough(draftStart, arcEnd, cursor) : null) ?? undefined } : draftStart && cursor ? { a: draftStart, b: typed && dist(cursor, draftStart) > 1 ? pointAtLength(draftStart, cursor, Number(typed)) : cursor } : null}
                   rooms={rooms}
+                  sectionLines={[...sectionLines, ...(tool === "section" && draftStart && cursor ? [{ id: "preview", label: "?", a: draftStart, b: cursor }] : [])]}
                   snap={tool === "wall" || tool.startsWith("shape:") ? snap : null}
                   calibration={step === "scale" ? calib : undefined}
                   className={`absolute inset-0 h-full w-full ${tool === "pan" ? "cursor-grab" : tool === "select" ? "cursor-default" : "cursor-crosshair"}`}
@@ -597,8 +640,15 @@ export default function SpacePlanner() {
                 </div>
               ) : null}
 
-              {step === "build" && (selWall || selOpening || selItem || selRoom) ? (
+              {step === "build" && (selWall || selOpening || selItem || selRoom || selSection) ? (
                 <div className="rounded-2xl border border-[var(--cx-gold)]/40 bg-[var(--cx-panel)] p-4">
+                  {selSection ? (
+                    <div className="space-y-3">
+                      <h2 className="font-semibold">Section {selSection.label}</h2>
+                      <p className="text-xs text-white/70">A cross-section is drawn along this line in the report, looking the way the arrows point.</p>
+                      <button type="button" onClick={() => commit((pl) => ({ ...pl, sections: (pl.sections ?? []).map((x) => (x.id === selSection.id ? { ...x, a: x.b, b: x.a } : x)) }))} className={`${btn} w-full bg-white/10`}>Flip view</button>
+                    </div>
+                  ) : null}
                   {selRoom ? (
                     <div className="space-y-3">
                       <h2 className="font-semibold">Room · {selRoom.area.toFixed(1)} m²</h2>
@@ -652,6 +702,7 @@ export default function SpacePlanner() {
                           </select>
                         </label>
                       ) : null}
+                      <label className="block text-xs font-bold text-white/80">Specification<textarea rows={3} className={field} placeholder={defaultSpec(selItem)} value={selItem.spec ?? ""} onChange={(e) => setPlan((pl) => ({ ...pl, items: pl.items.map((i) => (i.id === selItem.id ? { ...i, spec: e.target.value } : i)) }))} /><span className="text-[11px] font-normal text-white/60">Leave empty to use the suggested wording.</span></label>
                       {priceField(selItem.price, marketPrice(catalogItem(selItem.type)?.priceId)?.rate ?? null, (v) => commit((pl) => ({ ...pl, items: pl.items.map((i) => (i.id === selItem.id ? { ...i, price: v } : i)) })))}
                       <button type="button" onClick={rotateSelected} className={`${btn} w-full bg-white/5`}><RotateCw className="h-4 w-4" />Turn 90°</button>
                     </div>
@@ -723,13 +774,38 @@ export default function SpacePlanner() {
               </div>
               <div className="p-5">
                 <h2 className="text-2xl font-bold text-[#0D3352]">{plan.title || "My space"}</h2>
+                <details className="mt-3 rounded-lg border border-[#DDE1E7] bg-[#F6F7F9] p-3 text-sm" open={!plan.info?.project}>
+                  <summary className="cursor-pointer font-bold text-[#0D3352]">Project details for the drawing set</summary>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                    {([["project", "Project", "e.g. 2-bedroom apartment"], ["location", "Location", "e.g. Mpape, Abuja"], ["revision", "Revision", "e.g. A"], ["preparedBy", "Prepared by", "Your name or company"]] as const).map(([k, label, ph]) => (
+                      <label key={k} className="text-xs font-bold text-[#0D3352]">{label}<input className="mt-1 w-full rounded-md border border-[#C9D1DA] bg-white px-2 py-1.5 text-sm text-[#1B2433]" placeholder={ph} value={plan.info?.[k] ?? ""} onChange={(e) => setPlan((pl) => ({ ...pl, info: { ...pl.info, [k]: e.target.value } }))} /></label>
+                    ))}
+                    <label className="text-xs font-bold text-[#0D3352] sm:col-span-2">Notes (printed with the schedule)<textarea rows={2} className="mt-1 w-full rounded-md border border-[#C9D1DA] bg-white px-2 py-1.5 text-sm text-[#1B2433]" placeholder="e.g. Hall door re-hung to open into the lobby." value={plan.info?.notes ?? ""} onChange={(e) => setPlan((pl) => ({ ...pl, info: { ...pl.info, notes: e.target.value } }))} /></label>
+                  </div>
+                </details>
                 <div className="mt-3 grid gap-px overflow-hidden rounded-lg border border-[#0D3352] bg-[#DDE1E7] text-sm sm:grid-cols-4">
                   {[["Overall size", sizeText], ["Floor area", area ? `${area.toFixed(1)} m²` : "—"], ["Ceiling height", `${plan.height} mm`], ["Estimated total", naira(sched.total)]].map(([k, v]) => <div key={k} className="bg-white p-3"><b className="block text-xs text-[#8A1A10]">{k}</b>{v}</div>)}
                 </div>
-                <div className="mt-4 rounded-lg border border-[#DDE1E7] p-2">
-                  <PlanSvg ref={reportSvg} plan={plan} box={reportBox} rooms={rooms} markers={elevations.map((e) => ({ letter: e.letter, at: e.marker.at, look: e.marker.look }))} showBackdrop={false} className="h-auto w-full" />
+                <h3 className="mt-6 text-lg font-bold text-[#0D3352]">Layout plan</h3>
+                <div className="mt-2 rounded-lg border border-[#DDE1E7] p-2">
+                  <PlanSvg ref={layoutSvg} plan={plan} box={reportBox} rooms={rooms} itemLabels showDimensions={false} showBackdrop={false} className="h-auto w-full" />
+                </div>
+                <h3 className="mt-6 text-lg font-bold text-[#0D3352]">Floor plan, dimensioned</h3>
+                <div className="mt-2 rounded-lg border border-[#DDE1E7] p-2">
+                  <PlanSvg ref={reportSvg} wallChains={chains} sectionLines={sectionLines} plan={plan} box={reportBox} rooms={rooms} markers={elevations.map((e) => ({ letter: e.letter, at: e.marker.at, look: e.marker.look }))} showBackdrop={false} className="h-auto w-full" />
                   <p className="mt-1 text-center text-xs text-[#5A6675]">Floor plan · dimensions in millimetres · not to scale</p>
                 </div>
+                {crossSections.length ? (
+                  <>
+                    <h3 className="mt-6 text-lg font-bold text-[#0D3352]">Cross-sections</h3>
+                    {crossSections.map((c, i) => (
+                      <div key={c.label} className="mt-2 rounded-lg border border-[#DDE1E7] p-2">
+                        <p className="text-sm font-bold text-[#0D3352]">Section {c.label}-{c.label}{c.walkway ? ` · walkway ${c.walkway} mm clear` : ""}</p>
+                        <SectionSvg ref={(el) => { crossRefs.current[i] = el; }} s={c} className="h-auto w-full" />
+                      </div>
+                    ))}
+                  </>
+                ) : <p className="mt-4 text-xs text-[#5A6675]">Tip: draw a <b>Section line</b> across the room in Build to add a cross-section showing the walkway.</p>}
                 <h3 className="mt-6 text-lg font-bold text-[#0D3352]">3D model</h3>
                 <div className="mt-2"><Viewer3d plan={plan} /></div>
                 <p className="mt-1 text-xs text-[#5A6675]">Concept visual. The PDF includes all six views.</p>
@@ -759,7 +835,23 @@ export default function SpacePlanner() {
                     </div>
                   </>
                 ) : null}
-                <h3 className="mt-6 text-lg font-bold text-[#0D3352]">Schedule of items</h3>
+                <h3 className="mt-6 text-lg font-bold text-[#0D3352]">Schedule of items and services</h3>
+                <div className="mt-2 grid gap-4 lg:grid-cols-[1.4fr_1fr]">
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[520px] text-sm">
+                      <thead><tr className="border-b-2 border-[#0D3352] text-left text-xs text-[#8A1A10]">{["Item", "Size (mm)", "Specification", "Qty"].map((h) => <th key={h} className="px-2 py-1.5">{h}</th>)}</tr></thead>
+                      <tbody>{specRows.map((r, i) => <tr key={i} className="border-b border-[#DDE1E7] align-top"><td className="px-2 py-1.5 font-semibold">{r.name}</td><td className="whitespace-nowrap px-2 py-1.5">{r.size}</td><td className="px-2 py-1.5">{r.spec}</td><td className="px-2 py-1.5">{r.qty}</td></tr>)}</tbody>
+                    </table>
+                  </div>
+                  <div className="text-sm">
+                    <h4 className="font-bold text-[#0D3352]">Services provision</h4>
+                    <ul className="mt-1 list-disc space-y-1 pl-5">{services.map((l) => <li key={l}>{l}</li>)}</ul>
+                    <h4 className="mt-3 font-bold text-[#0D3352]">Key sizes</h4>
+                    <ul className="mt-1 list-disc space-y-1 pl-5">{sizes.map((l) => <li key={l}>{l}</li>)}</ul>
+                    {plan.info?.notes ? <><h4 className="mt-3 font-bold text-[#0D3352]">Notes</h4><p className="mt-1 whitespace-pre-wrap">{plan.info.notes}</p></> : null}
+                  </div>
+                </div>
+                <h3 className="mt-6 text-lg font-bold text-[#0D3352]">Cost schedule</h3>
                 <div className="mt-2 overflow-x-auto">
                   <table className="w-full min-w-[560px] text-sm">
                     <thead><tr className="bg-[#0D3352] text-left text-white">{["Item", "Size (mm)", "Qty", "Unit price", "Total"].map((h) => <th key={h} className="px-3 py-2">{h}</th>)}</tr></thead>
