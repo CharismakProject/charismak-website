@@ -1,7 +1,7 @@
 import { forwardRef, type ReactNode } from "react";
 
 import { catalogItem, WINDOW_HEIGHT } from "@/lib/planner/catalog";
-import { wallLength, type Item, type Opening, type Plan, type Pt, type Wall } from "@/lib/planner/model";
+import { allWalls, roomArea, roomCentre, roomOf, roomPolygon, wallLength, type Item, type Opening, type Plan, type Pt, type Wall } from "@/lib/planner/model";
 
 const NAVY = "#0D3352";
 const RED = "#8A1A10";
@@ -93,14 +93,20 @@ const PlanSvg = forwardRef<SVGSVGElement, PlanSvgProps & Omit<React.SVGProps<SVG
   ref,
 ) {
   const unit = viewBox.w / 60; // text size relative to the view
-  const walls = new Map(plan.walls.map((w) => [w.id, w]));
+  const every = allWalls(plan);
+  const walls = new Map(every.map((w) => [w.id, w]));
+  const seen = new Set<string>(); // shared walls between rooms get one dimension
+  const isSel = (id: string) => selected === id || (selected !== null && roomOf(id) === selected);
   const b = plan.backdrop;
   return (
     <svg ref={ref} xmlns="http://www.w3.org/2000/svg" viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`} className={className} width={pixelWidth} height={pixelWidth ? Math.round((pixelWidth * viewBox.h) / viewBox.w) : undefined} {...rest}>
       <rect x={viewBox.x} y={viewBox.y} width={viewBox.w} height={viewBox.h} fill="#fff" />
       {b && showBackdrop ? <image href={b.image} x={b.x} y={b.y} width={b.pxW * b.mmPerPx} height={b.pxH * b.mmPerPx} opacity={b.opacity} preserveAspectRatio="none" /> : null}
-      {plan.walls.map((w) => (
-        <line key={w.id} data-id={w.id} x1={w.a.x} y1={w.a.y} x2={w.b.x} y2={w.b.y} stroke={selected === w.id ? RED : "#1B2433"} strokeWidth={w.thickness} strokeLinecap="square" />
+      {plan.rooms.map((r) => (
+        <polygon key={r.id} data-id={r.id} points={roomPolygon(r).map((p) => `${p.x},${p.y}`).join(" ")} fill={selected === r.id ? "#FBEDEA" : "#F3F5F8"} />
+      ))}
+      {every.map((w) => (
+        <line key={w.id} data-id={w.id} x1={w.a.x} y1={w.a.y} x2={w.b.x} y2={w.b.y} stroke={isSel(w.id) ? RED : "#1B2433"} strokeWidth={w.thickness} strokeLinecap="square" />
       ))}
       {plan.openings.map((o) => { const w = walls.get(o.wallId); return w ? <g key={o.id} data-id={o.id} opacity={selected === o.id ? 0.6 : 1}>{opening(o, w)}</g> : null; })}
       {plan.items.map((it) => (
@@ -109,7 +115,13 @@ const PlanSvg = forwardRef<SVGSVGElement, PlanSvgProps & Omit<React.SVGProps<SVG
           {selected === it.id ? <rect x={-it.w / 2 - 40} y={-it.d / 2 - 40} width={it.w + 80} height={it.d + 80} fill="none" stroke={RED} strokeWidth={unit * 0.15} strokeDasharray={`${unit * 0.5} ${unit * 0.3}`} /> : null}
         </g>
       ))}
-      {showDimensions ? plan.walls.map((w) => dimension(w, w.thickness / 2 + unit * 1.4, unit * 0.9)) : null}
+      {plan.rooms.map((r) => { const c = roomCentre(r); return (
+        <g key={`label-${r.id}`} pointerEvents="none" fontFamily="Arial, sans-serif" textAnchor="middle">
+          <text x={c.x} y={c.y - unit * 0.3} fontSize={unit * 1.05} fontWeight={700} fill={NAVY}>{r.name}</text>
+          <text x={c.x} y={c.y + unit * 1} fontSize={unit * 0.85} fill="#5A6675">{roomArea(r).toFixed(1)} m²</text>
+        </g>
+      ); })}
+      {showDimensions ? every.filter((w) => { const k = [w.a, w.b].map((p) => `${Math.round(p.x)},${Math.round(p.y)}`).sort().join("|"); if (seen.has(k)) return false; seen.add(k); return true; }).map((w) => dimension(w, w.thickness / 2 + unit * 1.4, unit * 0.9)) : null}
       {draft ? <><line x1={draft.a.x} y1={draft.a.y} x2={draft.b.x} y2={draft.b.y} stroke={RED} strokeWidth={150} strokeOpacity={0.5} strokeLinecap="square" /><text x={(draft.a.x + draft.b.x) / 2} y={(draft.a.y + draft.b.y) / 2 - unit * 1.2} fontSize={unit * 1.2} textAnchor="middle" fill={RED} fontWeight={700} fontFamily="Arial, sans-serif">{Math.round(Math.hypot(draft.b.x - draft.a.x, draft.b.y - draft.a.y))} mm</text></> : null}
       {calibration?.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r={unit * 0.4} fill={RED} />)}
       {calibration && calibration.length === 2 ? <line x1={calibration[0].x} y1={calibration[0].y} x2={calibration[1].x} y2={calibration[1].y} stroke={RED} strokeWidth={unit * 0.15} /> : null}

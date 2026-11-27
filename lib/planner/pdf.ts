@@ -24,7 +24,9 @@ const blobUrl = (blob: Blob) => new Promise<string>((resolve) => { const r = new
 export type ReportInfo = { title: string; size: string; area: number | null; height: number; date: string };
 
 /** Charismak-branded A4 report: plan page, then the schedule of items with prices. */
-export async function buildPlannerPdf(info: ReportInfo, planPng: Blob, planRatio: number, lines: ScheduleLine[], total: number, unpriced: number) {
+export type RoomRow = { name: string; shape: string; size: string; area: number };
+
+export async function buildPlannerPdf(info: ReportInfo, planPng: Blob, planRatio: number, lines: ScheduleLine[], total: number, unpriced: number, rooms: RoomRow[] = []) {
   const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4", compress: true });
   const W = 297, H = 210, M = 12;
   const logo = await dataUrl("/branding/charismak-logo-wide.jpg");
@@ -63,18 +65,34 @@ export async function buildPlannerPdf(info: ReportInfo, planPng: Blob, planRatio
 
   // Page 2+: schedule
   let page = 2;
-  doc.addPage(); header("Schedule of items");
-  doc.setTextColor(...NAVY); doc.setFont("helvetica", "bold"); doc.setFontSize(14);
-  doc.text("Schedule of items", M, 35);
-  const cols = [M, M + 95, M + 160, M + 180, M + 225];
-  const heads = ["Item", "Size (mm)", "Qty", "Unit price", "Total"];
-  let y = 44;
-  const head = () => {
+  doc.addPage(); header(rooms.length ? "Rooms and schedule of items" : "Schedule of items");
+  let y = 35;
+  const bar = (titles: string[], at: number[]) => {
     doc.setFillColor(...NAVY); doc.rect(M, y - 5, W - 2 * M, 8, "F");
     doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(9);
-    heads.forEach((h, i) => doc.text(h, cols[i] + 2, y));
+    titles.forEach((h, i) => doc.text(h, at[i] + 2, y));
     y += 8;
   };
+  if (rooms.length) {
+    doc.setTextColor(...NAVY); doc.setFont("helvetica", "bold"); doc.setFontSize(14); doc.text("Rooms", M, y); y += 9;
+    const rc = [M, M + 95, M + 140, M + 210];
+    bar(["Room", "Shape", "Overall size (mm)", "Floor area"], rc);
+    doc.setFont("helvetica", "normal");
+    rooms.forEach((r, i) => {
+      if (i % 2) { doc.setFillColor(246, 247, 249); doc.rect(M, y - 5, W - 2 * M, 7.5, "F"); }
+      doc.setTextColor(27, 36, 51); doc.setFontSize(9);
+      [r.name, r.shape, r.size, `${r.area.toFixed(1)} m²`].forEach((t, j) => doc.text(t, rc[j] + 2, y));
+      y += 7.5;
+    });
+    doc.setFont("helvetica", "bold"); doc.setTextColor(...NAVY);
+    doc.text("Total floor area", rc[2] + 2, y + 1); doc.text(`${rooms.reduce((t, r) => t + r.area, 0).toFixed(1)} m²`, rc[3] + 2, y + 1);
+    y += 12;
+  }
+  doc.setTextColor(...NAVY); doc.setFont("helvetica", "bold"); doc.setFontSize(14);
+  doc.text("Schedule of items", M, y); y += 9;
+  const cols = [M, M + 95, M + 160, M + 180, M + 225];
+  const heads = ["Item", "Size (mm)", "Qty", "Unit price", "Total"];
+  const head = () => bar(heads, cols);
   head();
   doc.setFont("helvetica", "normal");
   lines.forEach((l, i) => {

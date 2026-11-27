@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 
 import { marketPrice } from "../lib/planner/catalog";
-import { emptyPlan, enclosedArea, projectOnWall, readSaved, rectangleRoom, schedule, snapEnd, wallLength, withLength, type Plan } from "../lib/planner/model";
+import { allWalls, emptyPlan, enclosedArea, floorArea, newRoom, projectOnWall, readSaved, rectangleRoom, roomArea, roomPolygon, roomWalls, schedule, snapEnd, snapRoom, wallLength, withLength, type Plan } from "../lib/planner/model";
 
 // Room of 3000 x 1800 mm = 5.4 m², four walls.
 const walls = rectangleRoom(3000, 1800);
@@ -53,5 +53,30 @@ assert.equal(s.total, wc!.rate * 2 + 25000 + win.unitPrice!);
 assert.equal(readSaved("not json"), null);
 assert.equal(readSaved(JSON.stringify({ version: 2 })), null);
 assert.equal(readSaved(JSON.stringify(plan))?.items.length, 4);
+
+// Rooms: shape areas (overall w × l minus the cut-outs), turning keeps the area.
+const L = { ...newRoom("L", 0, 0, "Living", 6000, 4000), a: 2000, b: 1500 };
+assert.equal(roomArea(L), 24 - 3);
+const T = { ...newRoom("T", 0, 0, "T", 6000, 4000), a: 2000, b: 1500 };
+assert.equal(roomArea(T), 6 * 1.5 + 2 * 2.5);
+const U = { ...newRoom("U", 0, 0, "U", 6000, 4000), a: 2000, b: 1500 };
+assert.equal(roomArea(U), 24 - 3);
+assert.equal(roomArea({ ...L, rot: 90 }), roomArea(L));
+const turned = roomPolygon({ ...newRoom("rect", 100, 200, "r", 3000, 2000), rot: 90 });
+assert.deepEqual([Math.min(...turned.map((p) => p.x)), Math.min(...turned.map((p) => p.y)), Math.max(...turned.map((p) => p.x)), Math.max(...turned.map((p) => p.y))], [100, 200, 2100, 3200], "a turned room keeps its top-left");
+assert.equal(roomWalls(L).length, 6);
+
+// Snapping: a room dropped 120 mm away lines up flush with its neighbour.
+const A = newRoom("rect", 0, 0, "Kitchen", 3000, 3000);
+const B = newRoom("rect", 3120, 40, "Store", 2000, 3000);
+const roomsPlan: Plan = { ...emptyPlan(), rooms: [A, B] };
+assert.deepEqual(snapRoom(roomsPlan, B, 3120, 40, 200), { x: 3000, y: 0 });
+assert.equal(floorArea({ ...roomsPlan, rooms: [A, { ...B, x: 3000, y: 0 }] }), 9 + 6);
+
+// A door on a room wall is priced; once the room is deleted its door drops out.
+const withDoor: Plan = { ...roomsPlan, openings: [{ id: "d1", wallId: `${A.id}:1`, kind: "door", t: 0.5, width: 900 }] };
+assert.equal(allWalls(withDoor).length, 8);
+assert.equal(schedule(withDoor).lines.find((l) => l.name === "Door")?.qty, 1);
+assert.equal(schedule({ ...withDoor, rooms: [B] }).lines.find((l) => l.name === "Door"), undefined);
 
 console.log("Space Planner checks passed.");

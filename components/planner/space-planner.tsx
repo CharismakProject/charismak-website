@@ -6,11 +6,12 @@ import { DoorOpen, Download, FileUp, Hand, Minus, MousePointer2, Plus, RotateCw,
 
 import PlanSvg from "./plan-svg";
 import { CATALOG, CATEGORIES, catalogItem, marketPrice, DOOR_PRICE_ID, WINDOW_PRICE_ID, WINDOW_HEIGHT } from "@/lib/planner/catalog";
-import { bounds, dist, emptyPlan, enclosedArea, projectOnWall, readSaved, rectangleRoom, schedule, snapEnd, STORAGE_KEY, uid, wallLength, withLength, type Item, type Plan, type Pt } from "@/lib/planner/model";
+import { allWalls, bounds, CUT_LABELS, defaultCuts, dist, emptyPlan, floorArea, newRoom, projectOnWall, readSaved, roomArea, roomOf, schedule, SHAPE_LABEL, snapEnd, snapRoom, STORAGE_KEY, uid, wallLength, withLength, type Item, type Plan, type Pt, type RoomShape } from "@/lib/planner/model";
 import { buildPlannerPdf, naira } from "@/lib/planner/pdf";
 
 type Step = "start" | "scale" | "build" | "report";
-type Tool = "select" | "pan" | "wall" | "door" | "window" | `item:${string}`;
+type Tool = "select" | "pan" | "wall" | "door" | "window" | `item:${string}` | `room:${RoomShape}`;
+const SHAPES: RoomShape[] = ["rect", "L", "T", "U"];
 type View = { x: number; y: number; w: number };
 
 const STEPS: { id: Step; label: string }[] = [
@@ -40,7 +41,7 @@ export default function SpacePlanner() {
   const [cursor, setCursor] = useState<Pt | null>(null);
   const [calib, setCalib] = useState<Pt[]>([]);
   const [calibLength, setCalibLength] = useState("");
-  const [room, setRoom] = useState({ w: "3000", l: "1800" });
+  const [room, setRoom] = useState({ w: "3000", l: "1800", shape: "rect" as RoomShape });
   const [view, setView] = useState<View>({ x: -1000, y: -1000, w: 8000 });
   const [size, setSize] = useState({ w: 800, h: 560 });
   const [category, setCategory] = useState(CATEGORIES[0]);
@@ -119,7 +120,7 @@ export default function SpacePlanner() {
 
   const nearestWall = (p: Pt) => {
     let best: { wallId: string; t: number; distance: number } | null = null;
-    for (const w of plan.walls) { const r = projectOnWall(p, w); if (!best || r.distance < best.distance) best = { wallId: w.id, t: r.t, distance: r.distance }; }
+    for (const w of allWalls(plan)) { const r = projectOnWall(p, w); if (!best || r.distance < best.distance) best = { wallId: w.id, t: r.t, distance: r.distance }; }
     return best && best.distance < Math.max(tolerance * 1.5, 400) ? best : null;
   };
 
@@ -139,7 +140,7 @@ export default function SpacePlanner() {
     }
     if (step !== "build") return;
     if (tool === "wall") {
-      const s = draftStart ? snapEnd(draftStart, p, plan.walls, tolerance) : snapEnd(p, p, plan.walls, tolerance);
+      const s = draftStart ? snapEnd(draftStart, p, allWalls(plan), tolerance) : snapEnd(p, p, allWalls(plan), tolerance);
       if (!draftStart) { setDraftStart(s); setCursor(s); return; }
       if (dist(draftStart, s) < 50) return;
       const wall = { id: uid("w"), a: draftStart, b: s, thickness: 150 };
@@ -156,6 +157,16 @@ export default function SpacePlanner() {
       setTool("select");
       return;
     }
+    if (tool.startsWith("room:")) {
+      const shape = tool.slice(5) as RoomShape;
+      const r = newRoom(shape, Math.round(p.x / 10) * 10, Math.round(p.y / 10) * 10, `Room ${plan.rooms.length + 1}`);
+      const placed = { ...r, ...snapRoom(plan, r, r.x, r.y, tolerance * 2) };
+      commit((pl) => ({ ...pl, rooms: [...pl.rooms, placed] }));
+      setSelected(placed.id);
+      setTool("select");
+      setMessage("Room added. Drag it against another room to join them; edit its name and sizes on the right.");
+      return;
+    }
     if (tool.startsWith("item:")) {
       const c = catalogItem(tool.slice(5));
       if (!c) return;
@@ -165,11 +176,13 @@ export default function SpacePlanner() {
       setTool("select");
       return;
     }
-    const hit = (e.target as Element).closest?.("[data-id]")?.getAttribute("data-id") ?? null;
-    if (tool === "select" && hit) setSelected(hit);
-    if (tool === "select" && !hit) setSelected(null);
+    const raw = (e.target as Element).closest?.("[data-id]")?.getAttribute("data-id") ?? null;
+    const hit = raw ? roomOf(raw) ?? raw : null;
+    if (tool === "select") setSelected(hit);
     const item = hit ? plan.items.find((i) => i.id === hit) : undefined;
-    drag.current = { id: tool === "select" && item ? item.id : null, start: p, origin: item ? { x: item.x, y: item.y } : p, view, moved: false };
+    const rm = hit ? plan.rooms.find((r) => r.id === hit) : undefined;
+    const target = tool === "select" ? item ?? rm : undefined;
+    drag.current = { id: target ? target.id : null, start: p, origin: target ? { x: target.x, y: target.y } : p, view, moved: false };
   };
 
   const onPointerMove = (e: ReactPointerEvent<SVGSVGElement>) => {
@@ -182,13 +195,19 @@ export default function SpacePlanner() {
       setView({ x: c.x - w / 2, y: c.y - w / aspect / 2, w });
       return;
     }
-    if (tool === "wall" && draftStart) { setCursor(snapEnd(draftStart, toWorld(e.clientX, e.clientY), plan.walls, tolerance)); return; }
+    if (tool === "wall" && draftStart) { setCursor(snapEnd(draftStart, toWorld(e.clientX, e.clientY), allWalls(plan), tolerance)); return; }
     const d = drag.current;
     if (!d) return;
     if (d.id) {
       const p = toWorld(e.clientX, e.clientY);
       const nx = Math.round((d.origin.x + p.x - d.start.x) / 10) * 10, ny = Math.round((d.origin.y + p.y - d.start.y) / 10) * 10;
       if (!d.moved) { setHistory((h) => [...h.slice(-49), plan]); d.moved = true; }
+      const rm = plan.rooms.find((r) => r.id === d.id);
+      if (rm) {
+        const at = snapRoom(plan, rm, d.origin.x + p.x - d.start.x, d.origin.y + p.y - d.start.y, tolerance);
+        setPlan((pl) => ({ ...pl, rooms: pl.rooms.map((r) => (r.id === d.id ? { ...r, ...at } : r)) }));
+        return;
+      }
       setPlan((pl) => ({ ...pl, items: pl.items.map((i) => (i.id === d.id ? { ...i, x: nx, y: ny } : i)) }));
     } else {
       // Pan: measure against the view at drag start so the drawing follows the finger.
@@ -207,10 +226,10 @@ export default function SpacePlanner() {
 
   const removeSelected = () => {
     if (!selected) return;
-    commit((pl) => ({ ...pl, walls: pl.walls.filter((w) => w.id !== selected), openings: pl.openings.filter((o) => o.id !== selected && o.wallId !== selected), items: pl.items.filter((i) => i.id !== selected) }));
+    commit((pl) => ({ ...pl, walls: pl.walls.filter((w) => w.id !== selected), rooms: pl.rooms.filter((r) => r.id !== selected), openings: pl.openings.filter((o) => o.id !== selected && o.wallId !== selected && roomOf(o.wallId) !== selected), items: pl.items.filter((i) => i.id !== selected) }));
     setSelected(null);
   };
-  const rotateSelected = () => commit((pl) => ({ ...pl, items: pl.items.map((i) => (i.id === selected ? { ...i, rot: (i.rot + 90) % 360 } : i)) }));
+  const rotateSelected = () => commit((pl) => ({ ...pl, items: pl.items.map((i) => (i.id === selected ? { ...i, rot: (i.rot + 90) % 360 } : i)), rooms: pl.rooms.map((r) => (r.id === selected ? { ...r, rot: (r.rot + 90) % 360 } : r)) }));
 
   const finishWall = () => { setDraftStart(null); setCursor(null); setTool("select"); };
   useEffect(() => {
@@ -227,6 +246,8 @@ export default function SpacePlanner() {
   const selWall = plan.walls.find((w) => w.id === selected);
   const selOpening = plan.openings.find((o) => o.id === selected);
   const selItem = plan.items.find((i) => i.id === selected);
+  const selRoom = plan.rooms.find((r) => r.id === selected);
+  const editRoom = (patch: Partial<typeof plan.rooms[number]>) => commit((pl) => ({ ...pl, rooms: pl.rooms.map((r) => (r.id === selected ? { ...r, ...patch } : r)) }));
 
   // ----- Step 1: start -----
   const onUpload = async (file?: File) => {
@@ -246,7 +267,7 @@ export default function SpacePlanner() {
   const startRoom = () => {
     const w = Number(room.w), l = Number(room.l);
     if (!(w >= 500 && l >= 500)) { setMessage("Enter the room width and length in millimetres (for example 3000 and 1800)."); return; }
-    const next = { ...plan, walls: rectangleRoom(w, l) };
+    const next = { ...plan, rooms: [...plan.rooms, { ...newRoom(room.shape, 0, 0, plan.rooms.length ? `Room ${plan.rooms.length + 1}` : "Room 1", w, l) }] };
     commit(next); setStep("build"); setTool("select"); requestFit(next); setMessage("");
   };
 
@@ -262,6 +283,7 @@ export default function SpacePlanner() {
       backdrop: { ...b, mmPerPx: b.mmPerPx * k },
       walls: plan.walls.map((w) => ({ ...w, a: scalePt(w.a), b: scalePt(w.b) })),
       items: plan.items.map((i) => ({ ...i, ...scalePt(i) })),
+      rooms: plan.rooms.map((r) => ({ ...r, ...scalePt(r), w: r.w * k, l: r.l * k, a: r.a * k, b: r.b * k })),
     };
     commit(next); setCalib([]); setStep("build"); setTool("wall"); requestFit(next);
     setMessage("Scale set. Now trace the walls: tap at a corner, tap at the next corner, and so on.");
@@ -269,8 +291,9 @@ export default function SpacePlanner() {
 
   // ----- Step 4: report -----
   const sched = useMemo(() => schedule(plan), [plan]);
-  const area = useMemo(() => enclosedArea(plan.walls), [plan.walls]);
-  const b = bounds(plan.walls.length ? { ...plan, items: [], backdrop: null } : plan);
+  const roomRows = plan.rooms.map((r) => ({ name: r.name, shape: SHAPE_LABEL[r.shape], size: `${Math.round(r.w)} × ${Math.round(r.l)}`, area: roomArea(r) }));
+  const area = useMemo(() => floorArea(plan), [plan]);
+  const b = bounds(allWalls(plan).length ? { ...plan, items: [], backdrop: null } : plan);
   const sizeText = `${Math.round(b.maxX - b.minX)} × ${Math.round(b.maxY - b.minY)} mm`;
   const reportBox = useMemo(() => { const v = fit({ ...plan, backdrop: null }, 1.6); return { x: v.x, y: v.y, w: v.w, h: v.w / 1.6 }; }, [plan]);
 
@@ -285,7 +308,7 @@ export default function SpacePlanner() {
     setBusy(true); setMessage("Making your PDF…");
     try {
       const png = await planPngBlob();
-      const pdf = await buildPlannerPdf({ title: plan.title || "My space", size: sizeText, area, height: plan.height, date: today() }, png, 1.6, sched.lines, sched.total, sched.unpriced);
+      const pdf = await buildPlannerPdf({ title: plan.title || "My space", size: sizeText, area, height: plan.height, date: today() }, png, 1.6, sched.lines, sched.total, sched.unpriced, roomRows);
       downloadBlob(pdf, `charismak-${slug}-report.pdf`); setMessage("");
     } catch { setMessage("The PDF could not be made in this browser. Try again, or use a desktop browser."); }
     finally { setBusy(false); }
@@ -341,8 +364,9 @@ export default function SpacePlanner() {
             <div className="rounded-2xl border border-white/10 bg-[var(--cx-panel)] p-6">
               <Square className="h-7 w-7 text-[var(--cx-gold)]" />
               <h2 className="mt-3 text-xl font-semibold">Start with a room size</h2>
-              <p className="mt-2 text-sm text-white/75">No plan? Type the inside size of the room in millimetres and we draw the four walls for you.</p>
-              <div className="mt-4 grid grid-cols-3 gap-2">
+              <p className="mt-2 text-sm text-white/75">No plan? Pick a shape and type the overall size in millimetres. You can add more rooms and join them in the next step.</p>
+              <div className="mt-4 flex flex-wrap gap-1">{SHAPES.map((sh) => <button key={sh} type="button" onClick={() => setRoom({ ...room, shape: sh })} aria-pressed={room.shape === sh} className={`rounded-full px-3 py-1 text-xs font-bold ${room.shape === sh ? "bg-white text-[#0A1A2F]" : "bg-white/5 text-white/80"}`}>{SHAPE_LABEL[sh]}</button>)}</div>
+              <div className="mt-3 grid grid-cols-3 gap-2">
                 <label className="text-xs font-bold text-white/80">Width<input className={field} inputMode="numeric" value={room.w} onChange={(e) => setRoom({ ...room, w: e.target.value })} /></label>
                 <label className="text-xs font-bold text-white/80">Length<input className={field} inputMode="numeric" value={room.l} onChange={(e) => setRoom({ ...room, l: e.target.value })} /></label>
                 <label className="text-xs font-bold text-white/80">Height<input className={field} inputMode="numeric" value={plan.height} onChange={(e) => setPlan({ ...plan, height: Number(e.target.value.replace(/\D/g, "")) || 0 })} /></label>
@@ -416,8 +440,22 @@ export default function SpacePlanner() {
                 </div>
               ) : null}
 
-              {step === "build" && (selWall || selOpening || selItem) ? (
+              {step === "build" && (selWall || selOpening || selItem || selRoom) ? (
                 <div className="rounded-2xl border border-[var(--cx-gold)]/40 bg-[var(--cx-panel)] p-4">
+                  {selRoom ? (
+                    <div className="space-y-3">
+                      <h2 className="font-semibold">Room · {roomArea(selRoom).toFixed(1)} m²</h2>
+                      <label className="block text-xs font-bold text-white/80">Name<input className={field} value={selRoom.name} onChange={(e) => setPlan((pl) => ({ ...pl, rooms: pl.rooms.map((r) => (r.id === selRoom.id ? { ...r, name: e.target.value } : r)) }))} /></label>
+                      <div className="flex flex-wrap gap-1">{SHAPES.map((sh) => <button key={sh} type="button" onClick={() => editRoom({ shape: sh, ...defaultCuts(sh, selRoom.w, selRoom.l) })} aria-pressed={selRoom.shape === sh} className={`rounded-full px-3 py-1 text-xs font-bold ${selRoom.shape === sh ? "bg-white text-[#0A1A2F]" : "bg-white/5 text-white/80"}`}>{SHAPE_LABEL[sh]}</button>)}</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {([["w", "Width"], ["l", "Length"], ...(CUT_LABELS[selRoom.shape] ? [["a", CUT_LABELS[selRoom.shape]![0]], ["b", CUT_LABELS[selRoom.shape]![1]]] : []), ["thickness", "Wall thickness"]] as [keyof typeof selRoom, string][]).map(([k, label]) => (
+                          <label key={k} className="text-xs font-bold text-white/80">{label}<input className={field} inputMode="numeric" value={Math.round(Number(selRoom[k]))} onChange={(e) => { const v = Number(e.target.value.replace(/\D/g, "")); setPlan((pl) => ({ ...pl, rooms: pl.rooms.map((r) => (r.id === selRoom.id ? { ...r, [k]: v || 0 } : r)) })); }} /></label>
+                        ))}
+                      </div>
+                      <button type="button" onClick={rotateSelected} className={`${btn} w-full bg-white/5`}><RotateCw className="h-4 w-4" />Turn 90°</button>
+                      <p className="text-[11px] text-white/60">Drag the room to move it; it snaps to the edges of other rooms so walls line up.</p>
+                    </div>
+                  ) : null}
                   {selWall ? (
                     <div className="space-y-3">
                       <h2 className="font-semibold">Wall</h2>
@@ -452,6 +490,21 @@ export default function SpacePlanner() {
 
               {step === "build" ? (
                 <div className="rounded-2xl border border-white/10 bg-[var(--cx-panel)] p-4">
+                  <h2 className="font-semibold">Add a room</h2>
+                  <p className="mt-1 text-xs text-white/65">Pick a shape, then tap the plan. Drag rooms together to join them.</p>
+                  <div className="mt-3 grid grid-cols-4 gap-2">
+                    {SHAPES.map((sh) => (
+                      <button key={sh} type="button" onClick={() => { setTool(`room:${sh}`); setMessage(`Tap the plan to place a ${SHAPE_LABEL[sh].toLowerCase()} room.`); }} aria-pressed={tool === `room:${sh}`} className={`rounded-lg border px-1 py-2 text-xs font-bold ${tool === `room:${sh}` ? "border-[var(--cx-gold)] bg-[var(--cx-gold)]/15" : "border-white/10 bg-white/5 hover:bg-white/10"}`}>
+                        <svg viewBox="0 0 40 30" className="mx-auto mb-1 h-6 w-8" fill="none" stroke="currentColor" strokeWidth="3"><polygon points={sh === "L" ? "2,2 20,2 20,15 38,15 38,28 2,28" : sh === "T" ? "2,2 38,2 38,12 26,12 26,28 14,28 14,12 2,12" : sh === "U" ? "2,2 14,2 14,16 26,16 26,2 38,2 38,28 2,28" : "2,2 38,2 38,28 2,28"} /></svg>
+                        {SHAPE_LABEL[sh].replace("-shape", "")}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              {step === "build" ? (
+                <div className="rounded-2xl border border-white/10 bg-[var(--cx-panel)] p-4">
                   <h2 className="font-semibold">Add items</h2>
                   <p className="mt-1 text-xs text-white/65">Pick an item, then tap the plan to place it. Drag to move; select to resize, turn or price it.</p>
                   <div className="mt-3 flex flex-wrap gap-1">{CATEGORIES.map((c) => <button key={c} type="button" onClick={() => setCategory(c)} className={`rounded-full px-3 py-1 text-xs font-bold ${category === c ? "bg-white text-[#0A1A2F]" : "bg-white/5 text-white/80"}`}>{c}</button>)}</div>
@@ -468,7 +521,7 @@ export default function SpacePlanner() {
               {step === "build" ? (
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm">
                   <label className="block text-xs font-bold text-white/80">Project name<input className={field} value={plan.title} onChange={(e) => setPlan({ ...plan, title: e.target.value })} /></label>
-                  <p className="mt-3 text-white/75">{plan.walls.length} walls · {plan.openings.length} doors/windows · {plan.items.length} items{area ? ` · ${area.toFixed(1)} m²` : ""}</p>
+                  <p className="mt-3 text-white/75">{plan.rooms.length ? `${plan.rooms.length} rooms · ` : ""}{plan.walls.length} walls · {plan.openings.length} doors/windows · {plan.items.length} items{area ? ` · ${area.toFixed(1)} m²` : ""}</p>
                   <p className="mt-1 font-bold text-[var(--cx-gold)]">Estimated: {naira(sched.total)}{sched.unpriced ? ` (+${sched.unpriced} unpriced)` : ""}</p>
                   <button type="button" onClick={() => goto("report")} className={`${btn} mt-3 w-full bg-[var(--cx-gold)] text-[#0A1A2F]`}><FileText className="h-4 w-4" />See report</button>
                 </div>
@@ -498,6 +551,18 @@ export default function SpacePlanner() {
                   <PlanSvg ref={reportSvg} plan={plan} box={reportBox} showBackdrop={false} className="h-auto w-full" />
                   <p className="mt-1 text-center text-xs text-[#5A6675]">Floor plan · dimensions in millimetres · not to scale</p>
                 </div>
+                {roomRows.length ? (
+                  <>
+                    <h3 className="mt-6 text-lg font-bold text-[#0D3352]">Rooms</h3>
+                    <div className="mt-2 overflow-x-auto">
+                      <table className="w-full min-w-[480px] text-sm">
+                        <thead><tr className="bg-[#0D3352] text-left text-white">{["Room", "Shape", "Overall size (mm)", "Floor area"].map((h) => <th key={h} className="px-3 py-2">{h}</th>)}</tr></thead>
+                        <tbody>{roomRows.map((r, i) => <tr key={i} className={i % 2 ? "bg-[#F6F7F9]" : ""}><td className="px-3 py-2 font-semibold">{r.name}</td><td className="px-3 py-2">{r.shape}</td><td className="px-3 py-2">{r.size}</td><td className="px-3 py-2">{r.area.toFixed(1)} m²</td></tr>)}</tbody>
+                        <tfoot><tr className="border-t-2 border-[#0D3352] font-bold text-[#0D3352]"><td className="px-3 py-2" colSpan={3}>Total floor area</td><td className="px-3 py-2">{roomRows.reduce((t, r) => t + r.area, 0).toFixed(1)} m²</td></tr></tfoot>
+                      </table>
+                    </div>
+                  </>
+                ) : null}
                 <h3 className="mt-6 text-lg font-bold text-[#0D3352]">Schedule of items</h3>
                 <div className="mt-2 overflow-x-auto">
                   <table className="w-full min-w-[560px] text-sm">

@@ -6,9 +6,12 @@ export type Wall = { id: string; a: Pt; b: Pt; thickness: number };
 export type Opening = { id: string; wallId: string; kind: "door" | "window"; t: number; width: number; price?: number | null };
 export type Item = { id: string; type: string; x: number; y: number; w: number; d: number; h: number; rot: number; label?: string; price?: number | null };
 export type Backdrop = { image: string; pxW: number; pxH: number; mmPerPx: number; x: number; y: number; opacity: number };
-export type Plan = { version: 1; title: string; height: number; walls: Wall[]; openings: Opening[]; items: Item[]; backdrop: Backdrop | null };
+export type RoomShape = "rect" | "L" | "T" | "U";
+/** A room box placed as one piece. x, y = top-left; w × l overall; a, b = the cut-out sizes for L, T and U shapes; rot in 90° steps. */
+export type Room = { id: string; name: string; shape: RoomShape; x: number; y: number; w: number; l: number; a: number; b: number; rot: number; thickness: number };
+export type Plan = { version: 1; title: string; height: number; walls: Wall[]; rooms: Room[]; openings: Opening[]; items: Item[]; backdrop: Backdrop | null };
 
-export const emptyPlan = (): Plan => ({ version: 1, title: "My space", height: 3000, walls: [], openings: [], items: [], backdrop: null });
+export const emptyPlan = (): Plan => ({ version: 1, title: "My space", height: 3000, walls: [], rooms: [], openings: [], items: [], backdrop: null });
 
 let counter = 0;
 export const uid = (prefix: string) => `${prefix}-${Date.now().toString(36)}-${(counter++).toString(36)}`;
@@ -46,9 +49,91 @@ export function rectangleRoom(width: number, length: number, thickness = 150): W
   return c.map((a, i) => ({ id: uid("w"), a, b: c[(i + 1) % 4], thickness }));
 }
 
+export const SHAPE_LABEL: Record<RoomShape, string> = { rect: "Rectangle", L: "L-shape", T: "T-shape", U: "U-shape" };
+/** What a and b mean for each shape, for the edit panel. */
+export const CUT_LABELS: Record<RoomShape, [string, string] | null> = { rect: null, L: ["Cut-out width", "Cut-out depth"], T: ["Stem width", "Top depth"], U: ["Opening width", "Opening depth"] };
+
+/** Default cut-out sizes for a shape of w × l. */
+export function defaultCuts(shape: RoomShape, w: number, l: number) {
+  if (shape === "L") return { a: Math.round(w / 2 / 10) * 10, b: Math.round(l / 2 / 10) * 10 };
+  if (shape === "T") return { a: Math.round(w / 3 / 10) * 10, b: Math.round(l / 3 / 10) * 10 };
+  if (shape === "U") return { a: Math.round(w / 3 / 10) * 10, b: Math.round(l / 2 / 10) * 10 };
+  return { a: 0, b: 0 };
+}
+
+export function newRoom(shape: RoomShape, x: number, y: number, name: string, w = 3600, l = 3000): Room {
+  return { id: uid("r"), name, shape, x, y, w, l, ...defaultCuts(shape, w, l), rot: 0, thickness: 150 };
+}
+
+/** Corner points of a room, clockwise, in plan millimetres. */
+export function roomPolygon(r: Room): Pt[] {
+  const w = r.w, l = r.l;
+  const a = Math.max(0, Math.min(r.a, w - 100)), b = Math.max(0, Math.min(r.b, l - 100));
+  let pts: [number, number][];
+  if (r.shape === "L") pts = [[0, 0], [w - a, 0], [w - a, b], [w, b], [w, l], [0, l]];
+  else if (r.shape === "T") pts = [[0, 0], [w, 0], [w, b], [(w + a) / 2, b], [(w + a) / 2, l], [(w - a) / 2, l], [(w - a) / 2, b], [0, b]];
+  else if (r.shape === "U") pts = [[0, 0], [(w - a) / 2, 0], [(w - a) / 2, b], [(w + a) / 2, b], [(w + a) / 2, 0], [w, 0], [w, l], [0, l]];
+  else pts = [[0, 0], [w, 0], [w, l], [0, l]];
+  // Turn in 90° steps about the room's top-left, keeping the box's top-left at x, y.
+  const turns = ((Math.round(r.rot / 90) % 4) + 4) % 4;
+  const turned = pts.map(([px, py]) => {
+    if (turns === 1) return [l - py, px];
+    if (turns === 2) return [w - px, l - py];
+    if (turns === 3) return [py, w - px];
+    return [px, py];
+  });
+  return turned.map(([px, py]) => ({ x: r.x + px, y: r.y + py }));
+}
+
+/** The walls a room contributes; ids are "<room id>:<edge>" so doors and windows stay attached when it moves. */
+export function roomWalls(r: Room): Wall[] {
+  const pts = roomPolygon(r);
+  return pts.map((a, i) => ({ id: `${r.id}:${i}`, a, b: pts[(i + 1) % pts.length], thickness: r.thickness }));
+}
+
+/** Every wall on the plan: drawn walls plus the walls of every room. */
+export const allWalls = (plan: Plan): Wall[] => [...plan.walls, ...plan.rooms.flatMap(roomWalls)];
+
+export const roomOf = (wallId: string) => (wallId.includes(":") ? wallId.split(":")[0] : null);
+
+export function polygonArea(pts: Pt[]) {
+  let s = 0;
+  for (let i = 0; i < pts.length; i++) { const p = pts[i], q = pts[(i + 1) % pts.length]; s += p.x * q.y - q.x * p.y; }
+  return Math.abs(s) / 2 / 1e6;
+}
+export const roomArea = (r: Room) => polygonArea(roomPolygon(r));
+
+/** Centre of a room's box, for its label. */
+export function roomCentre(r: Room): Pt {
+  const pts = roomPolygon(r);
+  const xs = pts.map((p) => p.x), ys = pts.map((p) => p.y);
+  return { x: (Math.min(...xs) + Math.max(...xs)) / 2, y: (Math.min(...ys) + Math.max(...ys)) / 2 };
+}
+
+/** Snap a room being moved to x, y so its edges line up with other rooms and walls when within tolerance. */
+export function snapRoom(plan: Plan, room: Room, x: number, y: number, tolerance: number): { x: number; y: number } {
+  const moved = roomPolygon({ ...room, x, y });
+  const tx: number[] = [], ty: number[] = [];
+  for (const r of plan.rooms) if (r.id !== room.id) for (const p of roomPolygon(r)) { tx.push(p.x); ty.push(p.y); }
+  for (const w of plan.walls) { tx.push(w.a.x, w.b.x); ty.push(w.a.y, w.b.y); }
+  const best = (own: number[], targets: number[]) => {
+    let d = Infinity;
+    for (const o of own) for (const t of targets) { const k = t - o; if (Math.abs(k) < Math.abs(d) && Math.abs(k) <= tolerance) d = k; }
+    return Number.isFinite(d) ? d : 0;
+  };
+  const dx = best(moved.map((p) => p.x), tx), dy = best(moved.map((p) => p.y), ty);
+  return { x: Math.round((x + dx) / 5) * 5, y: Math.round((y + dy) / 5) * 5 };
+}
+
+/** Total floor area: the rooms, or a single closed outline of drawn walls when there are no rooms. */
+export function floorArea(plan: Plan): number | null {
+  if (plan.rooms.length) return plan.rooms.reduce((s, r) => s + roomArea(r), 0);
+  return enclosedArea(plan.walls);
+}
+
 export function bounds(plan: Plan) {
   const xs: number[] = [], ys: number[] = [];
-  for (const w of plan.walls) { xs.push(w.a.x, w.b.x); ys.push(w.a.y, w.b.y); }
+  for (const w of allWalls(plan)) { xs.push(w.a.x, w.b.x); ys.push(w.a.y, w.b.y); }
   for (const it of plan.items) { const r = Math.max(it.w, it.d) / 2; xs.push(it.x - r, it.x + r); ys.push(it.y - r, it.y + r); }
   if (plan.backdrop) { const b = plan.backdrop; xs.push(b.x, b.x + b.pxW * b.mmPerPx); ys.push(b.y, b.y + b.pxH * b.mmPerPx); }
   if (!xs.length) return { minX: 0, minY: 0, maxX: 5000, maxY: 4000 };
@@ -100,7 +185,9 @@ export function schedule(plan: Plan): { lines: ScheduleLine[]; total: number; un
     const m = marketPrice(c?.priceId);
     add(it.type, it.label || c?.name || it.type, c?.point ? "—" : `${mm(it.w)} × ${mm(it.d)} × ${mm(it.h)}`, pick(it.price, m ? m.rate : null));
   }
+  const wallIds = new Set(allWalls(plan).map((w) => w.id));
   for (const o of plan.openings) {
+    if (!wallIds.has(o.wallId)) continue;
     if (o.kind === "door") {
       const m = marketPrice(DOOR_PRICE_ID);
       add("door", "Door", `${mm(o.width)} wide`, pick(o.price, m ? m.rate : null));
@@ -122,7 +209,7 @@ export function readSaved(raw: string | null): Plan | null {
   try {
     const p = JSON.parse(raw) as Plan;
     if (p?.version !== 1 || !Array.isArray(p.walls) || !Array.isArray(p.items) || !Array.isArray(p.openings)) return null;
-    return { ...emptyPlan(), ...p };
+    return { ...emptyPlan(), ...p, rooms: Array.isArray(p.rooms) ? p.rooms : [] };
   } catch {
     return null;
   }
