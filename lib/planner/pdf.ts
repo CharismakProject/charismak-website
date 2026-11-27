@@ -28,7 +28,7 @@ export type RoomRow = { name: string; size: string; area: number };
 
 export type SheetImage = { title: string; png: Blob; ratio: number };
 
-export async function buildPlannerPdf(info: ReportInfo, planPng: Blob, planRatio: number, lines: ScheduleLine[], total: number, unpriced: number, rooms: RoomRow[] = [], views: Blob[] = [], elevations: SheetImage[] = []) {
+export async function buildPlannerPdf(info: ReportInfo, planPng: Blob, planRatio: number, lines: ScheduleLine[], total: number, unpriced: number, rooms: RoomRow[] = [], views: { name: string; blob: Blob }[] = [], elevations: SheetImage[] = []) {
   const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4", compress: true });
   const W = 297, H = 210, M = 12;
   const logo = await dataUrl("/branding/charismak-logo-wide.jpg");
@@ -79,12 +79,12 @@ export async function buildPlannerPdf(info: ReportInfo, planPng: Blob, planRatio
   };
 
   // 3D views
-  if (views.length) {
-    page += 1; doc.addPage(); header("3D views");
-    doc.setTextColor(...NAVY); doc.setFont("helvetica", "bold"); doc.setFontSize(14); doc.text("3D views", M, 35);
+  for (let v = 0; v < views.length; v += 2) {
+    page += 1; doc.addPage(); header(`3D views ${v + 1}${views[v + 1] ? ` and ${v + 2}` : ""}`);
+    doc.setTextColor(...NAVY); doc.setFont("helvetica", "bold"); doc.setFontSize(14); doc.text(`3D views ${v + 1}${views[v + 1] ? ` and ${v + 2}` : ""}`, M, 35);
     const bw = (W - 2 * M - 6) / 2, top3 = 42, bh = H - 10 - top3 - 6;
-    for (let i = 0; i < Math.min(2, views.length); i++) await placeImage(views[i], 1.6, M + i * (bw + 6), top3, bw, bh, i ? "Cutaway: walls cut at 1.2 m, opposite corner" : "Aerial view");
-    doc.setFontSize(8); doc.setTextColor(...GREY); doc.text("Indicative massing: items shown as blocks at their mounting heights.", M, H - 13);
+    for (let i = 0; i < 2 && v + i < views.length; i++) await placeImage(views[v + i].blob, 1.6, M + i * (bw + 6), top3, bw, bh, views[v + i].name);
+    doc.setFontSize(8); doc.setTextColor(...GREY); doc.text("Concept visual: drag-to-rotate version in the online report. Colours and finishes as chosen per item.", M, H - 13);
     footer(page);
   }
 

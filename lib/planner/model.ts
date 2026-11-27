@@ -7,7 +7,7 @@ export type Wall = { id: string; a: Pt; b: Pt; thickness: number; bulge?: number
 /** swing: which side a door opens to (1 = the wall's left side, -1 = the other); hinge: 1 puts the hinge at the other end. */
 export type Opening = { id: string; wallId: string; kind: "door" | "window"; t: number; width: number; price?: number | null; swing?: 1 | -1; hinge?: 0 | 1 };
 /** mount: height of the underside above the floor (mm); when missing the catalogue default is used. */
-export type Item = { id: string; type: string; x: number; y: number; w: number; d: number; h: number; rot: number; label?: string; price?: number | null; mount?: number };
+export type Item = { id: string; type: string; x: number; y: number; w: number; d: number; h: number; rot: number; label?: string; price?: number | null; mount?: number; finish?: string };
 export type Backdrop = { image: string; pxW: number; pxH: number; mmPerPx: number; x: number; y: number; opacity: number };
 /** A room name pinned at a point; the room is whichever closed area of walls contains the point. */
 export type RoomTag = { id: string; name: string; x: number; y: number };
