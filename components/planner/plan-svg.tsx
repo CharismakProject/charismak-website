@@ -13,6 +13,9 @@ export function wallPath(w: Pick<Wall, "a" | "b" | "bulge">): string {
 const NAVY = "#0D3352";
 const RED = "#8A1A10";
 
+/** Wall-hung items above head height are drawn dashed on plan ("over"), as on drawings. */
+const overhead = (it: Item) => (it.mount ?? catalogItem(it.type)?.mount ?? 0) >= 1400;
+
 /** Top-view symbol for an item, drawn in a box centred on 0,0 of size w × d. */
 function symbol(it: Item): ReactNode {
   const c = catalogItem(it.type);
@@ -20,6 +23,10 @@ function symbol(it: Item): ReactNode {
   const line = { fill: "none", stroke: NAVY, strokeWidth: Math.max(8, Math.min(w, d) * 0.03) } as const;
   const box = <rect x={-hw} y={-hd} width={w} height={d} fill="#fff" stroke={NAVY} strokeWidth={line.strokeWidth} rx={Math.min(w, d) * 0.04} />;
   switch (c?.symbol) {
+    case "worktop": return <rect x={-hw} y={-hd} width={w} height={d} fill="#E7E9EC" stroke={NAVY} strokeWidth={line.strokeWidth} />;
+    case "counter": return <rect x={-hw} y={-hd} width={w} height={d} fill="#C9A074" stroke={NAVY} strokeWidth={line.strokeWidth} />;
+    case "microwave": return <>{box}<text x={0} y={0} fontSize={Math.min(w, d) * 0.28} textAnchor="middle" dominantBaseline="middle" fill={NAVY}>MW</text></>;
+    case "hood": return <><rect x={-hw} y={-hd} width={w} height={d} fill="none" stroke={NAVY} strokeWidth={line.strokeWidth} strokeDasharray={`${line.strokeWidth * 4} ${line.strokeWidth * 3}`} /><line x1={-hw} y1={-hd} x2={hw} y2={hd} {...line} strokeDasharray={`${line.strokeWidth * 4} ${line.strokeWidth * 3}`} /><line x1={hw} y1={-hd} x2={-hw} y2={hd} {...line} strokeDasharray={`${line.strokeWidth * 4} ${line.strokeWidth * 3}`} /></>;
     case "chair": return <>{box}<rect x={-hw} y={-hd} width={w} height={d * 0.18} fill={NAVY} opacity={0.85} /></>;
     case "table": return <>{box}<rect x={-hw * 0.8} y={-hd * 0.75} width={w * 0.8} height={d * 0.75} {...line} /></>;
     case "bed": return <>{box}<rect x={-hw * 0.9} y={-hd * 0.95} width={w * 0.38} height={d * 0.16} rx={30} {...line} /><rect x={hw * 0.08} y={-hd * 0.95} width={w * 0.38} height={d * 0.16} rx={30} {...line} /><line x1={-hw} y1={-hd * 0.6} x2={hw} y2={-hd * 0.6} {...line} /></>;
@@ -140,9 +147,9 @@ const PlanSvg = forwardRef<SVGSVGElement, PlanSvgProps & Omit<React.SVGProps<SVG
         <path key={w.id} data-id={w.id} d={wallPath(w)} fill="none" stroke={isSel(w.id) ? RED : "#1B2433"} strokeWidth={w.thickness} strokeLinecap={w.bulge ? "butt" : "square"} />
       ))}
       {plan.openings.map((o) => { const w = walls.get(o.wallId); return w ? <g key={o.id} data-id={o.id} opacity={selected === o.id ? 0.6 : 1}>{opening(o, w)}</g> : null; })}
-      {plan.items.map((it) => (
+      {[...plan.items].sort((p, q) => (overhead(p) ? 1 : 0) - (overhead(q) ? 1 : 0)).map((it) => (
         <g key={it.id} data-id={it.id} transform={`translate(${it.x} ${it.y}) rotate(${it.rot})`}>
-          {symbol(it)}
+          {overhead(it) && catalogItem(it.type)?.symbol === "cabinet" ? <rect x={-it.w / 2} y={-it.d / 2} width={it.w} height={it.d} fill="none" stroke={NAVY} strokeWidth={Math.max(8, Math.min(it.w, it.d) * 0.025)} strokeDasharray="60 40" /> : symbol(it)}
           {selected === it.id ? <rect x={-it.w / 2 - 40} y={-it.d / 2 - 40} width={it.w + 80} height={it.d + 80} fill="none" stroke={RED} strokeWidth={unit * 0.15} strokeDasharray={`${unit * 0.5} ${unit * 0.3}`} /> : null}
         </g>
       ))}
