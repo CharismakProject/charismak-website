@@ -4,7 +4,8 @@ import { CATALOG, DOOR_PRICE_ID, WINDOW_HEIGHT, WINDOW_PRICE_ID, catalogItem, ma
 export type Pt = { x: number; y: number };
 /** bulge: for a curved wall, the signed distance in mm from the middle of the straight line a→b to the middle of the arc (0 or missing = straight). */
 export type Wall = { id: string; a: Pt; b: Pt; thickness: number; bulge?: number };
-export type Opening = { id: string; wallId: string; kind: "door" | "window"; t: number; width: number; price?: number | null };
+/** swing: which side a door opens to (1 = the wall's left side, -1 = the other); hinge: 1 puts the hinge at the other end. */
+export type Opening = { id: string; wallId: string; kind: "door" | "window"; t: number; width: number; price?: number | null; swing?: 1 | -1; hinge?: 0 | 1 };
 /** mount: height of the underside above the floor (mm); when missing the catalogue default is used. */
 export type Item = { id: string; type: string; x: number; y: number; w: number; d: number; h: number; rot: number; label?: string; price?: number | null; mount?: number };
 export type Backdrop = { image: string; pxW: number; pxH: number; mmPerPx: number; x: number; y: number; opacity: number };

@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
-import { Spline, DoorOpen, Download, FileUp, Hand, Minus, MousePointer2, Plus, RotateCw, Ruler, Square, Trash2, Undo2, AppWindow, Maximize, FileText, Image as ImageIcon } from "lucide-react";
+import { Check, Lightbulb, Spline, DoorOpen, Download, FileUp, Hand, Minus, MousePointer2, Plus, RotateCw, Ruler, Square, Trash2, Undo2, AppWindow, Maximize, FileText, Image as ImageIcon } from "lucide-react";
 
 import ElevationSvg from "./elevation-svg";
 import PlanSvg from "./plan-svg";
+import { examplePlan } from "@/lib/planner/example";
 import { itemMount, planElevations } from "@/lib/planner/elevation";
 import { CATALOG, CATEGORIES, catalogItem, marketPrice, DOOR_PRICE_ID, WINDOW_PRICE_ID, WINDOW_HEIGHT } from "@/lib/planner/catalog";
 import { arcOf, bulgeForRadius, bulgeThrough, bounds, CUT_LABELS, defaultCuts, detectRooms, dist, emptyPlan, outlineWalls, pointAtLength, projectOnWall, readSaved, schedule, SHAPE_LABEL, shapeOutline, snapPoint, STORAGE_KEY, uid, wallLength, withLength, type Item, type Plan, type Pt, type RoomShape, type Snap } from "@/lib/planner/model";
@@ -249,6 +250,35 @@ export default function SpacePlanner() {
     if (selRoom.tagId) setPlan((pl) => ({ ...pl, tags: pl.tags.map((t) => (t.id === selRoom.tagId ? { ...t, name } : t)) }));
     else commit((pl) => ({ ...pl, tags: [...pl.tags, { id: uid("t"), name, x: selRoom.label.x, y: selRoom.label.y }] }));
   };
+  // ----- Guidance: what to do next, and what the current tool expects -----
+  const roomsNamed = rooms.length > 0 && rooms.every((r) => r.tagId);
+  const steps: { id: string; label: string; done: boolean; hint: string; tools: [string, Tool][] }[] = [
+    { id: "walls", label: "Draw the walls", done: rooms.length > 0, tools: [["Wall", "wall"], ["Curved wall", "arc"]],
+      hint: plan.backdrop ? "Trace over your plan: choose Wall, tap a corner, then the next corner, and so on. Walls can start or end on any point of another wall. Close the outline so the room is found." : "Choose Wall and tap from corner to corner, or use “Draw a shape”. Close the outline so the room is found." },
+    { id: "openings", label: "Add doors and windows", done: plan.openings.length > 0, tools: [["Door", "door"], ["Window", "window"]],
+      hint: "Choose Door or Window, then tap on the wall where it goes. Select it afterwards to change its width or slide it along the wall." },
+    { id: "items", label: "Place fittings and furniture", done: plan.items.length > 0, tools: [],
+      hint: "Pick an item under “Add items” and tap the plan to place it. Drag to move it; select it to resize, turn, set its height or its price." },
+    { id: "rooms", label: "Name the rooms", done: roomsNamed, tools: [["Select", "select"]],
+      hint: "Choose Select and tap inside each room to give it a name (Kitchen, Bedroom 1…)." },
+    { id: "report", label: "Open the report", done: false, tools: [],
+      hint: "See the plan, wall elevations, 3D views and the priced schedule, then download the PDF." },
+  ];
+  const current = steps.find((x) => !x.done) ?? steps[steps.length - 1];
+  const toolHint = tool === "wall" ? (draftStart ? "Tap the next corner · or type a length and press Enter · Close joins back to the start · Done finishes" : "Tap where the wall starts — it snaps to corners and to any point on a wall")
+    : tool === "arc" ? (!draftStart ? "Tap where the curved wall starts" : !arcEnd ? "Tap where it ends (or type the chord length)" : "Tap a point the curve passes through (or type the radius)")
+    : tool === "door" || tool === "window" ? `Tap on a wall to add a ${tool}`
+    : tool.startsWith("item:") ? `Tap the plan to place: ${catalogItem(tool.slice(5))?.name ?? "item"}`
+    : tool.startsWith("shape:") ? "Tap where the shape’s top-left corner goes"
+    : tool === "pan" ? "Drag to move the view · pinch or scroll to zoom"
+    : "Tap a wall, door, item or room to edit it · drag items to move them";
+  const loadExample = () => {
+    if ((plan.walls.length || plan.items.length) && !window.confirm("Load the example? Your current plan on this device will be replaced.")) return;
+    const ex = examplePlan();
+    commit(ex); setSelected(null); setStep("build"); setTool("select"); requestFit(ex);
+    setMessage("Example loaded: the Mpape kitchen. Look around, tap things to see their settings, then open the report.");
+  };
+
   const removeSelected = () => {
     if (!selected) return;
     if (selRoom) { if (selRoom.tagId) commit((pl) => ({ ...pl, tags: pl.tags.filter((t) => t.id !== selRoom.tagId) })); setSelected(null); return; }
@@ -434,6 +464,19 @@ export default function SpacePlanner() {
         {message ? <p className="mb-3 rounded-lg border border-[var(--cx-gold)]/40 bg-[var(--cx-gold)]/10 px-3 py-2 text-sm text-white">{message}</p> : null}
 
         {step === "start" ? (
+          <ol className="mb-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            {[["Upload or start", "Upload a plan, or type a room size."], ["Set the scale", "Tap one known dimension on the plan."], ["Build", "Draw walls, add doors, windows and fittings."], ["Report", "Plan, elevations, 3D and prices — download the PDF."]].map(([t, d], i) => (
+              <li key={t} className="rounded-xl border border-white/10 bg-white/5 p-3"><span className="text-xs font-bold text-[var(--cx-gold)]">Step {i + 1}</span><p className="font-semibold">{t}</p><p className="text-xs text-white/70">{d}</p></li>
+            ))}
+          </ol>
+        ) : null}
+        {step === "start" ? (
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--cx-gold)]/40 bg-[var(--cx-gold)]/10 p-4">
+            <p className="text-sm"><b>New here?</b> Open a finished example — a kitchen in a 2-bedroom apartment in Mpape — and see how it works.</p>
+            <button type="button" onClick={loadExample} className={`${btn} bg-[var(--cx-gold)] text-[#0A1A2F]`}><Lightbulb className="h-4 w-4" />Load example</button>
+          </div>
+        ) : null}
+        {step === "start" ? (
           <section className="grid gap-4 md:grid-cols-2">
             <div className="rounded-2xl border border-white/10 bg-[var(--cx-panel)] p-6">
               <FileUp className="h-7 w-7 text-[var(--cx-gold)]" />
@@ -467,6 +510,34 @@ export default function SpacePlanner() {
           </section>
         ) : null}
 
+        {step === "scale" ? (
+          <div className="mb-3 rounded-2xl border border-[var(--cx-gold)]/40 bg-[var(--cx-panel)] p-3 md:p-4">
+            <p className="text-sm font-semibold">Set the scale <span className="font-normal text-white/70">({calib.length}/2 points tapped)</span></p>
+            <p className="text-sm text-white/80">Find a line on your plan with a dimension written on it. Tap both ends, type that dimension, then press Apply. You can also skip this and draw to typed sizes.</p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <input aria-label="Real length in millimetres" inputMode="numeric" placeholder="Length in mm, e.g. 3000" value={calibLength} onChange={(e) => setCalibLength(e.target.value.replace(/\D/g, ""))} className="w-48 rounded-lg bg-white px-3 py-2 text-sm text-[#0A1A2F] outline-none" />
+              <button type="button" onClick={applyScale} disabled={calib.length !== 2 || !calibLength} className={`${btn} bg-[var(--cx-gold)] text-[#0A1A2F]`}>Apply scale</button>
+              <button type="button" onClick={() => setCalib([])} className={`${btn} bg-white/10`}>Clear points</button>
+              <button type="button" onClick={() => { setStep("build"); setTool("wall"); }} className={`${btn} bg-white/5 text-white/80`}>Skip</button>
+            </div>
+          </div>
+        ) : null}
+        {step === "build" ? (
+          <div className="mb-3 rounded-2xl border border-[var(--cx-gold)]/40 bg-[var(--cx-panel)] p-3 md:p-4">
+            <div className="flex flex-wrap gap-1.5">
+              {steps.map((x, i) => (
+                <span key={x.id} className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold ${x === current ? "bg-[var(--cx-gold)] text-[#0A1A2F]" : x.done ? "bg-white/10 text-white" : "bg-white/5 text-white/50"}`}>{x.done ? <Check className="h-3 w-3" /> : `${i + 1}.`} {x.label}</span>
+              ))}
+            </div>
+            <p className="mt-2 text-sm font-semibold">Next: {current.label}</p>
+            <p className="text-sm text-white/80">{current.hint}</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {current.tools.map(([label, t]) => <button key={label} type="button" onClick={() => { setTool(t); setDraftStart(null); setArcEnd(null); setCursor(null); }} className={`${btn} ${tool === t ? "bg-[var(--cx-gold)] text-[#0A1A2F]" : "bg-white/10"}`}>{label}</button>)}
+              {current.id === "items" ? <button type="button" onClick={() => document.getElementById("items-card")?.scrollIntoView({ behavior: "smooth", block: "center" })} className={`${btn} bg-white/10`}>Show items</button> : null}
+              {current.id === "report" || current.id === "rooms" ? <button type="button" onClick={() => goto("report")} className={`${btn} ${current.id === "report" ? "bg-[var(--cx-gold)] text-[#0A1A2F]" : "bg-white/5 text-white/80"}`}><FileText className="h-4 w-4" />{current.id === "report" ? "See report" : "Skip to report"}</button> : null}
+            </div>
+          </div>
+        ) : null}
         {step === "scale" || step === "build" ? (
           <section className="grid gap-3 lg:grid-cols-[1fr_320px]">
             <div className="flex min-h-[60vh] flex-col overflow-hidden rounded-2xl border border-white/10 bg-[var(--cx-panel)]">
@@ -500,6 +571,7 @@ export default function SpacePlanner() {
                 </span>
               </div>
               <div ref={box} className="relative min-h-[50vh] flex-1 touch-none select-none bg-white" onWheel={(e) => zoom(e.deltaY > 0 ? 1.12 : 0.89, toWorld(e.clientX, e.clientY))}>
+                {step === "build" ? <p className="pointer-events-none absolute left-2 top-2 z-10 max-w-[90%] rounded-lg bg-[#0A1A2F]/85 px-3 py-1.5 text-xs font-semibold text-white">{toolHint}</p> : null}
                 <PlanSvg
                   ref={svgRef}
                   plan={plan}
@@ -564,6 +636,12 @@ export default function SpacePlanner() {
                     <div className="space-y-3">
                       <h2 className="font-semibold capitalize">{selOpening.kind}</h2>
                       <label className="block text-xs font-bold text-white/80">Width (mm)<input className={field} inputMode="numeric" value={selOpening.width} onChange={(e) => { const v = Number(e.target.value.replace(/\D/g, "")); commit((pl) => ({ ...pl, openings: pl.openings.map((o) => (o.id === selOpening.id ? { ...o, width: v || 0 } : o)) })); }} /></label>
+                      {selOpening.kind === "door" ? (
+                        <div className="grid grid-cols-2 gap-2">
+                          <button type="button" onClick={() => commit((pl) => ({ ...pl, openings: pl.openings.map((o) => (o.id === selOpening.id ? { ...o, swing: (o.swing ?? 1) === 1 ? -1 : 1 } : o)) }))} className={`${btn} bg-white/10`}>Flip side</button>
+                          <button type="button" onClick={() => commit((pl) => ({ ...pl, openings: pl.openings.map((o) => (o.id === selOpening.id ? { ...o, hinge: o.hinge ? 0 : 1 } : o)) }))} className={`${btn} bg-white/10`}>Swap hinge</button>
+                        </div>
+                      ) : null}
                       <label className="block text-xs font-bold text-white/80">Position along wall<input type="range" min={0} max={1} step={0.01} value={selOpening.t} onChange={(e) => { const t = Number(e.target.value); setPlan((pl) => ({ ...pl, openings: pl.openings.map((o) => (o.id === selOpening.id ? { ...o, t } : o)) })); }} className="w-full" /></label>
                       {priceField(selOpening.price, selOpening.kind === "door" ? marketPrice(DOOR_PRICE_ID)?.rate ?? null : (() => { const m = marketPrice(WINDOW_PRICE_ID); return m ? Math.round((m.rate * selOpening.width * WINDOW_HEIGHT) / 1e6) : null; })(), (v) => commit((pl) => ({ ...pl, openings: pl.openings.map((o) => (o.id === selOpening.id ? { ...o, price: v } : o)) })), selOpening.kind === "window" ? `${WINDOW_HEIGHT} mm high, priced per m²` : undefined)}
                     </div>
@@ -609,7 +687,7 @@ export default function SpacePlanner() {
               ) : null}
 
               {step === "build" ? (
-                <div className="rounded-2xl border border-white/10 bg-[var(--cx-panel)] p-4">
+                <div id="items-card" className="rounded-2xl border border-white/10 bg-[var(--cx-panel)] p-4">
                   <h2 className="font-semibold">Add items</h2>
                   <p className="mt-1 text-xs text-white/65">Pick an item, then tap the plan to place it. Drag to move; select to resize, turn or price it.</p>
                   <div className="mt-3 flex flex-wrap gap-1">{CATEGORIES.map((c) => <button key={c} type="button" onClick={() => setCategory(c)} className={`rounded-full px-3 py-1 text-xs font-bold ${category === c ? "bg-white text-[#0A1A2F]" : "bg-white/5 text-white/80"}`}>{c}</button>)}</div>
