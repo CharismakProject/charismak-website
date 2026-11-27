@@ -56,10 +56,14 @@ function opening(o: Opening, w: Wall) {
   if (o.kind === "window") {
     return <g key={o.id}>{gap}{[-0.4, 0, 0.4].map((k) => <polyline key={k} points={along(k)} fill="none" stroke="#1D5FA8" strokeWidth={14} />)}</g>;
   }
+  // Hinge at one end of the opening, leaf open towards the chosen side, swing arc to the other end.
+  const [h, f] = o.hinge ? [p2, p1] : [p1, p2];
   const cl = Math.hypot(p2.x - p1.x, p2.y - p1.y) || 1;
-  const nx = -(p2.y - p1.y) / cl, ny = (p2.x - p1.x) / cl;
-  const leafEnd = { x: p1.x + nx * cl, y: p1.y + ny * cl };
-  return <g key={o.id}>{gap}<line x1={p1.x} y1={p1.y} x2={leafEnd.x} y2={leafEnd.y} stroke={RED} strokeWidth={14} /><path d={`M ${leafEnd.x} ${leafEnd.y} A ${cl} ${cl} 0 0 1 ${p2.x} ${p2.y}`} fill="none" stroke={RED} strokeWidth={8} strokeDasharray="30 25" /></g>;
+  const side = o.swing ?? 1;
+  const nx = (-(p2.y - p1.y) / cl) * side, ny = ((p2.x - p1.x) / cl) * side;
+  const leafEnd = { x: h.x + nx * cl, y: h.y + ny * cl };
+  const sweep = (leafEnd.x - h.x) * (f.y - h.y) - (leafEnd.y - h.y) * (f.x - h.x) < 0 ? 1 : 0;
+  return <g key={o.id}>{gap}<line x1={h.x} y1={h.y} x2={leafEnd.x} y2={leafEnd.y} stroke={RED} strokeWidth={14} /><path d={`M ${leafEnd.x} ${leafEnd.y} A ${cl} ${cl} 0 0 ${sweep} ${f.x} ${f.y}`} fill="none" stroke={RED} strokeWidth={8} strokeDasharray="30 25" /></g>;
 }
 
 /** Dimension along a wall, offset to one side, text upright. */

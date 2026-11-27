@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 
 import { marketPrice } from "../lib/planner/catalog";
 import { planElevations, wallElevation } from "../lib/planner/elevation";
+import { examplePlan } from "../lib/planner/example";
 import { arcOf, bulgeForRadius, bulgeThrough, dist, pointOnWall, wallPolyline, detectRooms, emptyPlan, enclosedArea, floorArea, outlineWalls, pointAtLength, projectOnWall, readSaved, rectangleRoom, schedule, shapeOutline, snapPoint, uid, wallLength, withLength, type Plan, type Pt, type Wall } from "../lib/planner/model";
 
 const wall = (a: Pt, b: Pt): Wall => ({ id: uid("w"), a, b, thickness: 150 });
@@ -173,6 +174,18 @@ near(withLength(curvedTop, wallLength(curvedTop) * 2).bulge!, -2000, 1e-6);
   assert.ok(eC.curved);
   near(eC.length, wallLength(curved), 1e-6);
   near(eC.parts[0].x, wallLength(curved) / 2 - 450, 1e-6, "door centred on the unrolled curve");
+}
+
+// The example plan (Mpape kitchen) is one named room with every item and opening on a real wall.
+{
+  const ex = examplePlan();
+  const exRooms = detectRooms(ex.walls, ex.tags);
+  assert.equal(exRooms.length, 1);
+  assert.equal(exRooms[0].name, "Kitchen");
+  assert.ok(exRooms[0].area > 5 && exRooms[0].area < 5.4, `kitchen area ${exRooms[0].area}`);
+  assert.equal(ex.openings.every((o) => ex.walls.some((w) => w.id === o.wallId)), true);
+  assert.ok(planElevations(ex).length >= 3, "the example produces wall elevations");
+  assert.ok(schedule(ex).lines.length >= 8);
 }
 
 console.log("Space Planner checks passed.");
