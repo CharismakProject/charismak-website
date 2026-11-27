@@ -4,7 +4,7 @@ import { BookOpen, FolderUp, PencilRuler } from "lucide-react";
 /** One Construction Studio, three tabs: learn (Explorer), design (Design Studio), your own project (drawing + BOQ). */
 export const STUDIO_TABS = [
   { id: "learn", label: "Learn", hint: "3D lessons & stage costs", href: "/construction-explorer", icon: BookOpen },
-  { id: "design", label: "Design", hint: "Sample houses, plans, play & price", href: "/construction-studio/design", icon: PencilRuler },
+  { id: "design", label: "Space Planner", hint: "Upload a plan, place items, get a priced report", href: "/construction-studio/design", icon: PencilRuler },
   { id: "project", label: "My project", hint: "Your drawing & BOQ", href: "/construction-studio", icon: FolderUp },
 ] as const;
 

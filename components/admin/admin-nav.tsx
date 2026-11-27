@@ -12,6 +12,7 @@ const links = [
   { href: "/admin/services", label: "Services", icon: Wrench },
   { href: "/blog/manage", label: "News & Learning", icon: BookOpen },
   { href: "/courses/manage", label: "Courses", icon: GraduationCap },
+  { href: "/admin/studio-3d", label: "Advanced 3D Studio", icon: Building2 },
   { href: "/catalogue-admin", label: "Catalogue", icon: Boxes },
   { href: "/price-admin", label: "Market Prices", icon: CircleDollarSign },
   { href: "/admin/suppliers", label: "Supplier Profiles", icon: UserRoundCog },
