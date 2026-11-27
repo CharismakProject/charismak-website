@@ -6,18 +6,18 @@ export type Wall = { id: string; a: Pt; b: Pt; thickness: number };
 export type Opening = { id: string; wallId: string; kind: "door" | "window"; t: number; width: number; price?: number | null };
 export type Item = { id: string; type: string; x: number; y: number; w: number; d: number; h: number; rot: number; label?: string; price?: number | null };
 export type Backdrop = { image: string; pxW: number; pxH: number; mmPerPx: number; x: number; y: number; opacity: number };
-export type RoomShape = "rect" | "L" | "T" | "U";
-/** A room box placed as one piece. x, y = top-left; w × l overall; a, b = the cut-out sizes for L, T and U shapes; rot in 90° steps. */
-export type Room = { id: string; name: string; shape: RoomShape; x: number; y: number; w: number; l: number; a: number; b: number; rot: number; thickness: number };
-export type Plan = { version: 1; title: string; height: number; walls: Wall[]; rooms: Room[]; openings: Opening[]; items: Item[]; backdrop: Backdrop | null };
+/** A room name pinned at a point; the room is whichever closed area of walls contains the point. */
+export type RoomTag = { id: string; name: string; x: number; y: number };
+export type Plan = { version: 1; title: string; height: number; walls: Wall[]; tags: RoomTag[]; openings: Opening[]; items: Item[]; backdrop: Backdrop | null };
 
-export const emptyPlan = (): Plan => ({ version: 1, title: "My space", height: 3000, walls: [], rooms: [], openings: [], items: [], backdrop: null });
+export const emptyPlan = (): Plan => ({ version: 1, title: "My space", height: 3000, walls: [], tags: [], openings: [], items: [], backdrop: null });
 
 let counter = 0;
 export const uid = (prefix: string) => `${prefix}-${Date.now().toString(36)}-${(counter++).toString(36)}`;
 
 export const dist = (a: Pt, b: Pt) => Math.hypot(b.x - a.x, b.y - a.y);
 export const wallLength = (w: Wall) => dist(w.a, w.b);
+const round10 = (n: number) => Math.round(n / 10) * 10;
 
 /** Closest point on a wall, with t (0..1 along the wall) and the distance to it. */
 export function projectOnWall(p: Pt, w: Wall) {
@@ -27,14 +27,52 @@ export function projectOnWall(p: Pt, w: Wall) {
   return { t, point: q, distance: dist(p, q) };
 }
 
-/** Snap a wall end: lock to horizontal/vertical when close, and round to 10 mm. */
+// ---------- CAD-style snapping ----------
+
+export type SnapKind = "end" | "mid" | "on" | "ortho" | "angle" | "free";
+export type Snap = { pt: Pt; kind: SnapKind };
+
+/**
+ * Where a wall point lands, like AutoCAD object snaps: wall ends first, then wall midpoints, then any point
+ * on a wall. With no object nearby and a start point given, the direction is locked straight (ortho) or to
+ * 15° steps, and the length rounded to 10 mm.
+ */
+export function snapPoint(p: Pt, walls: Wall[], tolerance: number, from?: Pt | null, ortho = true): Snap {
+  let best: Snap | null = null, bestD = tolerance;
+  for (const w of walls) for (const e of [w.a, w.b]) { const d = dist(e, p); if (d <= bestD) { bestD = d; best = { pt: { ...e }, kind: "end" }; } }
+  if (best) return best;
+  bestD = tolerance;
+  for (const w of walls) { const m = { x: (w.a.x + w.b.x) / 2, y: (w.a.y + w.b.y) / 2 }; const d = dist(m, p); if (d <= bestD) { bestD = d; best = { pt: m, kind: "mid" }; } }
+  if (best) return best;
+  bestD = tolerance;
+  let onWall: Wall | null = null;
+  for (const w of walls) { const r = projectOnWall(p, w); if (r.distance <= bestD) { bestD = r.distance; best = { pt: r.point, kind: "on" }; onWall = w; } }
+  if (best && onWall) {
+    // Drawing from a start point onto a wall: prefer the square (straight-across) point on that wall.
+    if (from) for (const cand of [{ x: from.x, y: best.pt.y }, { x: best.pt.x, y: from.y }]) {
+      const r = projectOnWall(cand, onWall);
+      if (r.distance < 1 && dist(r.point, p) <= tolerance * 1.5) return { pt: r.point, kind: "on" };
+    }
+    return best;
+  }
+  if (!from) return { pt: { x: round10(p.x), y: round10(p.y) }, kind: "free" };
+  const dx = p.x - from.x, dy = p.y - from.y, len = Math.hypot(dx, dy);
+  if (ortho) {
+    return Math.abs(dx) >= Math.abs(dy) ? { pt: { x: from.x + round10(dx), y: from.y }, kind: "ortho" } : { pt: { x: from.x, y: from.y + round10(dy) }, kind: "ortho" };
+  }
+  const step = Math.PI / 12, ang = Math.round(Math.atan2(dy, dx) / step) * step, L = round10(len);
+  return { pt: { x: from.x + Math.cos(ang) * L, y: from.y + Math.sin(ang) * L }, kind: "angle" };
+}
+
+/** A point a given length from `from`, in the direction of `toward` (typed length, like AutoCAD direct distance entry). */
+export function pointAtLength(from: Pt, toward: Pt, length: number): Pt {
+  const d = dist(from, toward) || 1;
+  return { x: from.x + ((toward.x - from.x) / d) * length, y: from.y + ((toward.y - from.y) / d) * length };
+}
+
+/** Snap a wall end straight, or onto an existing wall. */
 export function snapEnd(start: Pt, p: Pt, walls: Wall[], tolerance: number): Pt {
-  for (const w of walls) for (const end of [w.a, w.b]) if (dist(end, p) <= tolerance) return { ...end };
-  const dx = p.x - start.x, dy = p.y - start.y;
-  let x = p.x, y = p.y;
-  if (Math.abs(dx) > 3 * Math.abs(dy)) y = start.y;
-  else if (Math.abs(dy) > 3 * Math.abs(dx)) x = start.x;
-  return { x: Math.round(x / 10) * 10, y: Math.round(y / 10) * 10 };
+  return snapPoint(p, walls, tolerance, start, true).pt;
 }
 
 /** Set a wall's length by moving its end point along its direction. */
@@ -43,121 +81,157 @@ export function withLength(w: Wall, length: number): Wall {
   return { ...w, b: { x: w.a.x + (w.b.x - w.a.x) * k, y: w.a.y + (w.b.y - w.a.y) * k } };
 }
 
-/** Four walls of a rectangular room, starting at the origin. */
-export function rectangleRoom(width: number, length: number, thickness = 150): Wall[] {
-  const c = [{ x: 0, y: 0 }, { x: width, y: 0 }, { x: width, y: length }, { x: 0, y: length }];
-  return c.map((a, i) => ({ id: uid("w"), a, b: c[(i + 1) % 4], thickness }));
-}
+// ---------- Shape shortcuts (they draw ordinary walls) ----------
 
+export type RoomShape = "rect" | "L" | "T" | "U";
 export const SHAPE_LABEL: Record<RoomShape, string> = { rect: "Rectangle", L: "L-shape", T: "T-shape", U: "U-shape" };
-/** What a and b mean for each shape, for the edit panel. */
 export const CUT_LABELS: Record<RoomShape, [string, string] | null> = { rect: null, L: ["Cut-out width", "Cut-out depth"], T: ["Stem width", "Top depth"], U: ["Opening width", "Opening depth"] };
 
-/** Default cut-out sizes for a shape of w × l. */
 export function defaultCuts(shape: RoomShape, w: number, l: number) {
-  if (shape === "L") return { a: Math.round(w / 2 / 10) * 10, b: Math.round(l / 2 / 10) * 10 };
-  if (shape === "T") return { a: Math.round(w / 3 / 10) * 10, b: Math.round(l / 3 / 10) * 10 };
-  if (shape === "U") return { a: Math.round(w / 3 / 10) * 10, b: Math.round(l / 2 / 10) * 10 };
+  if (shape === "L") return { a: round10(w / 2), b: round10(l / 2) };
+  if (shape === "T") return { a: round10(w / 3), b: round10(l / 3) };
+  if (shape === "U") return { a: round10(w / 3), b: round10(l / 2) };
   return { a: 0, b: 0 };
 }
 
-export function newRoom(shape: RoomShape, x: number, y: number, name: string, w = 3600, l = 3000): Room {
-  return { id: uid("r"), name, shape, x, y, w, l, ...defaultCuts(shape, w, l), rot: 0, thickness: 150 };
-}
-
-/** Corner points of a room, clockwise, in plan millimetres. */
-export function roomPolygon(r: Room): Pt[] {
-  const w = r.w, l = r.l;
-  const a = Math.max(0, Math.min(r.a, w - 100)), b = Math.max(0, Math.min(r.b, l - 100));
+/** Outline of a shape, clockwise on screen, with its top-left at x, y. */
+export function shapeOutline(shape: RoomShape, x: number, y: number, w: number, l: number, a?: number, b?: number): Pt[] {
+  const cuts = defaultCuts(shape, w, l);
+  const ca = Math.max(0, Math.min(a ?? cuts.a, w - 100)), cb = Math.max(0, Math.min(b ?? cuts.b, l - 100));
   let pts: [number, number][];
-  if (r.shape === "L") pts = [[0, 0], [w - a, 0], [w - a, b], [w, b], [w, l], [0, l]];
-  else if (r.shape === "T") pts = [[0, 0], [w, 0], [w, b], [(w + a) / 2, b], [(w + a) / 2, l], [(w - a) / 2, l], [(w - a) / 2, b], [0, b]];
-  else if (r.shape === "U") pts = [[0, 0], [(w - a) / 2, 0], [(w - a) / 2, b], [(w + a) / 2, b], [(w + a) / 2, 0], [w, 0], [w, l], [0, l]];
+  if (shape === "L") pts = [[0, 0], [w - ca, 0], [w - ca, cb], [w, cb], [w, l], [0, l]];
+  else if (shape === "T") pts = [[0, 0], [w, 0], [w, cb], [(w + ca) / 2, cb], [(w + ca) / 2, l], [(w - ca) / 2, l], [(w - ca) / 2, cb], [0, cb]];
+  else if (shape === "U") pts = [[0, 0], [(w - ca) / 2, 0], [(w - ca) / 2, cb], [(w + ca) / 2, cb], [(w + ca) / 2, 0], [w, 0], [w, l], [0, l]];
   else pts = [[0, 0], [w, 0], [w, l], [0, l]];
-  // Turn in 90° steps about the room's top-left, keeping the box's top-left at x, y.
-  const turns = ((Math.round(r.rot / 90) % 4) + 4) % 4;
-  const turned = pts.map(([px, py]) => {
-    if (turns === 1) return [l - py, px];
-    if (turns === 2) return [w - px, l - py];
-    if (turns === 3) return [py, w - px];
-    return [px, py];
-  });
-  return turned.map(([px, py]) => ({ x: r.x + px, y: r.y + py }));
+  return pts.map(([px, py]) => ({ x: x + px, y: y + py }));
 }
 
-/** The walls a room contributes; ids are "<room id>:<edge>" so doors and windows stay attached when it moves. */
-export function roomWalls(r: Room): Wall[] {
-  const pts = roomPolygon(r);
-  return pts.map((a, i) => ({ id: `${r.id}:${i}`, a, b: pts[(i + 1) % pts.length], thickness: r.thickness }));
-}
+export const outlineWalls = (pts: Pt[], thickness = 150): Wall[] => pts.map((a, i) => ({ id: uid("w"), a, b: pts[(i + 1) % pts.length], thickness }));
 
-/** Every wall on the plan: drawn walls plus the walls of every room. */
-export const allWalls = (plan: Plan): Wall[] => [...plan.walls, ...plan.rooms.flatMap(roomWalls)];
+/** Four walls of a rectangular room, starting at the origin. */
+export const rectangleRoom = (width: number, length: number, thickness = 150): Wall[] => outlineWalls(shapeOutline("rect", 0, 0, width, length), thickness);
 
-export const roomOf = (wallId: string) => (wallId.includes(":") ? wallId.split(":")[0] : null);
+// ---------- Rooms found from the walls (like Revit room detection) ----------
 
-export function polygonArea(pts: Pt[]) {
+export function signedArea(pts: Pt[]) {
   let s = 0;
   for (let i = 0; i < pts.length; i++) { const p = pts[i], q = pts[(i + 1) % pts.length]; s += p.x * q.y - q.x * p.y; }
-  return Math.abs(s) / 2 / 1e6;
+  return s / 2;
 }
-export const roomArea = (r: Room) => polygonArea(roomPolygon(r));
+export const polygonArea = (pts: Pt[]) => Math.abs(signedArea(pts)) / 1e6;
 
-/** Centre of a room's box, for its label. */
-export function roomCentre(r: Room): Pt {
-  const pts = roomPolygon(r);
+export function pointInPolygon(p: Pt, pts: Pt[]) {
+  let inside = false;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+    const a = pts[i], b = pts[j];
+    if ((a.y > p.y) !== (b.y > p.y) && p.x < ((b.x - a.x) * (p.y - a.y)) / (b.y - a.y) + a.x) inside = !inside;
+  }
+  return inside;
+}
+
+/** A point well inside a polygon (for its label): the sampled point furthest from every edge. */
+export function labelPoint(pts: Pt[]): Pt {
   const xs = pts.map((p) => p.x), ys = pts.map((p) => p.y);
-  return { x: (Math.min(...xs) + Math.max(...xs)) / 2, y: (Math.min(...ys) + Math.max(...ys)) / 2 };
-}
-
-/** Snap a room being moved to x, y so its edges line up with other rooms and walls when within tolerance. */
-export function snapRoom(plan: Plan, room: Room, x: number, y: number, tolerance: number): { x: number; y: number } {
-  const moved = roomPolygon({ ...room, x, y });
-  const tx: number[] = [], ty: number[] = [];
-  for (const r of plan.rooms) if (r.id !== room.id) for (const p of roomPolygon(r)) { tx.push(p.x); ty.push(p.y); }
-  for (const w of plan.walls) { tx.push(w.a.x, w.b.x); ty.push(w.a.y, w.b.y); }
-  const best = (own: number[], targets: number[]) => {
+  const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+  const edgeDist = (p: Pt) => {
     let d = Infinity;
-    for (const o of own) for (const t of targets) { const k = t - o; if (Math.abs(k) < Math.abs(d) && Math.abs(k) <= tolerance) d = k; }
-    return Number.isFinite(d) ? d : 0;
+    for (let i = 0; i < pts.length; i++) d = Math.min(d, projectOnWall(p, { id: "", a: pts[i], b: pts[(i + 1) % pts.length], thickness: 0 }).distance);
+    return d;
   };
-  const dx = best(moved.map((p) => p.x), tx), dy = best(moved.map((p) => p.y), ty);
-  return { x: Math.round((x + dx) / 5) * 5, y: Math.round((y + dy) / 5) * 5 };
+  let best: Pt = pts[0], bestD = -1;
+  const N = 16;
+  for (let i = 1; i < N; i++) for (let j = 1; j < N; j++) {
+    const p = { x: minX + ((maxX - minX) * i) / N, y: minY + ((maxY - minY) * j) / N };
+    if (!pointInPolygon(p, pts)) continue;
+    const d = edgeDist(p);
+    if (d > bestD) { bestD = d; best = p; }
+  }
+  return best;
 }
 
-/** Total floor area: the rooms, or a single closed outline of drawn walls when there are no rooms. */
-export function floorArea(plan: Plan): number | null {
-  if (plan.rooms.length) return plan.rooms.reduce((s, r) => s + roomArea(r), 0);
-  return enclosedArea(plan.walls);
+export type DetectedRoom = { key: string; pts: Pt[]; area: number; label: Pt; name: string; tagId: string | null };
+
+function segIntersection(p: Pt, p2: Pt, q: Pt, q2: Pt): Pt | null {
+  const r = { x: p2.x - p.x, y: p2.y - p.y }, s = { x: q2.x - q.x, y: q2.y - q.y };
+  const den = r.x * s.y - r.y * s.x;
+  if (Math.abs(den) < 1e-9) return null;
+  const t = ((q.x - p.x) * s.y - (q.y - p.y) * s.x) / den, u = ((q.x - p.x) * r.y - (q.y - p.y) * r.x) / den;
+  if (t < -1e-6 || t > 1 + 1e-6 || u < -1e-6 || u > 1 + 1e-6) return null;
+  return { x: p.x + t * r.x, y: p.y + t * r.y };
 }
+
+/**
+ * Closed areas formed by the wall centre-lines. Walls are split where they meet or cross (including a wall
+ * starting part-way along another), then each enclosed face of the resulting network is a room.
+ */
+export function detectRooms(walls: Wall[], tags: RoomTag[] = []): DetectedRoom[] {
+  const SNAP = 5;
+  const segs = walls.filter((w) => wallLength(w) > SNAP);
+  const splits = segs.map(() => [0, 1]);
+  for (let i = 0; i < segs.length; i++) for (let j = i + 1; j < segs.length; j++) {
+    const a = segs[i], b = segs[j];
+    const add = (k: number, w: Wall, pt: Pt) => { const r = projectOnWall(pt, w); if (r.distance <= SNAP) splits[k].push(r.t); };
+    const x = segIntersection(a.a, a.b, b.a, b.b);
+    if (x) { add(i, a, x); add(j, b, x); }
+    for (const e of [b.a, b.b]) add(i, a, e);
+    for (const e of [a.a, a.b]) add(j, b, e);
+  }
+  const nodes: Pt[] = [];
+  const nodeOf = (p: Pt) => { let k = nodes.findIndex((n) => dist(n, p) <= SNAP); if (k < 0) { nodes.push(p); k = nodes.length - 1; } return k; };
+  const adj = new Map<number, Set<number>>();
+  const link = (u: number, v: number) => { if (!adj.has(u)) adj.set(u, new Set()); adj.get(u)!.add(v); };
+  segs.forEach((w, k) => {
+    const ts = [...new Set(splits[k].map((t) => Math.round(t * 1e6) / 1e6))].sort((m, n) => m - n);
+    const ids = ts.map((t) => nodeOf({ x: w.a.x + (w.b.x - w.a.x) * t, y: w.a.y + (w.b.y - w.a.y) * t }));
+    for (let i = 0; i + 1 < ids.length; i++) if (ids[i] !== ids[i + 1]) { link(ids[i], ids[i + 1]); link(ids[i + 1], ids[i]); }
+  });
+  const ang = (u: number, v: number) => Math.atan2(nodes[v].y - nodes[u].y, nodes[v].x - nodes[u].x);
+  const sorted = new Map<number, number[]>();
+  for (const [u, vs] of adj) sorted.set(u, [...vs].sort((m, n) => ang(u, m) - ang(u, n)));
+  const used = new Set<string>(), faces: Pt[][] = [];
+  for (const [u0, vs] of adj) for (const v0 of vs) {
+    if (used.has(`${u0}>${v0}`)) continue;
+    let u = u0, v = v0;
+    const face: number[] = [];
+    for (let guard = 0; guard < 20000; guard++) {
+      used.add(`${u}>${v}`); face.push(u);
+      const around = sorted.get(v)!, i = around.indexOf(u);
+      const next = around[(i - 1 + around.length) % around.length];
+      u = v; v = next;
+      if (u === u0 && v === v0) break;
+    }
+    faces.push(face.map((k) => nodes[k]));
+  }
+  // With y pointing down and this turning rule, enclosed faces have positive signed area; outer boundaries negative.
+  const found = faces.filter((f) => f.length >= 3 && signedArea(f) > 1e4).map((pts) => ({ pts, area: polygonArea(pts) })).sort((a, b) => b.area - a.area);
+  const taken = new Set<string>();
+  return found.map(({ pts, area }, i) => {
+    const tag = tags.find((t) => !taken.has(t.id) && pointInPolygon(t, pts));
+    if (tag) taken.add(tag.id);
+    const label = labelPoint(pts);
+    return { key: `${Math.round(label.x)},${Math.round(label.y)}`, pts, area, label, name: tag?.name ?? `Room ${i + 1}`, tagId: tag?.id ?? null };
+  });
+}
+
+/** Total floor area of the closed areas formed by these walls, in m². */
+export function enclosedArea(walls: Wall[]): number | null {
+  const rooms = detectRooms(walls);
+  return rooms.length ? rooms.reduce((s, r) => s + r.area, 0) : null;
+}
+
+/** Total floor area of every room found on the plan, in m². */
+export const floorArea = (plan: Plan): number | null => enclosedArea(plan.walls);
 
 export function bounds(plan: Plan) {
   const xs: number[] = [], ys: number[] = [];
-  for (const w of allWalls(plan)) { xs.push(w.a.x, w.b.x); ys.push(w.a.y, w.b.y); }
+  for (const w of plan.walls) { xs.push(w.a.x, w.b.x); ys.push(w.a.y, w.b.y); }
   for (const it of plan.items) { const r = Math.max(it.w, it.d) / 2; xs.push(it.x - r, it.x + r); ys.push(it.y - r, it.y + r); }
   if (plan.backdrop) { const b = plan.backdrop; xs.push(b.x, b.x + b.pxW * b.mmPerPx); ys.push(b.y, b.y + b.pxH * b.mmPerPx); }
   if (!xs.length) return { minX: 0, minY: 0, maxX: 5000, maxY: 4000 };
   return { minX: Math.min(...xs), minY: Math.min(...ys), maxX: Math.max(...xs), maxY: Math.max(...ys) };
 }
 
-/** Floor area of a closed room outline (shoelace), in m², when the walls form one loop. */
-export function enclosedArea(walls: Wall[]): number | null {
-  if (walls.length < 3) return null;
-  const pts: Pt[] = [walls[0].a];
-  let cur = walls[0].b;
-  const left = walls.slice(1);
-  while (left.length) {
-    const i = left.findIndex((w) => dist(w.a, cur) < 5 || dist(w.b, cur) < 5);
-    if (i < 0) return null;
-    const [w] = left.splice(i, 1);
-    pts.push(cur);
-    cur = dist(w.a, cur) < 5 ? w.b : w.a;
-  }
-  if (dist(cur, pts[0]) > 5) return null;
-  let s = 0;
-  for (let i = 0; i < pts.length; i++) { const p = pts[i], q = pts[(i + 1) % pts.length]; s += p.x * q.y - q.x * p.y; }
-  return Math.abs(s) / 2 / 1e6;
-}
+// ---------- Schedule ----------
 
 export type ScheduleLine = { key: string; name: string; size: string; qty: number; unitPrice: number | null; source: "market" | "own" | "none"; total: number | null };
 
@@ -185,7 +259,7 @@ export function schedule(plan: Plan): { lines: ScheduleLine[]; total: number; un
     const m = marketPrice(c?.priceId);
     add(it.type, it.label || c?.name || it.type, c?.point ? "—" : `${mm(it.w)} × ${mm(it.d)} × ${mm(it.h)}`, pick(it.price, m ? m.rate : null));
   }
-  const wallIds = new Set(allWalls(plan).map((w) => w.id));
+  const wallIds = new Set(plan.walls.map((w) => w.id));
   for (const o of plan.openings) {
     if (!wallIds.has(o.wallId)) continue;
     if (o.kind === "door") {
@@ -201,15 +275,30 @@ export function schedule(plan: Plan): { lines: ScheduleLine[]; total: number; un
   return { lines, total: lines.reduce((s, l) => s + (l.total ?? 0), 0), unpriced: lines.filter((l) => l.total === null).reduce((s, l) => s + l.qty, 0) };
 }
 
+// ---------- Saving ----------
+
 export const STORAGE_KEY = "charismak-space-planner-v1";
 
-/** Parse a saved plan, ignoring anything malformed. */
+type LegacyRoom = { id: string; name: string; shape: RoomShape; x: number; y: number; w: number; l: number; a: number; b: number; thickness: number };
+
+/** Parse a saved plan, ignoring anything malformed. Plans saved with room boxes are turned into walls and room names. */
 export function readSaved(raw: string | null): Plan | null {
   if (!raw) return null;
   try {
-    const p = JSON.parse(raw) as Plan;
+    const p = JSON.parse(raw) as Plan & { rooms?: LegacyRoom[] };
     if (p?.version !== 1 || !Array.isArray(p.walls) || !Array.isArray(p.items) || !Array.isArray(p.openings)) return null;
-    return { ...emptyPlan(), ...p, rooms: Array.isArray(p.rooms) ? p.rooms : [] };
+    const { rooms, ...rest } = p;
+    const plan: Plan = { ...emptyPlan(), ...rest, walls: [...p.walls], tags: Array.isArray(p.tags) ? [...p.tags] : [] };
+    if (Array.isArray(rooms) && rooms.length) {
+      const remap = new Map<string, string>();
+      for (const r of rooms) {
+        const pts = shapeOutline(r.shape, r.x, r.y, r.w, r.l, r.a, r.b);
+        pts.forEach((a, i) => { const id = uid("w"); remap.set(`${r.id}:${i}`, id); plan.walls.push({ id, a, b: pts[(i + 1) % pts.length], thickness: r.thickness || 150 }); });
+        plan.tags.push({ id: uid("t"), name: r.name, ...labelPoint(pts) });
+      }
+      plan.openings = plan.openings.map((o) => (remap.has(o.wallId) ? { ...o, wallId: remap.get(o.wallId)! } : o));
+    }
+    return plan;
   } catch {
     return null;
   }

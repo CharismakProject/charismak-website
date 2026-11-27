@@ -1,7 +1,7 @@
 import { forwardRef, type ReactNode } from "react";
 
 import { catalogItem, WINDOW_HEIGHT } from "@/lib/planner/catalog";
-import { allWalls, roomArea, roomCentre, roomOf, roomPolygon, wallLength, type Item, type Opening, type Plan, type Pt, type Wall } from "@/lib/planner/model";
+import { wallLength, type DetectedRoom, type Item, type Opening, type Plan, type Pt, type Snap, type Wall } from "@/lib/planner/model";
 
 const NAVY = "#0D3352";
 const RED = "#8A1A10";
@@ -85,25 +85,27 @@ export type PlanSvgProps = {
   showDimensions?: boolean;
   className?: string;
   pixelWidth?: number;
+  rooms?: DetectedRoom[];
+  snap?: Snap | null;
 };
 
 /** The floor plan drawing, shared by the editor and the report/PDF. */
 const PlanSvg = forwardRef<SVGSVGElement, PlanSvgProps & Omit<React.SVGProps<SVGSVGElement>, "viewBox" | "ref">>(function PlanSvg(
-  { plan, box: viewBox, selected, draft, calibration, showBackdrop = true, showDimensions = true, className, pixelWidth, ...rest },
+  { plan, box: viewBox, selected, draft, calibration, showBackdrop = true, showDimensions = true, className, pixelWidth, rooms = [], snap, ...rest },
   ref,
 ) {
   const unit = viewBox.w / 60; // text size relative to the view
-  const every = allWalls(plan);
+  const every = plan.walls;
   const walls = new Map(every.map((w) => [w.id, w]));
   const seen = new Set<string>(); // shared walls between rooms get one dimension
-  const isSel = (id: string) => selected === id || (selected !== null && roomOf(id) === selected);
+  const isSel = (id: string) => selected === id;
   const b = plan.backdrop;
   return (
     <svg ref={ref} xmlns="http://www.w3.org/2000/svg" viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`} className={className} width={pixelWidth} height={pixelWidth ? Math.round((pixelWidth * viewBox.h) / viewBox.w) : undefined} {...rest}>
       <rect x={viewBox.x} y={viewBox.y} width={viewBox.w} height={viewBox.h} fill="#fff" />
       {b && showBackdrop ? <image href={b.image} x={b.x} y={b.y} width={b.pxW * b.mmPerPx} height={b.pxH * b.mmPerPx} opacity={b.opacity} preserveAspectRatio="none" /> : null}
-      {plan.rooms.map((r) => (
-        <polygon key={r.id} data-id={r.id} points={roomPolygon(r).map((p) => `${p.x},${p.y}`).join(" ")} fill={selected === r.id ? "#FBEDEA" : "#F3F5F8"} />
+      {rooms.map((r) => (
+        <polygon key={r.key} data-id={`room:${r.key}`} points={r.pts.map((p) => `${p.x},${p.y}`).join(" ")} fill={selected === `room:${r.key}` ? "#FBEDEA" : "#F3F5F8"} />
       ))}
       {every.map((w) => (
         <line key={w.id} data-id={w.id} x1={w.a.x} y1={w.a.y} x2={w.b.x} y2={w.b.y} stroke={isSel(w.id) ? RED : "#1B2433"} strokeWidth={w.thickness} strokeLinecap="square" />
@@ -115,14 +117,22 @@ const PlanSvg = forwardRef<SVGSVGElement, PlanSvgProps & Omit<React.SVGProps<SVG
           {selected === it.id ? <rect x={-it.w / 2 - 40} y={-it.d / 2 - 40} width={it.w + 80} height={it.d + 80} fill="none" stroke={RED} strokeWidth={unit * 0.15} strokeDasharray={`${unit * 0.5} ${unit * 0.3}`} /> : null}
         </g>
       ))}
-      {plan.rooms.map((r) => { const c = roomCentre(r); return (
-        <g key={`label-${r.id}`} pointerEvents="none" fontFamily="Arial, sans-serif" textAnchor="middle">
-          <text x={c.x} y={c.y - unit * 0.3} fontSize={unit * 1.05} fontWeight={700} fill={NAVY}>{r.name}</text>
-          <text x={c.x} y={c.y + unit * 1} fontSize={unit * 0.85} fill="#5A6675">{roomArea(r).toFixed(1)} m²</text>
+      {rooms.map((r) => (
+        <g key={`label-${r.key}`} pointerEvents="none" fontFamily="Arial, sans-serif" textAnchor="middle">
+          <text x={r.label.x} y={r.label.y - unit * 0.3} fontSize={unit * 1.05} fontWeight={700} fill={NAVY}>{r.name}</text>
+          <text x={r.label.x} y={r.label.y + unit * 1} fontSize={unit * 0.85} fill="#5A6675">{r.area.toFixed(1)} m²</text>
         </g>
-      ); })}
+      ))}
       {showDimensions ? every.filter((w) => { const k = [w.a, w.b].map((p) => `${Math.round(p.x)},${Math.round(p.y)}`).sort().join("|"); if (seen.has(k)) return false; seen.add(k); return true; }).map((w) => dimension(w, w.thickness / 2 + unit * 1.4, unit * 0.9)) : null}
       {draft ? <><line x1={draft.a.x} y1={draft.a.y} x2={draft.b.x} y2={draft.b.y} stroke={RED} strokeWidth={150} strokeOpacity={0.5} strokeLinecap="square" /><text x={(draft.a.x + draft.b.x) / 2} y={(draft.a.y + draft.b.y) / 2 - unit * 1.2} fontSize={unit * 1.2} textAnchor="middle" fill={RED} fontWeight={700} fontFamily="Arial, sans-serif">{Math.round(Math.hypot(draft.b.x - draft.a.x, draft.b.y - draft.a.y))} mm</text></> : null}
+      {snap && snap.kind !== "free" ? (
+        <g pointerEvents="none" stroke="#0A8A3A" strokeWidth={unit * 0.12} fill="none">
+          {snap.kind === "end" ? <rect x={snap.pt.x - unit * 0.5} y={snap.pt.y - unit * 0.5} width={unit} height={unit} /> : null}
+          {snap.kind === "mid" ? <polygon points={`${snap.pt.x},${snap.pt.y - unit * 0.6} ${snap.pt.x + unit * 0.55},${snap.pt.y + unit * 0.4} ${snap.pt.x - unit * 0.55},${snap.pt.y + unit * 0.4}`} /> : null}
+          {snap.kind === "on" ? <><line x1={snap.pt.x - unit * 0.5} y1={snap.pt.y - unit * 0.5} x2={snap.pt.x + unit * 0.5} y2={snap.pt.y + unit * 0.5} /><line x1={snap.pt.x + unit * 0.5} y1={snap.pt.y - unit * 0.5} x2={snap.pt.x - unit * 0.5} y2={snap.pt.y + unit * 0.5} /></> : null}
+          {snap.kind === "ortho" || snap.kind === "angle" ? <circle cx={snap.pt.x} cy={snap.pt.y} r={unit * 0.3} /> : null}
+        </g>
+      ) : null}
       {calibration?.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r={unit * 0.4} fill={RED} />)}
       {calibration && calibration.length === 2 ? <line x1={calibration[0].x} y1={calibration[0].y} x2={calibration[1].x} y2={calibration[1].y} stroke={RED} strokeWidth={unit * 0.15} /> : null}
     </svg>
