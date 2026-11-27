@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 
 import { marketPrice } from "../lib/planner/catalog";
+import { planElevations, wallElevation } from "../lib/planner/elevation";
 import { arcOf, bulgeForRadius, bulgeThrough, dist, pointOnWall, wallPolyline, detectRooms, emptyPlan, enclosedArea, floorArea, outlineWalls, pointAtLength, projectOnWall, readSaved, rectangleRoom, schedule, shapeOutline, snapPoint, uid, wallLength, withLength, type Plan, type Pt, type Wall } from "../lib/planner/model";
 
 const wall = (a: Pt, b: Pt): Wall => ({ id: uid("w"), a, b, thickness: 150 });
@@ -131,5 +132,47 @@ const mid = snapPoint({ x: onArc.x + 30, y: onArc.y + 20 }, [curvedTop], 100);
 assert.equal(mid.kind, "mid");
 // Length edit keeps the curve's proportion.
 near(withLength(curvedTop, wallLength(curvedTop) * 2).bulge!, -2000, 1e-6);
+
+// ---------- Wall elevations ----------
+{
+  const room = rectangleRoom(4000, 3000); // top (0,0)->(4000,0), right, bottom (4000,3000)->(0,3000), left
+  const [top, right, bottom] = room;
+  const ep: Plan = {
+    ...emptyPlan(),
+    walls: room,
+    openings: [{ id: "d", wallId: top.id, kind: "door", t: 0.25, width: 900 }, { id: "w", wallId: right.id, kind: "window", t: 0.5, width: 1200 }],
+    items: [
+      { id: "wc1", type: "wall-cabinet", x: 3000, y: 250, w: 600, d: 350, h: 700, rot: 0 },
+      { id: "sofa", type: "sofa", x: 1000, y: 2550, w: 2000, d: 900, h: 850, rot: 0 },
+      { id: "mid", type: "table", x: 2000, y: 1500, w: 1600, d: 900, h: 750, rot: 0 },
+      { id: "bulb", type: "bulb", x: 2000, y: 200, w: 250, d: 250, h: 100, rot: 0 },
+    ],
+  };
+  const eTop = wallElevation(top, ep, 1);
+  assert.deepEqual(eTop.parts.find((q) => q.kind === "door"), { kind: "door", name: "Door", x: 550, w: 900, y: 0, h: 2100 });
+  const cab = eTop.parts.find((q) => q.name === "Wall cabinet")!;
+  assert.deepEqual([cab.x, cab.w, cab.y, cab.h], [2700, 600, 1450, 700], "wall cabinet at its mounting height");
+  assert.equal(eTop.parts.some((q) => q.name === "Light bulb"), false, "ceiling items are left out");
+  assert.equal(eTop.parts.some((q) => q.name === "Dining table"), false, "items in the middle of the room are left out");
+  const eRight = wallElevation(right, ep, 1);
+  assert.deepEqual(eRight.parts.map((q) => [q.kind, q.x, q.y, q.h]), [["window", 900, 900, 1200]]);
+  // Bottom wall runs right-to-left; seen from inside, the sofa near x=0..2000 is on the viewer's right: 2000..4000.
+  const eBottom = wallElevation(bottom, ep, 1);
+  const sofa = eBottom.parts.find((q) => q.name === "Sofa (3-seat)")!;
+  assert.deepEqual([Math.round(sofa.x), Math.round(sofa.w)], [2000, 2000]);
+  // Auto-chosen elevations: walls with things on them, most first, lettered.
+  const els = planElevations(ep);
+  // Top has the door and cabinet (2 parts); the corner sofa touches the bottom and left walls; ties go to the longer wall.
+  assert.deepEqual(els.map((e) => [e.letter, e.wallId]), [["A", top.id], ["B", bottom.id], ["C", right.id], ["D", room[3].id]]);
+  assert.ok(els[0].marker.at.y > 0, "the plan marker for the top wall sits inside the room");
+  // With nothing placed: the four longest walls.
+  assert.equal(planElevations({ ...emptyPlan(), walls: room }).length, 4);
+  // Curved wall: unrolled along its true length.
+  const curved = { ...top, bulge: -1000 };
+  const eC = wallElevation(curved, { ...ep, walls: [curved, ...room.slice(1)], openings: [{ id: "d", wallId: top.id, kind: "door", t: 0.5, width: 900 }], items: [] }, 1);
+  assert.ok(eC.curved);
+  near(eC.length, wallLength(curved), 1e-6);
+  near(eC.parts[0].x, wallLength(curved) / 2 - 450, 1e-6, "door centred on the unrolled curve");
+}
 
 console.log("Space Planner checks passed.");

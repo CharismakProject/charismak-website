@@ -26,7 +26,9 @@ export type ReportInfo = { title: string; size: string; area: number | null; hei
 /** Charismak-branded A4 report: plan page, then the schedule of items with prices. */
 export type RoomRow = { name: string; size: string; area: number };
 
-export async function buildPlannerPdf(info: ReportInfo, planPng: Blob, planRatio: number, lines: ScheduleLine[], total: number, unpriced: number, rooms: RoomRow[] = []) {
+export type SheetImage = { title: string; png: Blob; ratio: number };
+
+export async function buildPlannerPdf(info: ReportInfo, planPng: Blob, planRatio: number, lines: ScheduleLine[], total: number, unpriced: number, rooms: RoomRow[] = [], views: Blob[] = [], elevations: SheetImage[] = []) {
   const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4", compress: true });
   const W = 297, H = 210, M = 12;
   const logo = await dataUrl("/branding/charismak-logo-wide.jpg");
@@ -62,9 +64,41 @@ export async function buildPlannerPdf(info: ReportInfo, planPng: Blob, planRatio
   doc.setFontSize(8); doc.setTextColor(...GREY);
   doc.text("Floor plan · dimensions in millimetres · not to scale", W / 2, top + ph + 3.5, { align: "center" });
   footer(1);
+  let page = 1;
 
-  // Page 2+: schedule
-  let page = 2;
+  /** Fit an image into a box, centred, with a caption underneath. */
+  const placeImage = async (png: Blob, ratio: number, x: number, yTop: number, bw: number, bh: number, caption: string) => {
+    let iw = bw, ih = iw / ratio;
+    if (ih > bh - 6) { ih = bh - 6; iw = ih * ratio; }
+    const ix = x + (bw - iw) / 2;
+    doc.setDrawColor(221, 225, 231); doc.rect(ix - 0.5, yTop - 0.5, iw + 1, ih + 1);
+    doc.addImage(await blobUrl(png), "PNG", ix, yTop, iw, ih);
+    doc.setFontSize(9); doc.setTextColor(...NAVY); doc.setFont("helvetica", "bold");
+    doc.text(caption, x + bw / 2, yTop + ih + 4.5, { align: "center" });
+    doc.setFont("helvetica", "normal");
+  };
+
+  // 3D views
+  if (views.length) {
+    page += 1; doc.addPage(); header("3D views");
+    doc.setTextColor(...NAVY); doc.setFont("helvetica", "bold"); doc.setFontSize(14); doc.text("3D views", M, 35);
+    const bw = (W - 2 * M - 6) / 2, top3 = 42, bh = H - 10 - top3 - 6;
+    for (let i = 0; i < Math.min(2, views.length); i++) await placeImage(views[i], 1.6, M + i * (bw + 6), top3, bw, bh, i ? "Cutaway: walls cut at 1.2 m, opposite corner" : "Aerial view");
+    doc.setFontSize(8); doc.setTextColor(...GREY); doc.text("Indicative massing: items shown as blocks at their mounting heights.", M, H - 13);
+    footer(page);
+  }
+
+  // Wall elevations, two per page
+  for (let i = 0; i < elevations.length; i += 2) {
+    page += 1; doc.addPage(); header("Wall elevations");
+    doc.setTextColor(...NAVY); doc.setFont("helvetica", "bold"); doc.setFontSize(14); doc.text("Wall elevations", M, 35);
+    const topE = 40, bh = (H - 10 - topE - 4) / 2;
+    for (let k = 0; k < 2 && i + k < elevations.length; k++) await placeImage(elevations[i + k].png, elevations[i + k].ratio, M, topE + k * bh, W - 2 * M, bh, elevations[i + k].title);
+    footer(page);
+  }
+
+  // Schedule
+  page += 1;
   doc.addPage(); header(rooms.length ? "Rooms and schedule of items" : "Schedule of items");
   let y = 35;
   const bar = (titles: string[], at: number[]) => {

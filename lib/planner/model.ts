@@ -5,7 +5,8 @@ export type Pt = { x: number; y: number };
 /** bulge: for a curved wall, the signed distance in mm from the middle of the straight line a→b to the middle of the arc (0 or missing = straight). */
 export type Wall = { id: string; a: Pt; b: Pt; thickness: number; bulge?: number };
 export type Opening = { id: string; wallId: string; kind: "door" | "window"; t: number; width: number; price?: number | null };
-export type Item = { id: string; type: string; x: number; y: number; w: number; d: number; h: number; rot: number; label?: string; price?: number | null };
+/** mount: height of the underside above the floor (mm); when missing the catalogue default is used. */
+export type Item = { id: string; type: string; x: number; y: number; w: number; d: number; h: number; rot: number; label?: string; price?: number | null; mount?: number };
 export type Backdrop = { image: string; pxW: number; pxH: number; mmPerPx: number; x: number; y: number; opacity: number };
 /** A room name pinned at a point; the room is whichever closed area of walls contains the point. */
 export type RoomTag = { id: string; name: string; x: number; y: number };

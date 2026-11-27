@@ -110,11 +110,13 @@ export type PlanSvgProps = {
   pixelWidth?: number;
   rooms?: DetectedRoom[];
   snap?: Snap | null;
+  /** Section markers: a lettered circle beside a wall with an arrow showing the direction of view. */
+  markers?: { letter: string; at: Pt; look: Pt }[];
 };
 
 /** The floor plan drawing, shared by the editor and the report/PDF. */
 const PlanSvg = forwardRef<SVGSVGElement, PlanSvgProps & Omit<React.SVGProps<SVGSVGElement>, "viewBox" | "ref">>(function PlanSvg(
-  { plan, box: viewBox, selected, draft, calibration, showBackdrop = true, showDimensions = true, className, pixelWidth, rooms = [], snap, ...rest },
+  { plan, box: viewBox, selected, draft, calibration, showBackdrop = true, showDimensions = true, className, pixelWidth, rooms = [], snap, markers = [], ...rest },
   ref,
 ) {
   const unit = viewBox.w / 60; // text size relative to the view
@@ -151,6 +153,13 @@ const PlanSvg = forwardRef<SVGSVGElement, PlanSvgProps & Omit<React.SVGProps<SVG
         const dw = { id: "draft", thickness: 150, ...draft }, arc = arcOf(dw), m = pointOnWall(dw, 0.5);
         return <><path d={wallPath(draft)} fill="none" stroke={RED} strokeWidth={150} strokeOpacity={0.5} strokeLinecap="square" /><text x={m.x} y={m.y - unit * 1.2} fontSize={unit * 1.2} textAnchor="middle" fill={RED} fontWeight={700} fontFamily="Arial, sans-serif">{arc ? `R ${Math.round(arc.r)} · L ${Math.round(arc.length)} mm` : `${Math.round(Math.hypot(draft.b.x - draft.a.x, draft.b.y - draft.a.y))} mm`}</text></>;
       })() : null}
+      {markers.map((m) => { const r = unit * 0.9, tip = { x: m.at.x + m.look.x * r * 2, y: m.at.y + m.look.y * r * 2 }, px = -m.look.y * r * 0.8, py = m.look.x * r * 0.8; return (
+        <g key={`mk-${m.letter}`} pointerEvents="none" fontFamily="Arial, sans-serif">
+          <polygon points={`${tip.x},${tip.y} ${m.at.x + px},${m.at.y + py} ${m.at.x - px},${m.at.y - py}`} fill={RED} />
+          <circle cx={m.at.x} cy={m.at.y} r={r} fill="#fff" stroke={RED} strokeWidth={unit * 0.12} />
+          <text x={m.at.x} y={m.at.y} fontSize={r * 1.1} fontWeight={700} textAnchor="middle" dominantBaseline="central" fill={RED}>{m.letter}</text>
+        </g>
+      ); })}
       {snap && snap.kind !== "free" ? (
         <g pointerEvents="none" stroke="#0A8A3A" strokeWidth={unit * 0.12} fill="none">
           {snap.kind === "end" ? <rect x={snap.pt.x - unit * 0.5} y={snap.pt.y - unit * 0.5} width={unit} height={unit} /> : null}
