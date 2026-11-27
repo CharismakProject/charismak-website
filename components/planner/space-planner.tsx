@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { Spline, DoorOpen, Download, FileUp, Hand, Minus, MousePointer2, Plus, RotateCw, Ruler, Square, Trash2, Undo2, AppWindow, Maximize, FileText, Image as ImageIcon } from "lucide-react";
 
+import ElevationSvg from "./elevation-svg";
 import PlanSvg from "./plan-svg";
+import { itemMount, planElevations } from "@/lib/planner/elevation";
 import { CATALOG, CATEGORIES, catalogItem, marketPrice, DOOR_PRICE_ID, WINDOW_PRICE_ID, WINDOW_HEIGHT } from "@/lib/planner/catalog";
 import { arcOf, bulgeForRadius, bulgeThrough, bounds, CUT_LABELS, defaultCuts, detectRooms, dist, emptyPlan, outlineWalls, pointAtLength, projectOnWall, readSaved, schedule, SHAPE_LABEL, shapeOutline, snapPoint, STORAGE_KEY, uid, wallLength, withLength, type Item, type Plan, type Pt, type RoomShape, type Snap } from "@/lib/planner/model";
 import { buildPlannerPdf, naira } from "@/lib/planner/pdf";
@@ -57,6 +59,8 @@ export default function SpacePlanner() {
   const box = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const reportSvg = useRef<SVGSVGElement>(null);
+  const elevationRefs = useRef<(SVGSVGElement | null)[]>([]);
+  const [views, setViews] = useState<{ blobs: Blob[]; urls: string[]; state: "idle" | "making" | "done" | "failed" }>({ blobs: [], urls: [], state: "idle" });
   const drag = useRef<{ id: string | null; start: Pt; origin: Pt; view: View; moved: boolean } | null>(null);
   const pointers = useRef(new Map<number, { x: number; y: number }>());
   const pinch = useRef<{ d: number; view: View } | null>(null);
@@ -356,6 +360,19 @@ export default function SpacePlanner() {
 
   // ----- Step 4: report -----
   const sched = useMemo(() => schedule(plan), [plan]);
+  const elevations = useMemo(() => (step === "report" ? planElevations(plan) : []), [plan, step]);
+  // 3D views are made only on the report step (three.js loads on demand).
+  useEffect(() => {
+    if (step !== "report" || !plan.walls.length) return;
+    let cancelled = false, made: string[] = [];
+    setViews({ blobs: [], urls: [], state: "making" });
+    import("@/lib/planner/three-view").then(({ render3dViews }) => render3dViews(plan)).then((blobs) => {
+      if (cancelled) return;
+      made = blobs.map((b) => URL.createObjectURL(b));
+      setViews({ blobs, urls: made, state: blobs.length ? "done" : "failed" });
+    }).catch(() => { if (!cancelled) setViews({ blobs: [], urls: [], state: "failed" }); });
+    return () => { cancelled = true; made.forEach((u) => URL.revokeObjectURL(u)); };
+  }, [step, plan]);
   const roomRows = rooms.map((r) => { const xs = r.pts.map((q) => q.x), ys = r.pts.map((q) => q.y); return { name: r.name, size: `${Math.round(Math.max(...xs) - Math.min(...xs))} × ${Math.round(Math.max(...ys) - Math.min(...ys))}`, area: r.area }; });
   const area = rooms.length ? rooms.reduce((t, r) => t + r.area, 0) : null;
   const b = bounds(plan.walls.length ? { ...plan, items: [], backdrop: null } : plan);
@@ -372,8 +389,9 @@ export default function SpacePlanner() {
   const downloadPdf = async () => {
     setBusy(true); setMessage("Making your PDF…");
     try {
+      const { planPng } = await import("@/lib/construction/design-export");
       const png = await planPngBlob();
-      const pdf = await buildPlannerPdf({ title: plan.title || "My space", size: sizeText, area, height: plan.height, date: today() }, png, 1.6, sched.lines, sched.total, sched.unpriced, roomRows);
+      const pdf = await buildPlannerPdf({ title: plan.title || "My space", size: sizeText, area, height: plan.height, date: today() }, png, 1.6, sched.lines, sched.total, sched.unpriced, roomRows, views.blobs, await Promise.all(elevations.map(async (e, i) => { const svg = elevationRefs.current[i]; const vb = svg?.viewBox.baseVal; return svg && vb ? { title: `Section ${e.letter} — ${Math.round(e.length)} mm wall${e.curved ? " (curved, unrolled)" : ""}`, png: await planPng(svg, 2400), ratio: vb.width / vb.height } : null; })).then((list) => list.filter((x): x is NonNullable<typeof x> => !!x)));
       downloadBlob(pdf, `charismak-${slug}-report.pdf`); setMessage("");
     } catch { setMessage("The PDF could not be made in this browser. Try again, or use a desktop browser."); }
     finally { setBusy(false); }
@@ -559,6 +577,7 @@ export default function SpacePlanner() {
                           <label key={k} className="text-xs font-bold text-white/80">{k === "w" ? "Width" : k === "d" ? "Depth" : "Height"}<input className={field} inputMode="numeric" value={selItem[k]} onChange={(e) => { const v = Number(e.target.value.replace(/\D/g, "")); setPlan((pl) => ({ ...pl, items: pl.items.map((i) => (i.id === selItem.id ? { ...i, [k]: v || 0 } : i)) })); }} /></label>
                         ))}
                       </div>
+                      <label className="block text-xs font-bold text-white/80">Height above floor (mm)<input className={field} inputMode="numeric" value={itemMount(selItem)} onChange={(e) => { const v = Number(e.target.value.replace(/\D/g, "")); setPlan((pl) => ({ ...pl, items: pl.items.map((i) => (i.id === selItem.id ? { ...i, mount: v } : i)) })); }} /></label>
                       {priceField(selItem.price, marketPrice(catalogItem(selItem.type)?.priceId)?.rate ?? null, (v) => commit((pl) => ({ ...pl, items: pl.items.map((i) => (i.id === selItem.id ? { ...i, price: v } : i)) })))}
                       <button type="button" onClick={rotateSelected} className={`${btn} w-full bg-white/5`}><RotateCw className="h-4 w-4" />Turn 90°</button>
                     </div>
@@ -634,9 +653,28 @@ export default function SpacePlanner() {
                   {[["Overall size", sizeText], ["Floor area", area ? `${area.toFixed(1)} m²` : "—"], ["Ceiling height", `${plan.height} mm`], ["Estimated total", naira(sched.total)]].map(([k, v]) => <div key={k} className="bg-white p-3"><b className="block text-xs text-[#8A1A10]">{k}</b>{v}</div>)}
                 </div>
                 <div className="mt-4 rounded-lg border border-[#DDE1E7] p-2">
-                  <PlanSvg ref={reportSvg} plan={plan} box={reportBox} rooms={rooms} showBackdrop={false} className="h-auto w-full" />
+                  <PlanSvg ref={reportSvg} plan={plan} box={reportBox} rooms={rooms} markers={elevations.map((e) => ({ letter: e.letter, at: e.marker.at, look: e.marker.look }))} showBackdrop={false} className="h-auto w-full" />
                   <p className="mt-1 text-center text-xs text-[#5A6675]">Floor plan · dimensions in millimetres · not to scale</p>
                 </div>
+                <h3 className="mt-6 text-lg font-bold text-[#0D3352]">3D views</h3>
+                {views.state === "making" ? <p className="mt-2 text-sm text-[#5A6675]">Making the 3D views…</p> : null}
+                {views.state === "failed" ? <p className="mt-2 text-sm text-[#8A1A10]">3D views could not be made in this browser. The plan, elevations and schedule are unaffected.</p> : null}
+                {views.urls.length ? <div className="mt-2 grid gap-3 md:grid-cols-2">{views.urls.map((u, i) => <img key={u} src={u} alt={i ? "3D cutaway view, walls cut at 1.2 m" : "Aerial 3D view"} className="w-full rounded-lg border border-[#DDE1E7]" />)}</div> : null}
+                <p className="mt-1 text-xs text-[#5A6675]">Indicative massing: items shown as blocks at their mounting heights.</p>
+                {elevations.length ? (
+                  <>
+                    <h3 className="mt-6 text-lg font-bold text-[#0D3352]">Wall elevations</h3>
+                    <p className="text-xs text-[#5A6675]">Each wall as seen from inside the room; the lettered markers on the plan show where you stand. Dimensions in millimetres.</p>
+                    <div className="mt-2 space-y-4">
+                      {elevations.map((e, i) => (
+                        <div key={e.letter} className="rounded-lg border border-[#DDE1E7] p-2">
+                          <p className="text-sm font-bold text-[#0D3352]">Section {e.letter} — {Math.round(e.length)} mm wall{e.curved ? " (curved, shown unrolled)" : ""}</p>
+                          <ElevationSvg ref={(el) => { elevationRefs.current[i] = el; }} e={e} className="h-auto w-full" />
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : null}
                 {roomRows.length ? (
                   <>
                     <h3 className="mt-6 text-lg font-bold text-[#0D3352]">Rooms</h3>
