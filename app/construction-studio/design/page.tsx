@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 
-import DesignStudioLoader from "@/components/construction/design/design-studio-loader";
+import SpacePlanner from "@/components/planner/space-planner";
 
 export const metadata: Metadata = {
-  title: "Design Studio — Draw a Building in 3D (Free)",
+  title: "Space Planner — Plan a Room, Place Furniture & Price It (Free)",
   description:
-    "Draw walls, floors, roofs, doors and windows in 3D in your browser. Free to use, no sign-up; your design stays on your device. Built on the open-source Pascal Editor.",
+    "Upload a floor plan or type a room size, set the scale, draw walls, doors and windows, place furniture, kitchen, bathroom and electrical items, and download a priced PDF report. Free, no sign-up.",
   alternates: { canonical: "https://www.charismakproject.com/construction-studio/design" },
 };
 
-export default function DesignStudioPage() {
-  return <DesignStudioLoader />;
+export default function SpacePlannerPage() {
+  return <SpacePlanner />;
 }

@@ -13,7 +13,7 @@ const navItems = [
 ];
 
 const toolItems = [
-  { label: "Construction Studio", href: "/construction-studio/design", description: "Learn in 3D · design & price a house · upload your drawing & BOQ" },
+  { label: "Construction Studio", href: "/construction-studio/design", description: "Space Planner: upload a plan, place items, get a priced PDF" },
   { label: "Cost Estimator", href: "/estimator", description: "Early budget range for your project" },
   { label: "Material Prices", href: "/prices", description: "Abuja prices with source, date and suppliers" },
   { label: "Rate Bank", href: "/rates", description: "Build-ups for common construction work" },
