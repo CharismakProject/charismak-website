@@ -7,11 +7,15 @@ export type Wall = { id: string; a: Pt; b: Pt; thickness: number; bulge?: number
 /** swing: which side a door opens to (1 = the wall's left side, -1 = the other); hinge: 1 puts the hinge at the other end. */
 export type Opening = { id: string; wallId: string; kind: "door" | "window"; t: number; width: number; price?: number | null; swing?: 1 | -1; hinge?: 0 | 1 };
 /** mount: height of the underside above the floor (mm); when missing the catalogue default is used. */
-export type Item = { id: string; type: string; x: number; y: number; w: number; d: number; h: number; rot: number; label?: string; price?: number | null; mount?: number; finish?: string };
+export type Item = { id: string; type: string; x: number; y: number; w: number; d: number; h: number; rot: number; label?: string; price?: number | null; mount?: number; finish?: string; spec?: string };
 export type Backdrop = { image: string; pxW: number; pxH: number; mmPerPx: number; x: number; y: number; opacity: number };
 /** A room name pinned at a point; the room is whichever closed area of walls contains the point. */
 export type RoomTag = { id: string; name: string; x: number; y: number };
-export type Plan = { version: 1; title: string; height: number; walls: Wall[]; tags: RoomTag[]; openings: Opening[]; items: Item[]; backdrop: Backdrop | null };
+/** Project details printed on the drawing set. */
+export type ProjectInfo = { project?: string; location?: string; revision?: string; preparedBy?: string; notes?: string };
+/** A section (cut) line drawn by the user; the viewer looks to the left of a→b. */
+export type SectionLine = { id: string; label: string; a: Pt; b: Pt };
+export type Plan = { version: 1; title: string; height: number; walls: Wall[]; tags: RoomTag[]; openings: Opening[]; items: Item[]; backdrop: Backdrop | null; info?: ProjectInfo; sections?: SectionLine[] };
 
 export const emptyPlan = (): Plan => ({ version: 1, title: "My space", height: 3000, walls: [], tags: [], openings: [], items: [], backdrop: null });
 
@@ -161,6 +165,19 @@ export function snapEnd(start: Pt, p: Pt, walls: Wall[], tolerance: number): Pt 
   return snapPoint(p, walls, tolerance, start, true).pt;
 }
 
+/**
+ * How far the inside faces start in from each end of a wall: half the thickness of the wall it meets at that end
+ * (0 if the end is free). Used to give internal (face-to-face) lengths on plans and elevations.
+ */
+export function endTrims(w: Wall, walls: Wall[]): { t0: number; t1: number } {
+  const at = (p: Pt) => {
+    let t = 0;
+    for (const o of walls) if (o.id !== w.id && projectOnWall(p, o).distance <= 5) t = Math.max(t, o.thickness / 2);
+    return t;
+  };
+  return { t0: at(w.a), t1: at(w.b) };
+}
+
 /** Set a wall's length by moving its end point along its direction. */
 export function withLength(w: Wall, length: number): Wall {
   const len = wallLength(w) || 1, k = length / len;
@@ -236,7 +253,32 @@ export function labelPoint(pts: Pt[]): Pt {
   return best;
 }
 
-export type DetectedRoom = { key: string; pts: Pt[]; area: number; label: Pt; name: string; tagId: string | null };
+/** pts: the room outline on the wall centre-lines; inner: the outline on the inside faces of the walls; area: internal floor area (m²) from inner. */
+export type DetectedRoom = { key: string; pts: Pt[]; inner: Pt[]; area: number; label: Pt; name: string; tagId: string | null };
+
+/**
+ * Inside-face outline of a room: each edge of the centre-line outline moved into the room by half the thickness
+ * of the wall it lies on, corners re-joined where the moved edges meet.
+ */
+export function insetOutline(pts: Pt[], thicknessAt: (a: Pt, b: Pt) => number): Pt[] {
+  const n = pts.length;
+  const lines = pts.map((a, i) => {
+    const b = pts[(i + 1) % n], L = dist(a, b) || 1;
+    let nx = -(b.y - a.y) / L, ny = (b.x - a.x) / L;
+    const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    if (!pointInPolygon({ x: mid.x + nx * 2, y: mid.y + ny * 2 }, pts)) { nx = -nx; ny = -ny; }
+    const d = thicknessAt(a, b) / 2;
+    return { p: { x: a.x + nx * d, y: a.y + ny * d }, q: { x: b.x + nx * d, y: b.y + ny * d } };
+  });
+  return lines.map((cur, i) => {
+    const prev = lines[(i - 1 + n) % n];
+    const r = { x: prev.q.x - prev.p.x, y: prev.q.y - prev.p.y }, s2 = { x: cur.q.x - cur.p.x, y: cur.q.y - cur.p.y };
+    const den = r.x * s2.y - r.y * s2.x;
+    if (Math.abs(den) < 1e-6 * (Math.hypot(r.x, r.y) * Math.hypot(s2.x, s2.y) || 1)) return cur.p; // straight on (arc pieces)
+    const t = ((cur.p.x - prev.p.x) * s2.y - (cur.p.y - prev.p.y) * s2.x) / den;
+    return { x: prev.p.x + r.x * t, y: prev.p.y + r.y * t };
+  });
+}
 
 function segIntersection(p: Pt, p2: Pt, q: Pt, q2: Pt): Pt | null {
   const r = { x: p2.x - p.x, y: p2.y - p.y }, s = { x: q2.x - q.x, y: q2.y - q.y };
@@ -291,13 +333,20 @@ export function detectRooms(walls: Wall[], tags: RoomTag[] = []): DetectedRoom[]
     faces.push(face.map((k) => nodes[k]));
   }
   // With y pointing down and this turning rule, enclosed faces have positive signed area; outer boundaries negative.
-  const found = faces.filter((f) => f.length >= 3 && signedArea(f) > 1e4).map((pts) => ({ pts, area: polygonArea(pts) })).sort((a, b) => b.area - a.area);
+  // Thickness of the wall under an outline edge (the piece containing the edge's midpoint).
+  const thicknessAt = (a: Pt, b: Pt) => {
+    const m = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    let best = 0, bestD = Infinity;
+    for (const w of segs) { const d = projectOnWall(m, w).distance; if (d < bestD) { bestD = d; best = w.thickness; } }
+    return bestD <= SNAP * 2 ? best : 0;
+  };
+  const found = faces.filter((f) => f.length >= 3 && signedArea(f) > 1e4).map((pts) => { const inner = insetOutline(pts, thicknessAt); return { pts, inner, area: polygonArea(inner) }; }).sort((a, b) => b.area - a.area);
   const taken = new Set<string>();
-  return found.map(({ pts, area }, i) => {
+  return found.map(({ pts, inner, area }, i) => {
     const tag = tags.find((t) => !taken.has(t.id) && pointInPolygon(t, pts));
     if (tag) taken.add(tag.id);
     const label = labelPoint(pts);
-    return { key: `${Math.round(label.x)},${Math.round(label.y)}`, pts, area, label, name: tag?.name ?? `Room ${i + 1}`, tagId: tag?.id ?? null };
+    return { key: `${Math.round(label.x)},${Math.round(label.y)}`, pts, inner, area, label, name: tag?.name ?? `Room ${i + 1}`, tagId: tag?.id ?? null };
   });
 }
 

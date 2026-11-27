@@ -3,10 +3,12 @@
 import { jsPDF } from "jspdf";
 
 import type { ScheduleLine } from "./model";
+import type { SpecRow } from "./spec";
 
 const NAVY: [number, number, number] = [13, 51, 82];
 const RED: [number, number, number] = [138, 26, 16];
 const GREY: [number, number, number] = [90, 102, 117];
+const INK: [number, number, number] = [27, 36, 51];
 
 export const naira = (n: number) => `NGN ${Math.round(n).toLocaleString("en-NG")}`;
 
@@ -14,139 +16,145 @@ async function dataUrl(src: string): Promise<string | null> {
   try {
     const blob = await (await fetch(src)).blob();
     return await new Promise((resolve) => { const r = new FileReader(); r.onload = () => resolve(String(r.result)); r.onerror = () => resolve(null); r.readAsDataURL(blob); });
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
-
 const blobUrl = (blob: Blob) => new Promise<string>((resolve) => { const r = new FileReader(); r.onload = () => resolve(String(r.result)); r.readAsDataURL(blob); });
 
-export type ReportInfo = { title: string; size: string; area: number | null; height: number; date: string };
-
-/** Charismak-branded A4 report: plan page, then the schedule of items with prices. */
-export type RoomRow = { name: string; size: string; area: number };
-
 export type SheetImage = { title: string; png: Blob; ratio: number };
+export type RoomRow = { name: string; size: string; area: number };
+export type DrawingSet = {
+  title: string; project: string; location: string; revision: string; preparedBy: string; date: string;
+  spaceLine: string;
+  cover: Blob | null;
+  layout: SheetImage; plan: SheetImage;
+  elevations: SheetImage[]; sections: SheetImage[];
+  views: { name: string; blob: Blob }[];
+  spec: SpecRow[]; services: string[]; keySizes: string[]; notes: string;
+  rooms: RoomRow[]; cost: { lines: ScheduleLine[]; total: number; unpriced: number };
+};
 
-export async function buildPlannerPdf(info: ReportInfo, planPng: Blob, planRatio: number, lines: ScheduleLine[], total: number, unpriced: number, rooms: RoomRow[] = [], views: { name: string; blob: Blob }[] = [], elevations: SheetImage[] = []) {
+/**
+ * A drawing set in the style of a contractor's design proposal (A4 landscape): a cover with contents and a 3D
+ * view, then one drawing per sheet with a header and a title block (project, drawing, drawing number, revision,
+ * date, scale), ending with the specification schedule and the cost schedule.
+ */
+export async function buildDrawingSet(d: DrawingSet): Promise<Blob> {
   const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4", compress: true });
   const W = 297, H = 210, M = 12;
   const logo = await dataUrl("/branding/charismak-logo-wide.jpg");
+  const subtitle = [d.project, d.location].filter(Boolean).join(", ") || d.title;
 
-  const header = (subtitle: string) => {
-    doc.setFillColor(255, 255, 255);
-    doc.rect(0, 0, W, 24, "F");
-    if (logo) doc.addImage(logo, "JPEG", M, 4, 58, 16);
-    doc.setTextColor(...NAVY); doc.setFont("helvetica", "bold"); doc.setFontSize(12);
-    doc.text("SPACE PLANNER REPORT", W - M, 10, { align: "right" });
-    doc.setTextColor(...RED); doc.setFont("helvetica", "normal"); doc.setFontSize(9);
-    doc.text(subtitle, W - M, 16, { align: "right" });
-    doc.setFillColor(...NAVY); doc.rect(0, 24, W, 1.2, "F");
+  // Contents (sheet numbers start at 2 after the cover).
+  type Sheet = { title: string; draw: (top: number, bottom: number) => Promise<void> | void; scale?: string };
+  const sheets: Sheet[] = [];
+  const fit = async (img: SheetImage | { png: Blob; ratio: number }, top: number, bottom: number, x = M, w = W - 2 * M) => {
+    let iw = w, ih = iw / img.ratio;
+    if (ih > bottom - top) { ih = bottom - top; iw = ih * img.ratio; }
+    doc.addImage(await blobUrl(img.png), "PNG", x + (w - iw) / 2, top + (bottom - top - ih) / 2, iw, ih);
   };
-  const footer = (page: number) => {
-    doc.setFillColor(...NAVY); doc.rect(0, H - 10, W, 10, "F");
-    doc.setTextColor(255, 255, 255); doc.setFontSize(8);
-    doc.text("Charismak Project Nigeria Limited  ·  charismakproject.com  ·  +234 706 661 9598  ·  Maitama, Abuja", M, H - 4);
-    doc.text(`Indicative layout and budget — verify on site · Page ${page}`, W - M, H - 4, { align: "right" });
-  };
-
-  // Page 1: title block + plan
-  header(`${info.title} · ${info.date}`);
-  doc.setTextColor(...NAVY); doc.setFont("helvetica", "bold"); doc.setFontSize(18);
-  doc.text(info.title, M, 35);
-  doc.setFont("helvetica", "normal"); doc.setFontSize(10); doc.setTextColor(...GREY);
-  doc.text([`Overall size: ${info.size}`, `Floor area: ${info.area ? `${info.area.toFixed(1)} m²` : "—"}   ·   Ceiling height: ${info.height} mm`, `Items placed: ${lines.reduce((s, l) => s + l.qty, 0)}   ·   Estimated total: ${naira(total)}${unpriced ? ` (+${unpriced} unpriced)` : ""}`], M, 42);
-  const top = 56, avW = W - 2 * M, avH = H - 10 - top - 4;
-  let pw = avW, ph = pw / planRatio;
-  if (ph > avH) { ph = avH; pw = ph * planRatio; }
-  doc.setDrawColor(221, 225, 231); doc.rect((W - pw) / 2 - 1, top - 1, pw + 2, ph + 2);
-  doc.addImage(await blobUrl(planPng), "PNG", (W - pw) / 2, top, pw, ph);
-  doc.setFontSize(8); doc.setTextColor(...GREY);
-  doc.text("Floor plan · dimensions in millimetres · not to scale", W / 2, top + ph + 3.5, { align: "center" });
-  footer(1);
-  let page = 1;
-
-  /** Fit an image into a box, centred, with a caption underneath. */
-  const placeImage = async (png: Blob, ratio: number, x: number, yTop: number, bw: number, bh: number, caption: string) => {
-    let iw = bw, ih = iw / ratio;
-    if (ih > bh - 6) { ih = bh - 6; iw = ih * ratio; }
-    const ix = x + (bw - iw) / 2;
-    doc.setDrawColor(221, 225, 231); doc.rect(ix - 0.5, yTop - 0.5, iw + 1, ih + 1);
-    doc.addImage(await blobUrl(png), "PNG", ix, yTop, iw, ih);
-    doc.setFontSize(9); doc.setTextColor(...NAVY); doc.setFont("helvetica", "bold");
-    doc.text(caption, x + bw / 2, yTop + ih + 4.5, { align: "center" });
-    doc.setFont("helvetica", "normal");
-  };
-
-  // 3D views
-  for (let v = 0; v < views.length; v += 2) {
-    page += 1; doc.addPage(); header(`3D views ${v + 1}${views[v + 1] ? ` and ${v + 2}` : ""}`);
-    doc.setTextColor(...NAVY); doc.setFont("helvetica", "bold"); doc.setFontSize(14); doc.text(`3D views ${v + 1}${views[v + 1] ? ` and ${v + 2}` : ""}`, M, 35);
-    const bw = (W - 2 * M - 6) / 2, top3 = 42, bh = H - 10 - top3 - 6;
-    for (let i = 0; i < 2 && v + i < views.length; i++) await placeImage(views[v + i].blob, 1.6, M + i * (bw + 6), top3, bw, bh, views[v + i].name);
-    doc.setFontSize(8); doc.setTextColor(...GREY); doc.text("Concept visual: drag-to-rotate version in the online report. Colours and finishes as chosen per item.", M, H - 13);
-    footer(page);
+  sheets.push({ title: "Layout plan", draw: (t, b) => fit(d.layout, t, b) });
+  sheets.push({ title: "Floor plan, dimensioned", draw: (t, b) => fit(d.plan, t, b) });
+  for (const e of d.elevations) sheets.push({ title: e.title, draw: (t, b) => fit(e, t, b) });
+  for (const s of d.sections) sheets.push({ title: s.title, draw: (t, b) => fit(s, t, b) });
+  for (let i = 0; i < d.views.length; i += 2) {
+    const pair = d.views.slice(i, i + 2);
+    sheets.push({ title: `3D views ${i + 1}${pair[1] ? ` and ${i + 2}` : ""}`, scale: "—", draw: async (t, b) => {
+      const bw = (W - 2 * M - 8) / 2;
+      for (let k = 0; k < pair.length; k++) {
+        const x = M + k * (bw + 8), ih = Math.min(b - t - 10, bw / 1.6), y = t + (b - t - 10 - ih) / 2;
+        doc.addImage(await blobUrl(pair[k].blob), "PNG", x, y, ih * 1.6, ih);
+        doc.setDrawColor(221, 225, 231); doc.rect(x, y, ih * 1.6, ih);
+        doc.setFont("helvetica", "bold"); doc.setFontSize(9); doc.setTextColor(...NAVY); doc.text(pair[k].name, x, y + ih + 5);
+      }
+    } });
   }
+  sheets.push({ title: "Schedule of items and services", scale: "—", draw: (t, b) => {
+    const colX = [M, M + 38, M + 72], specW = 112, right = M + 190;
+    let y = t + 2;
+    doc.setFont("helvetica", "bold"); doc.setFontSize(8); doc.setTextColor(...RED);
+    ["Item", "Size", "Specification"].forEach((h, i) => doc.text(h, colX[i], y));
+    doc.setDrawColor(...NAVY); doc.line(M, y + 1.5, M + 72 + specW, y + 1.5); y += 6;
+    doc.setFont("helvetica", "normal"); doc.setTextColor(...INK);
+    for (const r of d.spec) {
+      const lines = doc.splitTextToSize(r.spec, specW) as string[], nameL = doc.splitTextToSize(`${r.name}${r.qty > 1 ? ` (×${r.qty})` : ""}`, 36) as string[];
+      const rowH = Math.max(lines.length, nameL.length) * 3.6 + 2;
+      if (y + rowH > b) break;
+      doc.setFont("helvetica", "bold"); doc.text(nameL, colX[0], y); doc.setFont("helvetica", "normal");
+      doc.text(r.size, colX[1], y); doc.text(lines, colX[2], y);
+      y += rowH; doc.setDrawColor(221, 225, 231); doc.line(M, y - 2.2, M + 72 + specW, y - 2.2);
+    }
+    let ry = t + 2;
+    const block = (title: string, items: string[]) => {
+      if (!items.length) return;
+      doc.setFont("helvetica", "bold"); doc.setFontSize(11); doc.setTextColor(...NAVY); doc.text(title, right, ry); ry += 5;
+      doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(...INK);
+      for (const it of items) { const ls = doc.splitTextToSize(it, W - M - right - 4) as string[]; if (ry + ls.length * 3.6 > b) return; doc.text("•", right, ry); doc.text(ls, right + 3, ry); ry += ls.length * 3.6 + 1.2; }
+      ry += 3;
+    };
+    block("Services provision", d.services); block("Key sizes", d.keySizes); if (d.notes) block("Notes", [d.notes]);
+  } });
+  sheets.push({ title: "Rooms and cost schedule", scale: "—", draw: (t, b) => {
+    let y = t + 2;
+    const cols = [M, M + 100, M + 165, M + 185, M + 230];
+    const head = (titles: string[], at: number[]) => { doc.setFillColor(...NAVY); doc.rect(M, y - 4.5, W - 2 * M, 7, "F"); doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(8.5); titles.forEach((h, i) => doc.text(h, at[i] + 2, y)); y += 7; doc.setFont("helvetica", "normal"); doc.setTextColor(...INK); };
+    if (d.rooms.length) {
+      head(["Room", "Overall size (mm)", "", "", "Floor area"], cols);
+      for (const r of d.rooms) { doc.text(r.name, cols[0] + 2, y); doc.text(r.size, cols[1] + 2, y); doc.text(`${r.area.toFixed(1)} m²`, cols[4] + 2, y); y += 6; }
+      doc.setFont("helvetica", "bold"); doc.text("Total floor area", cols[1] + 2, y); doc.text(`${d.rooms.reduce((s, r) => s + r.area, 0).toFixed(1)} m²`, cols[4] + 2, y); y += 9;
+    }
+    head(["Item", "Size (mm)", "Qty", "Unit price", "Total"], cols);
+    for (const l of d.cost.lines) {
+      if (y > b - 14) break;
+      doc.text(l.name, cols[0] + 2, y); doc.text(l.size, cols[1] + 2, y); doc.text(String(l.qty), cols[2] + 2, y);
+      doc.text(l.unitPrice === null ? "—" : `${naira(l.unitPrice)}${l.source === "market" ? " *" : ""}`, cols[3] + 2, y);
+      doc.text(l.total === null ? "not priced" : naira(l.total), cols[4] + 2, y); y += 5.6;
+    }
+    doc.setDrawColor(...NAVY); doc.line(M, y - 3, W - M, y - 3);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(10); doc.setTextColor(...NAVY); doc.text("Estimated total", cols[3] + 2, y + 2); doc.text(naira(d.cost.total), cols[4] + 2, y + 2);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); doc.setTextColor(...GREY);
+    doc.text(["* Market price from the Charismak price list (Abuja); other prices entered by the user.", "Supply prices only; installation, delivery and taxes are not included. Verify prices before purchase."], M, Math.min(b, y + 9));
+  } });
 
-  // Wall elevations, two per page
-  for (let i = 0; i < elevations.length; i += 2) {
-    page += 1; doc.addPage(); header("Wall elevations");
-    doc.setTextColor(...NAVY); doc.setFont("helvetica", "bold"); doc.setFontSize(14); doc.text("Wall elevations", M, 35);
-    const topE = 40, bh = (H - 10 - topE - 4) / 2;
-    for (let k = 0; k < 2 && i + k < elevations.length; k++) await placeImage(elevations[i + k].png, elevations[i + k].ratio, M, topE + k * bh, W - 2 * M, bh, elevations[i + k].title);
-    footer(page);
+  // ---------- Cover ----------
+  if (logo) doc.addImage(logo, "JPEG", M + 4, 16, 72, 20);
+  doc.setFillColor(...RED); doc.rect(M + 4, 46, 18, 1.6, "F");
+  doc.setTextColor(...NAVY); doc.setFont("helvetica", "bold"); doc.setFontSize(24);
+  doc.text(doc.splitTextToSize(d.title, 118) as string[], M + 4, 60);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(11); doc.setTextColor(...GREY); doc.text(subtitle, M + 4, 82);
+  let cy = 94;
+  for (const [k, v] of [["Space", d.spaceLine], ["Revision", d.revision || "—"], ["Date", d.date], ["Prepared by", d.preparedBy || "—"]] as const) {
+    doc.setFont("helvetica", "bold"); doc.setFontSize(9); doc.setTextColor(...RED); doc.text(k, M + 4, cy);
+    doc.setFont("helvetica", "normal"); doc.setTextColor(...INK); doc.text(doc.splitTextToSize(v, 78) as string[], M + 44, cy);
+    doc.setDrawColor(221, 225, 231); doc.line(M + 4, cy + 2.5, M + 124, cy + 2.5); cy += 8;
   }
+  cy += 4; doc.setFont("helvetica", "bold"); doc.setFontSize(10); doc.setTextColor(...NAVY); doc.text("Contents", M + 4, cy); cy += 5;
+  doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(...INK);
+  sheets.forEach((s, i) => { if (cy < H - 22) { doc.text(`${i + 1}. ${s.title}`, M + 6, cy); cy += 4.4; } });
+  doc.setFontSize(7.5); doc.setTextColor(...GREY);
+  doc.text("Prepared with the Charismak Space Planner · charismakproject.com", M + 4, H - 12);
+  if (d.cover) { const iw = W - 140; doc.addImage(await blobUrl(d.cover), "PNG", 140, 0, iw, H); } else { doc.setFillColor(238, 241, 245); doc.rect(140, 0, W - 140, H, "F"); }
 
-  // Schedule
-  page += 1;
-  doc.addPage(); header(rooms.length ? "Rooms and schedule of items" : "Schedule of items");
-  let y = 35;
-  const bar = (titles: string[], at: number[]) => {
-    doc.setFillColor(...NAVY); doc.rect(M, y - 5, W - 2 * M, 8, "F");
-    doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(9);
-    titles.forEach((h, i) => doc.text(h, at[i] + 2, y));
-    y += 8;
-  };
-  if (rooms.length) {
-    doc.setTextColor(...NAVY); doc.setFont("helvetica", "bold"); doc.setFontSize(14); doc.text("Rooms", M, y); y += 9;
-    const rc = [M, M + 120, M + 210];
-    bar(["Room", "Overall size (mm)", "Floor area"], rc);
-    doc.setFont("helvetica", "normal");
-    rooms.forEach((r, i) => {
-      if (i % 2) { doc.setFillColor(246, 247, 249); doc.rect(M, y - 5, W - 2 * M, 7.5, "F"); }
-      doc.setTextColor(27, 36, 51); doc.setFontSize(9);
-      [r.name, r.size, `${r.area.toFixed(1)} m²`].forEach((t, j) => doc.text(t, rc[j] + 2, y));
-      y += 7.5;
-    });
-    doc.setFont("helvetica", "bold"); doc.setTextColor(...NAVY);
-    doc.text("Total floor area", rc[1] + 2, y + 1); doc.text(`${rooms.reduce((t, r) => t + r.area, 0).toFixed(1)} m²`, rc[2] + 2, y + 1);
-    y += 12;
+  // ---------- Sheets ----------
+  for (let i = 0; i < sheets.length; i++) {
+    const s = sheets[i], no = i + 2;
+    doc.addPage();
+    if (logo) doc.addImage(logo, "JPEG", M, 7, 40, 11);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(14); doc.setTextColor(...NAVY); doc.text(s.title, M + 50, 13);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(...GREY); doc.text(`${d.title}${subtitle && subtitle !== d.title ? ` · ${subtitle}` : ""}`, M + 50, 18);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(18); doc.setTextColor(...RED); doc.text(String(no), W - M, 15, { align: "right" });
+    doc.setFillColor(...NAVY); doc.rect(M, 22, W - 2 * M, 0.9, "F");
+    // Title block
+    const tb = H - 26, cells: [string, string, number][] = [["Project", d.project || d.title, 0], ["Drawing", s.title, 70], ["Drawing no.", `SP-${String(no - 1).padStart(2, "0")}`, 150], ["Rev", d.revision || "—", 190], ["Date", d.date, 212], ["Scale", s.scale ?? "NTS", 250]];
+    doc.setDrawColor(...NAVY); doc.setLineWidth(0.3); doc.rect(M, tb, W - 2 * M, 16);
+    doc.line(M, tb + 10, W - M, tb + 10);
+    for (const [k, v, x] of cells) {
+      if (x) doc.line(M + x, tb, M + x, tb + 10);
+      doc.setFont("helvetica", "bold"); doc.setFontSize(6.5); doc.setTextColor(...RED); doc.text(k, M + x + 2, tb + 3.5);
+      doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); doc.setTextColor(...INK); doc.text((doc.splitTextToSize(v, (k === "Drawing" ? 78 : k === "Project" ? 66 : 36)) as string[])[0], M + x + 2, tb + 7.5);
+    }
+    doc.setFontSize(6.5); doc.setTextColor(...GREY); doc.text("Dimensions in mm. Concept design: dimensions to be confirmed on site before fabrication or construction.", M + 2, tb + 13.8);
+    doc.setLineWidth(0.2);
+    await s.draw(28, tb - 4);
   }
-  doc.setTextColor(...NAVY); doc.setFont("helvetica", "bold"); doc.setFontSize(14);
-  doc.text("Schedule of items", M, y); y += 9;
-  const cols = [M, M + 95, M + 160, M + 180, M + 225];
-  const heads = ["Item", "Size (mm)", "Qty", "Unit price", "Total"];
-  const head = () => bar(heads, cols);
-  head();
-  doc.setFont("helvetica", "normal");
-  lines.forEach((l, i) => {
-    if (y > H - 30) { footer(page); doc.addPage(); page += 1; header("Schedule of items (continued)"); y = 36; head(); doc.setFont("helvetica", "normal"); }
-    if (i % 2) { doc.setFillColor(246, 247, 249); doc.rect(M, y - 5, W - 2 * M, 7.5, "F"); }
-    doc.setTextColor(27, 36, 51); doc.setFontSize(9);
-    doc.text(l.name, cols[0] + 2, y);
-    doc.text(l.size, cols[1] + 2, y);
-    doc.text(String(l.qty), cols[2] + 2, y);
-    doc.text(l.unitPrice === null ? "—" : `${naira(l.unitPrice)}${l.source === "market" ? " *" : ""}`, cols[3] + 2, y);
-    doc.text(l.total === null ? "not priced" : naira(l.total), cols[4] + 2, y);
-    y += 7.5;
-  });
-  y += 2;
-  doc.setDrawColor(...NAVY); doc.line(M, y - 4, W - M, y - 4);
-  doc.setFont("helvetica", "bold"); doc.setFontSize(11); doc.setTextColor(...NAVY);
-  doc.text("Estimated total", cols[3] + 2, y + 2);
-  doc.text(naira(total), cols[4] + 2, y + 2);
-  doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(...GREY);
-  doc.text(["* Market price from the Charismak price list (Abuja). Other prices were entered by the user.", "Supply prices only unless stated; installation, delivery and taxes are not included. Verify prices and sizes before purchase or construction."], M, y + 10);
-  footer(page);
   return doc.output("blob");
 }

@@ -1,14 +1,16 @@
 import { DOOR_HEIGHT, WINDOW_HEIGHT, WINDOW_SILL, catalogItem } from "./catalog";
-import { arcOf, detectRooms, pointInPolygon, pointOnWall, projectOnWall, tangentAt, wallLength, type Item, type Plan, type Pt, type Wall } from "./model";
+import { arcOf, detectRooms, endTrims, pointInPolygon, pointOnWall, projectOnWall, tangentAt, wallLength, type Item, type Plan, type Pt, type Wall } from "./model";
 
 /** Something drawn on a wall elevation: x along the wall from the viewer's left, y up from the floor, all in mm. */
-export type ElevationPart = { kind: "door" | "window" | "item"; name: string; x: number; w: number; y: number; h: number };
+export type ElevationPart = { kind: "door" | "window" | "item"; name: string; x: number; w: number; y: number; h: number; type?: string; finish?: string };
 export type Elevation = {
   letter: string;
   wallId: string;
   length: number;
   height: number;
   curved: boolean;
+  /** Viewing side: +1 = the wall's left side (positions run a→b), −1 = the other side (positions run b→a). */
+  side: number;
   parts: ElevationPart[];
   /** Plan marker: a point beside the wall on the viewing side, and the direction the viewer looks (towards the wall). */
   marker: { at: Pt; look: Pt };
@@ -40,9 +42,12 @@ function viewSide(w: Wall, plan: Plan, rooms: Pt[][]): number {
 
 /** Elevation of one wall seen from `side`: doors, windows and the items standing against it on that side. */
 export function wallElevation(w: Wall, plan: Plan, side: number, letter = "A"): Elevation {
-  const length = wallLength(w), height = plan.height;
+  const full = wallLength(w), height = plan.height;
+  // Internal length: from the inside face of the wall at one end to the inside face at the other.
+  const { t0, t1 } = arcOf(w) ? { t0: 0, t1: 0 } : endTrims(w, plan.walls);
+  const start = side > 0 ? t0 : t1, length = full - t0 - t1;
   // Viewer faces the wall from `side`; their right-hand direction runs along the wall from a to b when side = +1.
-  const along = (t: number) => (side > 0 ? t : 1 - t) * length;
+  const along = (t: number) => (side > 0 ? t : 1 - t) * full - start;
   const parts: ElevationPart[] = [];
   for (const o of plan.openings) {
     if (o.wallId !== w.id) continue;
@@ -65,11 +70,11 @@ export function wallElevation(w: Wall, plan: Plan, side: number, letter = "A"): 
     const x0 = Math.max(0, Math.min(...xs)), x1 = Math.min(length, Math.max(...xs));
     if (x1 - x0 < 10) continue;
     const mount = itemMount(it);
-    parts.push({ kind: "item", name: it.label || c?.name || it.type, x: x0, w: x1 - x0, y: mount, h: Math.min(it.h, Math.max(0, height - mount)) });
+    parts.push({ kind: "item", name: it.label || c?.name || it.type, x: x0, w: x1 - x0, y: mount, h: Math.min(it.h, Math.max(0, height - mount)), type: it.type, finish: it.finish });
   }
   parts.sort((p, q) => p.x - q.x);
-  const at = pointOnWall(w, 0.5), off = w.thickness / 2 + 900;
-  return { letter, wallId: w.id, length, height, curved: !!arcOf(w), parts, marker: { at: { x: at.x + n.x * off, y: at.y + n.y * off }, look: { x: -n.x, y: -n.y } } };
+  const at = pointOnWall(w, 0.5), off = w.thickness / 2 + 520;
+  return { letter, wallId: w.id, length, height, curved: !!arcOf(w), side, parts, marker: { at: { x: at.x + n.x * off, y: at.y + n.y * off }, look: { x: -n.x, y: -n.y } } };
 }
 
 /**
