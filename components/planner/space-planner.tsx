@@ -2,15 +2,15 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
-import { DoorOpen, Download, FileUp, Hand, Minus, MousePointer2, Plus, RotateCw, Ruler, Square, Trash2, Undo2, AppWindow, Maximize, FileText, Image as ImageIcon } from "lucide-react";
+import { Spline, DoorOpen, Download, FileUp, Hand, Minus, MousePointer2, Plus, RotateCw, Ruler, Square, Trash2, Undo2, AppWindow, Maximize, FileText, Image as ImageIcon } from "lucide-react";
 
 import PlanSvg from "./plan-svg";
 import { CATALOG, CATEGORIES, catalogItem, marketPrice, DOOR_PRICE_ID, WINDOW_PRICE_ID, WINDOW_HEIGHT } from "@/lib/planner/catalog";
-import { bounds, CUT_LABELS, defaultCuts, detectRooms, dist, emptyPlan, outlineWalls, pointAtLength, projectOnWall, readSaved, schedule, SHAPE_LABEL, shapeOutline, snapPoint, STORAGE_KEY, uid, wallLength, withLength, type Item, type Plan, type Pt, type RoomShape, type Snap } from "@/lib/planner/model";
+import { arcOf, bulgeForRadius, bulgeThrough, bounds, CUT_LABELS, defaultCuts, detectRooms, dist, emptyPlan, outlineWalls, pointAtLength, projectOnWall, readSaved, schedule, SHAPE_LABEL, shapeOutline, snapPoint, STORAGE_KEY, uid, wallLength, withLength, type Item, type Plan, type Pt, type RoomShape, type Snap } from "@/lib/planner/model";
 import { buildPlannerPdf, naira } from "@/lib/planner/pdf";
 
 type Step = "start" | "scale" | "build" | "report";
-type Tool = "select" | "pan" | "wall" | "door" | "window" | `item:${string}` | `shape:${RoomShape}`;
+type Tool = "select" | "pan" | "wall" | "arc" | "door" | "window" | `item:${string}` | `shape:${RoomShape}`;
 const SHAPES: RoomShape[] = ["rect", "L", "T", "U"];
 type View = { x: number; y: number; w: number };
 
@@ -40,6 +40,7 @@ export default function SpacePlanner() {
   const [draftStart, setDraftStart] = useState<Pt | null>(null);
   const [cursor, setCursor] = useState<Pt | null>(null);
   const [chainStart, setChainStart] = useState<Pt | null>(null);
+  const [arcEnd, setArcEnd] = useState<Pt | null>(null);
   const [snap, setSnap] = useState<Snap | null>(null);
   const [ortho, setOrtho] = useState(true);
   const [typed, setTyped] = useState("");
@@ -146,6 +147,17 @@ export default function SpacePlanner() {
       return;
     }
     if (step !== "build") return;
+    if (tool === "arc") {
+      if (!draftStart) { const sp = snapPoint(p, plan.walls, tolerance).pt; setDraftStart(sp); setCursor(sp); setMessage("Now tap where the curved wall ends (or type its chord length and press Enter)."); return; }
+      if (!arcEnd) {
+        const end = snapPoint(p, plan.walls, tolerance, draftStart, ortho).pt;
+        if (dist(end, draftStart) < 50) return;
+        setArcEnd(end); setTyped(""); setMessage("Now tap a point the curve passes through (or type the radius and press Enter).");
+        return;
+      }
+      addArc(bulgeThrough(draftStart, arcEnd, snapPoint(p, plan.walls, tolerance).pt));
+      return;
+    }
     if (tool === "wall") {
       const sp = snapPoint(p, plan.walls, tolerance, draftStart, ortho).pt;
       if (!draftStart) { setDraftStart(sp); setChainStart(sp); setCursor(sp); return; }
@@ -197,10 +209,11 @@ export default function SpacePlanner() {
       setView({ x: c.x - w / 2, y: c.y - w / aspect / 2, w });
       return;
     }
-    if (tool === "wall" || tool.startsWith("shape:")) {
-      const sn = snapPoint(toWorld(e.clientX, e.clientY), plan.walls, tolerance, tool === "wall" ? draftStart : null, ortho);
+    if (tool === "wall" || tool === "arc" || tool.startsWith("shape:")) {
+      const raw = toWorld(e.clientX, e.clientY);
+      const sn = snapPoint(raw, plan.walls, tolerance, (tool === "wall" || (tool === "arc" && !arcEnd)) ? draftStart : null, ortho);
       setSnap(sn);
-      if (draftStart) setCursor(sn.pt);
+      if (draftStart) setCursor(tool === "arc" && arcEnd && sn.kind === "free" ? raw : sn.pt);
       return;
     }
     const d = drag.current;
@@ -240,7 +253,22 @@ export default function SpacePlanner() {
   };
   const rotateSelected = () => commit((pl) => ({ ...pl, items: pl.items.map((i) => (i.id === selected ? { ...i, rot: (i.rot + 90) % 360 } : i)) }));
 
-  const finishWall = () => { setDraftStart(null); setChainStart(null); setCursor(null); setTyped(""); setTool("select"); };
+  const finishWall = () => { setDraftStart(null); setChainStart(null); setArcEnd(null); setCursor(null); setTyped(""); setTool("select"); };
+  /** Add the curved wall being drawn, with the given bulge; ready for the next one. */
+  const addArc = (bulge: number | null) => {
+    if (!draftStart || !arcEnd) return;
+    if (bulge === null || Math.abs(bulge) < 1) { setMessage("Those three points are in a straight line — tap a point off the line to make a curve."); return; }
+    const wall = { id: uid("w"), a: draftStart, b: arcEnd, thickness: 150, bulge };
+    commit((pl) => ({ ...pl, walls: [...pl.walls, wall] }));
+    setDraftStart(null); setArcEnd(null); setCursor(null); setTyped("");
+    setMessage("Curved wall added. Tap a new start point for another, or choose another tool.");
+  };
+  /** Which side of the chord the pointer is on (+1 / -1), for a typed radius. */
+  const chordSide = () => {
+    if (!draftStart || !arcEnd || !cursor) return 1;
+    const c = dist(draftStart, arcEnd) || 1, n = { x: -(arcEnd.y - draftStart.y) / c, y: (arcEnd.x - draftStart.x) / c };
+    return Math.sign((cursor.x - (draftStart.x + arcEnd.x) / 2) * n.x + (cursor.y - (draftStart.y + arcEnd.y) / 2) * n.y) || 1;
+  };
   /** Add a wall from the current start to `end`, then carry on from `end` (closing the loop ends the chain). */
   const addWallTo = (end: Pt) => {
     if (!draftStart || dist(draftStart, end) < 50) return;
@@ -254,6 +282,13 @@ export default function SpacePlanner() {
   const commitTyped = () => {
     const len = Number(typed);
     if (!draftStart || !(len > 0)) return;
+    if (tool === "arc") {
+      if (!arcEnd) { const toward = cursor && dist(cursor, draftStart) > 1 ? cursor : { x: draftStart.x + 1, y: draftStart.y }; setArcEnd(pointAtLength(draftStart, toward, len)); setTyped(""); setMessage("Now tap a point the curve passes through (or type the radius and press Enter)."); return; }
+      const b = bulgeForRadius(dist(draftStart, arcEnd), len, chordSide());
+      if (b === null) { setMessage(`The radius must be at least half the chord (${Math.ceil(dist(draftStart, arcEnd) / 2)} mm).`); return; }
+      addArc(b);
+      return;
+    }
     const toward = cursor && dist(cursor, draftStart) > 1 ? cursor : { x: draftStart.x + 1, y: draftStart.y };
     addWallTo(pointAtLength(draftStart, toward, len));
   };
@@ -261,11 +296,11 @@ export default function SpacePlanner() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement)?.tagName === "INPUT") return;
-      if (tool === "wall" && draftStart) {
+      if ((tool === "wall" || tool === "arc") && draftStart) {
         if (/^[0-9]$/.test(e.key)) { setTyped((t) => (t + e.key).slice(0, 6)); e.preventDefault(); return; }
         if (e.key === "Backspace" && typed) { setTyped((t) => t.slice(0, -1)); e.preventDefault(); return; }
         if (e.key === "Enter") { if (typed) commitTyped(); else finishWall(); return; }
-        if (e.key.toLowerCase() === "c") { closeChain(); return; }
+        if (e.key.toLowerCase() === "c" && tool === "wall") { closeChain(); return; }
       }
       if (e.key === "Escape") { finishWall(); }
       if ((e.key === "Delete" || e.key === "Backspace") && selected) removeSelected();
@@ -423,16 +458,17 @@ export default function SpacePlanner() {
                     {toolBtn("select", "Select", MousePointer2)}
                     {toolBtn("pan", "Move view", Hand)}
                     {toolBtn("wall", "Wall", Ruler)}
+                    {toolBtn("arc", "Curved wall", Spline)}
                     {toolBtn("door", "Door", DoorOpen)}
                     {toolBtn("window", "Window", AppWindow)}
-                    {tool === "wall" ? <button type="button" onClick={() => setOrtho((o) => !o)} aria-pressed={ortho} title="Ortho: keep walls straight (off = 15° steps)" className={`${btn} ${ortho ? "bg-white/20 text-white" : "bg-white/5 text-white/60"}`}>Ortho {ortho ? "on" : "off"}</button> : null}
-                    {tool === "wall" && draftStart ? (
+                    {tool === "wall" || (tool === "arc" && !arcEnd) ? <button type="button" onClick={() => setOrtho((o) => !o)} aria-pressed={ortho} title="Ortho: keep walls straight (off = 15° steps)" className={`${btn} ${ortho ? "bg-white/20 text-white" : "bg-white/5 text-white/60"}`}>Ortho {ortho ? "on" : "off"}</button> : null}
+                    {(tool === "wall" || tool === "arc") && draftStart ? (
                       <>
-                        <label className="flex items-center gap-1 rounded-lg bg-white/10 px-2 text-xs font-bold">Length
+                        <label className="flex items-center gap-1 rounded-lg bg-white/10 px-2 text-xs font-bold">{tool === "arc" ? (arcEnd ? "Radius" : "Chord") : "Length"}
                           <input aria-label="Wall length in millimetres" inputMode="numeric" placeholder="mm" value={typed} onChange={(e) => setTyped(e.target.value.replace(/\D/g, "").slice(0, 6))} onKeyDown={(e) => { if (e.key === "Enter") commitTyped(); }} className="w-20 rounded bg-white px-2 py-1 text-sm text-[#0A1A2F] outline-none" />
                         </label>
                         <button type="button" onClick={commitTyped} disabled={!typed} className={`${btn} bg-white/10`}>Add</button>
-                        <button type="button" onClick={closeChain} className={`${btn} bg-white/10`}>Close</button>
+                        {tool === "wall" ? <button type="button" onClick={closeChain} className={`${btn} bg-white/10`}>Close</button> : null}
                         <button type="button" onClick={finishWall} className={`${btn} bg-white text-[#0A1A2F]`}>Done</button>
                       </>
                     ) : null}
@@ -451,7 +487,7 @@ export default function SpacePlanner() {
                   plan={plan}
                   box={viewBox}
                   selected={selected}
-                  draft={draftStart && cursor ? { a: draftStart, b: typed && dist(cursor, draftStart) > 1 ? pointAtLength(draftStart, cursor, Number(typed)) : cursor } : null}
+                  draft={tool === "arc" && draftStart && arcEnd ? { a: draftStart, b: arcEnd, bulge: (typed ? bulgeForRadius(dist(draftStart, arcEnd), Number(typed), chordSide()) : cursor ? bulgeThrough(draftStart, arcEnd, cursor) : null) ?? undefined } : draftStart && cursor ? { a: draftStart, b: typed && dist(cursor, draftStart) > 1 ? pointAtLength(draftStart, cursor, Number(typed)) : cursor } : null}
                   rooms={rooms}
                   snap={tool === "wall" || tool.startsWith("shape:") ? snap : null}
                   calibration={step === "scale" ? calib : undefined}
@@ -493,7 +529,15 @@ export default function SpacePlanner() {
                   ) : null}
                   {selWall ? (
                     <div className="space-y-3">
-                      <h2 className="font-semibold">Wall</h2>
+                      <h2 className="font-semibold">{selWall.bulge ? "Curved wall" : "Wall"}</h2>
+                      {(() => { const arc = arcOf(selWall); return arc ? (
+                        <div className="space-y-3">
+                          <p className="text-xs text-white/75">Arc length {Math.round(arc.length)} mm · chord {Math.round(arc.chord)} mm</p>
+                          <label className="block text-xs font-bold text-white/80">Radius (mm)<input className={field} inputMode="numeric" key={`r-${selWall.id}-${Math.round(arc.r)}`} defaultValue={Math.round(arc.r)} onBlur={(e) => { const b = bulgeForRadius(arc.chord, Number(e.target.value), Math.sign(arc.bulge), Math.abs(arc.bulge) > arc.r); if (b === null) { setMessage(`The radius must be at least ${Math.ceil(arc.chord / 2)} mm for this wall.`); return; } commit((pl) => ({ ...pl, walls: pl.walls.map((w) => (w.id === selWall.id ? { ...w, bulge: b } : w)) })); }} /></label>
+                          <label className="block text-xs font-bold text-white/80">Bulge (mm, + / − flips the side)<input className={field} inputMode="numeric" key={`b-${selWall.id}-${Math.round(arc.bulge)}`} defaultValue={Math.round(arc.bulge)} onBlur={(e) => { const v = Number(e.target.value.replace(/[^0-9-]/g, "")); commit((pl) => ({ ...pl, walls: pl.walls.map((w) => (w.id === selWall.id ? { ...w, bulge: v || 0 } : w)) })); }} /></label>
+                          <button type="button" onClick={() => commit((pl) => ({ ...pl, walls: pl.walls.map((w) => (w.id === selWall.id ? { ...w, bulge: 0 } : w)) }))} className={`${btn} w-full bg-white/5`}>Make straight</button>
+                        </div>
+                      ) : <button type="button" onClick={() => commit((pl) => ({ ...pl, walls: pl.walls.map((w) => (w.id === selWall.id ? { ...w, bulge: Math.round(wallLength(w) / 5) } : w)) }))} className={`${btn} w-full bg-white/5`}><Spline className="h-4 w-4" />Make curved</button>; })()}
                       <label className="block text-xs font-bold text-white/80">Length (mm)<input className={field} inputMode="numeric" key={`l-${selWall.id}-${Math.round(wallLength(selWall))}`} defaultValue={Math.round(wallLength(selWall))} onBlur={(e) => { const v = Number(e.target.value); if (v > 50) commit((pl) => ({ ...pl, walls: pl.walls.map((w) => (w.id === selWall.id ? withLength(w, v) : w)) })); }} /></label>
                       <label className="block text-xs font-bold text-white/80">Thickness (mm)<input className={field} inputMode="numeric" value={selWall.thickness} onChange={(e) => { const v = Number(e.target.value.replace(/\D/g, "")); commit((pl) => ({ ...pl, walls: pl.walls.map((w) => (w.id === selWall.id ? { ...w, thickness: v || 0 } : w)) })); }} /></label>
                     </div>

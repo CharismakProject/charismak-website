@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 
 import { marketPrice } from "../lib/planner/catalog";
-import { detectRooms, emptyPlan, enclosedArea, floorArea, outlineWalls, pointAtLength, projectOnWall, readSaved, rectangleRoom, schedule, shapeOutline, snapPoint, uid, wallLength, withLength, type Plan, type Pt, type Wall } from "../lib/planner/model";
+import { arcOf, bulgeForRadius, bulgeThrough, dist, pointOnWall, wallPolyline, detectRooms, emptyPlan, enclosedArea, floorArea, outlineWalls, pointAtLength, projectOnWall, readSaved, rectangleRoom, schedule, shapeOutline, snapPoint, uid, wallLength, withLength, type Plan, type Pt, type Wall } from "../lib/planner/model";
 
 const wall = (a: Pt, b: Pt): Wall => ({ id: uid("w"), a, b, thickness: 150 });
 const areas = (walls: Wall[]) => detectRooms(walls).map((r) => Math.round(r.area * 100) / 100).sort((m, n) => m - n);
@@ -82,5 +82,54 @@ assert.equal(legacy.walls.length, 6);
 assert.equal(legacy.openings[0].wallId, legacy.walls[0].id);
 assert.equal(detectRooms(legacy.walls, legacy.tags)[0].name, "Living");
 assert.equal("rooms" in legacy, false);
+
+// ---------- Curved walls ----------
+const near = (a: number, b: number, tol: number, msg?: string) => assert.ok(Math.abs(a - b) <= tol, `${msg ?? ""} ${a} vs ${b}`);
+// Semicircle: chord 4000, bulge 2000 -> radius 2000, length = pi * 2000.
+const semi: Wall = { id: "s", a: { x: 0, y: 0 }, b: { x: 4000, y: 0 }, thickness: 150, bulge: 2000 };
+near(arcOf(semi)!.r, 2000, 1e-6, "semicircle radius");
+near(wallLength(semi), Math.PI * 2000, 1e-6, "semicircle length");
+near(pointOnWall(semi, 0.5).x, 2000, 1e-6); near(Math.abs(pointOnWall(semi, 0.5).y), 2000, 1e-6, "arc midpoint");
+// Every polyline point lies on the circle, and pieces are at most 2 degrees.
+const arcS = arcOf(semi)!;
+for (const q of wallPolyline(semi)) near(dist(q, arcS.c), 2000, 1e-6, "polyline on circle");
+assert.ok(wallPolyline(semi).length - 1 >= 90);
+
+// Three-point arc: the arc through a, b and p passes exactly through p, on either side.
+for (const p of [{ x: 1000, y: -700 }, { x: 2500, y: 900 }, { x: 3900, y: -150 }]) {
+  const bl = bulgeThrough({ x: 0, y: 0 }, { x: 4000, y: 0 }, p)!;
+  const arc = arcOf({ ...semi, bulge: bl })!;
+  near(dist(arc.c, p), arc.r, 1e-6, "3-point arc passes through p");
+}
+assert.equal(bulgeThrough({ x: 0, y: 0 }, { x: 4000, y: 0 }, { x: 2000, y: 0 }), null, "points in a line make no arc");
+// Radius entry: radius 2500 on chord 4000 gives bulge 1000 (minor arc) or 4000 (major arc).
+near(bulgeForRadius(4000, 2500, 1)!, 1000, 1e-6); near(bulgeForRadius(4000, 2500, -1, true)!, -4000, 1e-6);
+assert.equal(bulgeForRadius(4000, 1500, 1), null, "radius smaller than half the chord is impossible");
+
+// Room with a curved wall: 4000 x 3000 with the top wall bowing out 1000 mm adds a circular segment
+// (r = 2500, angle = 4·atan(0.5)): exact area = 12 + r²/2·(θ − sin θ) m².
+const r = 2.5, th = 4 * Math.atan(0.5), seg = (r * r / 2) * (th - Math.sin(th));
+const box = rectangleRoom(4000, 3000); // top wall runs (0,0) -> (4000,0)
+const out = areas([{ ...box[0], bulge: -1000 }, ...box.slice(1)]), inn = areas([{ ...box[0], bulge: 1000 }, ...box.slice(1)]);
+near(out[0], 12 + seg, 0.01, "bowing out adds the segment");
+near(inn[0], 12 - seg, 0.01, "bowing in removes the segment");
+// Accuracy of the detected area itself (before rounding): within 0.05% of exact.
+near(detectRooms([{ ...box[0], bulge: -1000 }, ...box.slice(1)])[0].area, 12 + seg, (12 + seg) * 0.0005, "curved area accuracy");
+
+// A straight wall ending on a curved wall splits the room correctly.
+const curvedTop: Wall = { ...box[0], bulge: -1000 };
+const onArc = pointOnWall(curvedTop, 0.5);
+const split = areas([curvedTop, ...box.slice(1), wall({ x: onArc.x, y: onArc.y }, { x: 2000, y: 3000 })]);
+near(split[0] + split[1], 12 + seg, 0.02, "split curved room keeps the total");
+near(split[0], split[1], 0.02, "symmetric halves");
+// Snapping onto a curved wall lands exactly on the arc.
+const sn = snapPoint({ x: 1200, y: -900 }, [curvedTop], 300);
+assert.equal(sn.kind, "on");
+near(dist(sn.pt, arcOf(curvedTop)!.c), arcOf(curvedTop)!.r, 1e-6, "on-arc snap is on the circle");
+// Arc midpoint snap.
+const mid = snapPoint({ x: onArc.x + 30, y: onArc.y + 20 }, [curvedTop], 100);
+assert.equal(mid.kind, "mid");
+// Length edit keeps the curve's proportion.
+near(withLength(curvedTop, wallLength(curvedTop) * 2).bulge!, -2000, 1e-6);
 
 console.log("Space Planner checks passed.");

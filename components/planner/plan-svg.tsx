@@ -1,7 +1,14 @@
 import { forwardRef, type ReactNode } from "react";
 
 import { catalogItem, WINDOW_HEIGHT } from "@/lib/planner/catalog";
-import { wallLength, type DetectedRoom, type Item, type Opening, type Plan, type Pt, type Snap, type Wall } from "@/lib/planner/model";
+import { arcOf, pointOnWall, tangentAt, wallLength, type DetectedRoom, type Item, type Opening, type Plan, type Pt, type Snap, type Wall } from "@/lib/planner/model";
+
+/** SVG path for a wall centre-line: a straight line or an exact circular arc. */
+export function wallPath(w: Pick<Wall, "a" | "b" | "bulge">): string {
+  const arc = arcOf({ id: "", thickness: 0, ...w });
+  if (!arc) return `M ${w.a.x} ${w.a.y} L ${w.b.x} ${w.b.y}`;
+  return `M ${w.a.x} ${w.a.y} A ${arc.r} ${arc.r} 0 ${Math.abs(arc.sweep) > Math.PI ? 1 : 0} ${arc.sweep > 0 ? 1 : 0} ${w.b.x} ${w.b.y}`;
+}
 
 const NAVY = "#0D3352";
 const RED = "#8A1A10";
@@ -40,24 +47,40 @@ function symbol(it: Item): ReactNode {
 }
 
 function opening(o: Opening, w: Wall) {
-  const len = wallLength(w) || 1;
-  const ux = (w.b.x - w.a.x) / len, uy = (w.b.y - w.a.y) / len;
-  const cx = w.a.x + (w.b.x - w.a.x) * o.t, cy = w.a.y + (w.b.y - w.a.y) * o.t;
-  const half = o.width / 2;
-  const p1 = { x: cx - ux * half, y: cy - uy * half }, p2 = { x: cx + ux * half, y: cy + uy * half };
-  const nx = -uy, ny = ux, th = w.thickness;
-  const gap = <line x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke="#fff" strokeWidth={th + 4} />;
+  const len = wallLength(w) || 1, ht = o.width / 2 / len;
+  const t1 = Math.max(0, o.t - ht), t2 = Math.min(1, o.t + ht);
+  const p1 = pointOnWall(w, t1), p2 = pointOnWall(w, t2), th = w.thickness;
+  const ts = Array.from({ length: 9 }, (_, i) => t1 + ((t2 - t1) * i) / 8);
+  const along = (k: number) => ts.map((t) => { const p = pointOnWall(w, t), d = tangentAt(w, t); return `${p.x + -d.y * th * k},${p.y + d.x * th * k}`; }).join(" ");
+  const gap = <polyline points={along(0)} fill="none" stroke="#fff" strokeWidth={th + 4} />;
   if (o.kind === "window") {
-    return <g key={o.id}>{gap}{[-0.5, 0, 0.5].map((k) => <line key={k} x1={p1.x + nx * th * k * 0.8} y1={p1.y + ny * th * k * 0.8} x2={p2.x + nx * th * k * 0.8} y2={p2.y + ny * th * k * 0.8} stroke="#1D5FA8" strokeWidth={14} />)}</g>;
+    return <g key={o.id}>{gap}{[-0.4, 0, 0.4].map((k) => <polyline key={k} points={along(k)} fill="none" stroke="#1D5FA8" strokeWidth={14} />)}</g>;
   }
-  const leafEnd = { x: p1.x + nx * o.width, y: p1.y + ny * o.width };
-  return <g key={o.id}>{gap}<line x1={p1.x} y1={p1.y} x2={leafEnd.x} y2={leafEnd.y} stroke={RED} strokeWidth={14} /><path d={`M ${leafEnd.x} ${leafEnd.y} A ${o.width} ${o.width} 0 0 1 ${p2.x} ${p2.y}`} fill="none" stroke={RED} strokeWidth={8} strokeDasharray="30 25" /></g>;
+  const cl = Math.hypot(p2.x - p1.x, p2.y - p1.y) || 1;
+  const nx = -(p2.y - p1.y) / cl, ny = (p2.x - p1.x) / cl;
+  const leafEnd = { x: p1.x + nx * cl, y: p1.y + ny * cl };
+  return <g key={o.id}>{gap}<line x1={p1.x} y1={p1.y} x2={leafEnd.x} y2={leafEnd.y} stroke={RED} strokeWidth={14} /><path d={`M ${leafEnd.x} ${leafEnd.y} A ${cl} ${cl} 0 0 1 ${p2.x} ${p2.y}`} fill="none" stroke={RED} strokeWidth={8} strokeDasharray="30 25" /></g>;
 }
 
 /** Dimension along a wall, offset to one side, text upright. */
 function dimension(w: Wall, offset: number, size: number) {
   const len = wallLength(w);
   if (len < 50) return null;
+  const arc = arcOf(w);
+  if (arc) {
+    // Curved wall: a concentric arc outside it, labelled with the radius and the true arc length.
+    const R = arc.r + offset, a = { x: arc.c.x + (w.a.x - arc.c.x) * (R / arc.r), y: arc.c.y + (w.a.y - arc.c.y) * (R / arc.r) }, b = { x: arc.c.x + (w.b.x - arc.c.x) * (R / arc.r), y: arc.c.y + (w.b.y - arc.c.y) * (R / arc.r) };
+    const out = { x: (arc.mid.x - arc.c.x) / arc.r, y: (arc.mid.y - arc.c.y) / arc.r };
+    const tp = { x: arc.c.x + out.x * (R + size * 0.8), y: arc.c.y + out.y * (R + size * 0.8) };
+    let angle = (Math.atan2(out.x, -out.y) * 180) / Math.PI;
+    if (angle > 90 || angle < -90) angle += 180;
+    return (
+      <g key={`d-${w.id}`} stroke="#5A6675" strokeWidth={size * 0.06} fill="none">
+        <path d={`M ${a.x} ${a.y} A ${R} ${R} 0 ${Math.abs(arc.sweep) > Math.PI ? 1 : 0} ${arc.sweep > 0 ? 1 : 0} ${b.x} ${b.y}`} />
+        <text x={tp.x} y={tp.y} fontSize={size} textAnchor="middle" dominantBaseline="middle" stroke="none" fill="#5A6675" fontFamily="Arial, sans-serif" transform={`rotate(${angle} ${tp.x} ${tp.y})`}>{`R ${Math.round(arc.r)} · L ${Math.round(len)}`}</text>
+      </g>
+    );
+  }
   const ux = (w.b.x - w.a.x) / len, uy = (w.b.y - w.a.y) / len;
   const nx = uy, ny = -ux;
   const a = { x: w.a.x + nx * offset, y: w.a.y + ny * offset }, b = { x: w.b.x + nx * offset, y: w.b.y + ny * offset };
@@ -79,7 +102,7 @@ export type PlanSvgProps = {
   plan: Plan;
   box: { x: number; y: number; w: number; h: number };
   selected?: string | null;
-  draft?: { a: Pt; b: Pt } | null;
+  draft?: { a: Pt; b: Pt; bulge?: number } | null;
   calibration?: Pt[];
   showBackdrop?: boolean;
   showDimensions?: boolean;
@@ -108,7 +131,7 @@ const PlanSvg = forwardRef<SVGSVGElement, PlanSvgProps & Omit<React.SVGProps<SVG
         <polygon key={r.key} data-id={`room:${r.key}`} points={r.pts.map((p) => `${p.x},${p.y}`).join(" ")} fill={selected === `room:${r.key}` ? "#FBEDEA" : "#F3F5F8"} />
       ))}
       {every.map((w) => (
-        <line key={w.id} data-id={w.id} x1={w.a.x} y1={w.a.y} x2={w.b.x} y2={w.b.y} stroke={isSel(w.id) ? RED : "#1B2433"} strokeWidth={w.thickness} strokeLinecap="square" />
+        <path key={w.id} data-id={w.id} d={wallPath(w)} fill="none" stroke={isSel(w.id) ? RED : "#1B2433"} strokeWidth={w.thickness} strokeLinecap={w.bulge ? "butt" : "square"} />
       ))}
       {plan.openings.map((o) => { const w = walls.get(o.wallId); return w ? <g key={o.id} data-id={o.id} opacity={selected === o.id ? 0.6 : 1}>{opening(o, w)}</g> : null; })}
       {plan.items.map((it) => (
@@ -123,8 +146,11 @@ const PlanSvg = forwardRef<SVGSVGElement, PlanSvgProps & Omit<React.SVGProps<SVG
           <text x={r.label.x} y={r.label.y + unit * 1} fontSize={unit * 0.85} fill="#5A6675">{r.area.toFixed(1)} m²</text>
         </g>
       ))}
-      {showDimensions ? every.filter((w) => { const k = [w.a, w.b].map((p) => `${Math.round(p.x)},${Math.round(p.y)}`).sort().join("|"); if (seen.has(k)) return false; seen.add(k); return true; }).map((w) => dimension(w, w.thickness / 2 + unit * 1.4, unit * 0.9)) : null}
-      {draft ? <><line x1={draft.a.x} y1={draft.a.y} x2={draft.b.x} y2={draft.b.y} stroke={RED} strokeWidth={150} strokeOpacity={0.5} strokeLinecap="square" /><text x={(draft.a.x + draft.b.x) / 2} y={(draft.a.y + draft.b.y) / 2 - unit * 1.2} fontSize={unit * 1.2} textAnchor="middle" fill={RED} fontWeight={700} fontFamily="Arial, sans-serif">{Math.round(Math.hypot(draft.b.x - draft.a.x, draft.b.y - draft.a.y))} mm</text></> : null}
+      {showDimensions ? every.filter((w) => { const k = [w.a, w.b].map((p) => `${Math.round(p.x)},${Math.round(p.y)}`).sort().join("|") + `|${Math.round(Math.abs(w.bulge ?? 0))}`; if (seen.has(k)) return false; seen.add(k); return true; }).map((w) => dimension(w, w.thickness / 2 + unit * 1.4, unit * 0.9)) : null}
+      {draft ? (() => {
+        const dw = { id: "draft", thickness: 150, ...draft }, arc = arcOf(dw), m = pointOnWall(dw, 0.5);
+        return <><path d={wallPath(draft)} fill="none" stroke={RED} strokeWidth={150} strokeOpacity={0.5} strokeLinecap="square" /><text x={m.x} y={m.y - unit * 1.2} fontSize={unit * 1.2} textAnchor="middle" fill={RED} fontWeight={700} fontFamily="Arial, sans-serif">{arc ? `R ${Math.round(arc.r)} · L ${Math.round(arc.length)} mm` : `${Math.round(Math.hypot(draft.b.x - draft.a.x, draft.b.y - draft.a.y))} mm`}</text></>;
+      })() : null}
       {snap && snap.kind !== "free" ? (
         <g pointerEvents="none" stroke="#0A8A3A" strokeWidth={unit * 0.12} fill="none">
           {snap.kind === "end" ? <rect x={snap.pt.x - unit * 0.5} y={snap.pt.y - unit * 0.5} width={unit} height={unit} /> : null}

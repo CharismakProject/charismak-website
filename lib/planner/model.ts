@@ -2,7 +2,8 @@ import { CATALOG, DOOR_PRICE_ID, WINDOW_HEIGHT, WINDOW_PRICE_ID, catalogItem, ma
 
 /** Space Planner drawing. All coordinates are in millimetres on the floor plan (x right, y down). */
 export type Pt = { x: number; y: number };
-export type Wall = { id: string; a: Pt; b: Pt; thickness: number };
+/** bulge: for a curved wall, the signed distance in mm from the middle of the straight line a→b to the middle of the arc (0 or missing = straight). */
+export type Wall = { id: string; a: Pt; b: Pt; thickness: number; bulge?: number };
 export type Opening = { id: string; wallId: string; kind: "door" | "window"; t: number; width: number; price?: number | null };
 export type Item = { id: string; type: string; x: number; y: number; w: number; d: number; h: number; rot: number; label?: string; price?: number | null };
 export type Backdrop = { image: string; pxW: number; pxH: number; mmPerPx: number; x: number; y: number; opacity: number };
@@ -16,11 +17,94 @@ let counter = 0;
 export const uid = (prefix: string) => `${prefix}-${Date.now().toString(36)}-${(counter++).toString(36)}`;
 
 export const dist = (a: Pt, b: Pt) => Math.hypot(b.x - a.x, b.y - a.y);
-export const wallLength = (w: Wall) => dist(w.a, w.b);
 const round10 = (n: number) => Math.round(n / 10) * 10;
 
-/** Closest point on a wall, with t (0..1 along the wall) and the distance to it. */
+// ---------- Curved walls: exact circular arcs ----------
+
+export type Arc = { c: Pt; r: number; a0: number; sweep: number; length: number; chord: number; bulge: number; mid: Pt; normal: Pt };
+
+/** The circle of a curved wall, or null when it is straight. */
+export function arcOf(w: Wall): Arc | null {
+  const s = w.bulge ?? 0, chord = dist(w.a, w.b);
+  if (Math.abs(s) < 1 || chord < 1) return null;
+  const u = { x: (w.b.x - w.a.x) / chord, y: (w.b.y - w.a.y) / chord };
+  const n = { x: -u.y, y: u.x }; // positive bulge bows to this side
+  const m = { x: (w.a.x + w.b.x) / 2, y: (w.a.y + w.b.y) / 2 };
+  const r = (chord * chord / 4 + s * s) / (2 * Math.abs(s));
+  const k = s - Math.sign(s) * r;
+  const c = { x: m.x + n.x * k, y: m.y + n.y * k };
+  const mid = { x: m.x + n.x * s, y: m.y + n.y * s };
+  const theta = 4 * Math.atan((2 * Math.abs(s)) / chord);
+  const va = { x: w.a.x - c.x, y: w.a.y - c.y }, vm = { x: mid.x - c.x, y: mid.y - c.y };
+  const dir = Math.sign(va.x * vm.y - va.y * vm.x) || 1;
+  return { c, r, a0: Math.atan2(va.y, va.x), sweep: theta * dir, length: r * theta, chord, bulge: s, mid, normal: n };
+}
+
+export const wallLength = (w: Wall) => { const arc = arcOf(w); return arc ? arc.length : dist(w.a, w.b); };
+
+/** Point at fraction t (0..1) along a wall, following the curve when curved. */
+export function pointOnWall(w: Wall, t: number): Pt {
+  const arc = arcOf(w);
+  if (!arc) return { x: w.a.x + (w.b.x - w.a.x) * t, y: w.a.y + (w.b.y - w.a.y) * t };
+  const ang = arc.a0 + arc.sweep * t;
+  return { x: arc.c.x + Math.cos(ang) * arc.r, y: arc.c.y + Math.sin(ang) * arc.r };
+}
+
+/** Unit direction of travel along a wall at fraction t. */
+export function tangentAt(w: Wall, t: number): Pt {
+  const arc = arcOf(w);
+  if (!arc) { const L = dist(w.a, w.b) || 1; return { x: (w.b.x - w.a.x) / L, y: (w.b.y - w.a.y) / L }; }
+  const ang = arc.a0 + arc.sweep * t, d = Math.sign(arc.sweep);
+  return { x: -Math.sin(ang) * d, y: Math.cos(ang) * d };
+}
+
+/** The wall as straight pieces: itself when straight, or arc pieces of at most 2° (chord error under 1 mm for radii up to 6.5 m). */
+export function wallPolyline(w: Wall, maxStepDeg = 2): Pt[] {
+  const arc = arcOf(w);
+  if (!arc) return [w.a, w.b];
+  // Pieces of at most maxStepDeg, but never shorter than 20 mm (so tight curves stay clean for room detection).
+  const n = Math.max(2, Math.min(Math.ceil(Math.abs(arc.sweep) / ((maxStepDeg * Math.PI) / 180)), Math.floor(arc.length / 20)));
+  return Array.from({ length: n + 1 }, (_, i) => (i === 0 ? w.a : i === n ? w.b : pointOnWall(w, i / n)));
+}
+
+/** Bulge for an arc from a to b passing through p (AutoCAD 3-point arc). Null when the three points are in a line. */
+export function bulgeThrough(a: Pt, b: Pt, p: Pt): number | null {
+  const chord = dist(a, b);
+  if (chord < 1) return null;
+  const d = 2 * (a.x * (b.y - p.y) + b.x * (p.y - a.y) + p.x * (a.y - b.y));
+  if (Math.abs(d) < 1e-6) return null;
+  const a2 = a.x * a.x + a.y * a.y, b2 = b.x * b.x + b.y * b.y, p2 = p.x * p.x + p.y * p.y;
+  const c = { x: (a2 * (b.y - p.y) + b2 * (p.y - a.y) + p2 * (a.y - b.y)) / d, y: (a2 * (p.x - b.x) + b2 * (a.x - p.x) + p2 * (b.x - a.x)) / d };
+  const r = dist(c, a);
+  const u = { x: (b.x - a.x) / chord, y: (b.y - a.y) / chord }, n = { x: -u.y, y: u.x };
+  const m = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+  const h = (c.x - m.x) * n.x + (c.y - m.y) * n.y; // centre's side of the chord
+  const side = Math.sign((p.x - m.x) * n.x + (p.y - m.y) * n.y) || 1; // the arc's side (where p is)
+  return h + r * side;
+}
+
+/** Bulge for a given radius on one side (+1 / -1); the radius must be at least half the chord. */
+export function bulgeForRadius(chord: number, radius: number, side: number, major = false): number | null {
+  if (radius < chord / 2 - 0.5) return null;
+  const h = Math.sqrt(Math.max(0, radius * radius - (chord * chord) / 4));
+  return (side >= 0 ? 1 : -1) * (major ? radius + h : radius - h);
+}
+
+/** Closest point on a wall, with t (0..1 along the wall) and the distance to it. Works for curved walls. */
 export function projectOnWall(p: Pt, w: Wall) {
+  const arc = arcOf(w);
+  if (arc) {
+    const two = Math.PI * 2;
+    let off = (Math.atan2(p.y - arc.c.y, p.x - arc.c.x) - arc.a0) * Math.sign(arc.sweep);
+    off = ((off % two) + two) % two;
+    const span = Math.abs(arc.sweep);
+    if (off <= span) {
+      const t = off / span, q = pointOnWall(w, t);
+      return { t, point: q, distance: dist(p, q) };
+    }
+    const da = dist(p, w.a), db = dist(p, w.b);
+    return da <= db ? { t: 0, point: { ...w.a }, distance: da } : { t: 1, point: { ...w.b }, distance: db };
+  }
   const dx = w.b.x - w.a.x, dy = w.b.y - w.a.y, len2 = dx * dx + dy * dy || 1;
   const t = Math.max(0, Math.min(1, ((p.x - w.a.x) * dx + (p.y - w.a.y) * dy) / len2));
   const q = { x: w.a.x + dx * t, y: w.a.y + dy * t };
@@ -42,7 +126,7 @@ export function snapPoint(p: Pt, walls: Wall[], tolerance: number, from?: Pt | n
   for (const w of walls) for (const e of [w.a, w.b]) { const d = dist(e, p); if (d <= bestD) { bestD = d; best = { pt: { ...e }, kind: "end" }; } }
   if (best) return best;
   bestD = tolerance;
-  for (const w of walls) { const m = { x: (w.a.x + w.b.x) / 2, y: (w.a.y + w.b.y) / 2 }; const d = dist(m, p); if (d <= bestD) { bestD = d; best = { pt: m, kind: "mid" }; } }
+  for (const w of walls) { const m = pointOnWall(w, 0.5); const d = dist(m, p); if (d <= bestD) { bestD = d; best = { pt: m, kind: "mid" }; } }
   if (best) return best;
   bestD = tolerance;
   let onWall: Wall | null = null;
@@ -78,7 +162,8 @@ export function snapEnd(start: Pt, p: Pt, walls: Wall[], tolerance: number): Pt 
 /** Set a wall's length by moving its end point along its direction. */
 export function withLength(w: Wall, length: number): Wall {
   const len = wallLength(w) || 1, k = length / len;
-  return { ...w, b: { x: w.a.x + (w.b.x - w.a.x) * k, y: w.a.y + (w.b.y - w.a.y) * k } };
+  // Same shape, scaled about the start point: a curved wall keeps its curvature proportion.
+  return { ...w, b: { x: w.a.x + (w.b.x - w.a.x) * k, y: w.a.y + (w.b.y - w.a.y) * k }, ...(w.bulge ? { bulge: w.bulge * k } : {}) };
 }
 
 // ---------- Shape shortcuts (they draw ordinary walls) ----------
@@ -166,7 +251,8 @@ function segIntersection(p: Pt, p2: Pt, q: Pt, q2: Pt): Pt | null {
  */
 export function detectRooms(walls: Wall[], tags: RoomTag[] = []): DetectedRoom[] {
   const SNAP = 5;
-  const segs = walls.filter((w) => wallLength(w) > SNAP);
+  const pieces: Wall[] = walls.flatMap((w) => { const pts = wallPolyline(w); return pts.slice(1).map((b, i) => ({ id: w.id, a: pts[i], b, thickness: w.thickness })); });
+  const segs = pieces.filter((w) => dist(w.a, w.b) > 0.5);
   const splits = segs.map(() => [0, 1]);
   for (let i = 0; i < segs.length; i++) for (let j = i + 1; j < segs.length; j++) {
     const a = segs[i], b = segs[j];
@@ -224,7 +310,7 @@ export const floorArea = (plan: Plan): number | null => enclosedArea(plan.walls)
 
 export function bounds(plan: Plan) {
   const xs: number[] = [], ys: number[] = [];
-  for (const w of plan.walls) { xs.push(w.a.x, w.b.x); ys.push(w.a.y, w.b.y); }
+  for (const w of plan.walls) for (const q of wallPolyline(w, 10)) { xs.push(q.x); ys.push(q.y); }
   for (const it of plan.items) { const r = Math.max(it.w, it.d) / 2; xs.push(it.x - r, it.x + r); ys.push(it.y - r, it.y + r); }
   if (plan.backdrop) { const b = plan.backdrop; xs.push(b.x, b.x + b.pxW * b.mmPerPx); ys.push(b.y, b.y + b.pxH * b.mmPerPx); }
   if (!xs.length) return { minX: 0, minY: 0, maxX: 5000, maxY: 4000 };
